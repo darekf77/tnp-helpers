@@ -9,7 +9,7 @@ import * as os from 'os';
 
 import { Helpers } from './index';
 import { config } from '../config';
-import { Models } from '../index';
+import { Models } from 'tnp-models';
 
 const encoding = 'utf8';
 

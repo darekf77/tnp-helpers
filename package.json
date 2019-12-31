@@ -2,6 +2,9 @@
   "tnp": {
     "resources": [],
     "type": "isomorphic-lib",
+    "linkedProjects": [
+      "tnp-models"
+    ],
     "overrided": {
       "ignoreDepsPattern": [],
       "includeAsDev": [],
