@@ -1,3 +1,10 @@
-import { HelpersTnp as Base } from './helpers';
 
-export const Helpers = Base.Instance;
+
+import { Models } from 'tnp-models';
+
+
+new Models();
+
+export class Helpers {
+
+}

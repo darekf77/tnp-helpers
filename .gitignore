@@ -33,6 +33,7 @@ Thumbs.db
 /.sass-cache
 /.sourcemaps
 /tsconfig.json
+/tsconfig.isomorphic.json
 /.npmrc
 /tslint.json
 /.editorconfig
@@ -43,9 +44,11 @@ Thumbs.db
 /.vscode/launch.json
 /tsconfig.browser.json
 /webpack.config.js
-/webpack.backend-bundle-build.js
 /run.js
 /tsconfig.json.filetemplate
+/tsconfig.isomorphic.json.filetemplate
+/src/tmp-tnp-models
 
 *.filetemplate
 
+/webpack.backend-bundle-build.js
