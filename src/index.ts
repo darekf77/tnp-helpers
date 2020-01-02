@@ -1,7 +1,3 @@
-console.log('hello helpersaaaa')
-import { Models } from 'tnp-models';
-new Models();
+import { HelpersTnp as Base } from './helpers';
 
-export class Helpers {
-
-}
+export const Helpers = Base.Instance;
