@@ -7,10 +7,12 @@ export class TsCodeModifer {
   public replace(input: string, regex: RegExp, replacement: string) {
 
     return input.split('\n').map(line => {
+
       const lineTrim = line.trim()
       if (lineTrim.startsWith('//')) {
         return line;
       }
+      // console.log(line)
       if (
         lineTrim.startsWith('import ') ||
         lineTrim.startsWith('export ') ||

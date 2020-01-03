@@ -18,7 +18,8 @@ import { HelpersFileFolders } from './helpers-file-folders.backend';
 import { Models } from 'tnp-models';
 //#endregion
 import { Helpers } from './index';
-import { config } from '../config';
+declare const ENV: any;
+const config = ENV.config as any;
 
 export function applyMixins(derivedCtor: any, baseCtors: any[]) {
   baseCtors.forEach(baseCtor => {

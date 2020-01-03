@@ -1,7 +1,8 @@
 import * as glob from 'glob';
 import * as path from 'path';
-import { config } from '../config';
-import { HelpersMerge } from '../project/compilers/baseline-site-join/merge-helpers.backend';
+declare const ENV: any;
+const config = ENV.config as any;
+import { HelpersMerge } from './merge-helpers.backend';
 
 export class HelpersMorphiFramework {
 

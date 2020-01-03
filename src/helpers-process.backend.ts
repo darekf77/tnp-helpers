@@ -12,7 +12,7 @@ import * as dateformat from 'dateformat';
 import { Helpers } from './index';
 import { Models } from 'tnp-models';
 import { CLASS } from 'typescript-class-helpers';
-
+declare const global: any;
 const prompts = require('prompts');
 //#endregion
 

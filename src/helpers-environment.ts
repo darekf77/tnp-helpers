@@ -1,6 +1,8 @@
 import * as fse from 'fs-extra';
 import * as path from 'path';
 
+console.log('ssd')
+
 export class HelpersEnvironment {
 
   environmentName(filename, local_env_name) {

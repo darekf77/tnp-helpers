@@ -2,8 +2,11 @@
 import chalk from 'chalk';
 //#endregion
 import { Morphi } from 'morphi';
-import { config } from '../config';
-import { PROGRESS_DATA } from '../progress-output';
+
+declare const global: any;
+declare const ENV: any;
+const config = ENV.config as any;
+const PROGRESS_DATA = ENV.PROGRESS_DATA as any;
 import { Helpers } from './index';
 
 export class HelpersMessages {

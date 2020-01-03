@@ -8,8 +8,9 @@ import * as rimraf from 'rimraf';
 import * as os from 'os';
 
 import { Helpers } from './index';
-import { config } from '../config';
-import { Models } from '../index';
+declare const ENV: any;
+const config = ENV.config as any;
+import { Models } from 'tnp-models';
 
 const encoding = 'utf8';
 
