@@ -49,13 +49,7 @@ Thumbs.db
 /tsconfig.isomorphic.json.filetemplate
 /tsconfig.browser.json.filetemplate
 /webpack.backend-bundle-build.js
-/src/tmp-tnp-helpers
-/src/tmp-tnp-models
-/src/tmp-tnp-ui
 
 
 
 *.filetemplate
-
-
-/webpack.backend-bundle-build.js

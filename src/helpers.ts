@@ -21,6 +21,7 @@ import { HelpersFileFolders } from './helpers-file-folders.backend';
 import { Models } from 'tnp-models';
 //#endregion
 import { Helpers } from './index';
+import { CLASS } from 'typescript-class-helpers';
 declare const ENV: any;
 const config = ENV.config as any;
 
@@ -61,6 +62,11 @@ export class HelpersTnp {
 
   ) {
 
+  }
+
+  CLIWRAP(f: Function, name: string) {
+    CLASS.setName(f, name);
+    return f;
   }
 
   get isBrowser() {
