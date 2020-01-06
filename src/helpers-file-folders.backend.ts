@@ -102,13 +102,20 @@ export class HelpersFileFolders {
   }
 
   tryCopyFrom(source, destination, options = {}) {
-    // console.log(`Trying to copy from hahah: ${source} to ${destination}`)
+    Helpers.log(`Trying to copy from: ${source} to ${destination}`);
+    if (fse.existsSync(source) && !fse.lstatSync(source).isDirectory()) {
+      // Helpers.warn(`[tryCopyFrom] This source is not directory: ${source} to ${destination}`);
+      Helpers.copyFile(source, destination);
+      return;
+    }
     try {
       fse.copySync(source, destination, _.merge({
         overwrite: true,
         recursive: true
       }, options))
+      // Helpers.info(`Copy success from: ${source} to ${destination}`)
     } catch (e) {
+      // Helpers.log(`Copy fail from: ${source} to ${destination}`)
       Helpers.log(e)
       sleep(1);
       Helpers.tryCopyFrom(source, destination, options)
