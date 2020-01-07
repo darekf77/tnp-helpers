@@ -5,6 +5,7 @@ import { HelpersMessages } from './helpers-messages';
 import { HelpersStringsRegexes } from './helpers-strings-regexes';
 import { HelpersEnvironment } from './helpers-environment';
 import { Helpers as HelperNg2Logger } from 'ng2-logger';
+import { conditionWait } from './condition-wait';
 //#region @backend
 import * as Task from 'task.js';
 import * as os from 'os';
@@ -90,6 +91,8 @@ export class HelpersTnp {
     // console.log('was promis ', wasPromise)
     return promisOrValue;
   }
+
+  conditionWait = conditionWait;
 
   waitForCondition(conditionFn: (any) => boolean, howOfftenCheckInMs = 1000) {
     return new Promise(async (resolve, reject) => {
