@@ -78,12 +78,12 @@ export class HelpersTnp {
     return HelperNg2Logger.isNode;
   }
 
-  async  runSyncOrAsync(fn: Function, args?: any[]) {
+  async  runSyncOrAsync(fn: Function, firstArg?: any) {
     if (_.isUndefined(fn)) {
       return;
     }
     // let wasPromise = false;
-    let promisOrValue = fn(args);
+    let promisOrValue = fn(firstArg);
     if (promisOrValue instanceof Promise) {
       // wasPromise = true;
       promisOrValue = Promise.resolve(promisOrValue)

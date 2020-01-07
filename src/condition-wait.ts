@@ -31,7 +31,7 @@ function waitFor(arr: Condition[], messageToShow: string = void 0) {
       // console.log(`timeoutCheck: ${timeoutCheck}`);
       // console.log(`timeoutNext: ${timeoutNext}`);
       // console.log(`Checking: ${name}`)
-      const resultTrue = await Helpers.runSyncOrAsync(check.callback, [check]);
+      const resultTrue = await Helpers.runSyncOrAsync(check.callback, check);
       // console.log(`after: ${name}`)
       if (resultTrue) {
         // console.log(`timeout 1 is set to ${timeoutNext}`)
