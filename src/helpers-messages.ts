@@ -1,12 +1,13 @@
 //#region @backend
 import chalk from 'chalk';
 //#endregion
-import { Morphi } from 'morphi';
+import { CLASS } from 'typescript-class-helpers';
+
 
 declare const global: any;
 declare const ENV: any;
 const config = ENV.config as any;
-const PROGRESS_DATA = ENV.PROGRESS_DATA as any;
+
 import { Helpers } from './index';
 
 export class HelpersMessages {
@@ -77,7 +78,10 @@ export class HelpersMessages {
     //#region @backend
     if (!global.muteMessages && !global.hideInfos) {
       console.log(chalk.green(details))
-      global.tnpNonInteractive && PROGRESS_DATA.log({ msg: details })
+      if (global.tnpNonInteractive) {
+        const PROGRESS_DATA = CLASS.getBy('PROGRESS_DATA') as any;
+        PROGRESS_DATA.log({ msg: details })
+      }
     }
     //#endregion
   }
@@ -92,7 +96,10 @@ export class HelpersMessages {
     // console.log('global.hideLog', global.hideLog);
     if ((!global.muteMessages && !global.hideLog)) {
       console.log(chalk.gray(details))
-      global.tnpNonInteractive && PROGRESS_DATA.log({ msg: details })
+      if (global.tnpNonInteractive) {
+        const PROGRESS_DATA = CLASS.getBy('PROGRESS_DATA') as any;
+        PROGRESS_DATA.log({ msg: details })
+      }
     }
     //#endregion
   }
