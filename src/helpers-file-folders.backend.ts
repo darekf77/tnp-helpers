@@ -3,7 +3,6 @@ import * as fs from 'fs';
 import * as _ from 'lodash';
 import * as  underscore from 'underscore';
 import * as path from 'path';
-import { sleep } from 'sleep';
 import * as rimraf from 'rimraf';
 import * as os from 'os';
 
@@ -108,18 +107,10 @@ export class HelpersFileFolders {
       Helpers.copyFile(source, destination);
       return;
     }
-    try {
-      fse.copySync(source, destination, _.merge({
-        overwrite: true,
-        recursive: true
-      }, options))
-      // Helpers.info(`Copy success from: ${source} to ${destination}`)
-    } catch (e) {
-      // Helpers.log(`Copy fail from: ${source} to ${destination}`)
-      Helpers.log(e)
-      sleep(1);
-      Helpers.tryCopyFrom(source, destination, options)
-    }
+    fse.copySync(source, destination, _.merge({
+      overwrite: true,
+      recursive: true
+    }, options));
   }
   removeFileIfExists(absoluteFilePath: string, options?: { modifiedFiles?: Models.other.ModifiedFiles; }) {
     // console.log(`removeFileIfExists: ${absoluteFilePath}`)
@@ -155,16 +146,10 @@ export class HelpersFileFolders {
 
   tryRemoveDir(dirpath: string, contentOnly = false) {
     // console.log(`tryRemoveDir: ${dirpath}`)
-    try {
-      if (contentOnly) {
-        rimraf.sync(`${dirpath}/*`)
-      } else {
-        rimraf.sync(dirpath)
-      }
-    } catch (e) {
-      Helpers.log(`Trying to remove directory: ${dirpath}`)
-      sleep(1);
-      Helpers.tryRemoveDir(dirpath, contentOnly);
+    if (contentOnly) {
+      rimraf.sync(`${dirpath}/*`)
+    } else {
+      rimraf.sync(dirpath)
     }
   }
 

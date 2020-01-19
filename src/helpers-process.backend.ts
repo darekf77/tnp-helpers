@@ -5,7 +5,6 @@ import chalk from 'chalk';
 import * as fse from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
-import * as sleep from 'sleep';
 import * as fkill from 'fkill';
 import * as dateformat from 'dateformat';
 
@@ -321,14 +320,15 @@ export class HelpersProcess {
     return {
       sync(): Buffer {
         if (_.isNumber(options.tryAgainWhenFailAfter) && options.tryAgainWhenFailAfter > 0) {
-          try {
+          // TODO try again when fail
+          // try {
             const proc = Helpers.runSyncIn(command, options);
             return proc;
-          } catch (error) {
-            console.log(`Trying again command: ${command}`)
-            sleep.msleep(options.tryAgainWhenFailAfter)
-            return Helpers.run(command, options).sync()
-          }
+          // } catch (error) {
+          //   console.log(`Trying again command: ${command}`)
+          //  TODO: WAIT FUNCTION HERE
+          //   return Helpers.run(command, options).sync()
+          // }
         }
         return Helpers.runSyncIn(command, options);
       },
