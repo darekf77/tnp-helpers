@@ -266,7 +266,7 @@ export class HelpersProcess {
     const maxBuffer = biggerBuffer ? Helpers.bigMaxBuffer : undefined;
     let stdio = Helpers.getStdio(options)
     Helpers.checkProcess(cwd, command);
-    return child.execSync(command, { stdio, cwd, maxBuffer })
+    return child.execSync(command, { stdio, cwd, maxBuffer } as any)
   }
 
   runAsyncIn(command: string, options?: Models.dev.RunOptions) {
@@ -323,14 +323,14 @@ export class HelpersProcess {
           // TODO try again when fail
           // try {
             const proc = Helpers.runSyncIn(command, options);
-            return proc;
+            return proc as any;
           // } catch (error) {
           //   console.log(`Trying again command: ${command}`)
           //  TODO: WAIT FUNCTION HERE
           //   return Helpers.run(command, options).sync()
           // }
         }
-        return Helpers.runSyncIn(command, options);
+        return Helpers.runSyncIn(command, options) as any;
       },
       async() {
         return Helpers.runAsyncIn(command, options);
