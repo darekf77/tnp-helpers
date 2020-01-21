@@ -97,7 +97,14 @@ export class HelpersFileFolders {
     if (!fse.existsSync(jsFilePath)) {
       Helpers.error(`Not able to find path: ${orgPath}`);
     }
-    return eval(fse.readFileSync(jsFilePath).toLocaleString())
+    let fileContent = fse.readFileSync(jsFilePath).toLocaleString();
+    // fileContent = fileContent.split('\n').map(l => {
+    //   if
+    //   return
+    // })//@LAST/
+
+
+    return eval(fileContent)
   }
 
   tryCopyFrom(source, destination, options = {}) {
