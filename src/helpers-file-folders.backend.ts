@@ -98,9 +98,18 @@ export class HelpersFileFolders {
       Helpers.error(`Not able to find path: ${orgPath}`);
     }
     let fileContent = fse.readFileSync(jsFilePath).toLocaleString();
-    // fileContent = fileContent.split('\n').map(l => {
-    //   if
-    //   return
+
+    // const stringForRegex = `require\((\"|\')\.\/${
+    //   config.regexString.pathPartStringRegex
+    //   }(\"|\'))`;
+    // console.log('stringForRegex:', stringForRegex);
+
+    // fileContent.split('\n').map(l => {
+    //   const matches = l.match(new RegExp(stringForRegex));
+    //   if (matches) {
+    //     console.log('matched', matches)
+    //   }
+    //   return l;
     // })//@LAST/
 
 
@@ -332,7 +341,17 @@ export class HelpersFileFolders {
     if (!options) {
       options = {} as any;
     }
-    fse.copySync(sourceDir, destinationDir, _.merge({ overwrite: true, recursive: true }, options));
+    if (sourceDir === destinationDir || path.resolve(sourceDir) === path.resolve(destinationDir)) {
+      Helpers.warn(`[helper][copy] Trying to copy same source and destination`, true);
+    } else {
+      console.warn('sourceDir', sourceDir)
+      console.warn('sourceDir', path.resolve(sourceDir))
+      console.warn('sourceDir', fse.existsSync(sourceDir))
+      console.warn('destinationDir', destinationDir)
+      console.warn('destinationDir', path.resolve(destinationDir))
+      console.trace('destinationDir', fse.existsSync(destinationDir))
+      fse.copySync(sourceDir, destinationDir, _.merge({ overwrite: true, recursive: true }, options));
+    }
   }
 
   copyFile(sourcePath: string, destinationPath: string,
