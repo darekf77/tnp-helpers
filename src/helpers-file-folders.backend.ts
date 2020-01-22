@@ -5,6 +5,8 @@ import * as  underscore from 'underscore';
 import * as path from 'path';
 import * as rimraf from 'rimraf';
 import * as os from 'os';
+import { JSON10 } from 'json10';
+
 
 import { Helpers } from './index';
 declare const ENV: any;
@@ -99,19 +101,26 @@ export class HelpersFileFolders {
     }
     let fileContent = fse.readFileSync(jsFilePath).toLocaleString();
 
-    // const stringForRegex = `require\((\"|\')\.\/${
-    //   config.regexString.pathPartStringRegex
-    //   }(\"|\'))`;
-    // console.log('stringForRegex:', stringForRegex);
+    const stringForRegex = `require\\(("|')\\.\\/([a-zA-Z0-9]|\\-|\\_|\\+|\\.)*("|')\\)`;
+    console.log('stringForRegex:', stringForRegex);
 
-    // fileContent.split('\n').map(l => {
-    //   const matches = l.match(new RegExp(stringForRegex));
-    //   if (matches) {
-    //     console.log('matched', matches)
-    //   }
-    //   return l;
-    // })//@LAST/
+    fileContent = fileContent.split('\n').map(line => {
+      const matches = line.match(new RegExp(stringForRegex));
+      if (matches !== null) {
+        // console.log('matched', matches)
+        const rep = _.first(matches);
+        if (rep) {
+          const newFilename = path.join(path.dirname(jsFilePath), rep.split('(')[1].replace(/("|'|\))/g, ''));
+          line = line.replace(rep, `require('${newFilename}')`);
+        }
+        // console.log(line)
+      }
 
+      // console.log('matched', matches)
+
+
+      return line;
+    }).join('\n');
 
     return eval(fileContent)
   }
@@ -327,10 +336,12 @@ export class HelpersFileFolders {
     return allFiles.filter(f => {
       const info = fse.lstatSync(f);
       return (info.mtimeMs === mfrMtime && !info.isDirectory())
-    })
+    });
   }
 
-  copy(sourceDir: string, destinationDir: string, options?: { filter: any }) {
+  copy(sourceDir: string, destinationDir: string, options?: { filter: any; overwrite?: boolean, recursive?: boolean }) {
+    // sourceDir = sourceDir ? (sourceDir.replace(/\/$/, '')) : sourceDir;
+    // destinationDir = destinationDir ? (destinationDir.replace(/\/$/, '')) : destinationDir;
     if (!fse.existsSync(sourceDir)) {
       Helpers.warn(`[helper][copy] Source dir doesnt exist: ${sourceDir} for destination: ${destinationDir}`);
       return;
@@ -341,16 +352,42 @@ export class HelpersFileFolders {
     if (!options) {
       options = {} as any;
     }
+    if (_.isUndefined(options.overwrite)) {
+      options.overwrite = true;
+    }
+    if (_.isUndefined(options.recursive)) {
+      options.recursive = true;
+    }
+
+    // const [srcStat, destStat] = [
+    //   fse.existsSync(sourceDir) && fse.statSync(sourceDir),
+    //   fse.existsSync(destinationDir) && fse.statSync(destinationDir),
+    // ];
+    // if (destStat && destStat.ino && destStat.dev && destStat.ino === srcStat.ino && destStat.dev === srcStat.dev) {
+    //   Helpers.warn(`[helper][copy] Same location stats.. Trying to copy same source and destination:
+    //   from: ${sourceDir}
+    //   to: ${destinationDir}
+    //   `);
+    //   return;
+    // }
+
     if (sourceDir === destinationDir || path.resolve(sourceDir) === path.resolve(destinationDir)) {
-      Helpers.warn(`[helper][copy] Trying to copy same source and destination`, true);
+      Helpers.warn(`[helper][copy] Trying to copy same source and destination
+      from: ${sourceDir}
+      to: ${destinationDir}
+      `);
     } else {
-      console.warn('sourceDir', sourceDir)
-      console.warn('sourceDir', path.resolve(sourceDir))
-      console.warn('sourceDir', fse.existsSync(sourceDir))
-      console.warn('destinationDir', destinationDir)
-      console.warn('destinationDir', path.resolve(destinationDir))
-      console.trace('destinationDir', fse.existsSync(destinationDir))
-      fse.copySync(sourceDir, destinationDir, _.merge({ overwrite: true, recursive: true }, options));
+      // console.warn('filter', _.isFunction(options.filter));
+      // console.warn('sourceDir', sourceDir);
+      // console.warn('destinationDir', destinationDir);
+      // console.log(JSON.stringify(options))
+      // try {
+      fse.copySync(sourceDir, destinationDir, options);
+      // } catch (error) {
+      //   console.trace(error);
+      //   process.exit(0)
+      // }
+
     }
   }
 
