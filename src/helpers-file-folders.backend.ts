@@ -42,9 +42,19 @@ export class HelpersFileFolders {
   }
 
   createSymLink(existedFileOrFolder: string, destinationPath: string,
-    options?: { continueWhenExistedFolderDoesntExists?: boolean }) {
+    options?: { continueWhenExistedFolderDoesntExists?: boolean; dontRenameWhenSlashAtEnd?: boolean; }) {
 
-    const { continueWhenExistedFolderDoesntExists = false } = options || {};
+    // Helpers.log(`existedFileOrFolder ${existedFileOrFolder}`)
+    // Helpers.log(`destinationPath ${destinationPath}`)
+
+    options = options ? options : {};
+    if (_.isUndefined(options.continueWhenExistedFolderDoesntExists)) {
+      options.continueWhenExistedFolderDoesntExists = false;
+    }
+    if (_.isUndefined(options.dontRenameWhenSlashAtEnd)) {
+      options.dontRenameWhenSlashAtEnd = false;
+    }
+    const { continueWhenExistedFolderDoesntExists, dontRenameWhenSlashAtEnd } = options;
 
     // console.log('Create link!')
 
@@ -82,8 +92,8 @@ export class HelpersFileFolders {
 
 
     rimraf.sync(link);
-    // log(`target ${target}`)
-    // log(`link ${link}`)
+    // Helpers.log(`target ${target}`)
+    // Helpers.log(`link ${link}`)
     fse.symlinkSync(target, link)
   }
 
