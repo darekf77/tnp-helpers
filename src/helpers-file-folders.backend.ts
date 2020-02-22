@@ -112,7 +112,7 @@ export class HelpersFileFolders {
     let fileContent = fse.readFileSync(jsFilePath).toLocaleString();
 
     const stringForRegex = `require\\(("|')\\.\\/([a-zA-Z0-9]|\\-|\\_|\\+|\\.)*("|')\\)`;
-    console.log('stringForRegex:', stringForRegex);
+    Helpers.log(`stringForRegex: ${stringForRegex}`);
 
     fileContent = fileContent.split('\n').map(line => {
       const matches = line.match(new RegExp(stringForRegex));
