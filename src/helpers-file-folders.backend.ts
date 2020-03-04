@@ -157,7 +157,7 @@ export class HelpersFileFolders {
   }
 
   removeFolderIfExists(absoluteFolderPath: string, options?: { modifiedFiles?: Models.other.ModifiedFiles; }) {
-    console.log(`remove folder: ${absoluteFolderPath}`)
+    Helpers.log(`[helpers] Remove folder: ${absoluteFolderPath}`)
     const { modifiedFiles } = options || { modifiedFiles: { modifiedFiles: [] } };
     if (fse.existsSync(absoluteFolderPath)) {
       fse.removeSync(absoluteFolderPath);
