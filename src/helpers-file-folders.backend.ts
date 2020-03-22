@@ -180,7 +180,11 @@ export class HelpersFileFolders {
   // };
 
   tryRemoveDir(dirpath: string, contentOnly = false) {
-    // console.log(`tryRemoveDir: ${dirpath}`)
+    Helpers.log(`[tnp-helpers][tryRemoveDir]: ${dirpath}`);
+    // if (dirpath == '/Users/dfilipiak/projects/npm/firedev-projects/container-v2/workspace-v2') {
+    //   console.trace('aaaaaaaa')
+    //   process.exit(0)
+    // }
     if (contentOnly) {
       rimraf.sync(`${dirpath}/*`)
     } else {
@@ -207,6 +211,7 @@ export class HelpersFileFolders {
   }
 
   remove(fileOrFolderPathOrPatter: string, exactFolder = false) {
+    Helpers.log(`[tnp-helpers][remove]: ${fileOrFolderPathOrPatter}`);
     if (exactFolder) {
       if (!fse.existsSync(fileOrFolderPathOrPatter)) {
         Helpers.warn(`[remove] Folder doesnt not exists: ${fileOrFolderPathOrPatter}`)
@@ -215,7 +220,6 @@ export class HelpersFileFolders {
       rimraf.sync(fileOrFolderPathOrPatter, { glob: false, disableGlob: true, });
       return;
     }
-    // console.log(`remove: ${fileOrFolderPathOrPatter}`)
     rimraf.sync(fileOrFolderPathOrPatter);
   }
 

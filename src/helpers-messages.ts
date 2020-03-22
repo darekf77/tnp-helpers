@@ -135,9 +135,12 @@ export class HelpersMessages {
     //#endregion
   }
 
-  log(details: string) {
+  log(details: string, debugLevel = 0) {
     if (Helpers.isBrowser) {
       console.log(details);
+      return;
+    }
+    if (debugLevel > global.verboseLevel) {
       return;
     }
     //#region @backend
