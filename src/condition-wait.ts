@@ -45,7 +45,7 @@ function waitFor(arr: Condition[], messageToShow: string = void 0) {
 
         arr.unshift(check);
         if (!messageToShow || check.errorMessage !== messageToShow) {
-          Helpers.log(check.errorMessage);
+          Helpers.info(check.errorMessage);
         } else {
           // console.log(`dont show error  message ${check.errorMessage}`)
         }
