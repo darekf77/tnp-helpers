@@ -1,14 +1,18 @@
+//#region @backend
 import * as fse from 'fs-extra';
 import * as path from 'path';
+//#endregion
 
 export class HelpersEnvironment {
 
   environmentName(filename, local_env_name) {
+    //#region @backend
     let name = path.basename(filename)
     name = name.replace(/\.js$/, '')
     name = name.replace('environment', '')
     name = name.replace(/\./g, '');
     return name === '' ? local_env_name : name
+    //#endregion
   }
 
 

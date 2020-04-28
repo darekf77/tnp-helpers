@@ -193,37 +193,51 @@ export class HelpersProcess {
   //   `);
   // })
 
-  modifyLineByLine(data: string | Buffer | Error, outputLineReplace: (outputLine: string) => string) {
+  modifyLineByLine(
+    data: string | Buffer | Error,
+    outputLineReplace: (outputLine: string) => string,
+    prefix: string,
+  ) {
     let modifyOutput = _.isFunction(outputLineReplace);
     if (modifyOutput && _.isString(data)) {
       data = data.split(/\r?\n/).map(line => outputLineReplace(line)).join('\n');
+    }
+    if (prefix && _.isString(data)) {
+      return data.split('\n').map(l => {
+        if (!l || l.trim().length === 0) {
+          return l;
+        }
+        return `${prefix} ${l}`
+      }).join('\n');
     }
     return data as string;
   }
 
   logProc(proc: child.ChildProcess, output = true, stdio,
-    outputLineReplace: (outputLine: string) => string) {
+    outputLineReplace: (outputLine: string) => string, prefix: string) {
     Helpers.processes.push(proc);
 
     proc.stdio = stdio;
 
-
+    if (!prefix) {
+      prefix = '';
+    }
 
     if (output) {
       proc.stdout.on('data', (data) => {
-        process.stdout.write(Helpers.modifyLineByLine(data, outputLineReplace))
+        process.stdout.write(Helpers.modifyLineByLine(data, outputLineReplace, prefix))
       })
 
       proc.stdout.on('error', (data) => {
-        console.log(Helpers.modifyLineByLine(data, outputLineReplace));
+        console.log(Helpers.modifyLineByLine(data, outputLineReplace, prefix));
       })
 
       proc.stderr.on('data', (data) => {
-        process.stderr.write(Helpers.modifyLineByLine(data, outputLineReplace))
+        process.stderr.write(Helpers.modifyLineByLine(data, outputLineReplace, prefix))
       })
 
       proc.stderr.on('error', (data) => {
-        console.log(Helpers.modifyLineByLine(data, outputLineReplace));
+        console.log(Helpers.modifyLineByLine(data, outputLineReplace, prefix));
       })
 
     }
@@ -274,7 +288,8 @@ export class HelpersProcess {
     const maxBuffer = biggerBuffer ? Helpers.bigMaxBuffer : undefined;
     let stdio = Helpers.getStdio(options)
     Helpers.checkProcess(cwd, command);
-    return Helpers.logProc(child.exec(command, { cwd, maxBuffer }), output, stdio, outputLineReplace);
+    return Helpers.logProc(child.exec(command, { cwd, maxBuffer }),
+      output, stdio, outputLineReplace, options.prefix);
   }
 
   prepareWatchCommand(cmd) {
@@ -322,8 +337,8 @@ export class HelpersProcess {
         if (_.isNumber(options.tryAgainWhenFailAfter) && options.tryAgainWhenFailAfter > 0) {
           // TODO try again when fail
           // try {
-            const proc = Helpers.runSyncIn(command, options);
-            return proc as any;
+          const proc = Helpers.runSyncIn(command, options);
+          return proc as any;
           // } catch (error) {
           //   console.log(`Trying again command: ${command}`)
           //  TODO: WAIT FUNCTION HERE
@@ -334,6 +349,20 @@ export class HelpersProcess {
       },
       async() {
         return Helpers.runAsyncIn(command, options);
+      },
+      unitlOutputContains(msg: string) {
+        let nextStep = false;
+        return new Promise<any>(resolve => {
+          const proc = Helpers.runAsyncIn(command, options);
+          proc.stdout.on('data', (message) => {
+            const data: string = message.toString().trim();
+            if (!nextStep && (data.search(msg) !== -1)) {
+              Helpers.info(`[unitlOutputContains] Move to next step...`)
+              nextStep = true;
+              resolve()
+            }
+          })
+        });
       }
     }
   }
