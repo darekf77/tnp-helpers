@@ -56,7 +56,7 @@ export namespace HelpersMerge {
 
 
   export function pathToBaselineNodeModulesRelative(project: Project) {
-    const baselinePath = project.type === 'workspace' ? project.baseline.name
+    const baselinePath = project.typeIs('workspace') ? project.baseline.name
       : path.join(project.baseline.parent.name, project.baseline.name)
 
     return baselinePath;
@@ -120,7 +120,7 @@ export namespace HelpersMerge {
 
 
   export function pathToBaselineAbsolute(project: Project) {
-    const isInsideWokrspace = (project.parent && project.parent.type === 'workspace');
+    const isInsideWokrspace = (project.parent && project.parent.typeIs('workspace'));
 
     const toReplace = path.join(
       isInsideWokrspace ? (
