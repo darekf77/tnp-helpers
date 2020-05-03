@@ -204,7 +204,7 @@ export class HelpersProcess {
     }
     if (prefix && _.isString(data)) {
       return data.split('\n').map(l => {
-        if (!l || l.trim().length === 0) {
+        if (!l || l.trim().length === 0 || l.trim() === '.') {
           return l;
         }
         return `${prefix} ${l}`
