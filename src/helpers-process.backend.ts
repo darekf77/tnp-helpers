@@ -217,6 +217,7 @@ export class HelpersProcess {
     outputLineReplace: (outputLine: string) => string, prefix: string) {
     Helpers.processes.push(proc);
 
+    // @ts-ignore
     proc.stdio = stdio;
 
     if (!prefix) {
