@@ -36,6 +36,20 @@ const prompts = require('prompts');
 
 
 export class HelpersProcess {
+  async pressKeyAnd(message = 'Press enter try again', printWaitMessages = 0) {
+    if (_.isNumber(printWaitMessages) && printWaitMessages > 0) {
+      Helpers.log(`Please wait (${printWaitMessages}) seconds`);
+      await Helpers.pressKeyAnd(message, printWaitMessages - 1);
+      return;
+    }
+
+    return new Promise((resovle) => {
+      Helpers.log(message);
+      process.stdin.once('data', function () {
+        resovle()
+      });
+    })
+  }
 
   pressKeyAndContinue(message = 'Press enter try again') {
     Helpers.log(message);
@@ -351,18 +365,53 @@ export class HelpersProcess {
       async() {
         return Helpers.runAsyncIn(command, options);
       },
-      unitlOutputContains(msg: string) {
-        let nextStep = false;
-        return new Promise<any>(resolve => {
+      unitlOutputContains(stdoutMsg: string | string[], stderMsg?: string | string[]) {
+        let isResolved = false;
+        return new Promise<any>((resolve, reject) => {
+
+          if (_.isString(stdoutMsg)) {
+            stdoutMsg = [stdoutMsg];
+          }
+          if (_.isString(stderMsg)) {
+            stderMsg = [stderMsg];
+          }
+          if (!_.isArray(stdoutMsg)) {
+            reject(`[unitlOutputContains] Message not a array`);
+          }
+
           const proc = Helpers.runAsyncIn(command, options);
+          proc.stderr.on('data', (message) => {
+            const data: string = message.toString().trim();
+            if (!isResolved) {
+              for (let index = 0; index < stderMsg.length; index++) {
+                const rejectm = stderMsg[index];
+                if ((data.search(rejectm) !== -1)) {
+                  Helpers.info(`[unitlOutputContains] Rejected move to next step...`);
+                  isResolved = true;
+                  reject();
+                  proc.kill('SIGINT');
+                  break;
+                }
+              }
+            }
+          });
+
           proc.stdout.on('data', (message) => {
             const data: string = message.toString().trim();
-            if (!nextStep && (data.search(msg) !== -1)) {
-              Helpers.info(`[unitlOutputContains] Move to next step...`)
-              nextStep = true;
-              resolve()
+
+            if (!isResolved) {
+              for (let index = 0; index < stdoutMsg.length; index++) {
+                const m = stdoutMsg[index];
+                if ((data.search(m) !== -1)) {
+                  Helpers.info(`[unitlOutputContains] Move to next step...`)
+                  isResolved = true;
+                  resolve();
+                  break;
+                }
+              }
             }
-          })
+
+          });
         });
       }
     }
