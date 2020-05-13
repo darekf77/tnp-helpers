@@ -27,13 +27,13 @@ export class HelpersFileFolders {
       return path.extname(filePath) === '.lnk';
     } else {
       if (!fse.existsSync(filePath)) {
-        Helpers.error(`File or folder "${filePath}" doesn't exist.`)
+        return false;
       }
       try {
         filePath = Helpers.removeSlashAtEnd(filePath);
         const command = `[[ -L "${filePath}" && -d "${filePath}" ]] && echo "symlink"`;
         // console.log(command)
-        const res = Helpers.run(command, { output: false }).sync().toString()
+        const res = Helpers.run(command, { output: false, biggerBuffer: false }).sync().toString()
         return res.trim() === 'symlink'
       } catch (error) {
         return false;
@@ -135,17 +135,34 @@ export class HelpersFileFolders {
     return eval(fileContent)
   }
 
-  tryCopyFrom(source, destination, options = {}) {
+  tryCopyFrom(source: string, destination: string, options = {}) {
     Helpers.log(`Trying to copy from: ${source} to ${destination}`);
     if (fse.existsSync(source) && !fse.lstatSync(source).isDirectory()) {
       // Helpers.warn(`[tryCopyFrom] This source is not directory: ${source} to ${destination}`);
       Helpers.copyFile(source, destination);
       return;
     }
-    fse.copySync(source, destination, _.merge({
-      overwrite: true,
-      recursive: true
-    }, options));
+    if (fse.existsSync(destination.replace(/\/$/, ''))) {
+      const destMaybe = destination.replace(/\/$/, '');
+      const stats = fse.lstatSync(destMaybe);
+      const isNotDirectory = !stats.isDirectory();
+      const isSymbolicLink = stats.isSymbolicLink()
+      if (isNotDirectory || isSymbolicLink) {
+        rimraf.sync(destMaybe);
+      }
+    }
+    try {
+      fse.copySync(source, destination, _.merge({
+        overwrite: true,
+        recursive: true
+      }, options));
+    } catch (error) {
+      rimraf.sync(destination);
+      fse.copySync(source, destination, _.merge({
+        overwrite: true,
+        recursive: true
+      }, options));
+    }
   }
   removeFileIfExists(absoluteFilePath: string, options?: { modifiedFiles?: Models.other.ModifiedFiles; }) {
     // console.log(`removeFileIfExists: ${absoluteFilePath}`)

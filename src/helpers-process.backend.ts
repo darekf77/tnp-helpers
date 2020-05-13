@@ -206,6 +206,35 @@ export class HelpersProcess {
   //     ${JSON.stringify(aa)}
   //   `);
   // })
+  formatPath(pathToFileOrFolder: string) {
+    if (!_.isString(pathToFileOrFolder)) {
+      return `\n< provided path is not string: ${pathToFileOrFolder} >\n`;
+    }
+    if (!path.isAbsolute(pathToFileOrFolder)) {
+      return `\n
+${Helpers.terminalLine()}
+relativePath: ${pathToFileOrFolder}
+${Helpers.terminalLine()}\n`;
+    }
+    if (!fse.existsSync(pathToFileOrFolder)) {
+      return `\n
+${Helpers.terminalLine()}
+< provided path does not exist: ${pathToFileOrFolder} >
+${Helpers.terminalLine()}\n`;
+    }
+
+    const isDirectory = fse.lstatSync(pathToFileOrFolder).isDirectory();
+    return `
+${Helpers.terminalLine()}
+<-- ${isDirectory ? 'Path to directory': 'Path to file' }: -->
+${
+      isDirectory ? pathToFileOrFolder.split('/').map(c => `/${c}`).join('\n').replace(/^\//, '') : (
+        path.dirname(pathToFileOrFolder.split('/').map(c => `/${c}`).join('\n').replace(/^\//, ''))
+        + '\n/' + chalk.bold(path.basename(pathToFileOrFolder))
+      )
+      }
+${ Helpers.terminalLine()}\n`;
+  };
 
   modifyLineByLine(
     data: string | Buffer | Error,
@@ -263,9 +292,9 @@ export class HelpersProcess {
   checkProcess(dirPath: string, command: string) {
     if (!fse.existsSync(dirPath)) {
       Helpers.error(`
-  Path for process cwd doesn't exist: ${dirPath}
-  command: ${command}
-  `);
+Path for process cwd doesn't exist: ${dirPath}
+command: ${command}
+`);
     }
     if (!command) {
       Helpers.error(`Bad command: ${command}`);
@@ -342,7 +371,7 @@ export class HelpersProcess {
 
   run(command: string,
     options?: Models.dev.RunOptions) {
-    // console.log(`Command: "${command}" , options "${_.isObject(options) ? JSON.stringify(options) : options}"`)
+
     if (!options) options = {};
     if (options.output === undefined) options.output = true;
     if (options.biggerBuffer === undefined) options.biggerBuffer = false;
@@ -355,7 +384,7 @@ export class HelpersProcess {
           const proc = Helpers.runSyncIn(command, options);
           return proc as any;
           // } catch (error) {
-          //   console.log(`Trying again command: ${command}`)
+
           //  TODO: WAIT FUNCTION HERE
           //   return Helpers.run(command, options).sync()
           // }
