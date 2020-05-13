@@ -410,6 +410,18 @@ export class HelpersProcess {
                 }
               }
             }
+            if (!isResolved) {
+              for (let index = 0; index < stderMsg.length; index++) {
+                const rejectm = stderMsg[index];
+                if ((data.search(rejectm) !== -1)) {
+                  Helpers.info(`[unitlOutputContains] Rejected move to next step...`);
+                  isResolved = true;
+                  reject();
+                  proc.kill('SIGINT');
+                  break;
+                }
+              }
+            }
 
           });
         });
