@@ -17,7 +17,23 @@ const encoding = 'utf8';
 
 export class HelpersFileFolders {
 
+  getValueFromJSON(filepath: string, lodashGetPath: string, defaultValue = void 0) {
+    if (!fse.existsSync(filepath)) {
+      return defaultValue;
+    }
+    const json = Helpers.readJson(filepath);
+    return _.get(json, lodashGetPath, defaultValue);
+  }
 
+  setValueToJSON(filepath: string, lodashGetPath: string, value: any) {
+    if (!fse.existsSync(filepath)) {
+      Helpers.error(`Not able to set value in json: ${filepath}`, true, true);
+      return;
+    }
+    const json = Helpers.readJson(filepath);
+    _.set(json, lodashGetPath, value);
+    Helpers.writeFile(filepath, json);
+  }
 
   isLink(filePath: string) {
 
@@ -522,6 +538,19 @@ ${sourceData}
     return fse.readFileSync(absoluteFilePath, {
       encoding
     }).toString().trim()
+  }
+
+  readJson(absoluteFilePath: string) {
+    if (!fse.existsSync(absoluteFilePath)) {
+      return {};
+    }
+    try {
+      const fileContent = Helpers.readFile(absoluteFilePath);
+      let json = JSON.parse(fileContent);
+      return json;
+    } catch (error) {
+      return {};
+    }
   }
 
   /**

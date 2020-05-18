@@ -226,7 +226,7 @@ ${Helpers.terminalLine()}\n`;
     const isDirectory = fse.lstatSync(pathToFileOrFolder).isDirectory();
     return `
 ${Helpers.terminalLine()}
-<-- ${isDirectory ? 'Path to directory': 'Path to file' }: -->
+<-- ${isDirectory ? 'Path to directory' : 'Path to file'}: -->
 ${
       isDirectory ? pathToFileOrFolder.split('/').map(c => `/${c}`).join('\n').replace(/^\//, '') : (
         path.dirname(pathToFileOrFolder.split('/').map(c => `/${c}`).join('\n').replace(/^\//, ''))
@@ -393,6 +393,25 @@ command: ${command}
       },
       async() {
         return Helpers.runAsyncIn(command, options);
+      },
+      asyncAsPromise(): Promise<void> {
+        let isResolved = false;
+        return new Promise<any>((resolve, reject) => {
+          const proc = Helpers.runAsyncIn(command, options);
+          proc.on('exit', () => {
+            if (!isResolved) {
+              isResolved = true;
+              resolve();
+            }
+
+          });
+          proc.on('error', () => {
+            if (!isResolved) {
+              isResolved = true;
+              reject();
+            }
+          });
+        });
       },
       unitlOutputContains(stdoutMsg: string | string[], stderMsg?: string | string[]) {
         let isResolved = false;
