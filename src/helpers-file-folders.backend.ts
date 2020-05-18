@@ -127,26 +127,57 @@ export class HelpersFileFolders {
     }
     let fileContent = fse.readFileSync(jsFilePath).toLocaleString();
 
-    const stringForRegex = `require\\(("|')\\.\\/([a-zA-Z0-9]|\\-|\\_|\\+|\\.)*("|')\\)`;
-    Helpers.log(`stringForRegex: ${stringForRegex}`);
+    (() => {
+      const stringForRegex = `require\\(("|')\\.\\/([a-zA-Z0-9]|\\/|\\-|\\_|\\+|\\.)*("|')\\)`;
+      Helpers.log(`stringForRegex: ${stringForRegex}`);
 
-    fileContent = fileContent.split('\n').map(line => {
-      const matches = line.match(new RegExp(stringForRegex));
-      if (matches !== null) {
-        // console.log('matched', matches)
-        const rep = _.first(matches);
-        if (rep) {
-          const newFilename = path.join(path.dirname(jsFilePath), rep.split('(')[1].replace(/("|'|\))/g, ''));
-          line = line.replace(rep, `require('${newFilename}')`);
+      fileContent = fileContent.split('\n').map(line => {
+        const matches = line.match(new RegExp(stringForRegex));
+        if (matches !== null) {
+          // console.log('matched', matches)
+          const rep = _.first(matches);
+          if (rep) {
+            const newFilename = path.join(path.dirname(jsFilePath), rep.split('(')[1].replace(/("|'|\))/g, ''));
+            line = line.replace(rep, `require('${newFilename}')`);
+          }
+          // console.log(line)
         }
-        // console.log(line)
-      }
 
-      // console.log('matched', matches)
+        // console.log('matched', matches)
 
 
-      return line;
-    }).join('\n');
+        return line;
+      }).join('\n');
+    })();
+
+    (() => {
+      const stringForRegex = `require\\(("|')([a-zA-Z0-9]|\\/|\\-|\\_|\\+|\\.)*("|')\\)`;
+      Helpers.log(`stringForRegex: ${stringForRegex}`);
+
+      fileContent = fileContent.split('\n').map(line => {
+        // console.log(`LINE: "${line}"`)
+        const matches = line.match(new RegExp(stringForRegex));
+        if (matches !== null) {
+          // console.log('matched', matches)
+          const rep = _.first(matches);
+          if (rep) {
+            const relativePart = rep.split('(')[1].replace(/("|'|\))/g, '');
+            // console.log(`RELATIVE PART: "${relativePart}"`)
+            if (relativePart.search('/') !== -1) {
+              const newFilename = path.join(path.dirname(jsFilePath), 'node_modules', relativePart);
+              line = line.replace(rep, `require('${newFilename}')`);
+            }
+          }
+          // console.log(line)
+        }
+
+        // console.log('matched', matches)
+
+
+        return line;
+      }).join('\n');
+    })();
+
 
     return eval(fileContent)
   }
