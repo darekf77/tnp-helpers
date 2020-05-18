@@ -163,7 +163,7 @@ export class HelpersFileFolders {
           if (rep) {
             const relativePart = rep.split('(')[1].replace(/("|'|\))/g, '');
             // console.log(`RELATIVE PART: "${relativePart}"`)
-            if (relativePart.search('/') !== -1) {
+            if (relativePart.search('/') !== -1 && !relativePart.startsWith('/')) {
               const newFilename = path.join(path.dirname(jsFilePath), 'node_modules', relativePart);
               line = line.replace(rep, `require('${newFilename}')`);
             }
