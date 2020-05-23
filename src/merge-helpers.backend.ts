@@ -6,9 +6,10 @@ import * as glob from 'glob';
 import * as watch from 'watch'
 // local
 type Project = any;
-// import { Project } from '../../abstract';
-declare const ENV: any;
-const config = ENV.config as any;
+if (!global['ENV']) {
+  global['ENV'] = {};
+}
+const config = global['ENV'].config as any;
 import { Helpers } from './index';
 import chalk from 'chalk';
 //#endregion

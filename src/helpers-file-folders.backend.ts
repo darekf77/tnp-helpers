@@ -9,8 +9,10 @@ import { JSON10 } from 'json10';
 
 
 import { Helpers } from './index';
-declare const ENV: any;
-const config = ENV.config as any;
+if (!global['ENV']) {
+  global['ENV'] = {};
+}
+const config = global['ENV'].config as any;
 import { Models } from 'tnp-models';
 
 const encoding = 'utf8';

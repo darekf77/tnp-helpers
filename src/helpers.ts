@@ -23,8 +23,10 @@ import { Models } from 'tnp-models';
 //#endregion
 import { Helpers } from './index';
 import { CLASS } from 'typescript-class-helpers';
-declare const ENV: any;
-const config = ENV.config as any;
+if (!global['ENV']) {
+  global['ENV'] = {};
+}
+const config = global['ENV'].config as any;
 
 export function applyMixins(derivedCtor: any, baseCtors: any[]) {
   baseCtors.forEach(baseCtor => {
@@ -78,12 +80,12 @@ export class HelpersTnp {
     return HelperNg2Logger.isNode;
   }
 
-  async  runSyncOrAsync(fn: Function, firstArg?: any) {
+  async runSyncOrAsync(fn: Function, ...firstArg: any[]) {
     if (_.isUndefined(fn)) {
       return;
     }
     // let wasPromise = false;
-    let promisOrValue = fn(firstArg);
+    let promisOrValue = fn(...firstArg);
     if (promisOrValue instanceof Promise) {
       // wasPromise = true;
       promisOrValue = Promise.resolve(promisOrValue)

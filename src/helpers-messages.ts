@@ -5,8 +5,10 @@ import { CLASS } from 'typescript-class-helpers';
 
 
 declare const global: any;
-declare const ENV: any;
-const config = ENV.config as any;
+if (!global['ENV']) {
+  global['ENV'] = {};
+}
+const config = global['ENV'].config as any;
 
 import { Helpers } from './index';
 

@@ -1,7 +1,9 @@
 import * as glob from 'glob';
 import * as path from 'path';
-declare const ENV: any;
-const config = ENV.config as any;
+if (!global['ENV']) {
+  global['ENV'] = {};
+}
+const config = global['ENV'].config as any;
 import { HelpersMerge } from './merge-helpers.backend';
 
 export class HelpersMorphiFramework {
