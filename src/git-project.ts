@@ -7,11 +7,14 @@ const Helpers = HelpersTnp.Instance;
 import { Models } from 'tnp-models';
 
 export abstract class ProjectGit {
+
+  //#region @backend
   public run(this: Project, command: string, options?: Models.dev.RunOptions) {
     if (!options) { options = {}; }
     if (!options.cwd) { options.cwd = this.location; }
     return Helpers.run(command, options);
   }
+  //#endregion
 
   //#region @backend
   public get git(this: Project, ) {
