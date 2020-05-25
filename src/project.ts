@@ -6,7 +6,9 @@ import * as _ from 'lodash';
 import * as json5 from 'json5';
 export { ChildProcess } from 'child_process';
 import { ChildProcess } from 'child_process';
+import { ProjectGit } from './git-project';
 //#endregion
+
 declare const global: any;
 if (!global['ENV']) {
   global['ENV'] = {};
@@ -14,10 +16,10 @@ if (!global['ENV']) {
 const config = global['ENV'].config as any;
 import { CLASS } from 'typescript-class-helpers';
 import { Models } from 'tnp-models';
+import { Morphi } from 'morphi';
 import { HelpersTnp } from './helpers';
 const Helpers = HelpersTnp.Instance;
-import { ProjectGit } from './git-project';
-import { Morphi, ModelDataConfig } from 'morphi';
+
 
 function getClassFunction(className) {
   const classFN = CLASS.getBy(className) as any;
@@ -27,7 +29,11 @@ function getClassFunction(className) {
   return classFN;
 }
 
-export class Project<T = Models.other.IProject> extends ProjectGit implements Models.other.IProject {
+export class Project<T = Models.other.IProject>
+  //#region @backend
+  extends ProjectGit
+  //#endregion
+  implements Models.other.IProject {
   //#region @backend
   @Morphi.Orm.Column.Primary({ type: 'varchar', length: 400 })
   //#endregion
