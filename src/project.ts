@@ -120,12 +120,12 @@ export class Project<T = Models.other.IProject> extends ProjectGit implements Mo
       return alreadyExist as any;
     }
     if (!fse.existsSync(location)) {
-      Helpers.log(`[project.from] Cannot find project in location: ${location}`);
+      Helpers.log(`[tnp-helpers][project.from] Cannot find project in location: ${location}`, 1);
       Project.emptyLocations.push(location);
       return;
     }
     if (!PackageJSON.fromLocation(location)) {
-      Helpers.log(`[project.from] Cannot find package.json in location: ${location}`, 1);
+      Helpers.log(`[tnp-helpers][project.from] Cannot find package.json in location: ${location}`, 1);
       Project.emptyLocations.push(location);
       return;
     };
@@ -161,7 +161,7 @@ export class Project<T = Models.other.IProject> extends ProjectGit implements Mo
     // log(resultProject ? (`PROJECT ${resultProject.type} in ${location}`)
     //     : ('NO PROJECT FROM LOCATION ' + location))
 
-    Helpers.log(`[project.from] ${chalk.bold(resultProject.name)} from ...${location.substr(location.length - 100)}`, 1)
+    Helpers.log(`[tnp-helpers][project.from] ${chalk.bold(resultProject.name)} from ...${location.substr(location.length - 100)}`, 1)
     return resultProject as any;
   }
   //#endregion
@@ -175,7 +175,7 @@ export class Project<T = Models.other.IProject> extends ProjectGit implements Mo
     const { type, findGitRoot } = options;
 
     if (_.isString(type) && !Models.libs.LibTypeArr.includes(type)) {
-      Helpers.error(`[nearestTo] wrong type: ${type}`, false, true)
+      Helpers.error(`[tnp-helpers][project.nearestTo] wrong type: ${type}`, false, true)
     }
     if (fse.existsSync(absoluteLocation)) {
       absoluteLocation = fse.realpathSync(absoluteLocation)
@@ -254,7 +254,7 @@ export class Project<T = Models.other.IProject> extends ProjectGit implements Mo
 
     const current = Project.From(process.cwd())
     if (!current) {
-      Helpers.error(`Current location is not a ${chalk.bold('tnp')} type project.
+      Helpers.error(`[tnp-helpers] Current location is not a ${chalk.bold(config.frameworkName)} type project.
 
       location: "${process.cwd()}"
 
@@ -282,7 +282,7 @@ export class Project<T = Models.other.IProject> extends ProjectGit implements Mo
         tnpBundleTnpPath = Helpers.readFile(config.pathes.tnp_system_path_txt_tnp_bundle).toString().trim()
       }
       if (!fse.existsSync(tnpBundleTnpPath)) {
-        Helpers.error(`Please build you ${chalk.bold('tnp-npm-project')} first... `)
+        Helpers.error(`[tnp-helpers] Please build you ${chalk.bold('tnp-npm-project')} first... `)
       }
       frameworkLocation = Project.From(tnpBundleTnpPath)
     }
@@ -311,7 +311,7 @@ export class Project<T = Models.other.IProject> extends ProjectGit implements Mo
 
     const projectPath = path.join(config.pathes.projectsExamples(version).projectByType(libraryType));
     if (!fse.existsSync(projectPath)) {
-      Helpers.error(`Bad library type: ${libraryType} for this framework version: ${version}`, false, true);
+      Helpers.error(`[tnp-helpers] Bad library type: ${libraryType} for this framework version: ${version}`, false, true);
     }
     return Project.From<T>(projectPath);
   }

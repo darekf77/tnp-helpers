@@ -1,7 +1,7 @@
 //#region @backend
 import chalk from 'chalk';
 //#endregion
-import { CLASS } from 'typescript-class-helpers';
+import { PROGRESS_DATA } from 'tnp-models';
 
 declare const global: any;
 if (!global['ENV']) {
@@ -129,7 +129,6 @@ export class HelpersMessages {
       }
       console.log(chalk.green(details))
       if (global.tnpNonInteractive) {
-        const PROGRESS_DATA = CLASS.getBy('PROGRESS_DATA') as any;
         PROGRESS_DATA.log({ msg: details })
       }
     }
@@ -156,7 +155,6 @@ export class HelpersMessages {
       }
       console.log(chalk.gray(details))
       if (global.tnpNonInteractive) {
-        const PROGRESS_DATA = CLASS.getBy('PROGRESS_DATA') as any;
         PROGRESS_DATA.log({ msg: details })
       }
     }
