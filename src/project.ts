@@ -334,10 +334,11 @@ export class Project<T = Models.other.IProject> extends ProjectGit implements Mo
       },
     })
   }
-  browser: Models.other.IProject = {} as any;
-  cache = {};
 
   //#endregion
+
+  browser: Models.other.IProject = {} as any;
+  cache = {};
 
   /**
      * Do use this variable for comparatios
