@@ -2,7 +2,8 @@ import * as fse from 'fs-extra';
 import * as path from 'path';
 
 import { Project } from './project';
-import { Helpers } from 'tnp-helpers';
+import { HelpersTnp } from './helpers';
+const Helpers = HelpersTnp.Instance;
 import { Models } from 'tnp-models';
 
 export abstract class ProjectGit {
