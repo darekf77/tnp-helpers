@@ -3,7 +3,6 @@ import chalk from 'chalk';
 //#endregion
 import { CLASS } from 'typescript-class-helpers';
 
-
 declare const global: any;
 if (!global['ENV']) {
   global['ENV'] = {};
