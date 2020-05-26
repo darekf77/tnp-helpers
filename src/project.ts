@@ -29,11 +29,12 @@ function getClassFunction(className) {
   return classFN;
 }
 
-export class Project<T = Models.other.IProject>
+export class Project<T extends Models.other.IProject = any>
   //#region @backend
   extends ProjectGit
+  implements Models.other.IProject
   //#endregion
-  implements Models.other.IProject {
+   {
   //#region @backend
   @Morphi.Orm.Column.Primary({ type: 'varchar', length: 400 })
   //#endregion
@@ -66,24 +67,24 @@ export class Project<T = Models.other.IProject>
   public resources: string[];
   public env: Models.env.EnvConfig;
   public allowedEnvironments: Models.env.EnvironmentName[];
-  // @ts-ignore
+  //#region @backend
   public children: T[];
-  // @ts-ignore
   public grandpa: T;
-  // @ts-ignore
+
   public distribution: T;
-  // @ts-ignore
+
   public childrenThatAreLibs?: T[];
-  // @ts-ignore
+
   public childrenThatAreClients?: T[];
-  // @ts-ignore
+
   public childrenThatAreThirdPartyInNodeModules?: T[];
-  // @ts-ignore
+
   public parent: T;
-  // @ts-ignore
+
   public preview: T;
-  // @ts-ignore
+
   public baseline: T;
+  //#endregion
 
   public static projects: Project[] = [];
   /**

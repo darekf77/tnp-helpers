@@ -153,7 +153,9 @@ export class HelpersMessages {
       } else {
         global[KEY.LAST_LOG] = details;
       }
-      console.log(chalk.gray(details))
+      if(global.tnp_normal_mode) {
+        console.log(chalk.gray(details))
+      }
       if (global.tnpNonInteractive) {
         PROGRESS_DATA.log({ msg: details })
       }
