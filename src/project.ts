@@ -2,42 +2,40 @@
 import chalk from 'chalk';
 import * as fse from 'fs-extra';
 import * as path from 'path';
-import * as _ from 'lodash';
 import * as json5 from 'json5';
 export { ChildProcess } from 'child_process';
 import { ChildProcess } from 'child_process';
 import { ProjectGit } from './git-project';
-//#endregion
-
 declare const global: any;
 if (!global['ENV']) {
   global['ENV'] = {};
 }
 const config = global['ENV'].config as any;
+//#endregion
+import * as _ from 'lodash';
 import { CLASS } from 'typescript-class-helpers';
 import { Models } from 'tnp-models';
 import { Morphi } from 'morphi';
 import { HelpersTnp } from './helpers';
 const Helpers = HelpersTnp.Instance;
 
-
-function getClassFunction(className) {
-  const classFN = CLASS.getBy(className) as any;
-  if (!classFN) {
-    Helpers.error(`[tnp-helpers][Project.From] cannot find class function by name ${className}`)
-  }
-  return classFN;
-}
-
-export class Project<T extends Models.other.IProject = any>
+export class Project<T extends Project<any> = any>
   //#region @backend
   extends ProjectGit
-  implements Models.other.IProject
-  //#endregion
-   {
+//#endregion
+{
   //#region @backend
   @Morphi.Orm.Column.Primary({ type: 'varchar', length: 400 })
   //#endregion
+
+  protected cache = {};
+
+  /**
+   * Do use this variable for comparatios
+   * ONLY FOR VIEWING
+   */
+  public readonly _type: Models.libs.LibType;
+  public browser: Pick<Project<any>, 'location' | 'name'> = {} as any;
   public location: string;
   public name: string;
   public genericName: string;
@@ -67,7 +65,7 @@ export class Project<T extends Models.other.IProject = any>
   public resources: string[];
   public env: Models.env.EnvConfig;
   public allowedEnvironments: Models.env.EnvironmentName[];
-  //#region @backend
+
   public children: T[];
   public grandpa: T;
 
@@ -84,17 +82,16 @@ export class Project<T extends Models.other.IProject = any>
   public preview: T;
 
   public baseline: T;
-  //#endregion
 
-  public static projects: Project[] = [];
+  public static projects: Project<any>[] = [];
   /**
    * To speed up checking folder I am keeping pathes for alterdy checked folder
    * This may break things that are creating new projects
    */
   public static emptyLocations: string[] = [];
 
-  //#region @backend
   static typeFrom(location: string): Models.libs.LibType {
+    //#region @backendFunc
     const PackageJSON = CLASS.getBy('PackageJSON') as any;
 
     if (!fse.existsSync(location)) {
@@ -103,11 +100,11 @@ export class Project<T extends Models.other.IProject = any>
     const packageJson = PackageJSON.fromLocation(location);
     const type = packageJson.type;
     return type;
+    //#endregion
   }
-  //#endregion
 
-  //#region @backend
-  public static From<T = Project>(location: string): T {
+  public static From<T = Project<any>>(location: string): T {
+    //#region @backendFunc
     const PackageJSON = CLASS.getBy('PackageJSON') as any;
 
     if (!_.isString(location)) {
@@ -139,7 +136,7 @@ export class Project<T extends Models.other.IProject = any>
     const type = this.typeFrom(location);
 
     // console.log(`TYpe "${type}" for ${location} `)
-    let resultProject: Project;
+    let resultProject: Project<any>;
     if (type === 'isomorphic-lib') {
       resultProject = new (getClassFunction('ProjectIsomorphicLib'))(location);
     }
@@ -170,13 +167,13 @@ export class Project<T extends Models.other.IProject = any>
 
     Helpers.log(`[tnp-helpers][project.from] ${chalk.bold(resultProject.name)} from ...${location.substr(location.length - 100)}`, 1)
     return resultProject as any;
+    //#endregion
   }
-  //#endregion
 
-  //#region @backend
   public static nearestTo<T = Project>(
     absoluteLocation: string,
     options?: { type?: Models.libs.LibType; findGitRoot?: boolean; }): T {
+    //#region @backendFunc
 
     options = options || {};
     const { type, findGitRoot } = options;
@@ -230,9 +227,8 @@ export class Project<T extends Models.other.IProject = any>
       }
     }
     return project as any;
+    //#endregion
   }
-  //#endregion
-
 
   public static DefaultPortByType(type: Models.libs.LibType): number {
     if (type === 'workspace') { return 5000; }
@@ -244,7 +240,6 @@ export class Project<T extends Models.other.IProject = any>
     if (type === 'container' || type === 'unknow-npm-project') {
       return;
     }
-    // error(`[project] Cannot resove type for: ${type}`);
   }
 
   public static get isBundleMode() {
@@ -256,9 +251,8 @@ export class Project<T extends Models.other.IProject = any>
     //#endregion
   }
 
-  //#region @backend
-  static get Current() {
-
+  static get Current(): Project<any> {
+    //#region @backendFunc
     const current = Project.From(process.cwd())
     if (!current) {
       Helpers.error(`[tnp-helpers] Current location is not a ${chalk.bold(config.frameworkName)} type project.
@@ -267,14 +261,12 @@ export class Project<T extends Models.other.IProject = any>
 
       }`, false, false);
     }
-    // log('CURRENT', current.location)
     return current;
+    //#endregion
   }
-  //#endregion
 
-  //#region @backend
-  static get Tnp() {
-
+  static get Tnp(): Project<any> {
+    //#region @backendFunc
     let frameworkLocation = Project.From(config.pathes.tnp_folder_location);
     if (frameworkLocation) {
       const currentPathInSystem = path.join(frameworkLocation.location, config.file.tnp_system_path_txt);
@@ -294,13 +286,17 @@ export class Project<T extends Models.other.IProject = any>
       frameworkLocation = Project.From(tnpBundleTnpPath)
     }
     return frameworkLocation;
+    //#endregion
   }
-  //#endregion
 
-  //#region @backend
   public static by<T = Project>(
     libraryType: Models.libs.NewFactoryType,
-    version: Models.libs.FrameworkVersion = config.defaultFrameworkVersion): T {
+    version: Models.libs.FrameworkVersion
+      //#region @backend
+      = config.defaultFrameworkVersion
+    //#endregion
+  ): T {
+    //#region @backendFunc
 
     if (libraryType === 'workspace') {
       const workspaceProject = Project.From(config.pathes.projectsExamples(version).workspace);
@@ -321,13 +317,13 @@ export class Project<T extends Models.other.IProject = any>
       Helpers.error(`[tnp-helpers] Bad library type: ${libraryType} for this framework version: ${version}`, false, true);
     }
     return Project.From<T>(projectPath);
+    //#endregion
   }
-  //#endregion
 
-  //#region @backend
-
-  defineProperty(variableName: string, classFn: Function) {
+  defineProperty<T>(variableName: keyof T, classFn: Function) {
+    //#region @backendFunc
     const that = this;
+
     const prefixedName = `__${variableName}`
     Object.defineProperty(this, variableName, {
       get: function () {
@@ -340,18 +336,8 @@ export class Project<T extends Models.other.IProject = any>
         that[prefixedName] = v;
       },
     })
+    //#endregion
   }
-
-  //#endregion
-
-  browser: Models.other.IProject = {} as any;
-  cache = {};
-
-  /**
-     * Do use this variable for comparatios
-     * ONLY FOR VIEWING
-     */
-  public readonly _type: Models.libs.LibType;
 
   public setType(this: Project, type: Models.libs.LibType) {
     // @ts-ignore
@@ -366,3 +352,17 @@ export class Project<T extends Models.other.IProject = any>
   }
 
 }
+
+
+export type ProjectBuild = { project: Project; appBuild: boolean; };
+
+
+//#region @backend
+function getClassFunction(className) {
+  const classFN = CLASS.getBy(className) as any;
+  if (!classFN) {
+    Helpers.error(`[tnp-helpers][Project.From] cannot find class function by name ${className}`)
+  }
+  return classFN;
+}
+//#endregion

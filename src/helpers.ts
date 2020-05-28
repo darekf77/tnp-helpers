@@ -20,13 +20,15 @@ import { HelpersNpm } from './helpers-npm.backend';
 import { HelpersTerminal } from './helpers-system-terminal.backend';
 import { HelpersFileFolders } from './helpers-file-folders.backend';
 import { Models } from 'tnp-models';
-//#endregion
-import { Helpers } from './index';
-import { CLASS } from 'typescript-class-helpers';
 if (!global['ENV']) {
   global['ENV'] = {};
 }
 const config = global['ENV'].config as any;
+import chalk from 'chalk';
+//#endregion
+import { Helpers } from './index';
+import { CLASS } from 'typescript-class-helpers';
+import { Morphi } from 'morphi';
 
 export function applyMixins(derivedCtor: any, baseCtors: any[]) {
   baseCtors.forEach(baseCtor => {
@@ -38,7 +40,7 @@ export function applyMixins(derivedCtor: any, baseCtors: any[]) {
 
 
 export class HelpersTnp {
-  //#region singleton
+
   private static _instance: HelpersTnp;
   public static get Instance() {
     if (!HelpersTnp._instance) {
@@ -46,7 +48,7 @@ export class HelpersTnp {
     }
     return HelpersTnp._instance;
   }
-  //#endregion
+
 
   //#region @backend
   readonly processes: child.ChildProcess[] = [];
@@ -94,6 +96,23 @@ export class HelpersTnp {
     return promisOrValue;
   }
 
+  async mesureExectionInMs(
+    description: string,
+    functionToExecute: Function,
+    ...functionArguments: any[]): Promise<number> {
+    var start = new Date()
+    await Helpers.runSyncOrAsync(functionToExecute, ...functionArguments);
+    //@ts-ignore
+    var end = new Date() - start
+    if (Morphi.IsBrowser) {
+      Helpers.info(`Execution time: ${end.toString()}ms for "${description}"`);
+    }
+    //#region @backend
+    Helpers.info(`Execution time: ${chalk.bold(end.toString())}ms for "${chalk.bold(description)}"`);
+    //#endregion
+    return end;
+  }
+
   conditionWait = conditionWait;
 
   waitForCondition(conditionFn: (any) => boolean, howOfftenCheckInMs = 1000) {
@@ -113,10 +132,12 @@ export class HelpersTnp {
   }
 
   getBrowserVerPath(moduleName?: string) {
+    //#region @backend
     if (!moduleName) {
       return config.folder.browser;
     }
     return `${config.folder.browser}-for-${moduleName}`;
+    //#endregion
   }
 
   getMethodName(obj, method): string {

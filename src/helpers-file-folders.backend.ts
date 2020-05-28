@@ -419,7 +419,7 @@ export class HelpersFileFolders {
     });
   }
 
-  copy(sourceDir: string, destinationDir: string, options?: { filter: any; overwrite?: boolean, recursive?: boolean }) {
+  copy(sourceDir: string, destinationDir: string, options?: { filter?: any; overwrite?: boolean, recursive?: boolean }) {
     // sourceDir = sourceDir ? (sourceDir.replace(/\/$/, '')) : sourceDir;
     // destinationDir = destinationDir ? (destinationDir.replace(/\/$/, '')) : destinationDir;
     if (!fse.existsSync(sourceDir)) {

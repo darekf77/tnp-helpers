@@ -1,13 +1,13 @@
 //#region @backend
 import chalk from 'chalk';
-//#endregion
-import { PROGRESS_DATA } from 'tnp-models';
 
 declare const global: any;
 if (!global['ENV']) {
   global['ENV'] = {};
 }
 const config = global['ENV'].config as any;
+//#endregion
+import { PROGRESS_DATA } from 'tnp-models';
 
 import { Helpers } from './index';
 
@@ -140,10 +140,10 @@ export class HelpersMessages {
       console.log(details);
       return;
     }
+    //#region @backend
     if (debugLevel > global.verboseLevel) {
       return;
     }
-    //#region @backend
     // console.log('global.muteMessages', global.muteMessages);
     // console.log('global.hideLog', global.hideLog);
     if ((!global.muteMessages && !global.hideLog)) {
@@ -153,7 +153,7 @@ export class HelpersMessages {
       } else {
         global[KEY.LAST_LOG] = details;
       }
-      if(global.tnp_normal_mode) {
+      if (global.tnp_normal_mode) {
         console.log(chalk.gray(details))
       }
       if (global.tnpNonInteractive) {
