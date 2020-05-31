@@ -131,7 +131,7 @@ export class HelpersFileFolders {
 
     (() => {
       const stringForRegex = `require\\(("|')\\.\\/([a-zA-Z0-9]|\\/|\\-|\\_|\\+|\\.)*("|')\\)`;
-      Helpers.log(`stringForRegex: ${stringForRegex}`);
+      Helpers.log(`stringForRegex: ${stringForRegex}`, 1);
 
       fileContent = fileContent.split('\n').map(line => {
         const matches = line.match(new RegExp(stringForRegex));
@@ -213,6 +213,17 @@ export class HelpersFileFolders {
       }, options));
     }
   }
+
+  removeIfExists(absoluteFileOrFolderPath: string) {
+    if (fse.existsSync(absoluteFileOrFolderPath)) {
+      if (fse.lstatSync(absoluteFileOrFolderPath).isDirectory()) {
+        fse.removeSync(absoluteFileOrFolderPath);
+      } else {
+        fse.unlinkSync(absoluteFileOrFolderPath);
+      }
+    }
+  }
+
   removeFileIfExists(absoluteFilePath: string, options?: { modifiedFiles?: Models.other.ModifiedFiles; }) {
     // console.log(`removeFileIfExists: ${absoluteFilePath}`)
     const { modifiedFiles } = options || { modifiedFiles: { modifiedFiles: [] } };
@@ -279,10 +290,6 @@ export class HelpersFileFolders {
   remove(fileOrFolderPathOrPatter: string, exactFolder = false) {
     Helpers.log(`[tnp-helpers][remove]: ${fileOrFolderPathOrPatter}`);
     if (exactFolder) {
-      if (!fse.existsSync(fileOrFolderPathOrPatter)) {
-        Helpers.warn(`[remove] Folder doesnt not exists: ${fileOrFolderPathOrPatter}`)
-        return;
-      }
       rimraf.sync(fileOrFolderPathOrPatter, { glob: false, disableGlob: true, });
       return;
     }
