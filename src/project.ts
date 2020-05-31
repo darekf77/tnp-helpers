@@ -165,7 +165,12 @@ export class Project<T extends Project<any> = any>
     // log(resultProject ? (`PROJECT ${resultProject.type} in ${location}`)
     //     : ('NO PROJECT FROM LOCATION ' + location))
 
-    Helpers.log(`[tnp-helpers][project.from] ${chalk.bold(resultProject.name)} from ...${location.substr(location.length - 100)}`, 1)
+    if (resultProject) {
+      Helpers.log(`[tnp-helpers][project.from] ${chalk.bold(resultProject.name)} from ...${location.substr(location.length - 100)}`, 1);
+    } else {
+      Helpers.log(`[tnp-helpers][project.from] project not found in ${location}`, 1);
+    }
+
     return resultProject as any;
     //#endregion
   }
