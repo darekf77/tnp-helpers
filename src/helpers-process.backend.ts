@@ -376,6 +376,9 @@ command: ${command}
     if (options.output === undefined) options.output = true;
     if (options.biggerBuffer === undefined) options.biggerBuffer = false;
     if (options.cwd === undefined) options.cwd = process.cwd()
+    if (!_.isString(command)) {
+      Helpers.error(`[tnp-helper] command is not a string`)
+    }
     return {
       sync(): Buffer {
         if (_.isNumber(options.tryAgainWhenFailAfter) && options.tryAgainWhenFailAfter > 0) {
