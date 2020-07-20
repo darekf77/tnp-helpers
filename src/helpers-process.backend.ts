@@ -228,8 +228,8 @@ ${Helpers.terminalLine()}\n`;
 ${Helpers.terminalLine()}
 <-- ${isDirectory ? 'Path to directory' : 'Path to file'}: -->
 ${
-      isDirectory ? pathToFileOrFolder.split('/').map(c => `/${c}`).join('\n').replace(/^\//, '') : (
-        path.dirname(pathToFileOrFolder.split('/').map(c => `/${c}`).join('\n').replace(/^\//, ''))
+      isDirectory ? pathToFileOrFolder.split('/').map(c => `/${c}`).join('').replace(/^\//, '') : (
+        path.dirname(pathToFileOrFolder.split('/').map(c => `/${c}`).join('').replace(/^\//, ''))
         + '\n/' + chalk.bold(path.basename(pathToFileOrFolder))
       )
       }

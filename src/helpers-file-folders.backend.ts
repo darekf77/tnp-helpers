@@ -37,6 +37,11 @@ export class HelpersFileFolders {
     Helpers.writeFile(filepath, json);
   }
 
+  isFolder(pathToFileOrMaybeFolder: string) {
+    return pathToFileOrMaybeFolder && fse.existsSync(pathToFileOrMaybeFolder) &&
+      fse.lstatSync(pathToFileOrMaybeFolder).isDirectory();
+  }
+
   isLink(filePath: string) {
 
     if (os.platform() === 'win32') {

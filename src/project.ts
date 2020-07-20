@@ -134,6 +134,7 @@ export class Project<T extends Project<any> = any>
       return;
     };
     const type = this.typeFrom(location);
+    checkIfTypeIsNotCorrect(type);
 
     // console.log(`TYpe "${type}" for ${location} `)
     let resultProject: Project<any>;
@@ -356,6 +357,8 @@ export class Project<T extends Project<any> = any>
     return !this.typeIs(...types);
   }
 
+
+
 }
 
 
@@ -369,5 +372,19 @@ function getClassFunction(className) {
     Helpers.error(`[tnp-helpers][Project.From] cannot find class function by name ${className}`)
   }
   return classFN;
+}
+
+
+function checkIfTypeIsNotCorrect(type) {
+  if (_.isString(type) && !Models.libs.LibTypeArr.includes(type as any)) {
+    Helpers.error(`Incorrect type: "${type}"
+
+    Please use one of this: ${Models.libs.LibTypeArr.join(',')}
+
+    in
+    package.json > ${config.frameworkName}.type
+
+    `, false, true);
+  }
 }
 //#endregion

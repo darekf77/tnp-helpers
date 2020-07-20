@@ -35,9 +35,11 @@ export abstract class ProjectGit {
           var test = self.run('git rev-parse --is-inside-work-tree',
             {
               cwd: self.location,
-              output: false
+              output: false,
+              silence: true
             }).sync();
         } catch (e) {
+          return false;
         }
         return !!test;
       },
