@@ -8,11 +8,13 @@ export class HelpersGit {
   lastCommitHash(directoryPath): string {
     try {
       const cwd = directoryPath;
-      let hash = child.execSync(`git log -1 --format="%H"`, { cwd }).toString().trim()
+      let hash = child.execSync(`git rev-parse HEAD &> /dev/null && git log -1 --format="%H"`, { cwd }).toString().trim()
       return hash;
     } catch (e) {
-      console.log(e)
-      Helpers.error(`Cannot counts commits in branch in: ${directoryPath}`)
+      Helpers.log(e, 1);
+      Helpers.log(`[lastCommitHash] Cannot counts commits in branch in: ${directoryPath}`, 1)
+      return null;
+
     }
 
   }
@@ -20,11 +22,13 @@ export class HelpersGit {
   lastCommitDate(directoryPath): Date {
     try {
       const cwd = directoryPath;
-      let unixTimestamp = child.execSync(`git log -1 --pretty=format:%ct`, { cwd }).toString().trim()
+      let unixTimestamp = child.execSync(`git rev-parse HEAD &> /dev/null && git log -1 --pretty=format:%ct`, { cwd }).toString().trim()
       return new Date(Number(unixTimestamp) * 1000)
     } catch (e) {
-      console.log(e)
-      Helpers.error(`Cannot counts commits in branch in: ${directoryPath}`)
+      Helpers.log(e, 1);
+      Helpers.log(`[lastCommitDate] Cannot counts commits in branch in: ${directoryPath}`, 1)
+      return null;
+
     }
 
   }
@@ -32,13 +36,15 @@ export class HelpersGit {
 
   countCommits(directoryPath) {
     try {
+      // git rev-parse HEAD &> /dev/null check if any commits
       const cwd = directoryPath;
       let currentLocalBranch = child.execSync(`git branch | sed -n '/\* /s///p'`, { cwd }).toString().trim()
-      let value = child.execSync(`git rev-list --count ${currentLocalBranch}`, { cwd }).toString().trim()
+      let value = child.execSync(`git rev-parse HEAD &> /dev/null && git rev-list --count ${currentLocalBranch}`, { cwd }).toString().trim()
       return Number(value);
     } catch (e) {
-      console.log(e)
-      Helpers.error(`Cannot counts commits in branch in: ${directoryPath}`)
+      Helpers.log(e, 1);
+      Helpers.log(`[countCommits] Cannot counts commits in branch in: ${directoryPath}`, 1)
+      return 0;
     }
 
   }

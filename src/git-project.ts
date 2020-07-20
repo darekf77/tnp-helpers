@@ -31,16 +31,19 @@ export abstract class ProjectGit {
         })
       },
       get isGitRepo() {
+
         try {
           var test = self.run('git rev-parse --is-inside-work-tree',
             {
               cwd: self.location,
-              output: false,
-              silence: true
+              output: false
             }).sync();
+
         } catch (e) {
+
           return false;
         }
+
         return !!test;
       },
       get isGitRoot() {
