@@ -15,7 +15,7 @@
     }
   },
   "name": "tnp-helpers",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -212,7 +212,7 @@
     "systeminformation": "^3.45.7",
     "task.js": "^0.1.5",
     "tnp-db": "0.0.1",
-    "tnp-helpers": "0.0.1",
+    "tnp-helpers": "0.0.2",
     "ts-loader": "7.0.4",
     "ts-node": "~8.3.0",
     "tsickle": "^0.26.0",
