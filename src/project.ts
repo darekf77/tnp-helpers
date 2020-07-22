@@ -46,6 +46,7 @@ export class Project<T extends Project<any> = any>
   public isCoreProject: boolean;
   public isCommandLineToolOnly: boolean;
   public isGenerated: boolean;
+  public isGeneratedForRelease: boolean;
   public isWorkspaceChildProject: boolean;
   public isBasedOnOtherProject: boolean;
   public isForRecreation: boolean;

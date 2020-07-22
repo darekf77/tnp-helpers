@@ -52,7 +52,7 @@ export class HelpersProcess {
   }
 
   pressKeyAndContinue(message = 'Press enter try again') {
-    Helpers.log(message);
+    Helpers.info(message);
     require('child_process').spawnSync('read _ ', { shell: true, stdio: [0, 1, 2] });
     // return new Promise((resovle) => {
     //   Helpers.log(message);
