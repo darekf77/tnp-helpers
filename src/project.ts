@@ -40,6 +40,7 @@ export class Project<T extends Project<any> = any>
   public name: string;
   public genericName: string;
   public isWorkspace: boolean;
+  public isDocker: boolean;
   public isSite: boolean;
   public isSiteInStrictMode?: boolean;
   public isSiteInDependencyMode?: boolean;
@@ -99,6 +100,9 @@ export class Project<T extends Project<any> = any>
       return void 0;
     }
     const packageJson = PackageJSON.fromLocation(location);
+    if (!_.isObject(packageJson)) {
+      return void 0;
+    }
     const type = packageJson.type;
     return type;
     //#endregion
@@ -130,11 +134,13 @@ export class Project<T extends Project<any> = any>
       return;
     }
     if (!PackageJSON.fromLocation(location)) {
-      Helpers.log(`[tnp-helpers][project.from] Cannot find package.json in location: ${location}`, 1);
-      Project.emptyLocations.push(location);
-      return;
+      if (!isDockerProject(location)) {
+        Helpers.log(`[tnp-helpers][project.from] Cannot find package.json in location: ${location}`, 1);
+        Project.emptyLocations.push(location);
+        return;
+      }
     };
-    const type = this.typeFrom(location);
+    let type = this.typeFrom(location);
     checkIfTypeIsNotCorrect(type);
 
     // console.log(`TYpe "${type}" for ${location} `)
@@ -321,7 +327,7 @@ export class Project<T extends Project<any> = any>
 
     const projectPath = path.join(config.pathes.projectsExamples(version).projectByType(libraryType));
     if (!fse.existsSync(projectPath)) {
-      Helpers.error(`[tnp-helpers] Bad library type: ${libraryType} for this framework version: ${version}`, false, true);
+      Helpers.error(`[tnp-helpers] Bad library type "${libraryType}" for this framework version "${version}"`, false, true);
     }
     return Project.From<T>(projectPath);
     //#endregion
@@ -367,6 +373,26 @@ export type ProjectBuild = { project: Project; appBuild: boolean; };
 
 
 //#region @backend
+function isDockerProject(location: string) {
+  if (fse.existsSync(path.join(location, 'Dockerfile'))) {
+    const packageJson = path.join(location, 'package.json');
+    if (!Helpers.exists(packageJson)) {
+      Helpers.writeFile(packageJson, {
+        "name": path.basename(location),
+        "version": "0.0.0"
+      })
+    }
+    const pj = Helpers.readJson(packageJson);
+    pj[config.frameworkName] = {
+      "type": "docker",
+      "version": "v2"
+    }
+    Helpers.writeFile(packageJson, pj)
+    return true;
+  }
+  return false;
+}
+
 function getClassFunction(className) {
   const classFN = CLASS.getBy(className) as any;
   if (!classFN) {

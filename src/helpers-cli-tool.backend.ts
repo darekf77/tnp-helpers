@@ -1,5 +1,6 @@
 import * as _ from 'lodash';
 import { Helpers } from './index';
+import type { Project } from './project';
 export class HelpersCliTool {
 
   paramsFrom(command: string) {
@@ -13,6 +14,37 @@ export class HelpersCliTool {
       .replace(/\:/g, '')
       .replace(/\_/g, '')
       .toLowerCase()
+  }
+
+  argsFrom<T = any>(args: string | string[]) {
+    if (_.isString(args)) {
+      args = args.split(' ');
+    }
+    const obj = require('minimist')(args) as any;
+    return (_.isObject(obj) ? obj : {}) as T;
+  }
+
+  /**
+   * Resolve child project when accessing from parent workspace, container etc...
+   * @param args string or string[] from cli args
+   * @param CurrentProject project from process.cwd()
+   */
+  resolveChildProject(args: string | string[], CurrentProject: Project): Project {
+    if (!CurrentProject) {
+      return void 0;
+    }
+    if (_.isString(args)) {
+      args = args.split(' ');
+    }
+    let firstArg = _.first(args);
+    if (firstArg) {
+      firstArg = firstArg.replace(/\/$/, '');
+      const child = CurrentProject.children.find(c => c.name === firstArg);
+      if (child) {
+        CurrentProject = child;
+      }
+    }
+    return CurrentProject;
   }
 
   match(name: string, argv: string[]): { isMatch: boolean; restOfArgs: string[] } {

@@ -1,5 +1,7 @@
 import * as fse from 'fs-extra';
 import * as path from 'path';
+import * as _ from 'lodash';
+import chalk from 'chalk';
 
 import { Project } from './project';
 import { HelpersTnp } from './helpers';
@@ -11,6 +13,12 @@ export abstract class ProjectGit {
   //#region @backend
   public run(this: Project, command: string, options?: Models.dev.RunOptions) {
     if (!options) { options = {}; }
+    if(_.isUndefined(options.showCommand)) {
+      options.showCommand = true;
+    }
+    if (options.showCommand) {
+      Helpers.info(`[${chalk.underline('Executing shell command')}]]  "${command}"`);
+    }
     if (!options.cwd) { options.cwd = this.location; }
     return Helpers.run(command, options);
   }

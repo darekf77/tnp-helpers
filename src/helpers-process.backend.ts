@@ -240,24 +240,39 @@ ${ Helpers.terminalLine()}\n`;
     data: string | Buffer | Error,
     outputLineReplace: (outputLine: string) => string,
     prefix: string,
+    extractFromLine?: (string | Function)[],
   ) {
+    const checkExtract = (_.isArray(extractFromLine) && extractFromLine.length > 0);
     let modifyOutput = _.isFunction(outputLineReplace);
     if (modifyOutput && _.isString(data)) {
       data = data.split(/\r?\n/).map(line => outputLineReplace(line)).join('\n');
     }
     if (prefix && _.isString(data)) {
-      return data.split('\n').map(l => {
-        if (!l || l.trim().length === 0 || l.trim() === '.') {
-          return l;
+      return data.split('\n').map(singleLine => {
+        if (!singleLine || singleLine.trim().length === 0 || singleLine.trim() === '.') {
+          return singleLine;
         }
-        return `${prefix} ${l}`
+        if (checkExtract) {
+          const sFuncs = extractFromLine
+            .filter(f => _.isString(f))
+          if (sFuncs.filter(f => (singleLine.search(f as string) !== -1)).length === sFuncs.length) {
+            const fun = extractFromLine.find(f => _.isFunction(f));
+            if (fun) {
+              let s = singleLine;
+              sFuncs.forEach(f => { s = s.replace(f as string, '') });
+              (fun as Function)(s.trim());
+            }
+          }
+        }
+        return `${prefix} ${singleLine}`
       }).join('\n');
     }
     return data as string;
   }
 
   logProc(proc: child.ChildProcess, output = true, stdio,
-    outputLineReplace: (outputLine: string) => string, prefix: string) {
+    outputLineReplace: (outputLine: string) => string, prefix: string,
+    extractFromLine?: (string | Function)[]) {
     Helpers.processes.push(proc);
 
     // @ts-ignore
@@ -269,19 +284,19 @@ ${ Helpers.terminalLine()}\n`;
 
     if (output) {
       proc.stdout.on('data', (data) => {
-        process.stdout.write(Helpers.modifyLineByLine(data, outputLineReplace, prefix))
+        process.stdout.write(Helpers.modifyLineByLine(data, outputLineReplace, prefix, extractFromLine))
       })
 
       proc.stdout.on('error', (data) => {
-        console.log(Helpers.modifyLineByLine(data, outputLineReplace, prefix));
+        console.log(Helpers.modifyLineByLine(data, outputLineReplace, prefix, extractFromLine));
       })
 
       proc.stderr.on('data', (data) => {
-        process.stderr.write(Helpers.modifyLineByLine(data, outputLineReplace, prefix))
+        process.stderr.write(Helpers.modifyLineByLine(data, outputLineReplace, prefix, extractFromLine))
       })
 
       proc.stderr.on('error', (data) => {
-        console.log(Helpers.modifyLineByLine(data, outputLineReplace, prefix));
+        console.log(Helpers.modifyLineByLine(data, outputLineReplace, prefix, extractFromLine));
       })
 
     }
@@ -328,12 +343,12 @@ command: ${command}
   }
 
   runAsyncIn(command: string, options?: Models.dev.RunOptions) {
-    const { output, cwd, biggerBuffer, outputLineReplace } = options;
+    const { output, cwd, biggerBuffer, outputLineReplace, extractFromLine } = options;
     const maxBuffer = biggerBuffer ? Helpers.bigMaxBuffer : undefined;
     let stdio = Helpers.getStdio(options)
     Helpers.checkProcess(cwd, command);
     return Helpers.logProc(child.exec(command, { cwd, maxBuffer }),
-      output, stdio, outputLineReplace, options.prefix);
+      output, stdio, outputLineReplace, options.prefix, extractFromLine);
   }
 
   prepareWatchCommand(cmd) {
@@ -381,6 +396,14 @@ command: ${command}
     }
     return {
       sync(): Buffer {
+        if (_.isArray(options.extractFromLine)) {
+          Helpers.error(`[tnp-helper] extractFromLine only for:
+          - asyncAsPromise
+          - async
+          - unitlOutputContains
+
+          `, false, true);
+        }
         if (_.isNumber(options.tryAgainWhenFailAfter) && options.tryAgainWhenFailAfter > 0) {
           // TODO try again when fail
           // try {
