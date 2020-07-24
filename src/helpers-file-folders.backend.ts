@@ -42,6 +42,10 @@ export class HelpersFileFolders {
       fse.lstatSync(pathToFileOrMaybeFolder).isDirectory();
   }
 
+  pathFromLink(filePath: string) {
+    return fse.readlinkSync(filePath);
+  }
+
   isLink(filePath: string) {
 
     if (os.platform() === 'win32') {
