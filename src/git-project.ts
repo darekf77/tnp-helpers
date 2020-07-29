@@ -17,7 +17,7 @@ export abstract class ProjectGit {
       options.showCommand = true;
     }
     if (options.showCommand) {
-      Helpers.info(`[${chalk.underline('Executing shell command')}]]  "${command}"`);
+      Helpers.info(`[[${chalk.underline('Executing shell command')}]]  "${command}"`);
     }
     if (!options.cwd) { options.cwd = this.location; }
     return Helpers.run(command, options);
