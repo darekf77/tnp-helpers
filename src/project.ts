@@ -260,7 +260,7 @@ export class Project<T extends Project<any> = any>
       return true;
     }
     //#region @backend
-    return !(!!global[config.message.tnp_normal_mode])
+    return !(!!global[config.message.globalSystemToolModelMode])
     //#endregion
   }
 
@@ -288,7 +288,7 @@ export class Project<T extends Project<any> = any>
       }
     } else {
       let tnpBundleTnpPath;
-      if (global.tnp_normal_mode) {
+      if (global.globalSystemToolModelMode) {
         tnpBundleTnpPath = Helpers.readFile(config.pathes.tnp_system_path_txt).toString().trim()
       } else {
         tnpBundleTnpPath = Helpers.readFile(config.pathes.tnp_system_path_txt_tnp_bundle).toString().trim()

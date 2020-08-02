@@ -26,13 +26,13 @@ export class HelpersMessages {
     }
     //#region @backend
     // Error.stackTraceLimit = Infinity;
-    if (!global.tnp_normal_mode) {
+    if (!global.globalSystemToolMode) {
       noTrace = true;
     }
     if (typeof details === 'object') {
       try {
         const json = JSON.stringify(details)
-        if (global.tnp_normal_mode) {
+        if (global.globalSystemToolMode) {
           if (global[KEY.LAST_ERROR] === json) {
             process.stdout.write('.');
             return;
@@ -57,7 +57,7 @@ export class HelpersMessages {
 
 
       } catch (error) {
-        if (global.tnp_normal_mode) {
+        if (global.globalSystemToolMode) {
           if (global[KEY.LAST_ERROR] === details) {
             process.stdout.write('.');
             return;
@@ -81,7 +81,7 @@ export class HelpersMessages {
         }
       }
     } else {
-      if (global.tnp_normal_mode) {
+      if (global.globalSystemToolMode) {
         if (global[KEY.LAST_ERROR] === details) {
           process.stdout.write('.');
           return;
@@ -106,7 +106,7 @@ export class HelpersMessages {
 
     }
 
-    if (global[config.message.tnp_normal_mode]) {
+    if (global[config.message.globalSystemToolMode]) {
       if (!noExit) {
         process.exit(1);
       }
@@ -153,7 +153,7 @@ export class HelpersMessages {
       } else {
         global[KEY.LAST_LOG] = details;
       }
-      if (global.tnp_normal_mode) {
+      if (global.globalSystemToolMode) {
         console.log(chalk.gray(details))
       }
       if (global.tnpNonInteractive) {
@@ -169,7 +169,7 @@ export class HelpersMessages {
       return;
     }
     //#region @backend
-    if (!global.tnp_normal_mode) {
+    if (!global.globalSystemToolMode) {
       trace = false;
     }
     if (global[KEY.LAST_WARN] === details) {
