@@ -280,25 +280,11 @@ export class Project<T extends Project<any> = any>
 
   static get Tnp(): Project<any> {
     //#region @backendFunc
-    let frameworkLocation = Project.From(config.pathes.tnp_folder_location);
-    if (frameworkLocation) {
-      const currentPathInSystem = path.join(frameworkLocation.location, config.file.tnp_system_path_txt);
-      if (!fse.existsSync(currentPathInSystem)) {
-        Helpers.writeFile(currentPathInSystem, frameworkLocation.location)
-      }
-    } else {
-      let tnpBundleTnpPath;
-      if (global.globalSystemToolModelMode) {
-        tnpBundleTnpPath = Helpers.readFile(config.pathes.tnp_system_path_txt).toString().trim()
-      } else {
-        tnpBundleTnpPath = Helpers.readFile(config.pathes.tnp_system_path_txt_tnp_bundle).toString().trim()
-      }
-      if (!fse.existsSync(tnpBundleTnpPath)) {
-        Helpers.error(`[tnp-helpers] Please build you ${chalk.bold('tnp-npm-project')} first... `)
-      }
-      frameworkLocation = Project.From(tnpBundleTnpPath)
+    let tnpPorject = Project.From(config.pathes.tnp_folder_location);
+    if(!tnpPorject && !global.globalSystemToolMode) {
+      Helpers.error(`Not able to find tnp project in "${config.pathes.tnp_folder_location}".`)
     }
-    return frameworkLocation;
+    return tnpPorject;
     //#endregion
   }
 
