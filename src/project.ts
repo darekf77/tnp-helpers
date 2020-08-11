@@ -141,7 +141,7 @@ export class Project<T extends Project<any> = any>
       }
     };
     let type = this.typeFrom(location);
-    checkIfTypeIsNotCorrect(type);
+    checkIfTypeIsNotCorrect(type, location);
 
     // console.log(`TYpe "${type}" for ${location} `)
     let resultProject: Project<any>;
@@ -281,7 +281,7 @@ export class Project<T extends Project<any> = any>
   static get Tnp(): Project<any> {
     //#region @backendFunc
     let tnpPorject = Project.From(config.pathes.tnp_folder_location);
-    if(!tnpPorject && !global.globalSystemToolMode) {
+    if (!tnpPorject && !global.globalSystemToolMode) {
       Helpers.error(`Not able to find tnp project in "${config.pathes.tnp_folder_location}".`)
     }
     return tnpPorject;
@@ -388,7 +388,7 @@ function getClassFunction(className) {
 }
 
 
-function checkIfTypeIsNotCorrect(type) {
+function checkIfTypeIsNotCorrect(type, location) {
   if (_.isString(type) && !Models.libs.LibTypeArr.includes(type as any)) {
     Helpers.error(`Incorrect type: "${type}"
 
@@ -396,6 +396,8 @@ function checkIfTypeIsNotCorrect(type) {
 
     in
     package.json > ${config.frameworkName}.type
+
+    location: ${location}
 
     `, false, true);
   }
