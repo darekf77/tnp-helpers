@@ -268,11 +268,12 @@ export class Project<T extends Project<any> = any>
     //#region @backendFunc
     const current = Project.From(process.cwd())
     if (!current) {
-      Helpers.error(`[tnp-helpers] Current location is not a ${chalk.bold(config.frameworkName)} type project.
+      Helpers.warn(`[tnp-helpers] Current location is not a ${chalk.bold(config.frameworkName)} type project.
 
       location: "${process.cwd()}"
 
-      }`, false, false);
+      }`);
+      return void 0;
     }
     return current;
     //#endregion

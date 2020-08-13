@@ -11,7 +11,8 @@
         "tnp-models",
         "morphi"
       ],
-      "dependencies": {}
+      "dependencies": {},
+      "linkedFolders": []
     },
     "libReleaseOptions": {
       "nodts": false,
