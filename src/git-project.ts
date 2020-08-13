@@ -16,10 +16,10 @@ export abstract class ProjectGit {
     if(_.isUndefined(options.showCommand)) {
       options.showCommand = true;
     }
-    if (options.showCommand) {
-      Helpers.info(`[[${chalk.underline('Executing shell command')}]]  "${command}"`);
-    }
     if (!options.cwd) { options.cwd = this.location; }
+    if (options.showCommand) {
+      Helpers.info(`[[${chalk.underline('Executing shell command')}]]  "${command}" in [[${options.cwd}]]`);
+    }
     return Helpers.run(command, options);
   }
   //#endregion
