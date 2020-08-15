@@ -52,22 +52,24 @@ export class HelpersCliTool {
     let restOfArgs = argv;
 
     let counter = 0;
-    isMatch = !!argv.find((vv, i) => {
+    isMatch = !!argv
+      .filter(a => !a.startsWith('--')) // TODO fix this also for other special paramters
+      .find((vv, i) => {
 
-      if (++counter > 3) {
-        // console.log(`counter NOT OK ${vv}`)
-        return false
-      }
-      // console.log(`counter ok for ${vv}`)
-      const nameInKC = Helpers.cliTool.paramsFrom(name);
-      const argInKC = Helpers.cliTool.paramsFrom(vv);
+        if (++counter > 3) {
+          // console.log(`counter NOT OK ${vv}`)
+          return false
+        }
+        // console.log(`counter ok for ${vv}`)
+        const nameInKC = Helpers.cliTool.paramsFrom(name);
+        const argInKC = Helpers.cliTool.paramsFrom(vv);
 
-      const condition = (nameInKC === argInKC)
-      if (condition) {
-        restOfArgs = _.slice(argv, i + 1, argv.length);
-      }
-      return condition;
-    });
+        const condition = (nameInKC === argInKC)
+        if (condition) {
+          restOfArgs = _.slice(argv, i + 1, argv.length);
+        }
+        return condition;
+      });
     return { isMatch, restOfArgs };
   }
 
