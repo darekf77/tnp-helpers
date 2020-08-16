@@ -435,7 +435,15 @@ export class HelpersFileFolders {
     });
   }
 
-  copy(sourceDir: string, destinationDir: string, options?: { filter?: any; overwrite?: boolean, recursive?: boolean }) {
+  copy(sourceDir: string, destinationDir: string, options?:
+    {
+      filter?: any;
+      overwrite?: boolean,
+      recursive?: boolean,
+      omitFolders?: string[],
+      omitFoldersBaseFolder?: string,
+      copySymlinksAsFiles?: boolean,
+    }) {
     // sourceDir = sourceDir ? (sourceDir.replace(/\/$/, '')) : sourceDir;
     // destinationDir = destinationDir ? (destinationDir.replace(/\/$/, '')) : destinationDir;
     if (!fse.existsSync(sourceDir)) {
@@ -455,6 +463,10 @@ export class HelpersFileFolders {
       options.recursive = true;
     }
 
+    if (options.copySymlinksAsFiles) {
+      options['dereference'] = true;
+    }
+
     // const [srcStat, destStat] = [
     //   fse.existsSync(sourceDir) && fse.statSync(sourceDir),
     //   fse.existsSync(destinationDir) && fse.statSync(destinationDir),
@@ -466,6 +478,20 @@ export class HelpersFileFolders {
     //   `);
     //   return;
     // }
+    if (_.isArray(options.omitFolders) && options.omitFolders.length >= 1
+      && _.isNil(options.filter) && _.isString(options.omitFoldersBaseFolder)
+      && path.isAbsolute(options.omitFoldersBaseFolder)) {
+      options.filter = (src: string, dest: string) => {
+        // console.log('src',src)
+        const baseFolder = _.first(src.replace(options.omitFoldersBaseFolder, '')
+          .replace(/^\//, '').split('/'));
+        if (!baseFolder || baseFolder.trim() === '') {
+          return true;
+        }
+        const isAllowed = _.isUndefined(options.omitFolders.find(f => baseFolder.startsWith(f)));
+        return isAllowed;
+      };
+    }
 
     if (sourceDir === destinationDir || path.resolve(sourceDir) === path.resolve(destinationDir)) {
       Helpers.warn(`[helper][copy] Trying to copy same source and destination
