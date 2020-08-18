@@ -42,6 +42,18 @@ export class HelpersFileFolders {
       fse.lstatSync(pathToFileOrMaybeFolder).isDirectory();
   }
 
+  stringify(inputObject: any): string {
+    // if (_.isString(inputObject)) {
+    //   return inputObject;
+    // }
+    // if (_.isObject(inputObject)) {
+    //   config.log(inputObject)
+    //   Helpers.error(`[tnp-helpers] trying to stringify not a object`, false, true);
+    // }
+    return JSON.stringify(inputObject, null, 2);
+  }
+
+
   pathFromLink(filePath: string) {
     return fse.readlinkSync(filePath);
   }
@@ -637,7 +649,7 @@ ${sourceData}
     }
 
     if (_.isObject(input)) {
-      input = JSON.stringify(input, null, 2);
+      input = Helpers.stringify(input);
     } else if (!_.isString(input)) {
       input = ''
     }
