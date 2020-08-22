@@ -60,6 +60,7 @@ export class Project<T extends Project<any> = any>
   public useFramework: boolean;
   public defaultPort?: number;
   public version: string;
+  public lastNpmVersion?: string;
   public _routerTargetHttp?: string;
   public customizableFilesAndFolders: string[];
   public type: Models.libs.LibType;

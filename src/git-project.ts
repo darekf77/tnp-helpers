@@ -13,7 +13,7 @@ export abstract class ProjectGit {
   //#region @backend
   public run(this: Project, command: string, options?: Models.dev.RunOptions) {
     if (!options) { options = {}; }
-    if(_.isUndefined(options.showCommand)) {
+    if (_.isUndefined(options.showCommand)) {
       options.showCommand = true;
     }
     if (!options.cwd) { options.cwd = this.location; }
@@ -37,6 +37,29 @@ export abstract class ProjectGit {
               , true, true)
           }
         })
+      },
+      renameOrigin(newNameOrUlr: string) {
+        if (!newNameOrUlr.endsWith('.git')) {
+          newNameOrUlr = (newNameOrUlr + '.git')
+        }
+        const oldOrigin = self.git.originURL;
+        if (!newNameOrUlr.startsWith('git@') && !newNameOrUlr.startsWith('https://')) {
+          newNameOrUlr = oldOrigin.replace(path.basename(oldOrigin), newNameOrUlr);
+        }
+
+        try {
+          self.run(`git remote rm origin`).sync();
+        } catch (error) { }
+
+        try {
+          self.run(`git remote add origin ${newNameOrUlr}`).sync();
+          Helpers.info(`Origin changed:
+        from: ${oldOrigin}
+          to: ${newNameOrUlr}\n`);
+        } catch (e) {
+          Helpers.error(`Not able to change origin.. reverting to old`, true, true);
+          self.run(`git remote add origin ${oldOrigin}`).sync();
+        }
       },
       get isGitRepo() {
 

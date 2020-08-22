@@ -142,6 +142,12 @@ export class HelpersProcess {
   }
 
   async  killProcessByPort(port: number) {
+    const org = port;
+    port = Number(port);
+    if (!_.isNumber(port)) {
+      Helpers.warn(`[tnp-helpers] Can't kill on port: "${org}"`);
+      return;
+    }
     try {
       await fkill(`:${port}`);
       // run(`fkill -f :${port} &> /dev/null`, { output: false }).sync()
