@@ -100,7 +100,7 @@ export class Project<T extends Project<any> = any>
     if (!fse.existsSync(location)) {
       return void 0;
     }
-    const packageJson = PackageJSON.fromLocation(location);
+    const packageJson = PackageJSON && PackageJSON.fromLocation(location);
     if (!_.isObject(packageJson)) {
       return void 0;
     }
@@ -116,6 +116,9 @@ export class Project<T extends Project<any> = any>
     if (!_.isString(location)) {
       Helpers.warn(`[project.from] location is not a string`)
       return;
+    }
+    if (path.basename(location) === 'dist') {
+      location = path.dirname(location);
     }
     location = path.resolve(location);
     if (Project.emptyLocations.includes(location)) {
@@ -134,7 +137,7 @@ export class Project<T extends Project<any> = any>
       Project.emptyLocations.push(location);
       return;
     }
-    if (!PackageJSON.fromLocation(location)) {
+    if (PackageJSON && !PackageJSON.fromLocation(location)) {
       if (!isDockerProject(location)) {
         Helpers.log(`[tnp-helpers][project.from] Cannot find package.json in location: ${location}`, 1);
         Project.emptyLocations.push(location);
@@ -142,7 +145,7 @@ export class Project<T extends Project<any> = any>
       }
     };
     let type = this.typeFrom(location);
-    checkIfTypeIsNotCorrect(type, location);
+    PackageJSON && checkIfTypeIsNotCorrect(type, location);
 
     // console.log(`TYpe "${type}" for ${location} `)
     let resultProject: Project<any>;
@@ -177,7 +180,21 @@ export class Project<T extends Project<any> = any>
     if (resultProject) {
       Helpers.log(`[tnp-helpers][project.from] ${chalk.bold(resultProject.name)} from ...${location.substr(location.length - 100)}`, 1);
     } else {
-      Helpers.log(`[tnp-helpers][project.from] project not found in ${location}`, 1);
+      if (PackageJSON) {
+        Helpers.log(`[tnp-helpers][project.from] project not found in ${location}`, 1);
+      } else {
+        const packagejsonpath = path.join(location, 'package.json');
+        if (fse.existsSync(packagejsonpath)) {
+          const name = Helpers.getValueFromJSON(packagejsonpath, 'name');
+          // if (name && name === path.basename(location)) { TODO think about it
+          if (name) {
+            resultProject = new Project();
+            resultProject.location = location;
+            resultProject.name = name;
+            resultProject.type = Helpers.getValueFromJSON(path.join(location, 'package.json'), 'tnp.type');
+          }
+        }
+      }
     }
 
     return resultProject as any;

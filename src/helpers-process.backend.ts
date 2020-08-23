@@ -324,6 +324,24 @@ command: ${command}
 
   readonly bigMaxBuffer = 2024 * 500;
 
+  async waitForMessegeInStdout(proc: child.ChildProcess, message: string) {
+    return new Promise((resolve, reject) => {
+      let resolved = false;
+      proc.stdout.on('data', (data) => {
+        if (_.isString(data) && data.search(message) !== -1) {
+          resolved = true;
+          resolve();
+        }
+      })
+      proc.once('exit', () => {
+        if (!resolved) {
+          reject();
+        }
+      })
+    })
+
+  }
+
   getStdio(options?: Models.dev.RunOptions) {
     const {
       output, silence,
