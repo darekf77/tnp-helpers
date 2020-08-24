@@ -14,7 +14,7 @@ export abstract class ProjectGit {
   public run(this: Project, command: string, options?: Models.dev.RunOptions) {
     if (!options) { options = {}; }
     if (_.isUndefined(options.showCommand)) {
-      options.showCommand = true;
+      options.showCommand = false;
     }
     if (!options.cwd) { options.cwd = this.location; }
     if (options.showCommand) {

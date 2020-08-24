@@ -26,10 +26,11 @@ export class HelpersArrayObj {
     return arr;
   }
 
-  uniqArray(array: any[]) {
+  uniqArray<T = any>(array: any[], uniqueProperty?: (keyof T)) {
     var seen = {};
     return array.filter(function (item) {
-      return seen.hasOwnProperty(item) ? false : (seen[item] = true);
+      return seen.hasOwnProperty(uniqueProperty ? item[uniqueProperty] : item) ? false
+        : (seen[uniqueProperty ? item[uniqueProperty] : item] = true);
     });
   }
 
