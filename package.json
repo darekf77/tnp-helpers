@@ -37,8 +37,8 @@
   },
   "homepage": "https://github.com/darekf77/tnp-helpers#readme",
   "dependencies": {
-    "morphi": "3.1.13",
-    "tnp-models": "0.0.6"
+    "morphi": "3.1.14",
+    "tnp-models": "0.0.7"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "~0.901.3",
