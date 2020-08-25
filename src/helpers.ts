@@ -28,7 +28,7 @@ import chalk from 'chalk';
 //#endregion
 import { Helpers } from './index';
 import { CLASS } from 'typescript-class-helpers';
-import { Morphi } from 'morphi';
+import { Morphi, Models as MorphiModels } from 'morphi';
 
 export function applyMixins(derivedCtor: any, baseCtors: any[]) {
   baseCtors.forEach(baseCtor => {
@@ -246,7 +246,7 @@ export class HelpersTnp {
   //#endregion
 
   //#region @backend
-  checkEnvironment = (deps?: Models.morphi.GlobalDependencies) => MorpiHelpers.checkEnvironment(deps)
+  checkEnvironment = (deps?: MorphiModels.GlobalDependencies) => MorpiHelpers.checkEnvironment(deps)
   //#endregion
   public applyMixins = applyMixins;
 }
