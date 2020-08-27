@@ -19,7 +19,7 @@ import { TsCodeModifer } from './ts-code-modifier';
 import { HelpersNpm } from './helpers-npm.backend';
 import { HelpersTerminal } from './helpers-system-terminal.backend';
 import { HelpersFileFolders } from './helpers-file-folders.backend';
-import { Models } from 'tnp-models';
+
 if (!global['ENV']) {
   global['ENV'] = {};
 }
