@@ -203,24 +203,28 @@ export class Project<T extends Project<any> = any>
 
   public static nearestTo<T = Project>(
     absoluteLocation: string,
-    options?: { type?: Models.libs.LibType; findGitRoot?: boolean; }): T {
+    options?: { type?: Models.libs.LibType; findGitRoot?: boolean; onlyOutSideNodeModules?: boolean }): T {
     //#region @backendFunc
 
     options = options || {};
-    const { type, findGitRoot } = options;
+    const { type, findGitRoot, onlyOutSideNodeModules } = options;
 
     if (_.isString(type) && !Models.libs.LibTypeArr.includes(type)) {
       Helpers.error(`[tnp-helpers][project.nearestTo] wrong type: ${type}`, false, true)
     }
     if (fse.existsSync(absoluteLocation)) {
-      absoluteLocation = fse.realpathSync(absoluteLocation)
+      absoluteLocation = fse.realpathSync(absoluteLocation);
     }
     if (fse.existsSync(absoluteLocation) && !fse.lstatSync(absoluteLocation).isDirectory()) {
-      absoluteLocation = path.dirname(absoluteLocation)
+      absoluteLocation = path.dirname(absoluteLocation);
     }
+
     let project: Project;
     let previousLocation: string;
     while (true) {
+      if (onlyOutSideNodeModules && (path.basename(path.dirname(absoluteLocation)) === 'node_modules')) {
+        absoluteLocation = path.dirname(path.dirname(absoluteLocation));
+      }
       project = Project.From(absoluteLocation);
       if (_.isString(type)) {
         if (project?.typeIs(type)) {
