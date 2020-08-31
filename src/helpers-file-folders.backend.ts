@@ -627,7 +627,7 @@ ${sourceData}
     }).toString().trim()
   }
 
-  readJson(absoluteFilePath: string) {
+  readJson(absoluteFilePath: string, defaultValue = {}) {
     if (!fse.existsSync(absoluteFilePath)) {
       return {};
     }
@@ -636,7 +636,7 @@ ${sourceData}
       let json = JSON.parse(fileContent);
       return json;
     } catch (error) {
-      return {};
+      return defaultValue;
     }
   }
 
