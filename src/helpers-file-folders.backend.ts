@@ -236,6 +236,9 @@ export class HelpersFileFolders {
   }
 
   removeIfExists(absoluteFileOrFolderPath: string) {
+    try {
+      fse.unlinkSync(absoluteFileOrFolderPath);
+    } catch (error) { }
     if (fse.existsSync(absoluteFileOrFolderPath)) {
       if (fse.lstatSync(absoluteFileOrFolderPath).isDirectory()) {
         fse.removeSync(absoluteFileOrFolderPath);
@@ -334,7 +337,11 @@ export class HelpersFileFolders {
       Helpers.warn(`[helpers][mkdirp] On mac osx /tmp is changed to /private/tmp`, false);
       folderPath = folderPath.replace(`/tmp/`, '/private/tmp/');
     }
-    fse.mkdirpSync(folderPath);
+    if (fse.existsSync(folderPath)) {
+      Helpers.warn(`[helpers][mkdirp] folder path already exists: ${folderPath}`, false);
+    } else {
+      fse.mkdirpSync(folderPath);
+    }
   }
 
 
