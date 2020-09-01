@@ -1,7 +1,12 @@
 import * as _ from 'lodash';
 import { Helpers } from './index';
 import type { Project } from './project';
+import { CLASS } from 'typescript-class-helpers';
 export class HelpersCliTool {
+
+  paramsFromFn(classFN: Function) {
+    return Helpers.cliTool.paramsFrom(CLASS.getName(classFN))
+  }
 
   paramsFrom(command: string) {
     if (!command) {
