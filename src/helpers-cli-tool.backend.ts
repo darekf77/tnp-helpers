@@ -1,11 +1,30 @@
 import * as _ from 'lodash';
+import * as path from 'path';
 import { Helpers } from './index';
 import type { Project } from './project';
 import { CLASS } from 'typescript-class-helpers';
+
+declare const global: any;
+if (!global['ENV']) {
+  global['ENV'] = {};
+}
+const config = global['ENV'].config as any;
+
 export class HelpersCliTool {
 
-  paramsFromFn(classFN: Function) {
-    return Helpers.cliTool.paramsFrom(CLASS.getName(classFN))
+  paramsFromFn(classFN: Function, shortVersion = false) {
+    const classFnParsed = Helpers.cliTool.paramsFrom(CLASS.getName(classFN));
+    if (!classFnParsed) {
+      return '';
+    }
+    if (shortVersion) {
+      const shortKey = Object.keys(config.argsReplacements).find(key => {
+        const v = Helpers.cliTool.paramsFrom(config.argsReplacements[key]);
+        return v.trim() === classFnParsed.trim();
+      });
+      return shortKey;
+    }
+    return classFnParsed;
   }
 
   paramsFrom(command: string) {
@@ -27,6 +46,22 @@ export class HelpersCliTool {
     }
     const obj = require('minimist')(args) as any;
     return (_.isObject(obj) ? obj : {}) as T;
+  }
+
+  resolveProject<T = Project>(args: string | string[], CurrentProject: Project, ProjectClass: typeof Project): T {
+    if (!CurrentProject) {
+      return void 0;
+    }
+    if (_.isString(args)) {
+      args = args.split(' ');
+    }
+    let firstArg = _.first(args).replace(/\/$/, '');
+    if (firstArg) {
+      if (path.isAbsolute(firstArg)) {
+        return ProjectClass.From(firstArg);
+      }
+      return ProjectClass.From(path.join(CurrentProject.location, firstArg));
+    }
   }
 
   /**
