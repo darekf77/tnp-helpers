@@ -45,6 +45,15 @@ export class HelpersCliTool {
       args = args.split(' ');
     }
     const obj = require('minimist')(args) as any;
+    Object.keys(obj).forEach(key => {
+      const v = obj[key];
+      if (v === 'true') {
+        obj[key] = true;
+      }
+      if (v === 'false') {
+        obj[key] = false;
+      }
+    })
     return (_.isObject(obj) ? obj : {}) as T;
   }
 

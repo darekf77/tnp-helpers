@@ -281,8 +281,11 @@ ${ Helpers.terminalLine()}\n`;
     extractFromLine?: (string | Function)[]) {
     Helpers.processes.push(proc);
 
-    // @ts-ignore
-    proc.stdio = stdio;
+    if (stdio) {
+      // @ts-ignore
+      proc.stdio = stdio;
+    }
+
 
     if (!prefix) {
       prefix = '';
@@ -328,12 +331,28 @@ command: ${command}
     return new Promise((resolve, reject) => {
       let resolved = false;
       proc.stdout.on('data', (data) => {
+
+        // console.log(`
+
+        // [waitForMessegeInStdout] data: ${data}
+        // [waitForMessegeInStdout] data typeof: ${typeof data}
+
+        // `);
+        if (_.isObject(data) && _.isFunction(data.toString)) {
+          data = data.toString()
+        }
+
         if (_.isString(data) && data.search(message) !== -1) {
           resolved = true;
           resolve();
         }
       })
-      proc.once('exit', () => {
+      proc.once('exit', (code) => {
+        // console.log(`
+
+        // [waitForMessegeInStdout] exit: ${code}
+
+        // `);
         if (!resolved) {
           reject();
         }
@@ -367,12 +386,29 @@ command: ${command}
   }
 
   runAsyncIn(command: string, options?: Models.dev.RunOptions) {
-    const { output, cwd, biggerBuffer, outputLineReplace, extractFromLine } = options;
+    const { output, cwd, biggerBuffer, outputLineReplace, extractFromLine, detach } = options;
     const maxBuffer = biggerBuffer ? Helpers.bigMaxBuffer : undefined;
     let stdio = Helpers.getStdio(options)
     Helpers.checkProcess(cwd, command);
-    return Helpers.logProc(child.exec(command, { cwd, maxBuffer }),
-      output, stdio, outputLineReplace, options.prefix, extractFromLine);
+    let proc: child.ChildProcess;
+    if (detach) {
+      const cmd = _.first(command.split(' '));
+      const argsForCmd = command.split(' ').slice(1);
+      console.log(`cmd: "${cmd}",  args: "${argsForCmd.join(' ')}"`)
+      proc = child.spawn(cmd, argsForCmd, { cwd, detached: true });
+      console.log(`
+
+      DETACHED PROCESS IS WORKING ON PID: ${proc.pid}
+
+      `)
+      // proc = child.exec(`${command} &`, { cwd, maxBuffer, });
+    } else {
+      proc = child.exec(command, { cwd, maxBuffer, });
+    }
+    return Helpers.logProc(proc,
+      detach ? true : output,
+      detach ? void 0 : stdio,
+      outputLineReplace, options.prefix, extractFromLine);
   }
 
   prepareWatchCommand(cmd) {
@@ -441,7 +477,8 @@ command: ${command}
         }
         return Helpers.runSyncIn(command, options) as any;
       },
-      async() {
+      async(detach = false) {
+        options.detach = detach;
         return Helpers.runAsyncIn(command, options);
       },
       asyncAsPromise(): Promise<void> {
