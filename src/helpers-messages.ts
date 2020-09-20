@@ -8,7 +8,7 @@ if (!global['ENV']) {
 const config = global['ENV'].config as any;
 //#endregion
 import { PROGRESS_DATA } from 'tnp-models';
-
+import { Level } from 'ng2-logger';
 import { Helpers } from './index';
 
 const KEY = {
@@ -17,6 +17,38 @@ const KEY = {
   LAST_WARN: Symbol(),
   LAST_LOG: Symbol(),
 }
+
+// export class Log {
+//   private static _instance: Log;
+//   public Instance() {
+//     if (!Log._instance) {
+//       Log._instance = new Log();
+//     }
+//     return Log._instance;
+//   }
+
+//   create(name: string, level?: Level) {
+//     if (level === void 0) {
+//       level = Level.DATA;
+//     }
+//     return {
+//       d(details: string, debugLevel?: number) {
+//         return Helpers.log(`[${name}] ${details}`, debugLevel)
+//       },
+//       i(details: string) {
+//         return Helpers.info(`[${name}] ${details}`)
+//       },
+
+//       w(details: string, noExit = false, noTrace = false) {
+//         return Helpers.error(`[${name}] ${details}`, noExit, noTrace);
+//       },
+//       er(details: string, ) {
+//         return Helpers.info(`[${name}] ${details}`)
+//       },
+//     }
+//   }
+
+// }
 
 export class HelpersMessages {
   error(details: any, noExit = false, noTrace = false) {
