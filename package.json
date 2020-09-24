@@ -21,7 +21,7 @@
     }
   },
   "name": "tnp-helpers",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -37,8 +37,8 @@
   },
   "homepage": "https://github.com/darekf77/tnp-helpers#readme",
   "dependencies": {
-    "morphi": "4.0.1",
-    "tnp-models": "0.0.8"
+    "morphi": "4.0.2",
+    "tnp-models": "0.0.9"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "~0.901.3",
