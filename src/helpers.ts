@@ -4,6 +4,7 @@ import { HelpersArrayObj } from './helpers-array-obj';
 import { HelpersMessages } from './helpers-messages';
 import { HelpersStringsRegexes } from './helpers-strings-regexes';
 import { HelpersEnvironment } from './helpers-environment';
+import { HelpersStrings } from './helpers-strings';
 import { Helpers as HelperNg2Logger } from 'ng2-logger';
 import { conditionWait } from './condition-wait';
 //#region @backend
@@ -64,6 +65,7 @@ export class HelpersTnp {
     public morphi = new HelpersMorphiFramework(),
     //#endregion
     public arrays = new HelpersArrayObj(),
+    public strings = new HelpersStrings(),
 
   ) {
 
