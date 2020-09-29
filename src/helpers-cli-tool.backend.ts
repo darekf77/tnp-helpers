@@ -3,12 +3,8 @@ import * as path from 'path';
 import { Helpers } from './index';
 import type { Project } from './project';
 import { CLASS } from 'typescript-class-helpers';
-
 declare const global: any;
-if (!global['ENV']) {
-  global['ENV'] = {};
-}
-const config = global['ENV'].config as any;
+import { config } from 'tnp-config';
 
 export class HelpersCliTool {
 

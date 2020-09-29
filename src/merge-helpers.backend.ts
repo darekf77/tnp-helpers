@@ -6,10 +6,8 @@ import * as glob from 'glob';
 import * as watch from 'watch'
 // local
 type Project = any;
-if (!global['ENV']) {
-  global['ENV'] = {};
-}
-const config = global['ENV'].config as any;
+
+import { config } from 'tnp-config';
 import { Helpers } from './index';
 import chalk from 'chalk';
 //#endregion

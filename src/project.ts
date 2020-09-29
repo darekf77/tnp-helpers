@@ -6,12 +6,10 @@ import * as json5 from 'json5';
 export { ChildProcess } from 'child_process';
 import { ChildProcess } from 'child_process';
 import { ProjectGit } from './git-project';
-declare const global: any;
-if (!global['ENV']) {
-  global['ENV'] = {};
-}
-const config = global['ENV'].config as any;
+
 //#endregion
+declare const global: any;
+import { config } from 'tnp-config';
 import * as _ from 'lodash';
 import { CLASS } from 'typescript-class-helpers';
 import { Models } from 'tnp-models';
@@ -282,7 +280,7 @@ export class Project<T extends Project<any> = any>
       return true;
     }
     //#region @backend
-    return !(!!global[config.message.globalSystemToolModelMode])
+    return !(!!global[config.message.globalSystemToolMode])
     //#endregion
   }
 

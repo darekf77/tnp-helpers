@@ -1,12 +1,9 @@
 //#region @backend
 import chalk from 'chalk';
-
 declare const global: any;
-if (!global['ENV']) {
-  global['ENV'] = {};
-}
-const config = global['ENV'].config as any;
+
 //#endregion
+import { config } from 'tnp-config';
 import { PROGRESS_DATA } from 'tnp-models';
 import { Level } from 'ng2-logger';
 import { Helpers } from './index';

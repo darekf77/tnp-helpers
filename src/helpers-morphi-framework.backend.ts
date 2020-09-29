@@ -1,9 +1,6 @@
 import * as glob from 'glob';
 import * as path from 'path';
-if (!global['ENV']) {
-  global['ENV'] = {};
-}
-const config = global['ENV'].config as any;
+import { config } from 'tnp-config';
 import { HelpersMerge } from './merge-helpers.backend';
 
 export class HelpersMorphiFramework {

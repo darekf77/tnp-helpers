@@ -20,13 +20,9 @@ import { TsCodeModifer } from './ts-code-modifier';
 import { HelpersNpm } from './helpers-npm.backend';
 import { HelpersTerminal } from './helpers-system-terminal.backend';
 import { HelpersFileFolders } from './helpers-file-folders.backend';
-
-if (!global['ENV']) {
-  global['ENV'] = {};
-}
-const config = global['ENV'].config as any;
 import chalk from 'chalk';
 //#endregion
+import { config } from 'tnp-config';
 import { Helpers } from './index';
 import { CLASS } from 'typescript-class-helpers';
 import { Morphi, Models as MorphiModels } from 'morphi';
