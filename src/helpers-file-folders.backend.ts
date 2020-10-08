@@ -5,6 +5,7 @@ import * as  underscore from 'underscore';
 import * as path from 'path';
 import * as rimraf from 'rimraf';
 import * as os from 'os';
+import * as glob from 'glob';
 import { JSON10 } from 'json10';
 
 
@@ -452,14 +453,30 @@ export class HelpersFileFolders {
     });
   }
 
+  removeExcept(fromPath: string, exceptFolderAndFiles: string[]) {
+    fse.readdirSync(fromPath)
+      .filter(f => {
+        return !exceptFolderAndFiles.includes(f)
+      })
+      .map(f => path.join(fromPath, f))
+      .forEach(af => Helpers.removeFolderIfExists(af));
+
+    (glob.sync(`${fromPath}/*.*`))
+      .filter(f => {
+        return !exceptFolderAndFiles.includes(path.basename(f))
+      })
+      .forEach(af => Helpers.removeFileIfExists(af));
+  }
+
   copy(sourceDir: string, destinationDir: string, options?:
     {
       filter?: any;
-      overwrite?: boolean,
-      recursive?: boolean,
-      omitFolders?: string[],
-      omitFoldersBaseFolder?: string,
-      copySymlinksAsFiles?: boolean,
+      overwrite?: boolean;
+      recursive?: boolean;
+      omitFolders?: string[];
+      omitFoldersBaseFolder?: string;
+      copySymlinksAsFiles?: boolean;
+      useTempFolder?: boolean;
     }) {
     // sourceDir = sourceDir ? (sourceDir.replace(/\/$/, '')) : sourceDir;
     // destinationDir = destinationDir ? (destinationDir.replace(/\/$/, '')) : destinationDir;
@@ -478,6 +495,10 @@ export class HelpersFileFolders {
     }
     if (_.isUndefined(options.recursive)) {
       options.recursive = true;
+    }
+
+    if (_.isUndefined(options.useTempFolder)) {
+      options.useTempFolder = false;
     }
 
     if (options.copySymlinksAsFiles) {
@@ -521,7 +542,17 @@ export class HelpersFileFolders {
       // console.warn('destinationDir', destinationDir);
       // console.log(JSON.stringify(options))
       // try {
-      fse.copySync(sourceDir, destinationDir, options);
+
+      if (options.useTempFolder) {
+        let tempDestination = `${os.platform() === 'darwin' ? '/private/tmp' : '/tmp'}/${_.camelCase(destinationDir)}`;
+        Helpers.removeFolderIfExists(tempDestination);
+        fse.copySync(sourceDir, tempDestination, options);
+        fse.copySync(tempDestination, destinationDir, options);
+      } else {
+        fse.copySync(sourceDir, destinationDir, options);
+      }
+
+
       // } catch (error) {
       //   console.trace(error);
       //   process.exit(0)
