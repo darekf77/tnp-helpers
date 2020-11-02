@@ -11,3 +11,4 @@ export { BaseComponent, BaseComponentForRouter } from './base-component';
 export { BaseFormlyComponent } from './base-formly-component';
 export { DualComponentController } from './dual-component-ctrl';
 export { ResizeService } from './resize-service';
+export { LongPress } from './long-press.directive';

@@ -84,7 +84,7 @@ export abstract class BaseFormlyComponent<T extends DualComponentController = Du
   // _model: any;
   ngOnInit() {
     // console.log('model', this.model)
-    console.log('ket', this.key)
+    // console.log('ket', this.key)
     const isFormlyMode = !!this.field;
     log.i(`isFormlyMode: ${isFormlyMode}`);
     if (!isFormlyMode) {

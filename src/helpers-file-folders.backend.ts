@@ -26,6 +26,10 @@ export class HelpersFileFolders {
     return _.get(json, lodashGetPath, defaultValue);
   }
 
+  readValueFromJson(filepath: string, lodashGetPath: string, defaultValue = void 0) {
+    return Helpers.getValueFromJSON(filepath, lodashGetPath, defaultValue);
+  }
+
   setValueToJSON(filepath: string, lodashGetPath: string, value: any) {
     if (!fse.existsSync(filepath)) {
       Helpers.error(`Not able to set value in json: ${filepath}`, true, true);
