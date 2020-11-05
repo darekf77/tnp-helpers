@@ -1,0 +1,21 @@
+{
+  "resources": [],
+  "type": "isomorphic-lib",
+  "version": "v2",
+  "linkedProjects": [],
+  "overrided": {
+    "ignoreDepsPattern": [],
+    "includeAsDev": [],
+    "includeOnly": [
+      "tnp-models",
+      "morphi"
+    ],
+    "dependencies": {},
+    "linkedFolders": []
+  },
+  "libReleaseOptions": {
+    "nodts": false,
+    "obscure": false,
+    "ugly": false
+  }
+}
