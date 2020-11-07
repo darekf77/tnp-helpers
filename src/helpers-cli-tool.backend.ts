@@ -92,6 +92,23 @@ export class HelpersCliTool {
     return CurrentProject;
   }
 
+  resolveProjectsFromArgs(args: string | string[], CurrentProject: Project, ProjectClass: typeof Project): Project[] {
+    const projects = [];
+    if (!CurrentProject) {
+      return [];
+    }
+    if (_.isString(args)) {
+      args = args.split(' ');
+    }
+    args.forEach(a => {
+      const child = ProjectClass.From(path.join(CurrentProject.location, a));
+      if (child) {
+        projects.push(child);
+      }
+    });
+    return projects;
+  }
+
   match(name: string, argv: string[]): { isMatch: boolean; restOfArgs: string[] } {
     let isMatch = false;
     let restOfArgs = argv;
