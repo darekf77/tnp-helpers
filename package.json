@@ -225,7 +225,7 @@
     "svg-png-converter": "0.0.9",
     "systeminformation": "^3.45.7",
     "task.js": "^0.1.5",
-    "tnp-config": "~0.0.24",
+    "tnp-config": "~0.0.25",
     "tnp-db": "~0.0.16",
     "tnp-helpers": "~0.0.12",
     "tnp-ui": "~0.0.12",
