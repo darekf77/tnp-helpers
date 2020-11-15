@@ -115,6 +115,22 @@ export class HelpersTnp {
     return end;
   }
 
+  mesureExectionInMsSync(
+    description: string,
+    functionToExecute: () => void): number {
+    var start = new Date()
+    functionToExecute();
+    //@ts-ignore
+    var end = new Date() - start
+    if (Morphi.IsBrowser) {
+      Helpers.info(`Execution time: ${end.toString()}ms for "${description}"`);
+    }
+    //#region @backend
+    Helpers.info(`Execution time: ${chalk.bold(end.toString())}ms for "${chalk.bold(description)}"`);
+    //#endregion
+    return end;
+  }
+
   conditionWait = conditionWait;
 
   waitForCondition(conditionFn: (any) => boolean, howOfftenCheckInMs = 1000) {
