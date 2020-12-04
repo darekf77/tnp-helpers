@@ -109,6 +109,14 @@ export class HelpersGit {
     }
   }
 
+  checkoutDefaultBranch(directoryPath) {
+    const cwd = directoryPath;
+    const defaultBranch = child
+      .execSync(`git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'`, { cwd })
+      .toString().trim()
+    child.execSync(`git checkout ${defaultBranch}`, { cwd });
+  }
+
   //#endregion
 
 }
