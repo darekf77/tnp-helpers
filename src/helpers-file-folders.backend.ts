@@ -139,6 +139,12 @@ export class HelpersFileFolders {
     fse.symlinkSync(target, link)
   }
 
+  requireUncached(module) {
+    delete require.cache[require.resolve(module)];
+    return require(module);
+  }
+
+
   /**
    * get default export object from  js file
    * @param jsFilePath
