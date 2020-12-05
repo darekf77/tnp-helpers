@@ -38,6 +38,7 @@ export class Project<T extends Project<any> = any>
   public name: string;
   public genericName: string;
   public isWorkspace: boolean;
+  public isVscodeExtension: boolean;
   public isDocker: boolean;
   public isSite: boolean;
   public isSiteInStrictMode?: boolean;
@@ -152,6 +153,9 @@ export class Project<T extends Project<any> = any>
     }
     if (type === 'angular-lib') {
       resultProject = new (getClassFunction('ProjectAngularLib'))(location);
+    }
+    if (type === 'vscode-ext') {
+      resultProject = new (getClassFunction('ProjectVscodeExt'))(location);
     }
     if (type === 'angular-client') {
       resultProject = new (getClassFunction('ProjectAngularClient'))(location);
