@@ -111,6 +111,17 @@ export class HelpersProcess {
     }
   }
 
+  async  actionWrapper(fn: () => void, taskName: string = 'Task') {
+    function currentDate() {
+      return `[${dateformat(new Date(), 'HH:MM:ss')}]`;
+    }
+    // global.spinner && global.spinner.start()
+    Helpers.info(`${currentDate()} "${taskName}" Started..`)
+    await Helpers.runSyncOrAsync(fn);
+    Helpers.info(`${currentDate()} "${taskName}" Done\u2713`)
+    // global.spinner && global.spinner.stop()
+  }
+
   async  compilationWrapper(fn: () => void, taskName: string = 'Task',
     executionType: 'Compilation of' | 'Code execution of' | 'Event:' = 'Compilation of') {
     function currentDate() {

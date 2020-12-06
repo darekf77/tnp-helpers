@@ -66,6 +66,7 @@ export abstract class ProjectGit {
         try {
           var test = self.run('git rev-parse --is-inside-work-tree',
             {
+              biggerBuffer: false,
               cwd: self.location,
               output: false
             }).sync();
@@ -94,14 +95,21 @@ export abstract class ProjectGit {
       async updateOrigin(askToRetry = false) {
         await Helpers.git.pullCurrentBranch(self.location, askToRetry);
       },
-      pushCurrentBranch() {
-        self.run(`git push origin ${Helpers.git.currentBranchName(self.location)}`).sync()
+      pushCurrentBranch(force = false) {
+        self.run(`git push ${force ? '-f' : ''} origin ${Helpers.git.currentBranchName(self.location)}`).sync()
       },
       get thereAreSomeUncommitedChange() {
         return Helpers.run(`git diff --name-only`, { output: false, cwd: self.location }).sync().toString().trim() !== ''
       },
-      pullCurrentBranch() {
-        self.run(`git pull origin ${self.git.currentBranchName}`).sync()
+      pullCurrentBranch(force = false) {
+        if (force) {
+
+
+
+        } else {
+          self.run(`git pull origin ${self.git.currentBranchName}`).sync()
+        }
+
       },
       get currentBranchName() {
         // if (!self.git.isGitRepo) {
