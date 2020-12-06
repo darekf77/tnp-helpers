@@ -11,7 +11,6 @@ import { conditionWait } from './condition-wait';
 import * as Task from 'task.js';
 import * as os from 'os';
 import * as child from 'child_process';
-import { Helpers as MorpiHelpers } from 'morphi';
 import { HelpersGit } from './helpers-git.backend';
 import { HelpersCliTool } from './helpers-cli-tool.backend';
 import { HelpersMorphiFramework } from './helpers-morphi-framework.backend';
@@ -23,7 +22,7 @@ import { HelpersFileFolders } from './helpers-file-folders.backend';
 import chalk from 'chalk';
 import { HelpersDependencies } from './helpers-dependencies.backend';
 //#endregion
-import { config } from 'tnp-config';
+import { config, ConfigModels } from 'tnp-config';
 import { Helpers } from './index';
 import { CLASS } from 'typescript-class-helpers';
 import { Morphi, Models as MorphiModels } from 'morphi';
@@ -264,7 +263,7 @@ export class HelpersTnp {
   //#endregion
 
   //#region @backend
-  checkEnvironment = (deps?: MorphiModels.GlobalDependencies) => MorpiHelpers.checkEnvironment(deps)
+  checkEnvironment = (deps?: ConfigModels.GlobalDependencies) => config.checkEnvironment(deps);
   //#endregion
   public applyMixins = applyMixins;
 }
