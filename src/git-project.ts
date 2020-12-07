@@ -95,6 +95,12 @@ export abstract class ProjectGit {
       async updateOrigin(askToRetry = false) {
         await Helpers.git.pullCurrentBranch(self.location, askToRetry);
       },
+      commit(args: string) {
+        if (args.search('-m') === -1 && args.search('-msg') === -1) {
+          args = `-m ${args}`
+        }
+        self.run(`git commit --no-verify ${args}`).sync()
+      },
       pushCurrentBranch(force = false) {
         self.run(`git push ${force ? '-f' : ''} origin ${Helpers.git.currentBranchName(self.location)}`).sync()
       },
@@ -103,13 +109,10 @@ export abstract class ProjectGit {
       },
       pullCurrentBranch(force = false) {
         if (force) {
-
-
-
+          // TODO
         } else {
           self.run(`git pull origin ${self.git.currentBranchName}`).sync()
         }
-
       },
       get currentBranchName() {
         // if (!self.git.isGitRepo) {
