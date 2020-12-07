@@ -12,11 +12,10 @@ export class HelpersGit {
       return hash;
     } catch (e) {
       Helpers.log(e, 1);
-      Helpers.log(`[lastCommitHash] Cannot counts commits in branch in: ${directoryPath}`, 1)
+      Helpers.log(`[lastCommitHash] Not able to get last commit hash for repository in ${directoryPath}`, 1)
       return null;
 
     }
-
   }
 
   lastCommitDate(directoryPath): Date {
@@ -28,9 +27,7 @@ export class HelpersGit {
       Helpers.log(e, 1);
       Helpers.log(`[lastCommitDate] Cannot counts commits in branch in: ${directoryPath}`, 1)
       return null;
-
     }
-
   }
 
 

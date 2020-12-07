@@ -8,11 +8,17 @@ import * as path from 'path';
 import * as fkill from 'fkill';
 import * as dateformat from 'dateformat';
 
+import type { Project } from './project';
 import { Helpers } from './index';
 import { Models } from 'tnp-models';
 import { CLASS } from 'typescript-class-helpers';
+import { config } from 'tnp-config';
 declare const global: any;
 const prompts = require('prompts');
+import * as fuzzy from 'fuzzy'
+import * as inquirer from 'inquirer'
+import * as inquirerAutocomplete from 'inquirer-autocomplete-prompt';
+inquirer.registerPrompt('autocomplete', inquirerAutocomplete)
 //#endregion
 
 // TODO idea of procees someday to change
@@ -36,6 +42,47 @@ const prompts = require('prompts');
 
 
 export class HelpersProcess {
+
+  async restartApplicationItself(nameOfApp: string) {
+    Helpers.log(`Restarting ${nameOfApp}`);
+    return new Promise(resolve => {
+      setTimeout(function () {
+        process.on('exit', function () {
+          child.spawn(process.argv.shift(), [...process.argv, '--restarting'], {
+            cwd: process.cwd(),
+            detached: true,
+            stdio: 'inherit'
+          });
+        });
+        process.exit();
+      }, 5000);
+    });
+  }
+
+  goToDir(dir = '..') {
+    const previous = process.cwd()
+    try {
+
+      dir = path.isAbsolute(dir) ? dir : path.resolve(path.join(process.cwd(), dir));
+
+      if (path.basename(dir) === config.folder.external) {
+
+        const belowExternal = path.resolve(path.join(dir, '..'))
+        const classProject = CLASS.getBy('Project');
+        if (fse.existsSync(belowExternal) && !!(classProject as typeof Project).From(belowExternal)) {
+          dir = belowExternal;
+        }
+      }
+
+      process.chdir(dir)
+    }
+    catch (err) {
+      this.goToDir(previous)
+      return false;
+    }
+    return true;
+  }
+
   async pressKeyAnd(message = 'Press enter try again', printWaitMessages = 0) {
     if (_.isNumber(printWaitMessages) && printWaitMessages > 0) {
       Helpers.log(`Please wait (${printWaitMessages}) seconds`);
@@ -60,6 +107,36 @@ export class HelpersProcess {
     //     resovle()
     //   });
     // })
+  }
+
+  async  autocompleteAsk<T = string>(
+    question: string,
+    choices: { name: string; value: T; }[],
+    pageSize = 10
+  ) {
+
+    function source(answers, input) {
+      input = input || '';
+      return new Promise((resolve) => {
+        const fuzzyResult = fuzzy.filter(input, choices.map(f => f.name));
+        resolve(
+          fuzzyResult.map((el) => {
+            return { name: el.original, value: choices.find(c => c.name === el.original).value };
+          })
+        );
+      });
+    }
+
+    const res: { command: T } = await inquirer.prompt({
+      type: 'autocomplete',
+      name: 'command',
+      pageSize,
+      source,
+      message: question,
+      choices
+    } as any) as any;
+
+    return res.command;
   }
 
   async  questionYesNo(message: string,
@@ -109,6 +186,10 @@ export class HelpersProcess {
     } catch (e) {
       Helpers.error(e);
     }
+  }
+
+  sleep(seconds = 1) {
+    return Helpers.run(`sleep ${seconds}`).sync();
   }
 
   async  actionWrapper(fn: () => void, taskName: string = 'Task') {

@@ -21,11 +21,13 @@ import { HelpersTerminal } from './helpers-system-terminal.backend';
 import { HelpersFileFolders } from './helpers-file-folders.backend';
 import chalk from 'chalk';
 import { HelpersDependencies } from './helpers-dependencies.backend';
+import { HelpersPath } from './helpers-path.backend';
 //#endregion
 import { config, ConfigModels } from 'tnp-config';
 import { Helpers } from './index';
 import { CLASS } from 'typescript-class-helpers';
 import { Morphi, Models as MorphiModels } from 'morphi';
+
 
 
 export function applyMixins(derivedCtor: any, baseCtors: any[]) {
@@ -61,6 +63,7 @@ export class HelpersTnp {
     public npm = new HelpersNpm(),
     public morphi = new HelpersMorphiFramework(),
     public deps = new HelpersDependencies(),
+    public path = new HelpersPath(),
     //#endregion
     public arrays = new HelpersArrayObj(),
     public strings = new HelpersStrings(),

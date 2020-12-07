@@ -1,7 +1,7 @@
 import * as glob from 'glob';
 import * as path from 'path';
 import { config } from 'tnp-config';
-import { HelpersMerge } from './merge-helpers.backend';
+import { BaselineSiteJoinprefix } from './constants';
 
 export class HelpersMorphiFramework {
 
@@ -17,7 +17,7 @@ export class HelpersMorphiFramework {
         //   log(`Not match entity patern: ${p + path.basename(p)}`)
         // }
         return isMatchRegex &&
-          !path.basename(p).startsWith(HelpersMerge.BaselineSiteJoinprefix) &&
+          !path.basename(p).startsWith(BaselineSiteJoinprefix) &&
           !p.endsWith('Controller.ts') &&
           !p.endsWith('_REPOSITORY.ts') &&
           !p.endsWith('.REPOSITORY.ts') &&
@@ -40,7 +40,7 @@ export class HelpersMorphiFramework {
         cwd: cwd
       })
       .filter(p => {
-        return !path.basename(p).startsWith(HelpersMerge.BaselineSiteJoinprefix);
+        return !path.basename(p).startsWith(BaselineSiteJoinprefix);
       });
   }
 

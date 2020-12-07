@@ -1,5 +1,6 @@
 import * as fse from 'fs-extra';
 import * as fs from 'fs';
+import * as child from 'child_process';
 import * as _ from 'lodash';
 import * as  underscore from 'underscore';
 import * as path from 'path';
@@ -83,6 +84,11 @@ export class HelpersFileFolders {
     }
   }
 
+  renameFolder(from: string, to: string, cwd?: string) {
+    const command = `renamer --find  ${from}  --replace  ${to} *`;
+    Helpers.run(command, { cwd }).sync()
+  }
+
   createSymLink(existedFileOrFolder: string, destinationPath: string,
     options?: { continueWhenExistedFolderDoesntExists?: boolean; dontRenameWhenSlashAtEnd?: boolean; }) {
 
@@ -137,6 +143,52 @@ export class HelpersFileFolders {
     // Helpers.log(`target ${target}`)
     // Helpers.log(`link ${link}`)
     fse.symlinkSync(target, link)
+  }
+
+  isPlainFileOrFolder(filePath) {
+    return /^([a-zA-Z]|\-|\_|\@|\#|\$|\!|\^|\&|\*|\(|\))+$/.test(filePath);
+  }
+
+  createMultiplatformLink(target: string, link: string) {
+    if (this.isPlainFileOrFolder(link)) {
+      link = path.join(process.cwd(), link);
+    }
+
+    let command: string;
+    if (os.platform() === 'win32') {
+
+      if (target.startsWith('./')) {
+        target = path.win32.normalize(path.join(process.cwd(), path.basename(target)))
+      } else {
+        if (target === '.' || target === './') {
+          target = path.win32.normalize(path.join(process.cwd(), path.basename(link)))
+        } else {
+          target = path.win32.normalize(path.join(target, path.basename(link)))
+        }
+      }
+      if (fs.existsSync(target)) {
+        fs.unlinkSync(target);
+      }
+      target = path.win32.normalize(target)
+      if (link === '.' || link === './') {
+        link = process.cwd()
+      }
+      link = path.win32.normalize(link)
+      command = "mklink \/D "
+        + target
+        + " "
+        + link
+        + " >nul 2>&1 "
+    } else {
+      if (target.startsWith('./')) {
+        target = target.replace(/^\.\//g, '');
+      }
+      if (link === '.' || link === './') {
+        link = process.cwd()
+      }
+      command = `ln -sf "${link}" "${target}"`;
+    }
+    child.execSync(command);
   }
 
   requireUncached(module) {
@@ -212,6 +264,16 @@ export class HelpersFileFolders {
 
 
     return eval(fileContent)
+  }
+
+  tryRecreateDir(dirpath: string) {
+    try {
+      Helpers.mkdirp(dirpath);
+    } catch (error) {
+      Helpers.log(`Trying to recreate directory: ${dirpath}`)
+      Helpers.sleep(1);
+      Helpers.mkdirp(dirpath);
+    }
   }
 
   tryCopyFrom(source: string, destination: string, options = {}) {
@@ -290,15 +352,26 @@ export class HelpersFileFolders {
   // };
 
   tryRemoveDir(dirpath: string, contentOnly = false) {
+    if (!fse.existsSync(dirpath)) {
+      console.warn(`Folder ${path.basename(dirpath)} doesn't exist.`)
+      return;
+    }
     Helpers.log(`[tnp-helpers][tryRemoveDir]: ${dirpath}`);
     // if (dirpath == '/Users/dfilipiak/projects/npm/firedev-projects/container-v2/workspace-v2') {
     //   console.trace('aaaaaaaa')
     //   process.exit(0)
     // }
-    if (contentOnly) {
-      rimraf.sync(`${dirpath}/*`)
-    } else {
-      rimraf.sync(dirpath)
+    try {
+      if (contentOnly) {
+        rimraf.sync(`${dirpath}/*`)
+      } else {
+        rimraf.sync(dirpath)
+      }
+      return;
+    } catch (e) {
+      Helpers.log(`Trying to remove directory: ${dirpath}`)
+      Helpers.sleep(1);
+      Helpers.tryRemoveDir(dirpath, contentOnly);
     }
   }
 
@@ -379,6 +452,39 @@ export class HelpersFileFolders {
         return createFn(dir);
       })
       .filter(c => !!c)
+  }
+
+  findChildrenNavi<T>(location, createFn: (childLocation: string) => T): T[] {
+    if (!fse.existsSync(location)) {
+      return []
+    }
+
+    const notAllowed: RegExp[] = [
+      '\.vscode', 'node\_modules',
+      ..._.values(config.folder),
+      'e2e', 'tmp.*', 'dist.*', 'tests',
+      'module', 'browser', 'bundle*',
+      'components', '\.git', '\.build', 'bin', 'custom'
+    ].map(s => new RegExp(s))
+
+    const isDirectory = source => fse.lstatSync(source).isDirectory()
+    const getDirectories = source =>
+      fse.readdirSync(source).map(name => path.join(source, name)).filter(isDirectory)
+
+    let subdirectories = getDirectories(location)
+      .filter(f => {
+        const folderName = path.basename(f);
+        if (/.*es\-.*/.test(folderName)) {
+          return true
+        }
+        return (notAllowed.filter(p => p.test(folderName)).length === 0);
+      })
+
+    return subdirectories
+      .map(dir => {
+        return createFn(dir);
+      })
+      .filter(c => !!c);
   }
 
 

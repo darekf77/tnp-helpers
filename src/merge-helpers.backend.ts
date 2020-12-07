@@ -14,29 +14,12 @@ import chalk from 'chalk';
 
 export namespace HelpersMerge {
 
-  export const BaselineSiteJoinprefix = '__';
-
-  export const PathHelper = {
-    PREFIX(baseFileName) {
-      return `${BaselineSiteJoinprefix}${baseFileName}`
-    },
-    removeRootFolder(filePath: string) {
-      return filePath.replace(new RegExp(`^${config.regexString.pathPartStringRegex}`, 'g'), '')
-    },
-    removeExtension(filePath: string) {
-      const ext = path.extname(filePath);
-      return path.join(path.dirname(filePath), path.basename(filePath, ext))
-    },
-
-  }
-
-
   export function getPrefixedBasename(relativeFilePath: string) {
     const ext = path.extname(relativeFilePath);
     const basename = path.basename(relativeFilePath, ext)
       .replace(/\/$/g, ''); // replace last part of url /
 
-    const resultPath = PathHelper.PREFIX(`${basename}${ext}`);
+    const resultPath = Helpers.path.PREFIX(`${basename}${ext}`);
     return resultPath;
   }
 
