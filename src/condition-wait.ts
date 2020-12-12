@@ -17,7 +17,7 @@ export async function conditionWait(conditionAndTimeout: Condition[]) {
 function waitFor(arr: Condition[], messageToShow: string = void 0) {
   return new Promise(async (resolve, reject) => {
     if (arr.length === 0) {
-      resolve()
+      resolve(void 0)
     } else {
       // console.log(arr.length)
       const check = arr.shift();
@@ -38,7 +38,7 @@ function waitFor(arr: Condition[], messageToShow: string = void 0) {
         setTimeout(async () => {
           // console.log(`timeout 1 is over`)
           await waitFor(arr).then(() => {
-            resolve();
+            resolve(void 0);
           });
         }, timeoutNext);
       } else {
@@ -53,7 +53,7 @@ function waitFor(arr: Condition[], messageToShow: string = void 0) {
         setTimeout(async () => {
           // console.log(`timeout 2 ${timeoutCheck} ovef`)
           await waitFor(arr, check.errorMessage).then(() => {
-            resolve();
+            resolve(void 0);
           });
         }, timeoutCheck);
       }

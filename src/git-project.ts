@@ -25,7 +25,8 @@ export abstract class ProjectGit {
   //#endregion
 
   //#region @backend
-  public get git(this: Project, ) {
+  // @ts-ignore
+  public get git(this: Project) {
     const self = this;
     return {
       resetFiles(...relativePathes: string[]) {

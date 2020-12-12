@@ -26,10 +26,13 @@ export abstract class BaseFormlyComponent<T extends DualComponentController = Du
   protected DualComponentController = DualComponentController;
   public ctrl: T = {} as any;
   @Input() pizda: any;
+
+  // @ts-ignore
   get mode() {
     return this.ctrl.mode;
   }
 
+  // @ts-ignore
   @Input() set mode(v) {
     this.ctrl.mode = v;
   }
@@ -38,6 +41,8 @@ export abstract class BaseFormlyComponent<T extends DualComponentController = Du
   @Input() label: string;
   @Input() placeholder: string;
   @Input() defaultValue: T;
+
+  // @ts-ignore
   @Input() set model(v) {
     this.ctrl.model = v;
   }
@@ -48,6 +53,7 @@ export abstract class BaseFormlyComponent<T extends DualComponentController = Du
   @Output() change = new EventEmitter();
 
 
+  // @ts-ignore
   @Input() set key(value: string) {
     if (this.ctrl && this.ctrl.isFormlyMode) {
       return;

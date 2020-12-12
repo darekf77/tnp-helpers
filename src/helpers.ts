@@ -140,11 +140,11 @@ export class HelpersTnp {
 
       const result = await Helpers.runSyncOrAsync(conditionFn);
       if (result) {
-        resolve()
+        resolve(void 0)
       } else {
         setTimeout(() => {
           Helpers.waitForCondition(conditionFn, howOfftenCheckInMs).then(() => {
-            resolve();
+            resolve(void 0);
           })
         }, howOfftenCheckInMs);
       }

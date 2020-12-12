@@ -93,7 +93,7 @@ export class HelpersProcess {
     return new Promise((resovle) => {
       Helpers.log(message);
       process.stdin.once('data', function () {
-        resovle()
+        resovle(void 0)
       });
     })
   }
@@ -436,7 +436,7 @@ command: ${command}
 
         if (_.isString(data) && data.search(message) !== -1) {
           resolved = true;
-          resolve();
+          resolve(void 0);
         }
       })
       proc.once('exit', (code) => {
@@ -580,7 +580,7 @@ command: ${command}
           proc.on('exit', () => {
             if (!isResolved) {
               isResolved = true;
-              resolve();
+              resolve(void 0);
             }
 
           });
@@ -632,7 +632,7 @@ command: ${command}
                 if ((data.search(m) !== -1)) {
                   Helpers.info(`[unitlOutputContains] Move to next step...`)
                   isResolved = true;
-                  resolve();
+                  resolve(void 0);
                   break;
                 }
               }

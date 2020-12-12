@@ -9,6 +9,7 @@ import { NavigationEnd, Router } from '@angular/router';
 })
 export abstract class BaseComponent implements OnDestroy {
 
+  // @ts-ignore
   @Input() model: any = {};
 
   handlers: Subscription[] = [];
