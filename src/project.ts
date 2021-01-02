@@ -9,7 +9,7 @@ import { ProjectGit } from './git-project';
 
 //#endregion
 declare const global: any;
-import { config } from 'tnp-config';
+import { config, LibTypeArr, ConfigModels } from 'tnp-config';
 import * as _ from 'lodash';
 import { CLASS } from 'typescript-class-helpers';
 import { Models } from 'tnp-models';
@@ -32,7 +32,7 @@ export class Project<T extends Project<any> = any>
    * Do use this variable for comparatios
    * ONLY FOR VIEWING
    */
-  public readonly _type: Models.libs.LibType;
+  public readonly _type: ConfigModels.LibType;
   public browser: Pick<Project<any>, 'location' | 'name'> = {} as any;
   public location: string;
   public name: string;
@@ -62,7 +62,7 @@ export class Project<T extends Project<any> = any>
   public lastNpmVersion?: string;
   public _routerTargetHttp?: string;
   public customizableFilesAndFolders: string[];
-  public type: Models.libs.LibType;
+  public type: ConfigModels.LibType;
   public backupName: string;
   public resources: string[];
   public env: Models.env.EnvConfig;
@@ -92,7 +92,7 @@ export class Project<T extends Project<any> = any>
    */
   public static emptyLocations: string[] = [];
 
-  static typeFrom(location: string): Models.libs.LibType {
+  static typeFrom(location: string): ConfigModels.LibType {
     //#region @backendFunc
     const PackageJSON = CLASS.getBy('PackageJSON') as any;
 
@@ -154,6 +154,9 @@ export class Project<T extends Project<any> = any>
     if (type === 'angular-lib') {
       resultProject = new (getClassFunction('ProjectAngularLib'))(location);
     }
+    if (type === 'electron-client') {
+      resultProject = new (getClassFunction('ProjectElectronClient'))(location);
+    }
     if (type === 'vscode-ext') {
       resultProject = new (getClassFunction('ProjectVscodeExt'))(location);
     }
@@ -205,13 +208,13 @@ export class Project<T extends Project<any> = any>
 
   public static nearestTo<T = Project>(
     absoluteLocation: string,
-    options?: { type?: Models.libs.LibType; findGitRoot?: boolean; onlyOutSideNodeModules?: boolean }): T {
+    options?: { type?: ConfigModels.LibType; findGitRoot?: boolean; onlyOutSideNodeModules?: boolean }): T {
     //#region @backendFunc
 
     options = options || {};
     const { type, findGitRoot, onlyOutSideNodeModules } = options;
 
-    if (_.isString(type) && !Models.libs.LibTypeArr.includes(type)) {
+    if (_.isString(type) && !LibTypeArr.includes(type)) {
       Helpers.error(`[tnp-helpers][project.nearestTo] wrong type: ${type}`, false, true)
     }
     if (fse.existsSync(absoluteLocation)) {
@@ -267,10 +270,11 @@ export class Project<T extends Project<any> = any>
     //#endregion
   }
 
-  public static DefaultPortByType(type: Models.libs.LibType): number {
+  public static DefaultPortByType(type: ConfigModels.LibType): number {
     if (type === 'workspace') { return 5000; }
     if (type === 'angular-client') { return 4300; }
     if (type === 'angular-lib') { return 4250; }
+    if (type === 'electron-client') { return 4350; }
     if (type === 'ionic-client') { return 8080; }
     if (type === 'docker') { return 5000; }
     if (type === 'isomorphic-lib') { return 4000; }
@@ -314,8 +318,8 @@ export class Project<T extends Project<any> = any>
   }
 
   public static by<T = Project>(
-    libraryType: Models.libs.NewFactoryType,
-    version: Models.libs.FrameworkVersion
+    libraryType: ConfigModels.NewFactoryType,
+    version: ConfigModels.FrameworkVersion
       //#region @backend
       = config.defaultFrameworkVersion
     //#endregion
@@ -363,15 +367,15 @@ export class Project<T extends Project<any> = any>
     //#endregion
   }
 
-  public setType(this: Project, type: Models.libs.LibType) {
+  public setType(this: Project, type: ConfigModels.LibType) {
     // @ts-ignore
     this._type = type;
   }
-  public typeIs(this: Project, ...types: Models.libs.LibType[]) {
+  public typeIs(this: Project, ...types: ConfigModels.LibType[]) {
     return this._type && types.includes(this._type);
   }
 
-  public typeIsNot(this: Project, ...types: Models.libs.LibType[]) {
+  public typeIsNot(this: Project, ...types: ConfigModels.LibType[]) {
     return !this.typeIs(...types);
   }
 
@@ -414,10 +418,10 @@ function getClassFunction(className) {
 
 
 function checkIfTypeIsNotCorrect(type, location) {
-  if (_.isString(type) && !Models.libs.LibTypeArr.includes(type as any)) {
+  if (_.isString(type) && !LibTypeArr.includes(type as any)) {
     Helpers.error(`Incorrect type: "${type}"
 
-    Please use one of this: ${Models.libs.LibTypeArr.join(',')}
+    Please use one of this: ${LibTypeArr.join(',')}
 
     in
     package.json > ${config.frameworkName}.type

@@ -3,6 +3,7 @@ import * as  _ from 'lodash';
 
 import { Helpers } from './index';
 import { Models } from 'tnp-models';
+import { CoreLibCategoryArr } from 'tnp-config';
 
 async function start() {
 
@@ -19,14 +20,14 @@ async function start() {
         tnpModels?: typeof Models
       };
 
-      // console.log(tnpModels.libs.CoreLibCategoryArr.join(','));
+      // console.log(CoreLibCategoryArr.join(','));
       // console.log(global['dataChunk'])
       // console.log(global['n'])
       // Helpers.writeFile('', dataChunk.join(''))
       return new Promise(resolve => {
         setTimeout(() => {
           resolve();
-          console.log(tnpModels.libs.CoreLibCategoryArr.join(','))
+          console.log(CoreLibCategoryArr.join(','))
           console.log(
             `resolved worker ${n} `
             + dataChunk.join(',')
