@@ -146,7 +146,7 @@ export class Project<T extends Project<any> = any>
     let type = this.typeFrom(location);
     PackageJSON && checkIfTypeIsNotCorrect(type, location);
 
-    // console.log(`TYpe "${type}" for ${location} `)
+    // Helpers.log(`[tnp-helpers] Type "${type}" for ${location} `)
     let resultProject: Project<any>;
     if (type === 'isomorphic-lib') {
       resultProject = new (getClassFunction('ProjectIsomorphicLib'))(location);
@@ -174,6 +174,9 @@ export class Project<T extends Project<any> = any>
     }
     if (type === 'container') {
       resultProject = new (getClassFunction('ProjectContainer'))(location);
+    }
+    if (type === 'navi') {
+      resultProject = new (getClassFunction('ProjectNavi'))(location);
     }
     if (type === 'unknow-npm-project') {
       resultProject = new (getClassFunction('ProjectUnknowNpm'))(location);
