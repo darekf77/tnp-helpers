@@ -109,7 +109,7 @@ export class HelpersProcess {
     // })
   }
 
-  async  autocompleteAsk<T = string>(
+  async autocompleteAsk<T = string>(
     question: string,
     choices: { name: string; value: T; }[],
     pageSize = 10
@@ -139,26 +139,30 @@ export class HelpersProcess {
     return res.command;
   }
 
-  async  questionYesNo(message: string,
-    callbackTrue?: () => any, callbackFalse?: () => any) {
+  async questionYesNo(message: string,
+    callbackTrue?: () => any, callbackFalse?: () => any, defaultValue = true) {
 
     let response = {
-      value: true
+      value: defaultValue
     };
     if (!global.tnpNonInteractive) {
       response = await prompts({
         type: 'toggle',
         name: 'value',
         message,
-        initial: true,
+        initial: defaultValue,
         active: 'yes',
         inactive: 'no'
       });
     }
     if (response.value) {
-      await Helpers.runSyncOrAsync(callbackTrue);
+      if (callbackTrue) {
+        await Helpers.runSyncOrAsync(callbackTrue);
+      }
     } else {
-      await Helpers.runSyncOrAsync(callbackFalse);
+      if(callbackFalse) {
+        await Helpers.runSyncOrAsync(callbackFalse);
+      }
     }
     return response.value;
   }
@@ -192,7 +196,7 @@ export class HelpersProcess {
     return Helpers.run(`sleep ${seconds}`).sync();
   }
 
-  async  actionWrapper(fn: () => void, taskName: string = 'Task') {
+  async actionWrapper(fn: () => void, taskName: string = 'Task') {
     function currentDate() {
       return `[${dateformat(new Date(), 'HH:MM:ss')}]`;
     }
@@ -203,7 +207,7 @@ export class HelpersProcess {
     // global.spinner && global.spinner.stop()
   }
 
-  async  compilationWrapper(fn: () => void, taskName: string = 'Task',
+  async compilationWrapper(fn: () => void, taskName: string = 'Task',
     executionType: 'Compilation of' | 'Code execution of' | 'Event:' = 'Compilation of') {
     function currentDate() {
       return `[${dateformat(new Date(), 'HH:MM:ss')}]`;
@@ -233,7 +237,7 @@ export class HelpersProcess {
     Helpers.run(`kill -9 ${byPid}`).sync()
   }
 
-  async  killProcessByPort(port: number) {
+  async killProcessByPort(port: number) {
     const org = port;
     port = Number(port);
     if (!_.isNumber(port)) {
@@ -325,13 +329,12 @@ ${Helpers.terminalLine()}\n`;
     return `
 ${Helpers.terminalLine()}
 <-- ${isDirectory ? 'Path to directory' : 'Path to file'}: -->
-${
-      isDirectory ? pathToFileOrFolder.split('/').map(c => `/${c}`).join('').replace(/^\//, '') : (
+${isDirectory ? pathToFileOrFolder.split('/').map(c => `/${c}`).join('').replace(/^\//, '') : (
         path.dirname(pathToFileOrFolder.split('/').map(c => `/${c}`).join('').replace(/^\//, ''))
         + '\n/' + chalk.bold(path.basename(pathToFileOrFolder))
       )
       }
-${ Helpers.terminalLine()}\n`;
+${Helpers.terminalLine()}\n`;
   };
 
   modifyLineByLine(

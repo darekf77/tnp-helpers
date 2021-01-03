@@ -8,6 +8,7 @@ import * as rimraf from 'rimraf';
 import * as os from 'os';
 import * as glob from 'glob';
 import { JSON10 } from 'json10';
+import * as crypto from 'crypto';
 
 
 import { Helpers } from './index';
@@ -18,6 +19,17 @@ import { Models } from 'tnp-models';
 const encoding = 'utf8';
 
 export class HelpersFileFolders {
+
+  /**
+   * Calculate file checksum
+   */
+  checksum(pathToFile: string, algorithm?: 'md5' | 'sha1') {
+    const fileContent = Helpers.readFile(pathToFile);
+    return crypto
+      .createHash(algorithm || 'md5')
+      .update(fileContent, 'utf8')
+      .digest('hex')
+  }
 
   getValueFromJSON(filepath: string, lodashGetPath: string, defaultValue = void 0) {
     if (!fse.existsSync(filepath)) {
