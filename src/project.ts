@@ -181,6 +181,9 @@ export class Project<T extends Project<any> = any>
     if (type === 'unknow-npm-project') {
       resultProject = new (getClassFunction('ProjectUnknowNpm'))(location);
     }
+    if (type === 'scenario') {
+      resultProject = new (getClassFunction('ProjectScenarioReqRes'))(location);
+    }
 
     // log(resultProject ? (`PROJECT ${resultProject.type} in ${location}`)
     //     : ('NO PROJECT FROM LOCATION ' + location))

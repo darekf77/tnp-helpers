@@ -9,7 +9,7 @@ import * as os from 'os';
 import * as glob from 'glob';
 import { JSON10 } from 'json10';
 import * as crypto from 'crypto';
-
+import * as json5 from 'json5';
 
 import { Helpers } from './index';
 import { config } from 'tnp-config';
@@ -791,13 +791,18 @@ ${sourceData}
     }).toString().trim()
   }
 
-  readJson(absoluteFilePath: string, defaultValue = {}) {
+  readJson(absoluteFilePath: string, defaultValue = {}, useJson5 = false) {
     if (!fse.existsSync(absoluteFilePath)) {
       return {};
     }
     try {
       const fileContent = Helpers.readFile(absoluteFilePath);
-      let json = JSON.parse(fileContent);
+      let json;
+      if (useJson5) {
+        json = json5.parse(fileContent);
+      } else {
+        json = JSON.parse(fileContent);
+      }
       return json;
     } catch (error) {
       return defaultValue;
