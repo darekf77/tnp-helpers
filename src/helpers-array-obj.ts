@@ -1,5 +1,6 @@
 import * as _ from 'lodash';
 import { Helpers } from './index';
+import * as fuzzy from 'fuzzy';
 
 export class HelpersArrayObj {
 
@@ -43,4 +44,33 @@ export class HelpersArrayObj {
     }
     return obj;
   };
+
+  /**
+   * Fuzzy search
+   */
+  fuzzy<T = any>(query: string, list: T[], valueFn?: (modelFromList: T) => string) {
+    const resultsFuzzy = fuzzy.filter(
+      query,
+      list.map(k => valueFn ? valueFn(k) : k),
+    )
+    const resultsFuzzyKebab = fuzzy.filter(
+      _.kebabCase(query),
+      list.map(k => _.kebabCase((valueFn ? valueFn(k) : k) as any)),
+    )
+    const matches = resultsFuzzy.map((el) => el.string);
+    const matchesKebab = resultsFuzzyKebab.map((el) => el.string);
+
+    const results = (resultsFuzzy.length === 0) ? [] : list.filter(k => {
+      return matches.includes((valueFn ? valueFn(k) : k) as any);
+    })
+
+    if (matches.length === 0 && matchesKebab.length > 0) {
+      const m = list.find(k => _.kebabCase((valueFn ? valueFn(k) : k) as any) === _.first(matchesKebab));
+      results.push(m);
+      matches.push((valueFn ? valueFn(m) : m) as any);
+    }
+
+    return { matches, results };
+  }
+
 }
