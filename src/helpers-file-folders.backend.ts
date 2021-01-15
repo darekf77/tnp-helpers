@@ -812,7 +812,11 @@ ${sourceData}
   /**
    * wrapper for fs.writeFileSync
    */
-  writeFile(absoluteFilePath: string, input: string | object, dontWriteSameFile = true): boolean {
+  writeFile(absoluteFilePath: string | (string[]), input: string | object, dontWriteSameFile = true): boolean {
+    if (_.isArray(absoluteFilePath)) {
+      absoluteFilePath = path.join.apply(this, absoluteFilePath);
+    }
+    absoluteFilePath = absoluteFilePath as string;
     if (!fse.existsSync(path.dirname(absoluteFilePath))) {
       Helpers.mkdirp(path.dirname(absoluteFilePath));
     }

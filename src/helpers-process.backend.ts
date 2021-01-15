@@ -109,6 +109,19 @@ export class HelpersProcess {
     // })
   }
 
+  async list<T = string>(
+    question: string,
+    choices: { name: string; value: T; }[]
+  ) {
+    const res = await inquirer.prompt({
+      type: 'list',
+      name: 'value',
+      message: question,
+      choices
+    } as any) as any;
+    return res.value;
+  }
+
   async autocompleteAsk<T = string>(
     question: string,
     choices: { name: string; value: T; }[],
@@ -160,7 +173,7 @@ export class HelpersProcess {
         await Helpers.runSyncOrAsync(callbackTrue);
       }
     } else {
-      if(callbackFalse) {
+      if (callbackFalse) {
         await Helpers.runSyncOrAsync(callbackFalse);
       }
     }
