@@ -83,10 +83,10 @@ export class HelpersProcess {
     return true;
   }
 
-  async pressKeyAnd(message = 'Press enter try again', printWaitMessages = 0) {
+  async pressKeyOrWait(message = 'Press enter try again', printWaitMessages = 0) {
     if (_.isNumber(printWaitMessages) && printWaitMessages > 0) {
       Helpers.log(`Please wait (${printWaitMessages}) seconds`);
-      await Helpers.pressKeyAnd(message, printWaitMessages - 1);
+      await Helpers.pressKeyOrWait(message, printWaitMessages - 1);
       return;
     }
 

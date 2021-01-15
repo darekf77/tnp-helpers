@@ -69,6 +69,15 @@ export class HelpersFileFolders {
     return JSON.stringify(inputObject, null, 2);
   }
 
+  parse(jsonInstring: string, useJson5 = false) {
+    if (!_.isString(jsonInstring)) {
+      Helpers.log(jsonInstring)
+      Helpers.warn(`[tnp-helpers] Trying to parse no a string...`)
+      return jsonInstring;
+    }
+    return useJson5 ? json5.parse(jsonInstring) : JSON.parse(jsonInstring);
+  }
+
 
   pathFromLink(filePath: string) {
     return fse.readlinkSync(filePath);
@@ -798,11 +807,7 @@ ${sourceData}
     try {
       const fileContent = Helpers.readFile(absoluteFilePath);
       let json;
-      if (useJson5) {
-        json = json5.parse(fileContent);
-      } else {
-        json = JSON.parse(fileContent);
-      }
+      json = Helpers.parse(fileContent, useJson5);
       return json;
     } catch (error) {
       return defaultValue;
