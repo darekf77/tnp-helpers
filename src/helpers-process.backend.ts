@@ -117,7 +117,9 @@ export class HelpersProcess {
       type: 'list',
       name: 'value',
       message: question,
-      choices
+      choices,
+      pageSize: 10,
+      loop: false,
     } as any) as any;
     return res.value;
   }
