@@ -8,39 +8,77 @@ import { config } from 'tnp-config';
 
 export class HelpersCliTool {
 
-  paramsFromFn(classFN: Function, shortVersion = false) {
-    const classFnParsed = Helpers.cliTool.paramsFrom(CLASS.getName(classFN));
-    if (!classFnParsed) {
-      return '';
+  /**
+   * return simplified version of command:
+   * example: tnp HELLO:WORLD
+   * will be: tnp helloworld
+   *
+   * or: `tnp ${$START}`
+   * will be `tnp start`
+   *
+   * @param commandStringOrClass
+   */
+  simplifiedCmd(commandStringOrClass: string | Function, shortVersion = false) {
+    if (_.isFunction(commandStringOrClass)) {
+      commandStringOrClass = CLASS.getName(commandStringOrClass);
     }
-    if (shortVersion) {
-      const shortKey = Object.keys(config.argsReplacements).find(key => {
-        const v = Helpers.cliTool.paramsFrom(config.argsReplacements[key]);
-        return v.trim() === classFnParsed.trim();
-      });
-      return shortKey;
+    if (!commandStringOrClass) {
+      commandStringOrClass = ''
     }
-    return classFnParsed;
-  }
 
-  paramsFrom(command: string) {
-    if (!command) {
-      command = ''
-    }
-    return _
-      .kebabCase(command)
+    commandStringOrClass = _
+      .kebabCase(commandStringOrClass as string)
       .replace(/\$/g, '')
       .replace(/\-/g, '')
       .replace(/\:/g, '')
       .replace(/\_/g, '')
       .toLowerCase()
+
+    if (shortVersion) {
+      const shortKey = Object.keys(config.argsReplacements).find(key => {
+        const v = Helpers.cliTool.simplifiedCmd(config.argsReplacements[key]);
+        return v.trim() === (commandStringOrClass as string).trim();
+      });
+      return shortKey;
+    }
+
+    return commandStringOrClass;
+  }
+
+  argsFromBegin<T = any>(argumentsCommands: string | string[], argsFunc: (restOfCommandArgs) => T): {
+    resolved: T[],
+    /**
+     * arguments string without resolved
+     */
+    commandString: string;
+  } {
+    const resolved = [] as T[];
+    if (_.isString(argumentsCommands)) {
+      argumentsCommands = argumentsCommands.split(' ');
+    }
+    let commandString = (argumentsCommands || []);
+    while (true) {
+      const a = commandString.shift();
+      const v = argsFunc(a);
+      if (!_.isNil(v)) {
+        resolved.push(v);
+        continue;
+      }
+      break;
+    }
+
+    return { resolved, commandString: commandString.join(' ') };
   }
 
   argsFrom<T = any>(args: string | string[]) {
-    if (_.isString(args)) {
-      args = args.split(' ');
+    if (_.isArray(args)) {
+      args = Helpers.cliTool.removeStartEndCommandChars(args.join(' ')).split(' ');
     }
-    const obj = require('minimist')(args) as any;
+    if (_.isString(args)) {
+      args = Helpers.cliTool.removeStartEndCommandChars(args).split(' ');
+    }
+
+    const obj = require('minimist')(args || []) as any;
     Object.keys(obj).forEach(key => {
       const v = obj[key];
       if (v === 'true') {
@@ -51,6 +89,15 @@ export class HelpersCliTool {
       }
     })
     return (_.isObject(obj) ? obj : {}) as T;
+  }
+
+  removeStartEndCommandChars(command: string) {
+    return (command || '')
+      .replace(/^\"/, '')
+      .replace(/^\'/, '')
+      .replace(/\"$/, '')
+      .replace(/\'$/, '')
+      .trim()
   }
 
   resolveProject<T = Project>(args: string | string[], CurrentProject: Project, ProjectClass: typeof Project): T {
@@ -109,12 +156,17 @@ export class HelpersCliTool {
     return projects;
   }
 
-  match(name: string, argv: string[]): { isMatch: boolean; restOfArgs: string[] } {
+  /**
+   * Check if your function name fits into command line param
+   *
+   * @param name name of function
+   * @param restOfArgs arguments from command line
+   */
+  match(name: string, restOfArgs: string[]): { isMatch: boolean; restOfArgs: string[] } {
     let isMatch = false;
-    let restOfArgs = argv;
 
     let counter = 0;
-    isMatch = !!argv
+    isMatch = !!restOfArgs
       .filter(a => !a.startsWith('--')) // TODO fix this also for other special paramters
       .find((vv, i) => {
 
@@ -123,12 +175,12 @@ export class HelpersCliTool {
           return false
         }
         // console.log(`counter ok for ${vv}`)
-        const nameInKC = Helpers.cliTool.paramsFrom(name);
-        const argInKC = Helpers.cliTool.paramsFrom(vv);
+        const nameInKC = Helpers.cliTool.simplifiedCmd(name);
+        const argInKC = Helpers.cliTool.simplifiedCmd(vv);
 
         const condition = (nameInKC === argInKC)
         if (condition) {
-          restOfArgs = _.slice(argv, i + 1, argv.length);
+          restOfArgs = _.slice(restOfArgs, i + 1, restOfArgs.length);
         }
         return condition;
       });

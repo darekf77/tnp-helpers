@@ -543,7 +543,7 @@ command: ${command}
         }
         const fnName = typeof fn === 'function' ? CLASS.getName(fn) : fn;
         // console.log('Function name ', fnName)
-        let cmd = `tnp ${Helpers.cliTool.paramsFrom(fnName)} ${params}`;
+        let cmd = `tnp ${Helpers.cliTool.simplifiedCmd(fnName)} ${params}`;
         const toRun = `watch ${that.prepareWatchCommand(cmd)} ${folderPath}`;
         return that.run(toRun, { cwd }).async()
       }

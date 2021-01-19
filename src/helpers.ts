@@ -11,6 +11,7 @@ import { conditionWait } from './condition-wait';
 import * as Task from 'task.js';
 import * as os from 'os';
 import * as child from 'child_process';
+import { URL } from 'url';
 import { HelpersGit } from './helpers-git.backend';
 import { HelpersCliTool } from './helpers-cli-tool.backend';
 import { HelpersMorphiFramework } from './helpers-morphi-framework.backend';
@@ -77,6 +78,48 @@ export class HelpersTnp {
     CLASS.setName(f, name);
     return f;
   }
+
+  //#region @backend
+
+  urlClearOptions<T extends { [k: string]: string | string[] }>(url: string, minimistOption: T) {
+    _.keys(minimistOption).forEach(paramName => {
+      let value = minimistOption[paramName] as string[];
+      if (!_.isArray(value) && _.isString(value)) {
+        value = [value]
+      }
+      value.forEach(v => {
+        [
+          paramName,
+          _.kebabCase(paramName),
+          _.camelCase(paramName)
+        ].forEach(p => {
+          url = url
+            .replace(`--${p}=${v}`, '')
+            .replace(new RegExp(Helpers.escapeStringForRegEx(`--${p}\ +${v}`)), '');
+        });
+      })
+    });
+    return url;
+  }
+
+  urlParse(portOrHost: (number | string | URL)) {
+    let url: URL;
+    if (portOrHost instanceof URL) {
+      url = portOrHost;
+    }
+    if (_.isNumber(portOrHost)) {
+      url = new URL(`http://localhost:${portOrHost}`);
+    }
+    if (!_.isNaN(Number(portOrHost))) {
+      url = new URL(`http://localhost:${Number(portOrHost)}`);
+    }
+    if (_.isString(portOrHost)) {
+      url = new URL(portOrHost);
+    }
+
+    return url;
+  }
+  //#endregion
 
   get isBrowser() {
     return HelperNg2Logger.isBrowser;
