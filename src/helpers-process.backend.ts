@@ -252,35 +252,41 @@ export class HelpersProcess {
     Helpers.run(`kill -9 ${byPid}`).sync()
   }
 
-  async killProcessByPort(port: number) {
-    const org = port;
-    port = Number(port);
-    if (!_.isNumber(port)) {
-      Helpers.warn(`[tnp-helpers] Can't kill on port: "${org}"`);
-      return;
+  async killProcessByPort(portOrPortsToKill: number | number[]) {
+    if (!_.isArray(portOrPortsToKill)) {
+      portOrPortsToKill = [portOrPortsToKill];
     }
-    try {
-      await fkill(`:${port}`);
-      // run(`fkill -f :${port} &> /dev/null`, { output: false }).sync()
-      Helpers.info(`Processs killed successfully on port: ${port}`)
-    } catch (e) {
-      Helpers.warn(`No process to kill  on port: ${port}... `)
-    }
+    for (let index = 0; index < portOrPortsToKill.length; index++) {
+      let port = portOrPortsToKill[index];
+      const org = port;
+      port = Number(port);
+      if (!_.isNumber(port)) {
+        Helpers.warn(`[tnp-helpers] Can't kill on port: "${org}"`);
+        return;
+      }
+      try {
+        await fkill(`:${port}`);
+        // run(`fkill -f :${port} &> /dev/null`, { output: false }).sync()
+        Helpers.info(`Processs killed successfully on port: ${port}`)
+      } catch (e) {
+        Helpers.warn(`No process to kill  on port: ${port}... `)
+      }
 
 
-    // console.log(`Killing process on port ${port} in progress`);
-    // try {
-    //   if (os.platform() === 'linux') {
-    //     run(`lsof -i:${port}`, { output: false }).sync()
-    //   } else if (os.platform() === 'darwin') {
-    //     run(`lsof -P | grep ':${port}' | awk '{print $2}' | xargs kill -9 `, { output: false }).sync()
-    //   }
-    //   info(`Process killed on port: ${port}`)
-    // } catch (e) {
-    //   error(`Problem with killing process on port ${port}:
-    //   ${e}
-    //   `, true)
-    // }
+      // console.log(`Killing process on port ${port} in progress`);
+      // try {
+      //   if (os.platform() === 'linux') {
+      //     run(`lsof -i:${port}`, { output: false }).sync()
+      //   } else if (os.platform() === 'darwin') {
+      //     run(`lsof -P | grep ':${port}' | awk '{print $2}' | xargs kill -9 `, { output: false }).sync()
+      //   }
+      //   info(`Process killed on port: ${port}`)
+      // } catch (e) {
+      //   error(`Problem with killing process on port ${port}:
+      //   ${e}
+      //   `, true)
+      // }
+    }
   }
 
   clearConsole() {
