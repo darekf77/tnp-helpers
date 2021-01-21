@@ -424,8 +424,12 @@ export class HelpersFileFolders {
   }
 
   exists(folderOrFilePath: string) {
+    if (!folderOrFilePath) {
+      Helpers.warn(`[helpers][exists] Path is not a string, abort.. "${folderOrFilePath}"`, true);
+      return false;
+    }
     if (!path.isAbsolute(folderOrFilePath)) {
-      Helpers.warn(`[helpers][exists] Path is not absolute, abort ${folderOrFilePath}`, true);
+      Helpers.warn(`[helpers][exists] Path is not absolute, abort.. ${folderOrFilePath}`, true);
       return false;
     }
     return fse.existsSync(folderOrFilePath);

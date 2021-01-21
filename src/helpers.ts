@@ -80,43 +80,21 @@ export class HelpersTnp {
   }
 
   //#region @backend
-
-  urlClearOptions<T extends { [k: string]: string | string[] }>(url: string, minimistOption: T) {
-    _.keys(minimistOption).forEach(paramName => {
-      let value = minimistOption[paramName] as string[];
-      if (!_.isArray(value) && _.isString(value)) {
-        value = [value]
-      }
-      value.forEach(v => {
-        [
-          paramName,
-          _.kebabCase(paramName),
-          _.camelCase(paramName)
-        ].forEach(p => {
-          url = url
-            .replace(`--${p}=${v}`, '')
-            .replace(new RegExp(Helpers.escapeStringForRegEx(`--${p}\ +${v}`)), '');
-        });
-      })
-    });
-    return url;
-  }
-
   urlParse(portOrHost: (number | string | URL)) {
     let url: URL;
     if (portOrHost instanceof URL) {
       url = portOrHost;
-    }
-    if (_.isNumber(portOrHost)) {
+    } else if (_.isNumber(portOrHost)) {
       url = new URL(`http://localhost:${portOrHost}`);
-    }
-    if (!_.isNaN(Number(portOrHost))) {
+    } else if (!_.isNaN(Number(portOrHost))) {
       url = new URL(`http://localhost:${Number(portOrHost)}`);
+    } else if (_.isString(portOrHost)) {
+      try {
+        url = new URL(portOrHost);
+      } catch (error) {
+        return void 0;
+      }
     }
-    if (_.isString(portOrHost)) {
-      url = new URL(portOrHost);
-    }
-
     return url;
   }
   //#endregion

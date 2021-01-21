@@ -52,22 +52,58 @@ export class HelpersCliTool {
      */
     commandString: string;
   } {
+    let tmpArgumentsCommands = argumentsCommands;
     const resolved = [] as T[];
-    if (_.isString(argumentsCommands)) {
-      argumentsCommands = argumentsCommands.split(' ');
+    if (_.isString(tmpArgumentsCommands)) {
+      tmpArgumentsCommands = tmpArgumentsCommands.split(' ');
     }
-    let commandString = (argumentsCommands || []);
-    while (true) {
-      const a = commandString.shift();
-      const v = argsFunc(a);
-      if (!_.isNil(v)) {
-        resolved.push(v);
-        continue;
+    let commandString = (tmpArgumentsCommands || []);
+    if (_.isArray(commandString) && commandString.length > 0) {
+      while (true) {
+        if(commandString.length === 0) {
+          break;
+        }
+        const a = commandString.shift();
+        const v = argsFunc(a);
+        if (!_.isNil(v)) {
+          resolved.push(v);
+          continue;
+        }
+        commandString.unshift(a);
+        break;
       }
-      break;
+    } else {
+      commandString = [];
     }
+    return { resolved, commandString: (commandString).join(' ') };
+  }
 
-    return { resolved, commandString: commandString.join(' ') };
+  cleanCommand<T extends { [k: string]: string | string[] }>(command: string, minimistOption: T) {
+    minimistOption = _.cloneDeep(minimistOption);
+    delete minimistOption['_'];
+    if (!_.isString(command)) {
+      command = '';
+    }
+    _.keys(minimistOption).forEach(paramName => {
+      let value = minimistOption[paramName] as string[];
+      if (!_.isArray(value)) {
+        value = [value]
+      }
+      value
+        .map(v => v.toString())
+        .forEach(v => {
+          [
+            paramName,
+            _.kebabCase(paramName),
+            _.camelCase(paramName)
+          ].forEach(p => {
+            command = command
+              .replace(new RegExp(`--${p}=${v}`, ''), '')
+              .replace(new RegExp(`--${p}\ *${v}`, 'g'), '');
+          });
+        })
+    });
+    return command.trim();
   }
 
   argsFrom<T = any>(args: string | string[]) {
