@@ -29,10 +29,12 @@ export class HelpersArrayObj {
 
   uniqArray<T = any>(array: any[], uniqueProperty?: (keyof T)) {
     var seen = {};
-    return array.filter(function (item) {
-      return seen.hasOwnProperty(uniqueProperty ? item[uniqueProperty] : item) ? false
-        : (seen[uniqueProperty ? item[uniqueProperty] : item] = true);
-    });
+    return array
+      .filter(f => !!f)
+      .filter(function (item) {
+        return seen.hasOwnProperty(uniqueProperty ? item[uniqueProperty] : item) ? false
+          : (seen[uniqueProperty ? item[uniqueProperty] : item] = true);
+      });
   }
 
   sortKeys(obj) {
