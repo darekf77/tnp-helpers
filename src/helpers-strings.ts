@@ -45,5 +45,24 @@ export class HelpersStrings {
     return parseInt(pixelsCss.replace('px', ''));
   }
 
+  /**
+   * examples:
+   * 'aa bb bb' => ['aa','bb','cc'],
+   * 'aa' => ['aa']
+   * ['aa'] => ['aa']
+   */
+  splitIfNeed(stringOrArr: string | string[]): string[] {
+    let res = [];
+    if (_.isArray(stringOrArr)) {
+      res = stringOrArr.map(s => {
+        return s.trim();
+      })
+    }
+    if (_.isString(stringOrArr)) {
+      res = stringOrArr.split(/\s*[\s,]\s*/);
+    }
+    return res.filter(f => !!f && (f.trim() !== ''));
+  }
+
 }
 
