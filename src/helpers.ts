@@ -91,8 +91,11 @@ export class HelpersTnp {
     } else if (_.isString(portOrHost)) {
       try {
         url = new URL(portOrHost);
-      } catch (error) {
-        return void 0;
+      } catch (error) { }
+      if (Helpers.isValidIp(portOrHost)) {
+        try {
+          url = new URL(`http://${portOrHost}`);
+        } catch (error) { }
       }
     }
     return url;
