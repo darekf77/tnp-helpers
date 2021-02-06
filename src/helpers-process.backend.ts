@@ -557,7 +557,15 @@ command: ${command}
   }
 
 
-
+  getStringFrom(command: string, descriptionOfCommand?: string) {
+    try {
+      const res = Helpers.run(command, { output: false }).sync().toString();
+      return res;
+    } catch (error) {
+      Helpers.warn(`Not able to get string from "${descriptionOfCommand ? descriptionOfCommand : command}"`);
+      return void 0;
+    }
+  }
 
 
   run(command: string,

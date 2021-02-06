@@ -1,8 +1,14 @@
+import * as _ from 'lodash';
 import * as path from 'path';
 import { config } from 'tnp-config';
 import { BaselineSiteJoinprefix } from './constants';
 
 export class HelpersPath {
+
+  create(...pathPart: string[]) {
+    return path.join(...pathPart);
+  }
+
   PREFIX(baseFileName) {
     return `${BaselineSiteJoinprefix}${baseFileName}`
   }

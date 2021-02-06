@@ -110,6 +110,10 @@ export class HelpersTnp {
     return HelperNg2Logger.isNode;
   }
 
+  localIpAddress() {
+    return Helpers.getStringFrom('ipconfig getifaddr en0', `ip v4 address of first ethernet interface`)
+  }
+
   async runSyncOrAsync(fn: Function, ...firstArg: any[]) {
     if (_.isUndefined(fn)) {
       return;
