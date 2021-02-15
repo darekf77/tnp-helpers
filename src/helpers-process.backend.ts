@@ -98,7 +98,7 @@ export class HelpersProcess {
     })
   }
 
-  pressKeyAndContinue(message = 'Press enter try again') {
+  pressKeyAndContinue(message = 'Press enter to continue..') {
     Helpers.info(message);
     require('child_process').spawnSync('read _ ', { shell: true, stdio: [0, 1, 2] });
     // return new Promise((resovle) => {

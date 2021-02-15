@@ -143,6 +143,13 @@ export abstract class ProjectGit {
 
       lastCommitHash() {
         return Helpers.git.lastCommitHash(self.location)
+      },
+
+      penultimageCommitHash() {
+        return Helpers.git.penultimageCommitHash(self.location)
+      },
+      lastTagHash() {
+        return Helpers.git.lastTagHash(self.location)
       }
     }
   }

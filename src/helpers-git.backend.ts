@@ -18,6 +18,33 @@ export class HelpersGit {
     }
   }
 
+  penultimageCommitHash(directoryPath): string {
+    try {
+      const cwd = directoryPath;
+      let hash = child.execSync(`git rev-parse HEAD &> /dev/null && git log -2 --format="%H"`, { cwd }).toString().trim()
+      return hash;
+    } catch (e) {
+      Helpers.log(e, 1);
+      Helpers.log(`[lastCommitHash] Not able to get last commit hash for repository in ${directoryPath}`, 1)
+      return null;
+
+    }
+  }
+
+  lastTagHash(directoryPath): string {
+    try {
+      const cwd = directoryPath;
+      const tag = child.execSync(`git describe --tags $(git rev-list --tags --max-count=1)`, { cwd }).toString().trim();
+      let hash = child.execSync(`git log -1 --format=format:"%H" ${tag}`, { cwd }).toString().trim()
+      return hash;
+    } catch (e) {
+      Helpers.log(e, 1);
+      Helpers.log(`[lastCommitHash] Not able to get last commit hash for repository in ${directoryPath}`, 1)
+      return null;
+
+    }
+  }
+
   lastCommitDate(directoryPath): Date {
     try {
       const cwd = directoryPath;
