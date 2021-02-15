@@ -29,6 +29,14 @@ export abstract class ProjectGit {
   public get git(this: Project) {
     const self = this;
     return {
+      restoreLastVersion(localFilePath: string) {
+        try {
+          Helpers.info(`[git] restoring last verion of file ${self.name}/${localFilePath}`)
+          self.run(`git checkout -- ${localFilePath}`).sync();
+        } catch (error) {
+          Helpers.warn(`[tnp-git] Not able to resotre last version of file ${localFilePath}`);
+        }
+      },
       resetFiles(...relativePathes: string[]) {
         relativePathes.forEach(p => {
           try {

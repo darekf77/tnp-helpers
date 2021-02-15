@@ -1,3 +1,4 @@
+import * as _ from 'lodash';
 //#region @backend
 import * as fse from 'fs-extra';
 import * as path from 'path';
@@ -17,6 +18,10 @@ export class HelpersEnvironment {
 
 
   isValidIp(ip: string) {
+    if (!_.isString(ip)) {
+      return false;
+    }
+    ip = ip.trim();
     if (ip === 'localhost') {
       return true;
     }

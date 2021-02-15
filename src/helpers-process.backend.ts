@@ -160,7 +160,9 @@ export class HelpersProcess {
     let response = {
       value: defaultValue
     };
-    if (!global.tnpNonInteractive) {
+    if (global.tnpNonInteractive) {
+      Helpers.info(`${message} - AUTORESPONSE: ${defaultValue ? 'YES' : 'NO'}`);
+    } else {
       response = await prompts({
         type: 'toggle',
         name: 'value',

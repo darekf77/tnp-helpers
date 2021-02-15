@@ -4,25 +4,25 @@ import * as fuzzy from 'fuzzy';
 
 export class HelpersArrayObj {
 
-  arrayMoveElementBefore(arr: any[], a: any, b: any) {
-    let indexA = arr.indexOf(a);
+  arrayMoveElementBefore<T = any>(arr: any[], a: any, b: any, prop?: keyof T) {
+    let indexA = prop ? arr.findIndex(elem => elem[prop] === a[prop]) : arr.indexOf(a);
     _.pullAt(arr, indexA);
-    let indexB = arr.indexOf(b);
+    let indexB = prop ? arr.findIndex(elem => elem[prop] === b[prop]) : arr.indexOf(b);
     if (indexB === 0) {
       arr.unshift(a);
     } else {
-      arr = arr.splice(indexB - 1, 0, a);
+      arr.splice(indexB - 1, 0, a);
     }
     return arr;
   }
-  arrayMoveElementAfterB(arr: any[], a: any, b: any) {
-    let indexA = arr.indexOf(a);
+  arrayMoveElementAfterB<T = any>(arr: any[], a: any, b: any, prop?: keyof T) {
+    let indexA = prop ? arr.findIndex(elem => elem[prop] === a[prop]) : arr.indexOf(a);
     _.pullAt(arr, indexA);
-    let indexB = arr.indexOf(b);
+    let indexB = prop ? arr.findIndex(elem => elem[prop] === b[prop]) : arr.indexOf(b);
     if (indexB === arr.length - 1) {
       arr.push(a);
     } else {
-      arr = arr.splice(indexB + 1, 0, a);
+      arr.splice(indexB + 1, 0, a);
     }
     return arr;
   }

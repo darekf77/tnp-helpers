@@ -60,7 +60,7 @@ export class HelpersCliTool {
     let commandString = (tmpArgumentsCommands || []);
     if (_.isArray(commandString) && commandString.length > 0) {
       while (true) {
-        if(commandString.length === 0) {
+        if (commandString.length === 0) {
           break;
         }
         const a = commandString.shift();
@@ -78,7 +78,12 @@ export class HelpersCliTool {
     return { resolved, commandString: (commandString).join(' ') };
   }
 
-  cleanCommand<T extends { [k: string]: string | string[] }>(command: string, minimistOption: T) {
+  cleanCommand<T extends { [k: string]: string | boolean | string[] | boolean[] }>(command: string | string[], minimistOption: T) {
+    const isArray = _.isArray(command);
+    if (isArray) {
+      command = (command as string[]).join(' ');
+    }
+    command = command as string;
     minimistOption = _.cloneDeep(minimistOption);
     delete minimistOption['_'];
     if (!_.isString(command)) {
@@ -97,13 +102,13 @@ export class HelpersCliTool {
             _.kebabCase(paramName),
             _.camelCase(paramName)
           ].forEach(p => {
-            command = command
+            command = (command as string)
               .replace(new RegExp(`--${p}=${v}`, ''), '')
               .replace(new RegExp(`--${p}\ *${v}`, 'g'), '');
           });
         })
     });
-    return command.trim();
+    return command.trim() as string;
   }
 
   argsFrom<T = any>(args: string | string[]) {

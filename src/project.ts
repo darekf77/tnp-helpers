@@ -122,7 +122,7 @@ export class Project<T extends Project<any> = any>
     location = path.resolve(location);
     if (Project.emptyLocations.includes(location)) {
       if (location.search(`/${config.folder.bundle}`) === -1) {
-        Helpers.log(`[project.from] empty location ${location}`, 1)
+        Helpers.log(`[project.from] empty location ${location}`, 2)
         return;
       }
     }

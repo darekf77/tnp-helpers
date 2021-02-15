@@ -23,12 +23,12 @@ import { HelpersFileFolders } from './helpers-file-folders.backend';
 import chalk from 'chalk';
 import { HelpersDependencies } from './helpers-dependencies.backend';
 import { HelpersPath } from './helpers-path.backend';
+import { HelpersNetwork } from './helpers-network.backend';
 //#endregion
 import { config, ConfigModels } from 'tnp-config';
 import { Helpers } from './index';
 import { CLASS } from 'typescript-class-helpers';
 import { Morphi, Models as MorphiModels } from 'morphi';
-
 
 
 export function applyMixins(derivedCtor: any, baseCtors: any[]) {
@@ -65,10 +65,10 @@ export class HelpersTnp {
     public morphi = new HelpersMorphiFramework(),
     public deps = new HelpersDependencies(),
     public path = new HelpersPath(),
+    public network = new HelpersNetwork(),
     //#endregion
     public arrays = new HelpersArrayObj(),
     public strings = new HelpersStrings(),
-
 
   ) {
 
@@ -80,7 +80,7 @@ export class HelpersTnp {
   }
 
   //#region @backend
-  urlParse(portOrHost: (number | string | URL)) {
+  urlParse(portOrHost: (number | string | URL), forceDomain = false) {
     let url: URL;
     if (portOrHost instanceof URL) {
       url = portOrHost;
@@ -95,7 +95,13 @@ export class HelpersTnp {
       if (Helpers.isValidIp(portOrHost)) {
         try {
           url = new URL(`http://${portOrHost}`);
-        } catch (error) { }
+        } catch (error) {
+          Helpers.warn(`Not able to get port from ${portOrHost}`)
+        }
+      }
+      if (forceDomain) {
+        const domain = (portOrHost as string)
+        url = new URL(domain.startsWith('http') ? domain : `http://${portOrHost}`);
       }
     }
     return url;
@@ -110,9 +116,11 @@ export class HelpersTnp {
     return HelperNg2Logger.isNode;
   }
 
+  //#region @backend
   localIpAddress() {
     return Helpers.getStringFrom('ipconfig getifaddr en0', `ip v4 address of first ethernet interface`)
   }
+  //#endregion
 
   async runSyncOrAsync(fn: Function, ...firstArg: any[]) {
     if (_.isUndefined(fn)) {
