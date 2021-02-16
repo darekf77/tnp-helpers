@@ -104,19 +104,19 @@ export abstract class ProjectGit {
       async updateOrigin(askToRetry = false) {
         await Helpers.git.pullCurrentBranch(self.location, askToRetry);
       },
-      commit(args: string, tryAdd = false) {
-        if (tryAdd) {
-          const gitRootProject = Project.nearestTo(self.location, { findGitRoot: true });
-          try {
-            Helpers.info(`[git][commit] Adding current git changes in git root:
+      commit(args: string) {
+
+        const gitRootProject = Project.nearestTo(self.location, { findGitRoot: true });
+        try {
+          Helpers.info(`[git][commit] Adding current git changes in git root:
             ${gitRootProject.location}
             `)
-            gitRootProject.run(`git add --all . `).sync()
-          } catch (error) {
-            Helpers.warn(`Failed to 'git add --all .' in:
+          gitRootProject.run(`git add --all . `).sync()
+        } catch (error) {
+          Helpers.warn(`Failed to 'git add --all .' in:
             ${gitRootProject.location}`);
-          }
         }
+
         if (args.search('-m') === -1 && args.search('-msg') === -1) {
           const addBrackets = !(
             (args.startsWith('\'') ||
@@ -129,6 +129,7 @@ export abstract class ProjectGit {
         try {
           Helpers.info(`[git][commit] trying to commit what it with argument:
           "${args}"
+          location: ${self.location}
           `)
           self.run(`git commit --no-verify ${args}`).sync()
         } catch (error) {
