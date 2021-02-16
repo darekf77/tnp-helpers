@@ -104,14 +104,51 @@ export abstract class ProjectGit {
       async updateOrigin(askToRetry = false) {
         await Helpers.git.pullCurrentBranch(self.location, askToRetry);
       },
-      commit(args: string) {
-        if (args.search('-m') === -1 && args.search('-msg') === -1) {
-          args = `-m ${args}`
+      commit(args: string, tryAdd = false) {
+        if (tryAdd) {
+          const gitRootProject = Project.nearestTo(self.location, { findGitRoot: true });
+          try {
+            Helpers.info(`[git][commit] Adding current git changes in git root:
+            ${gitRootProject.location}
+            `)
+            gitRootProject.run(`git add --all . `).sync()
+          } catch (error) {
+            Helpers.warn(`Failed to 'git add --all .' in:
+            ${gitRootProject.location}`);
+          }
         }
-        self.run(`git commit --no-verify ${args}`).sync()
+        if (args.search('-m') === -1 && args.search('-msg') === -1) {
+          const addBrackets = !(
+            (args.startsWith('\'') ||
+              args.startsWith('"')) &&
+            (args.endsWith('\'') ||
+              args.endsWith('"'))
+          );
+          args = `-m ${addBrackets ? `"${args}"` : args}`;
+        }
+        try {
+          Helpers.info(`[git][commit] trying to commit what it with argument:
+          "${args}"
+          `)
+          self.run(`git commit --no-verify ${args}`).sync()
+        } catch (error) {
+          Helpers.warn(`[git][commit] not able to commit what is`);
+        }
       },
       pushCurrentBranch(force = false) {
-        self.run(`git push ${force ? '-f' : ''} origin ${Helpers.git.currentBranchName(self.location)}`).sync()
+        const currentBranchName = Helpers.git.currentBranchName(self.location);
+        while (true) {
+          try {
+            Helpers.info(`[git][push] ${force ? 'force' : ''} pushing current branch ${currentBranchName}`);
+            self.run(`git push ${force ? '-f' : ''} origin ${currentBranchName}`).sync()
+            break;
+          } catch (err) {
+            Helpers.error(`Not able to push branch ${currentBranchName} in:
+            ${self.location}`);
+            Helpers.pressKeyAndContinue(`Press any key to try again: `);
+            continue;
+          }
+        }
       },
       get thereAreSomeUncommitedChange() {
         return Helpers.run(`git diff --name-only`, { output: false, cwd: self.location }).sync().toString().trim() !== ''
