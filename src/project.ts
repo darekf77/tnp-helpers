@@ -53,6 +53,7 @@ export class Project<T extends Project<any> = any>
   public isContainer: boolean;
   public isContainerWithLinkedProjects: boolean;
   public isContainerChild: boolean;
+  public isContainerCoreProject: boolean;
   public isStandaloneProject: boolean;
   public isUnknowNpmProject: boolean;
   public isTnp: boolean;
@@ -106,6 +107,10 @@ export class Project<T extends Project<any> = any>
     const type = packageJson.type;
     return type;
     //#endregion
+  }
+
+  public static unload(project: Project) {
+    Project.projects = Project.projects.filter( f=> f!== project );
   }
 
   public static From<T = Project<any>>(location: string): T {
