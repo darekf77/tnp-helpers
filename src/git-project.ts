@@ -104,7 +104,10 @@ export abstract class ProjectGit {
       async updateOrigin(askToRetry = false) {
         await Helpers.git.pullCurrentBranch(self.location, askToRetry);
       },
-      commit(args: string) {
+      commit(args?: string) {
+        if(!_.isString(args)) {
+          args = 'update'
+        }
 
         const gitRootProject = Project.nearestTo(self.location, { findGitRoot: true });
         try {
