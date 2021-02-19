@@ -1,15 +1,15 @@
 import * as express from 'express';
 import * as http from 'http';
 import * as https from 'https';
+export { Application, Request, Response } from 'express';
+import { Application, Request, Response } from 'express';
 
 export class HelpersNetwork {
-
-
   from(app: express.Application) {
     return {
       handle(respond: (
-        req: http.IncomingMessage & express.Request,
-        res: http.ServerResponse & express.Response
+        req: http.IncomingMessage, //http.IncomingMessage & express.Request,
+        res: http.ServerResponse, //http.ServerResponse & express.Response
       ) => void, networkPath?: string | RegExp) {
         if (!networkPath) {
           networkPath = /^\/(.*)/;
