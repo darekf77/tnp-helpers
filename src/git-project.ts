@@ -105,7 +105,7 @@ export abstract class ProjectGit {
         await Helpers.git.pullCurrentBranch(self.location, askToRetry);
       },
       commit(args?: string) {
-        if(!_.isString(args)) {
+        if (!_.isString(args)) {
           args = 'update'
         }
 
@@ -148,7 +148,7 @@ export abstract class ProjectGit {
             break;
           } catch (err) {
             Helpers.error(`Not able to push branch ${currentBranchName} in:
-            ${self.location}`);
+            ${self.location}`, false, true);
             Helpers.pressKeyAndContinue(`Press any key to try again: `);
             continue;
           }
