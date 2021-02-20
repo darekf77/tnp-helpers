@@ -8,8 +8,8 @@ export class HelpersNetwork {
   from(app: express.Application) {
     return {
       handle(respond: (
-        req: http.IncomingMessage, //http.IncomingMessage & express.Request,
-        res: http.ServerResponse, //http.ServerResponse & express.Response
+        req: any, // http.IncomingMessage, //http.IncomingMessage & express.Request,
+        res: any, // http.ServerResponse, //http.ServerResponse & express.Response
       ) => void, networkPath?: string | RegExp) {
         if (!networkPath) {
           networkPath = /^\/(.*)/;
