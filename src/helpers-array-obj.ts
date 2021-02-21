@@ -4,6 +4,15 @@ import * as fuzzy from 'fuzzy';
 
 export class HelpersArrayObj {
 
+  from(s: string | string[]): string[] {
+    if (_.isArray(s)) {
+      return s;
+    }
+    if (_.isString(s)) {
+      return s.split(' ')
+    }
+  }
+
   arrayMoveElementBefore<T = any>(arr: any[], a: any, b: any, prop?: keyof T) {
     let indexA = prop ? arr.findIndex(elem => elem[prop] === a[prop]) : arr.indexOf(a);
     _.pullAt(arr, indexA);
