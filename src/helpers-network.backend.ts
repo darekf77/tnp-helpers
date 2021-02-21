@@ -7,6 +7,9 @@ import { Application, Request, Response } from 'express';
 export class HelpersNetwork {
   from(app: express.Application) {
     return {
+      use() {
+
+      },
       handle(respond: (
         req: any, // http.IncomingMessage, //http.IncomingMessage & express.Request,
         res: any, // http.ServerResponse, //http.ServerResponse & express.Response
