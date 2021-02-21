@@ -122,7 +122,7 @@ export class HelpersTnp {
   }
   //#endregion
 
-  //#region @backedn
+  //#region @backend
   allLocalIpAddresses(): URL[] {
     const { networkInterfaces } = require('os');
 
