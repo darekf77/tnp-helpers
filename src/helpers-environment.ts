@@ -2,6 +2,7 @@ import * as _ from 'lodash';
 //#region @backend
 import * as fse from 'fs-extra';
 import * as path from 'path';
+import { Helpers } from 'tnp-helpers';
 //#endregion
 
 export class HelpersEnvironment {
@@ -16,6 +17,11 @@ export class HelpersEnvironment {
     //#endregion
   }
 
+  isValidGitRepuUrl(url: string) {
+    const regex = /^([A-Za-z0-9]+@|http(|s)\:\/\/)([A-Za-z0-9.]+(:\d+)?)(?::|\/)([\d\/\w.-]+?)(\.git)?$/;
+    const res = regex.test(url);
+    return res;
+  }
 
   isValidIp(ip: string) {
     if (!_.isString(ip)) {

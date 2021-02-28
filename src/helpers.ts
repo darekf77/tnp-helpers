@@ -11,6 +11,7 @@ import { conditionWait } from './condition-wait';
 import * as Task from 'task.js';
 import * as os from 'os';
 import * as child from 'child_process';
+const isElevated = require('is-elevated');
 import { URL } from 'url';
 import { HelpersGit } from './helpers-git.backend';
 import { HelpersCliTool } from './helpers-cli-tool.backend';
@@ -74,6 +75,8 @@ export class HelpersTnp {
 
   }
 
+
+
   CLIWRAP(f: Function, name: string) {
     CLASS.setName(f, name);
     return f;
@@ -116,6 +119,14 @@ export class HelpersTnp {
     return HelperNg2Logger.isNode;
   }
 
+  async isElevated() {
+    //#region @backend
+    if (!(await isElevated())) {
+      Helpers.error(`[tnp-helpers] Please run this program as sudo (or admin on windows)`, false, true)
+    }
+    //#endregion
+  }
+
   //#region @backend
   localIpAddress() {
     return Helpers.getStringFrom('ipconfig getifaddr en0', `ip v4 address of first ethernet interface`)
@@ -125,7 +136,6 @@ export class HelpersTnp {
   //#region @backend
   allLocalIpAddresses(): URL[] {
     const { networkInterfaces } = require('os');
-
     const nets = networkInterfaces();
     const results = Object.create(null); // Or just '{}', an empty object
     const ips = [];

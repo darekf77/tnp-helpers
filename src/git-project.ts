@@ -29,6 +29,16 @@ export abstract class ProjectGit {
   public get git(this: Project) {
     const self = this;
     return {
+      clone(url: string, destinationFolderName = '') {
+        const commnad = `git -c http.sslVerify=false clone ${url} ${destinationFolderName}`;
+        Helpers.info(`
+
+        Cloning:
+        ${commnad}
+
+        `)
+        self.run(commnad).sync();
+      },
       restoreLastVersion(localFilePath: string) {
         try {
           Helpers.info(`[git] restoring last verion of file ${self.name}/${localFilePath}`)
@@ -158,6 +168,12 @@ export abstract class ProjectGit {
         return Helpers.run(`git diff --name-only`, { output: false, cwd: self.location }).sync().toString().trim() !== ''
       },
       pullCurrentBranch(force = false) {
+
+        if (self.git.originURL === '') {
+          Helpers.warn(`Not pulling branch without `
+            + `remote origin url.... in folder ${path.basename(self.location)}`);
+          return;
+        }
         if (force) {
           // TODO
         } else {
