@@ -30,6 +30,18 @@ export abstract class ProjectGit {
     const self = this;
     return {
       clone(url: string, destinationFolderName = '') {
+        const ALWAYS_HTTPS = true;
+        if (!url.endsWith('.git')) {
+          url = (url + '.git')
+        }
+        if (ALWAYS_HTTPS) {
+          if (!url.startsWith('https://')) {
+            const [serverPart, pathPart] = url.split(':');
+            const server = (serverPart || '').replace('git@', '');
+            url = `https://${server}/${pathPart}`;
+          }
+        }
+
         const commnad = `git -c http.sslVerify=false clone ${url} ${destinationFolderName}`;
         Helpers.info(`
 
@@ -177,7 +189,7 @@ export abstract class ProjectGit {
         if (force) {
           // TODO
         } else {
-          self.run(`git pull origin ${self.git.currentBranchName}`).sync()
+          self.run(`git -c http.sslVerify=false pull origin ${self.git.currentBranchName}`).sync()
         }
       },
       get currentBranchName() {
