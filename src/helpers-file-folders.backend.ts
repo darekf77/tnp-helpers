@@ -698,7 +698,7 @@ export class HelpersFileFolders {
         fse.copySync(sourceDir, tempDestination, options);
         fse.copySync(tempDestination, destinationDir, options);
       } else {
-        if (Helpers.isLink(sourceDir) && !Helpers.exists(fse.readlinkSync(sourceDir))) {
+        if ((sourceDir === path.resolve(sourceDir)) && Helpers.isLink(sourceDir) && !Helpers.exists(fse.readlinkSync(sourceDir))) {
           Helpers.warn(`[tnp-helpers] Not copying empty link from: ${sourceDir}
           `)
         } else {
