@@ -30,45 +30,62 @@ export abstract class ProjectGit {
     const self = this;
     return {
       clone(url: string, destinationFolderName = '') {
-        const ALWAYS_HTTPS = true;
-        if (!url.endsWith('.git')) {
-          url = (url + '.git')
-        }
-        if (ALWAYS_HTTPS) {
-          if (!url.startsWith('https://')) {
-            const [serverPart, pathPart] = url.split(':');
-            const server = (serverPart || '').replace('git@', '');
-            url = `https://${server}/${pathPart}`;
-          }
-        }
-
-        const commnad = `git -c http.sslVerify=false clone ${url} ${destinationFolderName}`;
-        Helpers.info(`
-
-        Cloning:
-        ${commnad}
-
-        `)
-        self.run(commnad).sync();
+        return Helpers.git.clone(self.location, url, destinationFolderName);
       },
       restoreLastVersion(localFilePath: string) {
-        try {
-          Helpers.info(`[git] restoring last verion of file ${self.name}/${localFilePath}`)
-          self.run(`git checkout -- ${localFilePath}`).sync();
-        } catch (error) {
-          Helpers.warn(`[tnp-git] Not able to resotre last version of file ${localFilePath}`);
-        }
+        return Helpers.git.restoreLastVersion(self.location, localFilePath);
       },
       resetFiles(...relativePathes: string[]) {
-        relativePathes.forEach(p => {
-          try {
-            self.run(`git checkout HEAD -- ${p}`, { cwd: self.location }).sync()
-          } catch (err) {
-            Helpers.error(`[project.git] Not able to reset files: ${p} inside project ${self.name}.`
-              , true, true)
-          }
-        })
+        return Helpers.git.resetFiles(self.location, ...relativePathes);
       },
+      get isGitRepo() {
+        return Helpers.git.isGitRepo(self.location);
+      },
+      get isGitRoot() {
+        return Helpers.git.isGitRoot(self.location);
+      },
+      get originURL() {
+        return Helpers.git.getOriginURL(self.location);
+      },
+      async updateOrigin(askToRetry = false) {
+        await Helpers.git.pullCurrentBranch(self.location, askToRetry);
+      },
+      commit(args?: string) {
+        return Helpers.git.commit(self.location, Project, args);
+      },
+      pushCurrentBranch(force = false) {
+        return Helpers.git.pushCurrentBranch(self.location, force);
+      },
+      get thereAreSomeUncommitedChange() {
+        return Helpers.git.checkIfthereAreSomeUncommitedChange(self.location);
+      },
+      pullCurrentBranch() {
+        return Helpers.git.pullCurrentBranch(self.location);
+      },
+      get currentBranchName() {
+        return Helpers.git.currentBranchName(self.location);
+      },
+      resetHard() {
+        self.run(`git reset --hard`).sync()
+      },
+      countComits() {
+        return Helpers.git.countCommits(self.location);
+      },
+      lastCommitDate() {
+        return Helpers.git.lastCommitDate(self.location)
+      },
+      lastCommitHash() {
+        return Helpers.git.lastCommitHash(self.location)
+      },
+      penultimageCommitHash() {
+        return Helpers.git.penultimageCommitHash(self.location)
+      },
+      lastTagHash() {
+        return Helpers.git.lastTagHash(self.location)
+      },
+      /**
+       * TODO does this make any sense
+       */
       renameOrigin(newNameOrUlr: string) {
         if (!newNameOrUlr.endsWith('.git')) {
           newNameOrUlr = (newNameOrUlr + '.git')
@@ -92,134 +109,6 @@ export abstract class ProjectGit {
           self.run(`git remote add origin ${oldOrigin}`).sync();
         }
       },
-      get isGitRepo() {
-
-        try {
-          var test = self.run('git rev-parse --is-inside-work-tree',
-            {
-              biggerBuffer: false,
-              cwd: self.location,
-              output: false
-            }).sync();
-
-        } catch (e) {
-
-          return false;
-        }
-
-        return !!test;
-      },
-      get isGitRoot() {
-        return fse.existsSync(path.join(self.location, '.git'))
-      },
-      get originURL() {
-        let url = '';
-        try {
-          // git config --get remote.origin.url
-          url = Helpers.run(`git config --get remote.origin.url`,
-            { output: false, cwd: self.location }).sync().toString().trim()
-        } catch (error) {
-
-        }
-        return url;
-      },
-      async updateOrigin(askToRetry = false) {
-        await Helpers.git.pullCurrentBranch(self.location, askToRetry);
-      },
-      commit(args?: string) {
-        if (!_.isString(args)) {
-          args = 'update'
-        }
-
-        const gitRootProject = Project.nearestTo(self.location, { findGitRoot: true });
-        try {
-          Helpers.info(`[git][commit] Adding current git changes in git root:
-            ${gitRootProject.location}
-            `)
-          gitRootProject.run(`git add --all . `).sync()
-        } catch (error) {
-          Helpers.warn(`Failed to 'git add --all .' in:
-            ${gitRootProject.location}`);
-        }
-
-        if (args.search('-m') === -1 && args.search('-msg') === -1) {
-          const addBrackets = !(
-            (args.startsWith('\'') ||
-              args.startsWith('"')) &&
-            (args.endsWith('\'') ||
-              args.endsWith('"'))
-          );
-          args = `-m ${addBrackets ? `"${args}"` : args}`;
-        }
-        try {
-          Helpers.info(`[git][commit] trying to commit what it with argument:
-          "${args}"
-          location: ${self.location}
-          `)
-          self.run(`git commit --no-verify ${args}`).sync()
-        } catch (error) {
-          Helpers.warn(`[git][commit] not able to commit what is`);
-        }
-      },
-      pushCurrentBranch(force = false) {
-        const currentBranchName = Helpers.git.currentBranchName(self.location);
-        while (true) {
-          try {
-            Helpers.info(`[git][push] ${force ? 'force' : ''} pushing current branch ${currentBranchName}`);
-            self.run(`git push ${force ? '-f' : ''} origin ${currentBranchName}`).sync()
-            break;
-          } catch (err) {
-            Helpers.error(`Not able to push branch ${currentBranchName} in:
-            ${self.location}`, false, true);
-            Helpers.pressKeyAndContinue(`Press any key to try again: `);
-            continue;
-          }
-        }
-      },
-      get thereAreSomeUncommitedChange() {
-        return Helpers.run(`git diff --name-only`, { output: false, cwd: self.location }).sync().toString().trim() !== ''
-      },
-      pullCurrentBranch(force = false) {
-
-        if (self.git.originURL === '') {
-          Helpers.warn(`Not pulling branch without `
-            + `remote origin url.... in folder ${path.basename(self.location)}`);
-          return;
-        }
-        if (force) {
-          // TODO
-        } else {
-          self.run(`git -c http.sslVerify=false pull origin ${self.git.currentBranchName}`).sync()
-        }
-      },
-      get currentBranchName() {
-        // if (!self.git.isGitRepo) {
-        //   return;
-        // }
-        return Helpers.git.currentBranchName(self.location);
-      },
-      resetHard() {
-        self.run(`git reset --hard`).sync()
-      },
-
-      countComits() {
-        return Helpers.git.countCommits(self.location);
-      },
-
-      lastCommitDate() {
-        return Helpers.git.lastCommitDate(self.location)
-      },
-
-      lastCommitHash() {
-        return Helpers.git.lastCommitHash(self.location)
-      },
-
-      penultimageCommitHash() {
-        return Helpers.git.penultimageCommitHash(self.location)
-      },
-      lastTagHash() {
-        return Helpers.git.lastTagHash(self.location)
-      }
     }
   }
   //#endregion

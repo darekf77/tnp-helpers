@@ -1,10 +1,14 @@
+//#region imports
+import * as _ from 'lodash';
 import * as child from 'child_process';
 import * as path from 'path';
-
+import * as fse from 'fs-extra';
 import { Helpers } from './index';
+import type { Project } from './project';
+//#endregion
 
 export class HelpersGit {
-
+  //#region get last commit hash
   lastCommitHash(directoryPath): string {
     try {
       const cwd = directoryPath;
@@ -17,7 +21,9 @@ export class HelpersGit {
 
     }
   }
+  //#endregion
 
+  //#region get penultimate commit hash
   penultimageCommitHash(directoryPath): string {
     try {
       const cwd = directoryPath;
@@ -30,7 +36,9 @@ export class HelpersGit {
 
     }
   }
+  //#endregion
 
+  //#region get last tag hash
   lastTagHash(directoryPath): string {
     try {
       const cwd = directoryPath;
@@ -44,7 +52,9 @@ export class HelpersGit {
 
     }
   }
+  //#endregion
 
+  //#region get last commit date
   lastCommitDate(directoryPath): Date {
     try {
       const cwd = directoryPath;
@@ -56,23 +66,24 @@ export class HelpersGit {
       return null;
     }
   }
+  //#endregion
 
-
-  countCommits(directoryPath) {
+  //#region get number of commit in repository
+  countCommits(cwd: string) {
     try {
       // git rev-parse HEAD &> /dev/null check if any commits
-      const cwd = directoryPath;
       let currentLocalBranch = child.execSync(`git branch | sed -n '/\* /s///p'`, { cwd }).toString().trim()
       let value = child.execSync(`git rev-parse HEAD &> /dev/null && git rev-list --count ${currentLocalBranch}`, { cwd }).toString().trim()
       return Number(value);
     } catch (e) {
       Helpers.log(e, 1);
-      Helpers.log(`[countCommits] Cannot counts commits in branch in: ${directoryPath}`, 1)
+      Helpers.log(`[countCommits] Cannot counts commits in branch in: ${cwd}`, 1)
       return 0;
     }
-
   }
+  //#endregion
 
+  //#region get current branch name
   currentBranchName(cwd) {
     try {
       const branchName = child.execSync(`git branch | sed -n '/\* /s///p'`, { cwd }).toString().trim()
@@ -81,9 +92,10 @@ export class HelpersGit {
       Helpers.error(e);
     }
   }
+  //#endregion
 
+  //#region commit "what is"
   commitWhatIs(customMessage = 'changes') {
-
     try {
       Helpers.run(`git add --all . `).sync()
     } catch (error) {
@@ -95,10 +107,91 @@ export class HelpersGit {
     } catch (error) {
       Helpers.warn(`Failed to git commit -m "${customMessage}"`);
     }
-
   }
+  //#endregion
 
-  async pullCurrentBranch(directoryPath, askToRetry = false) {
+  //#region commit
+  commit(cwd: string, ProjectClass: typeof Project, args?: string) {
+    if (!_.isString(args)) {
+      args = 'update'
+    }
+
+    const gitRootProject = ProjectClass.nearestTo(cwd, { findGitRoot: true });
+    try {
+      Helpers.info(`[git][commit] Adding current git changes in git root:
+        ${gitRootProject.location}
+        `)
+      gitRootProject.run(`git add --all . `).sync()
+    } catch (error) {
+      Helpers.warn(`Failed to 'git add --all .' in:
+        ${gitRootProject.location}`);
+    }
+
+    if (args.search('-m') === -1 && args.search('-msg') === -1) {
+      const addBrackets = !(
+        (args.startsWith('\'') ||
+          args.startsWith('"')) &&
+        (args.endsWith('\'') ||
+          args.endsWith('"'))
+      );
+      args = `-m ${addBrackets ? `"${args}"` : args}`;
+    }
+    try {
+      Helpers.info(`[git][commit] trying to commit what it with argument:
+      "${args}"
+      location: ${cwd}
+      `)
+      Helpers.run(`git commit --no-verify ${args}`, { cwd }).sync()
+    } catch (error) {
+      Helpers.warn(`[git][commit] not able to commit what is`);
+    }
+  }
+  //#endregion
+
+  //#region get remote origin
+  getOriginURL(cwd: string) {
+    let url = '';
+    try {
+      // git config --get remote.origin.url
+      url = Helpers.run(`git config --get remote.origin.url`,
+        { output: false, cwd }).sync().toString().trim()
+    } catch (error) {
+
+    }
+    return url;
+  }
+  //#endregion
+
+  //#region is git root
+  isGitRoot(cwd: string) {
+    return fse.existsSync(path.join(cwd, '.git'))
+  }
+  //#endregion
+
+  //#region is git repo
+  isGitRepo(cwd: string) {
+    try {
+      var test = Helpers.run('git rev-parse --is-inside-work-tree',
+        {
+          biggerBuffer: false,
+          cwd,
+          output: false
+        }).sync();
+
+    } catch (e) {
+      return false;
+    }
+    return !!test;
+  }
+  //#endregion
+
+  //#region pull current branch
+  async pullCurrentBranch(directoryPath: string, askToRetry = false) {
+    if (this.getOriginURL(directoryPath) === '') {
+      Helpers.warn(`Not pulling branch without `
+        + `remote origin url.... in folder ${path.basename(directoryPath)}`);
+      return;
+    }
     Helpers.info(`Pulling git changes in "${directoryPath}" `)
     try {
       const cwd = directoryPath;
@@ -113,26 +206,45 @@ export class HelpersGit {
           await Helpers.git.pullCurrentBranch(directoryPath, askToRetry)
         }, () => {
           process.exit(0)
-        })
+        });
       }
-
     }
-
   }
+  //#endregion
 
-  defaultRepoBranch(directoryPath) {
+  //#region push current branch
+  pushCurrentBranch(cwd: string, force = false) {
+    const currentBranchName = Helpers.git.currentBranchName(cwd);
+    while (true) {
+      try {
+        Helpers.info(`[git][push] ${force ? 'force' : ''} pushing current branch ${currentBranchName}`);
+        Helpers.run(`git push ${force ? '-f' : ''} origin ${currentBranchName}`, { cwd }).sync()
+        break;
+      } catch (err) {
+        Helpers.error(`Not able to push branch ${currentBranchName} in:
+        ${cwd}`, false, true);
+        Helpers.pressKeyAndContinue(`Press any key to try again: `);
+        continue;
+      }
+    }
+  }
+  //#endregion
+
+  //#region get default branch for repo
+  defaultRepoBranch(cwd: string) {
     try {
-      const cwd = directoryPath;
       const defaultBranch = child
         .execSync(`git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'`, { cwd })
         .toString().trim()
       return defaultBranch;
     } catch (e) {
       console.log(e)
-      Helpers.error(`Cannot find default branch for repo in : ${directoryPath}`)
+      Helpers.error(`Cannot find default branch for repo in : ${cwd}`)
     }
   }
+  //#endregion
 
+  //#region checkout default branch
   checkoutDefaultBranch(directoryPath) {
     const cwd = directoryPath;
     const defaultBranch = child
@@ -140,7 +252,65 @@ export class HelpersGit {
       .toString().trim()
     child.execSync(`git checkout ${defaultBranch}`, { cwd });
   }
+  //#endregion
 
+  //#region clone
+  clone(cwd: string, url: string, destinationFolderName = '') {
+    const ALWAYS_HTTPS = true;
+    if (!url.endsWith('.git')) {
+      url = (url + '.git')
+    }
+    if (ALWAYS_HTTPS) {
+      if (!url.startsWith('https://')) {
+        const [serverPart, pathPart] = url.split(':');
+        const server = (serverPart || '').replace('git@', '');
+        url = `https://${server}/${pathPart}`;
+      }
+    }
+
+    const commnad = `git -c http.sslVerify=false clone ${url} ${destinationFolderName}`;
+    Helpers.info(`
+
+    Cloning:
+    ${commnad}
+
+    `)
+    Helpers.run(commnad, { cwd }).sync();
+  }
+  //#endregion
+
+  //#region check if there are some uncommited changes
+  checkIfthereAreSomeUncommitedChange(cwd: string) {
+    try {
+      return Helpers.run(`git diff --name-only`, { output: false, cwd }).sync().toString().trim() !== '';
+    } catch (error) {
+      return true;
+    }
+  }
+  //#endregion
+
+  //#region restore last version
+  restoreLastVersion(cwd: string, localFilePath: string) {
+    try {
+      Helpers.info(`[git] restoring last verion of file ${path.basename(cwd)}/${localFilePath}`)
+      Helpers.run(`git checkout -- ${localFilePath}`, { cwd }).sync();
+    } catch (error) {
+      Helpers.warn(`[tnp-git] Not able to resotre last version of file ${localFilePath}`);
+    }
+  }
+  //#endregion
+
+  //#region reset files
+  resetFiles(cwd: string, ...relativePathes: string[]) {
+    relativePathes.forEach(p => {
+      try {
+        Helpers.run(`git checkout HEAD -- ${p}`, { cwd }).sync()
+      } catch (err) {
+        Helpers.error(`[project.git] Not able to reset files: ${p} inside project ${path.basename(cwd)}.`
+          , true, true)
+      }
+    });
+  }
   //#endregion
 
 }
