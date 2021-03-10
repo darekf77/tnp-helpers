@@ -5,6 +5,7 @@ import * as path from 'path';
 import * as fse from 'fs-extra';
 import { Helpers } from './index';
 import type { Project } from './project';
+import chalk from 'chalk';
 //#endregion
 
 export class HelpersGit {
@@ -255,7 +256,14 @@ export class HelpersGit {
   //#endregion
 
   //#region clone
-  clone(cwd: string, url: string, destinationFolderName = '') {
+  clone({ cwd, url, destinationFolderName = '', throwErrors, override }:
+    {
+      cwd: string;
+      url: string;
+      destinationFolderName?: string;
+      throwErrors?: boolean;
+      override?: boolean;
+    }) {
     const ALWAYS_HTTPS = true;
     if (!url.endsWith('.git')) {
       url = (url + '.git')
@@ -268,14 +276,37 @@ export class HelpersGit {
       }
     }
 
+    const cloneFolderName = path.join(
+      cwd,
+      (!!destinationFolderName && destinationFolderName.trim() !== '') ? destinationFolderName : path.basename(url)
+    );
+    if (override) {
+      Helpers.remove(cloneFolderName)
+    } else if (Helpers.exists(cloneFolderName) && Helpers.exists(path.join(cloneFolderName, '.git'))) {
+      Helpers.warn(`Alread cloned ${path.basename(cloneFolderName)}...`);
+      return;
+    }
+
     const commnad = `git -c http.sslVerify=false clone ${url} ${destinationFolderName}`;
     Helpers.info(`
 
     Cloning:
     ${commnad}
 
-    `)
-    Helpers.run(commnad, { cwd }).sync();
+    `);
+    if (throwErrors) {
+      Helpers.run(commnad, { cwd }).sync();
+    } else {
+      try {
+        Helpers.run(commnad, { cwd, output: false }).sync();
+      } catch (error) {
+        if (error?.stderr?.toString()?.search('remote: Not Found') !== -1) {
+          Helpers.warn(`[tnp-helpers][git] Project not found :${url}`);
+        } else {
+          Helpers.error(`Can't clone from url: ${chalk.bold(url)}..`, false, true);
+        }
+      }
+    }
   }
   //#endregion
 

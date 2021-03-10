@@ -30,7 +30,7 @@ export abstract class ProjectGit {
     const self = this;
     return {
       clone(url: string, destinationFolderName = '') {
-        return Helpers.git.clone(self.location, url, destinationFolderName);
+        return Helpers.git.clone({ cwd: self.location, url, destinationFolderName });
       },
       restoreLastVersion(localFilePath: string) {
         return Helpers.git.restoreLastVersion(self.location, localFilePath);
