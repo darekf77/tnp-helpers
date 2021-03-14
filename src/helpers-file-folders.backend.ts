@@ -443,7 +443,10 @@ export class HelpersFileFolders {
     return fse.existsSync(folderOrFilePath);
   }
 
-  mkdirp(folderPath: string) {
+  mkdirp(folderPath: string | string[]) {
+    if(_.isArray(folderPath)) {
+      folderPath = path.join(...folderPath);
+    }
     if (!path.isAbsolute(folderPath)) {
       Helpers.warn(`[helpers][mkdirp] Path is not absolute, abort ${folderPath}`, true);
       return;
