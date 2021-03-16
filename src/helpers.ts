@@ -25,12 +25,12 @@ import chalk from 'chalk';
 import { HelpersDependencies } from './helpers-dependencies.backend';
 import { HelpersPath } from './helpers-path.backend';
 import { HelpersNetwork } from './helpers-network.backend';
+import { HelpersJSON5 } from './helpers-json5.backend';
 //#endregion
 import { config, ConfigModels } from 'tnp-config';
 import { Helpers } from './index';
 import { CLASS } from 'typescript-class-helpers';
 import { Morphi, Models as MorphiModels } from 'morphi';
-
 
 export function applyMixins(derivedCtor: any, baseCtors: any[]) {
   baseCtors.forEach(baseCtor => {
@@ -67,6 +67,7 @@ export class HelpersTnp {
     public deps = new HelpersDependencies(),
     public path = new HelpersPath(),
     public network = new HelpersNetwork(),
+    public json5 = new HelpersJSON5(),
     //#endregion
     public arrays = new HelpersArrayObj(),
     public strings = new HelpersStrings(),
@@ -155,12 +156,12 @@ export class HelpersTnp {
   }
   //#endregion
 
-  async runSyncOrAsync(fn: Function, ...firstArg: any[]) {
+  async runSyncOrAsync(fn: Function | [string, object], ...firstArg: any[]) {
     if (_.isUndefined(fn)) {
       return;
     }
     // let wasPromise = false;
-    let promisOrValue = fn(...firstArg);
+    let promisOrValue = _.isArray(fn) ? fn[1][fn[0]](...firstArg) : fn(...firstArg);
     if (promisOrValue instanceof Promise) {
       // wasPromise = true;
       promisOrValue = Promise.resolve(promisOrValue)
@@ -257,7 +258,7 @@ export class HelpersTnp {
   }
 
   //#region @backend
-  async  workerCalculateArray(
+  async workerCalculateArray(
     dataToSplit: any[],
     operation: (dataChunk: any[], workerNumber?: number | undefined) => Promise<void>,
     options?: {

@@ -431,7 +431,10 @@ export class HelpersFileFolders {
     rimraf.sync(fileOrFolderPathOrPatter);
   }
 
-  exists(folderOrFilePath: string) {
+  exists(folderOrFilePath: string | string[]) {
+    if (_.isArray(folderOrFilePath)) {
+      folderOrFilePath = path.join(...folderOrFilePath);
+    }
     if (!folderOrFilePath) {
       Helpers.warn(`[helpers][exists] Path is not a string, abort.. "${folderOrFilePath}"`, true);
       return false;
@@ -444,7 +447,7 @@ export class HelpersFileFolders {
   }
 
   mkdirp(folderPath: string | string[]) {
-    if(_.isArray(folderPath)) {
+    if (_.isArray(folderPath)) {
       folderPath = path.join(...folderPath);
     }
     if (!path.isAbsolute(folderPath)) {
@@ -827,7 +830,7 @@ ${sourceData}
     try {
       const fileContent = Helpers.readFile(absoluteFilePath);
       let json;
-      json = Helpers.parse(fileContent, useJson5);
+      json = Helpers.parse(fileContent, useJson5 || absoluteFilePath.endsWith('.json5'));
       return json;
     } catch (error) {
       return defaultValue;

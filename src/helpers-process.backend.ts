@@ -209,6 +209,20 @@ export class HelpersProcess {
     }
   }
 
+  commnadOutputAsString(command: string, cwd = process.cwd(), biggerBuffer = false): string {
+    let output = '';
+    try {
+      output = Helpers.run(command, { output: false, cwd, biggerBuffer }).sync().toString().trim()
+      const splited = (output || '').split('\n');
+      output = splited.pop();
+    } catch (e) {
+      Helpers.warn(`[tnp-helepr] Not able to get output from command:
+      "${command}"
+      `);
+    }
+    return output;
+  }
+
   sleep(seconds = 1) {
     return Helpers.run(`sleep ${seconds}`).sync();
   }
