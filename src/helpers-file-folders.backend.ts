@@ -58,12 +58,15 @@ export class HelpersFileFolders {
       fse.lstatSync(pathToFileOrMaybeFolder).isDirectory();
   }
 
-  foldersFrom(pathToFolder: string) {
+  foldersFrom(pathToFolder: string | string[]) {
+    if (_.isArray(pathToFolder)) {
+      pathToFolder = path.join(...pathToFolder) as string;
+    }
     if (!Helpers.exists(pathToFolder)) {
       return [];
     }
     return fse.readdirSync(pathToFolder)
-      .map(f => path.join(pathToFolder, f));
+      .map(f => path.join(pathToFolder as string, f));
   }
 
   stringify(inputObject: any): string {
