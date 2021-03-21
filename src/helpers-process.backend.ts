@@ -306,6 +306,7 @@ export class HelpersProcess {
   }
 
   clearConsole() {
+    Helpers.msgCacheClear();
     console.log('\x1Bc');
 
     // process.stdout.write('\033c\033[3J');

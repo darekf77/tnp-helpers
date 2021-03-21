@@ -80,13 +80,13 @@ export class HelpersFileFolders {
     return JSON.stringify(inputObject, null, 2);
   }
 
-  parse(jsonInstring: string, useJson5 = false) {
+  parse<T = any>(jsonInstring: string, useJson5 = false) {
     if (!_.isString(jsonInstring)) {
       Helpers.log(jsonInstring)
       Helpers.warn(`[tnp-helpers] Trying to parse no a string...`)
       return jsonInstring;
     }
-    return useJson5 ? json5.parse(jsonInstring) : JSON.parse(jsonInstring);
+    return (useJson5 ? json5.parse(jsonInstring) : JSON.parse(jsonInstring)) as T;
   }
 
 

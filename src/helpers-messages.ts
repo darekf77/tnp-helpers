@@ -48,6 +48,13 @@ const KEY = {
 // }
 
 export class HelpersMessages {
+
+  msgCacheClear() {
+    global[KEY.LAST_LOG] = void 0;
+    global[KEY.LAST_WARN] = void 0;
+    global[KEY.LAST_ERROR] = void 0;
+    global[KEY.LAST_INFO] = void 0;
+  }
   error(details: any, noExit = false, noTrace = false) {
     if (Helpers.isBrowser) {
       console.error(details)
