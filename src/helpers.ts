@@ -26,7 +26,6 @@ import { HelpersDependencies } from './helpers-dependencies.backend';
 import { HelpersPath } from './helpers-path.backend';
 import { HelpersNetwork } from './helpers-network.backend';
 import { HelpersJSON5 } from './helpers-json5.backend';
-import { MetaContentMd } from './meta-content-md.backend';
 //#endregion
 import { config, ConfigModels } from 'tnp-config';
 import { Helpers } from './index';
@@ -70,7 +69,6 @@ export class HelpersTnp {
     public path = new HelpersPath(),
     public network = new HelpersNetwork(),
     public json5 = new HelpersJSON5(),
-    public metaMd = new MetaContentMd(),
     //#endregion
     public arrays = new HelpersArrayObj(),
     public strings = new HelpersStrings(),

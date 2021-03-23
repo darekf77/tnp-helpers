@@ -15,7 +15,7 @@ export class JSON5Helpers<STRUCTURE = {}> {
 
   private fileContent: string;
   get readOnlyData(): STRUCTURE {
-    if(!this.isDataReadFirstTime) {
+    if (!this.isDataReadFirstTime) {
       this.isDataReadFirstTime = true;
       this.read();
     }
