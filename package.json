@@ -29,7 +29,7 @@
     "homepage": "https://github.com/darekf77/tnp-helpers#readme"
   },
   "name": "tnp-helpers",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "description": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -252,7 +252,7 @@
     "svg-png-converter": "0.0.9",
     "systeminformation": "^3.45.7",
     "task.js": "^0.1.5",
-    "tnp-config": "~0.0.33",
+    "tnp-config": "~0.0.34",
     "tnp-db": "~0.0.20",
     "tnp-helpers": "~0.0.22",
     "tnp-ui": "~0.0.17",

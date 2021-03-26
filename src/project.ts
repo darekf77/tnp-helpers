@@ -110,7 +110,7 @@ export class Project<T extends Project<any> = any>
   }
 
   public static unload(project: Project) {
-    Project.projects = Project.projects.filter( f=> f!== project );
+    Project.projects = Project.projects.filter(f => f !== project);
   }
 
   public static From<T = Project<any>>(location: string): T {
@@ -278,6 +278,32 @@ export class Project<T extends Project<any> = any>
       }
     }
     return project as any;
+    //#endregion
+  }
+
+  public static allProjectFrom<T = Project>(absoluteLocation: string, stopOnCwd: string = '/') {
+    //#region @backendFunc
+    const projects = {};
+    const projectsList = [];
+    let previousAbsLocation: string;
+    while (absoluteLocation.startsWith(stopOnCwd)) {
+      if (previousAbsLocation === absoluteLocation) {
+        break;
+      }
+      const proj = Project.nearestTo(absoluteLocation);
+      if (proj) {
+        if (projects[proj.location]) {
+          break;
+        }
+        projects[proj.location] = proj;
+        projectsList.push(proj);
+        previousAbsLocation = absoluteLocation;
+        absoluteLocation = path.dirname(proj.location);
+        continue;
+      }
+      break;
+    }
+    return projectsList as T[];
     //#endregion
   }
 
