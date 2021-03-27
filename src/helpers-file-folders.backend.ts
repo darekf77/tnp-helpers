@@ -58,6 +58,9 @@ export class HelpersFileFolders {
       fse.lstatSync(pathToFileOrMaybeFolder).isDirectory();
   }
 
+  /**
+   * return absolute paths for folders inside folders
+   */
   foldersFrom(pathToFolder: string | string[]) {
     if (_.isArray(pathToFolder)) {
       pathToFolder = path.join(...pathToFolder) as string;
