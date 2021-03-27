@@ -69,7 +69,9 @@ export class HelpersFileFolders {
       return [];
     }
     return fse.readdirSync(pathToFolder)
-      .map(f => path.join(pathToFolder as string, f));
+      .map(f => path.join(pathToFolder as string, f))
+      .filter(f => fse.lstatSync(f).isDirectory())
+      ;
   }
 
   stringify(inputObject: any): string {

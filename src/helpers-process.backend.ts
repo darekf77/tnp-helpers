@@ -223,6 +223,13 @@ export class HelpersProcess {
     return output;
   }
 
+  outputToVScode(data: { label: string; option: string; }[] | string) {
+    if (_.isObject(data)) {
+      data = JSON.stringify(data);
+    }
+    console.log(encodeURIComponent(data as any));
+  }
+
   sleep(seconds = 1) {
     return Helpers.run(`sleep ${seconds}`).sync();
   }
