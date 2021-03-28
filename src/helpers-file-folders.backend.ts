@@ -129,6 +129,7 @@ export class HelpersFileFolders {
   createSymLink(existedFileOrFolder: string, destinationPath: string,
     options?: { continueWhenExistedFolderDoesntExists?: boolean; dontRenameWhenSlashAtEnd?: boolean; }) {
 
+
     // Helpers.log(`existedFileOrFolder ${existedFileOrFolder}`)
     // Helpers.log(`destinationPath ${destinationPath}`)
 
@@ -175,6 +176,47 @@ export class HelpersFileFolders {
       Helpers.mkdirp(path.dirname(link))
     }
 
+    const resolvedLink = path.resolve(link);
+    const resolvedTarget = path.resolve(target);
+    const exactSameLocations = (resolvedLink === resolvedTarget);
+    // const tagetIsLink = Helpers.isLink(resolvedTarget);
+    // const exactSameLinks = (tagetIsLink && (fse.readlinkSync(resolvedTarget) === resolvedLink));
+    // const exactSameOverrideTargetLink = (tagetIsLink && (fse.readlinkSync(resolvedTarget) === resolvedTarget));
+    const exactSameOVerrideTarget = (
+      !Helpers.isLink(resolvedLink)
+      && Helpers.exists(resolvedLink)
+      && !Helpers.isLink(resolvedTarget)
+      && Helpers.exists(resolvedTarget)
+      && Helpers.readFile(resolvedLink) === Helpers.readFile(resolvedTarget)
+    );
+    if (exactSameLocations) {
+      Helpers.warn(`[createSymLink] Trying to link same location`);
+      return;
+    }
+    // if (exactSameLinks) {
+    //   Helpers.warn(`[createSymLink] Trying to link same link`);
+    //   return;
+    // }
+    // if (exactSameOverrideTargetLink) {
+    //   Helpers.warn(`[createSymLink] Trying to override same link with link to itself`);
+    //   return;
+    // }
+    if (exactSameOVerrideTarget) {
+      const linkContainerLink = Helpers.pathContainLink(resolvedLink);
+      const targetContainerLink = Helpers.pathContainLink(resolvedTarget);
+      if (
+        (!linkContainerLink && targetContainerLink)
+        || (linkContainerLink && !targetContainerLink)
+      ) {
+        Helpers.warn(`[createSymLink] Trying to override same file with link to itself:
+        ${resolvedLink}
+        to
+        ${resolvedTarget}
+        `);
+        return;
+      }
+    }
+
 
     rimraf.sync(link);
     // Helpers.log(`target ${target}`)
@@ -182,11 +224,29 @@ export class HelpersFileFolders {
     fse.symlinkSync(target, link)
   }
 
+  pathContainLink(p: string) {
+    let previous: string;
+    while (true) {
+      p = path.dirname(p);
+      if (p === previous) {
+        return false;
+      }
+      if (Helpers.isLink(p)) {
+        return true;
+      }
+      if (!Helpers.exists(p)) {
+        return false;
+      }
+      previous = p;
+    }
+  }
+
   isPlainFileOrFolder(filePath) {
     return /^([a-zA-Z]|\-|\_|\@|\#|\$|\!|\^|\&|\*|\(|\))+$/.test(filePath);
   }
 
   createMultiplatformLink(target: string, link: string) {
+
     if (this.isPlainFileOrFolder(link)) {
       link = path.join(process.cwd(), link);
     }
@@ -210,7 +270,11 @@ export class HelpersFileFolders {
       if (link === '.' || link === './') {
         link = process.cwd()
       }
-      link = path.win32.normalize(link)
+      link = path.win32.normalize(link);
+      // if (path.resolve(target) === path.resolve(link)) { // TODO
+      //   Helpers.warn(`[createMultiplatformLink][win32] Trying to link same location`);
+      //   return;
+      // }
       command = "mklink \/D "
         + target
         + " "
@@ -222,6 +286,10 @@ export class HelpersFileFolders {
       }
       if (link === '.' || link === './') {
         link = process.cwd()
+      }
+      if (path.resolve(target) === path.resolve(link)) {
+        Helpers.warn(`[createMultiplatformLink] Trying to link same location`);
+        return;
       }
       command = `ln -sf "${link}" "${target}"`;
     }

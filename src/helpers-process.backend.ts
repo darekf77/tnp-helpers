@@ -59,6 +59,16 @@ export class HelpersProcess {
     });
   }
 
+  osIsMacOs(versino: 'big-sur' | 'catalina') {
+    if (versino == 'big-sur') {
+      return os.release().startsWith('20.');
+    }
+    if (versino == 'catalina') {
+      return os.release().startsWith('19.');
+    }
+    // TODO other oses
+  }
+
   goToDir(dir = '..') {
     const previous = process.cwd()
     try {

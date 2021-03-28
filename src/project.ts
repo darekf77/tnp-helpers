@@ -62,7 +62,7 @@ export class Project<T extends Project<any> = any>
   public isContainerCoreProject: boolean;
   public isStandaloneProject: boolean;
   public isUnknowNpmProject: boolean;
-  public isTnp: boolean;
+  public isNaviCli: boolean;
   public useFramework: boolean;
   public defaultPort?: number;
   public version: string;
@@ -349,6 +349,12 @@ export class Project<T extends Project<any> = any>
     return current;
     //#endregion
   }
+
+  //#region @backend
+  static get NaviCliLocation() {
+    return path.resolve(path.join(Project.Tnp.location, '../navi-cli'));
+  }
+  //#endregion
 
   static get Tnp(): Project<any> {
     //#region @backendFunc
