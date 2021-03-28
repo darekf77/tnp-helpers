@@ -17,6 +17,12 @@ import { Morphi } from 'morphi';
 import { HelpersTnp } from './helpers';
 const Helpers = HelpersTnp.Instance;
 
+export type EmptyProjectStructure = {
+  includeContent?: boolean;
+  relativePath: string;
+  relativeLinkFrom?: string;
+};
+
 export class Project<T extends Project<any> = any>
   //#region @backend
   extends ProjectGit
@@ -416,7 +422,12 @@ export class Project<T extends Project<any> = any>
     return !this.typeIs(...types);
   }
 
-
+  forEmptyStructure(): EmptyProjectStructure[] {
+    return [
+      { relativePath: config.file.package_json, includeContent: true },
+      { relativePath: config.folder.src },
+    ];
+  }
 
 }
 
