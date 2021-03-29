@@ -21,10 +21,12 @@ const encoding = 'utf8';
 export class HelpersFileFolders {
 
   /**
-   * Calculate file checksum
+   * Calculate file or string checksum
    */
-  checksum(pathToFile: string, algorithm?: 'md5' | 'sha1') {
-    const fileContent = Helpers.readFile(pathToFile);
+  checksum(absolutePathToFileOrContent: string, algorithm?: 'md5' | 'sha1') {
+    const fileContent = path.isAbsolute(absolutePathToFileOrContent)
+      ? Helpers.readFile(absolutePathToFileOrContent)
+      : absolutePathToFileOrContent;
     return crypto
       .createHash(algorithm || 'md5')
       .update(fileContent, 'utf8')
