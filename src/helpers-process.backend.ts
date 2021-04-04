@@ -233,11 +233,15 @@ export class HelpersProcess {
     return output;
   }
 
-  outputToVScode(data: { label: string; option: string; }[] | string) {
+  outputToVScode(data: { label: string; option: string; }[] | string, disableEncode = false) {
     if (_.isObject(data)) {
       data = JSON.stringify(data);
     }
-    console.log(encodeURIComponent(data as any));
+    if (disableEncode) {
+      console.log(data);
+    } else {
+      console.log(encodeURIComponent(data as any));
+    }
   }
 
   sleep(seconds = 1) {
