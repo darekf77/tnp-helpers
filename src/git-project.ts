@@ -11,6 +11,11 @@ import { Models } from 'tnp-models';
 export abstract class ProjectGit {
 
   //#region @backend
+
+  public runCommandGetString(this: Project, command: string) {
+    return Helpers.commnadOutputAsString(command, this.location, false);
+  }
+
   public run(this: Project, command: string, options?: Models.dev.RunOptions) {
     if (!options) { options = {}; }
     if (_.isUndefined(options.showCommand)) {
