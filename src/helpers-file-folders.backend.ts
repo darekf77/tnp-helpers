@@ -892,13 +892,13 @@ ${sourceData}
   /**
    * wrapper for fs.readFileSync
    */
-  readFile(absoluteFilePath: string): string | undefined {
+  readFile(absoluteFilePath: string, defaultValueWhenNotExists = void 0 as string): string | undefined {
     if (!fse.existsSync(absoluteFilePath)) {
-      return void 0;
+      return defaultValueWhenNotExists;
     }
     return fse.readFileSync(absoluteFilePath, {
       encoding
-    }).toString().trim()
+    }).toString().trim();
   }
 
   readJson(absoluteFilePath: string, defaultValue = {}, useJson5 = false) {

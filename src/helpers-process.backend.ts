@@ -13,6 +13,7 @@ import { Helpers } from './index';
 import { Models } from 'tnp-models';
 import { CLASS } from 'typescript-class-helpers';
 import { config } from 'tnp-config';
+import { Log, Level } from 'ng2-logger';
 declare const global: any;
 const prompts = require('prompts');
 import * as fuzzy from 'fuzzy'
@@ -67,6 +68,22 @@ export class HelpersProcess {
       return os.release().startsWith('19.');
     }
     // TODO other oses
+  }
+
+  async changeCwdWrapper(dir: string, functionToExecure: Function, logLevel: Level = Level.__NOTHING) {
+    const currentCwd = process.cwd();
+    Helpers.changeCwd(dir);
+    Log.disableLogs(logLevel)
+    await Helpers.runSyncOrAsync(functionToExecure);
+    Log.enableLogs();
+    Helpers.changeCwd(currentCwd);
+  }
+
+  changeCwd(dir?: string) {
+    if (!dir) {
+      return;
+    }
+    Helpers.goToDir(dir);
   }
 
   goToDir(dir = '..') {
