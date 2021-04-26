@@ -255,7 +255,7 @@
     "task.js": "^0.1.5",
     "tnp-config": "~0.0.34",
     "tnp-db": "~0.0.21",
-    "tnp-helpers": "~0.0.25",
+    "tnp-helpers": "~0.0.26",
     "tnp-ui": "~0.0.19",
     "ts-loader": "7.0.4",
     "ts-node": "~8.3.0",
@@ -282,5 +282,5 @@
     }
   },
   "private": false,
-  "lastBuildTagHash": "63078736f27b0f79bfdd0d7073e663f90f53045c"
+  "lastBuildTagHash": "5798f22db76c5b786247441fbf5507e20354fb07"
 }
