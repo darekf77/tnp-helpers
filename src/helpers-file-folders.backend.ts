@@ -60,6 +60,11 @@ export class HelpersFileFolders {
       fse.lstatSync(pathToFileOrMaybeFolder).isDirectory();
   }
 
+  isFile(pathToFileOrMaybeFolder: string) {
+    return pathToFileOrMaybeFolder && fse.existsSync(pathToFileOrMaybeFolder) &&
+      !fse.lstatSync(pathToFileOrMaybeFolder).isDirectory();
+  }
+
   /**
    * return absolute paths for folders inside folders
    */
@@ -189,6 +194,8 @@ export class HelpersFileFolders {
       && Helpers.exists(resolvedLink)
       && !Helpers.isLink(resolvedTarget)
       && Helpers.exists(resolvedTarget)
+      && Helpers.isFile(resolvedLink)
+      && Helpers.isFile(resolvedTarget)
       && Helpers.readFile(resolvedLink) === Helpers.readFile(resolvedTarget)
     );
     if (exactSameLocations) {
@@ -894,6 +901,9 @@ ${sourceData}
    */
   readFile(absoluteFilePath: string, defaultValueWhenNotExists = void 0 as string): string | undefined {
     if (!fse.existsSync(absoluteFilePath)) {
+      return defaultValueWhenNotExists;
+    }
+    if (fse.lstatSync(absoluteFilePath).isDirectory()) {
       return defaultValueWhenNotExists;
     }
     return fse.readFileSync(absoluteFilePath, {
