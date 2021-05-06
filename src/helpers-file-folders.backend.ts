@@ -195,7 +195,7 @@ export class HelpersFileFolders {
       && !Helpers.isLink(resolvedTarget)
       && Helpers.exists(resolvedTarget)
       && Helpers.isFile(resolvedLink)
-      && Helpers.isFile(resolvedTarget)
+      && Helpers.isFile(resolvedTarget) // TODO refactor this
       && Helpers.readFile(resolvedLink) === Helpers.readFile(resolvedTarget)
     );
     if (exactSameLocations) {
