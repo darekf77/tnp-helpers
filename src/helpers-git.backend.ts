@@ -186,6 +186,36 @@ export class HelpersGit {
   }
   //#endregion
 
+  private pull(branchName = 'master', cwd = process.cwd()) {
+    child.execSync(`git pull --ff-only origin ${branchName}`, { cwd });
+  }
+
+  //#region pull current branch
+  async pullBranch(branchName: string, directoryPath: string, askToRetry = false) {
+    if (this.getOriginURL(directoryPath) === '') {
+      Helpers.warn(`Not pulling branch without `
+        + `remote origin url.... in folder ${path.basename(directoryPath)}`);
+      return;
+    }
+    Helpers.info(`Pulling git changes in "${directoryPath}" `)
+    try {
+      const cwd = directoryPath;
+      Helpers.git.pull(branchName, cwd);
+      Helpers.info(`Branch "${branchName}" updated successfully in ${path.basename(directoryPath)}`)
+    } catch (e) {
+      // console.log(e)
+      Helpers.error(`Cannot update current branch in: ${directoryPath}`, askToRetry, true)
+      if (askToRetry) {
+        await Helpers.questionYesNo(`Do you wanna try again ?`, async () => {
+          await Helpers.git.pullCurrentBranch(directoryPath, askToRetry)
+        }, () => {
+          process.exit(0)
+        });
+      }
+    }
+  }
+  //#endregion
+
   //#region pull current branch
   async pullCurrentBranch(directoryPath: string, askToRetry = false) {
     if (this.getOriginURL(directoryPath) === '') {
@@ -197,7 +227,7 @@ export class HelpersGit {
     try {
       const cwd = directoryPath;
       let currentLocalBranch = child.execSync(`git branch | sed -n '/\* /s///p'`, { cwd }).toString().trim()
-      child.execSync(`git pull origin ${currentLocalBranch}`, { cwd });
+      Helpers.git.pull(currentLocalBranch, cwd);
       Helpers.info(`Branch "${currentLocalBranch}" updated successfully in ${path.basename(directoryPath)}`)
     } catch (e) {
       // console.log(e)
