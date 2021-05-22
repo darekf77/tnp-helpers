@@ -1,5 +1,5 @@
 //#region @backend
-import { fse, path } from 'tnp-core';
+import { fse, path, crossPlatformPath } from 'tnp-core';
 export { ChildProcess } from 'child_process';
 import { ProjectGit } from './git-project';
 import { CLI } from 'tnp-cli';
@@ -387,7 +387,13 @@ export class Project<T extends Project<any> = any>
 
     const projectPath = path.join(config.pathes.projectsExamples(version).projectByType(libraryType));
     if (!fse.existsSync(projectPath)) {
-      Helpers.error(`[tnp-helpers] Bad library type "${libraryType}" for this framework version "${version}"`, false, true);
+      Helpers.error(`
+      ${projectPath}
+      ${projectPath.replace(/\//g,'\\\\')}
+      ${crossPlatformPath(projectPath)}
+      [tnp-helpers] Bad library type "${libraryType}" for this framework version "${version}"
+      
+      `, false, true);
     }
     return Project.From<T>(projectPath);
     //#endregion

@@ -9,7 +9,7 @@ import { conditionWait } from './condition-wait';
 //#region @backend
 import { child_process, os, crossPlatformPath } from 'tnp-core';
 import * as Task from 'task.js';
-import isElevated from 'is-elevated';
+import { isElevated } from 'tnp-core';
 import { URL } from 'url';
 import { HelpersGit } from './helpers-git.backend';
 import { HelpersCliTool } from './helpers-cli-tool.backend';
@@ -19,7 +19,6 @@ import { TsCodeModifer } from './ts-code-modifier';
 import { HelpersNpm } from './helpers-npm.backend';
 import { HelpersTerminal } from './helpers-system-terminal.backend';
 import { HelpersFileFolders } from './helpers-file-folders.backend';
-import chalk from 'chalk';
 import { HelpersDependencies } from './helpers-dependencies.backend';
 import { HelpersPath } from './helpers-path.backend';
 import { HelpersNetwork } from './helpers-network.backend';
@@ -188,7 +187,7 @@ export class HelpersTnp {
       Helpers.info(`Execution time: ${end.toString()}ms for "${description}"`);
     }
     //#region @backend
-    Helpers.info(`Execution time: ${chalk.bold(end.toString())}ms for "${chalk.bold(description)}"`);
+    Helpers.info(`Execution time: ${CLI.chalk.bold(end.toString())}ms for "${CLI.chalk.bold(description)}"`);
     //#endregion
     return end;
   }
@@ -204,7 +203,7 @@ export class HelpersTnp {
       Helpers.info(`Execution time: ${end.toString()}ms for "${description}"`);
     }
     //#region @backend
-    Helpers.info(`Execution time: ${chalk.bold(end.toString())}ms for "${chalk.bold(description)}"`);
+    Helpers.info(`Execution time: ${CLI.chalk.bold(end.toString())}ms for "${CLI.chalk.bold(description)}"`);
     //#endregion
     return end;
   }

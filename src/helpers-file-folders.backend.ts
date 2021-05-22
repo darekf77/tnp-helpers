@@ -14,7 +14,6 @@ import * as json5 from 'json5';
 
 import { Helpers } from './index';
 import { config } from 'tnp-config';
-
 import { Models } from 'tnp-models';
 
 const encoding = 'utf8';
@@ -231,8 +230,64 @@ export class HelpersFileFolders {
     rimraf.sync(link);
     // Helpers.log(`target ${target}`)
     // Helpers.log(`link ${link}`)
-    fse.symlinkSync(target, link)
+    if(process.platform === 'win32') {
+      Helpers.info(`windows link: lnk ${target} ${link}`)
+      Helpers.run(`lnk ${target} ${link}`).sync();
+    } else {
+      fse.symlinkSync(target, link)
+    }    
   }
+
+  // createMultiplatformLink(target: string, link: string) {
+
+  //   if (this.isPlainFileOrFolder(link)) {
+  //     link = path.join(process.cwd(), link);
+  //   }
+
+  //   let command: string;
+  //   if (os.platform() === 'win32') {
+
+  //     if (target.startsWith('./')) {
+  //       target = path.win32.normalize(path.join(process.cwd(), path.basename(target)))
+  //     } else {
+  //       if (target === '.' || target === './') {
+  //         target = path.win32.normalize(path.join(process.cwd(), path.basename(link)))
+  //       } else {
+  //         target = path.win32.normalize(path.join(target, path.basename(link)))
+  //       }
+  //     }
+  //     if (fse.existsSync(target)) {
+  //       fse.unlinkSync(target);
+  //     }
+  //     target = path.win32.normalize(target)
+  //     if (link === '.' || link === './') {
+  //       link = process.cwd()
+  //     }
+  //     link = path.win32.normalize(link);
+  //     // if (path.resolve(target) === path.resolve(link)) { // TODO
+  //     //   Helpers.warn(`[createMultiplatformLink][win32] Trying to link same location`);
+  //     //   return;
+  //     // }
+  //     command = "mklink \/D "
+  //       + target
+  //       + " "
+  //       + link
+  //       + " >nul 2>&1 "
+  //   } else {
+  //     if (target.startsWith('./')) {
+  //       target = target.replace(/^\.\//g, '');
+  //     }
+  //     if (link === '.' || link === './') {
+  //       link = process.cwd()
+  //     }
+  //     if (path.resolve(target) === path.resolve(link)) {
+  //       Helpers.warn(`[createMultiplatformLink] Trying to link same location`);
+  //       return;
+  //     }
+  //     command = `ln -sf "${link}" "${target}"`;
+  //   }
+  //   child_process.execSync(command);
+  // }
 
   pathContainLink(p: string) {
     let previous: string;
@@ -255,56 +310,6 @@ export class HelpersFileFolders {
     return /^([a-zA-Z]|\-|\_|\@|\#|\$|\!|\^|\&|\*|\(|\))+$/.test(filePath);
   }
 
-  createMultiplatformLink(target: string, link: string) {
-
-    if (this.isPlainFileOrFolder(link)) {
-      link = path.join(process.cwd(), link);
-    }
-
-    let command: string;
-    if (os.platform() === 'win32') {
-
-      if (target.startsWith('./')) {
-        target = path.win32.normalize(path.join(process.cwd(), path.basename(target)))
-      } else {
-        if (target === '.' || target === './') {
-          target = path.win32.normalize(path.join(process.cwd(), path.basename(link)))
-        } else {
-          target = path.win32.normalize(path.join(target, path.basename(link)))
-        }
-      }
-      if (fse.existsSync(target)) {
-        fse.unlinkSync(target);
-      }
-      target = path.win32.normalize(target)
-      if (link === '.' || link === './') {
-        link = process.cwd()
-      }
-      link = path.win32.normalize(link);
-      // if (path.resolve(target) === path.resolve(link)) { // TODO
-      //   Helpers.warn(`[createMultiplatformLink][win32] Trying to link same location`);
-      //   return;
-      // }
-      command = "mklink \/D "
-        + target
-        + " "
-        + link
-        + " >nul 2>&1 "
-    } else {
-      if (target.startsWith('./')) {
-        target = target.replace(/^\.\//g, '');
-      }
-      if (link === '.' || link === './') {
-        link = process.cwd()
-      }
-      if (path.resolve(target) === path.resolve(link)) {
-        Helpers.warn(`[createMultiplatformLink] Trying to link same location`);
-        return;
-      }
-      command = `ln -sf "${link}" "${target}"`;
-    }
-    child_process.execSync(command);
-  }
 
   requireUncached(module) {
     delete require.cache[require.resolve(module)];

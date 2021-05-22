@@ -1,12 +1,11 @@
 //#region imports
-import { _, fse, path } from 'tnp-core';
-import * as glob from 'glob';
+import { _, fse, path, glob } from 'tnp-core';
 // local
 type Project = any;
 
 import { config } from 'tnp-config';
+import { CLI } from 'tnp-cli';
 import { Helpers } from './index';
-import chalk from 'chalk';
 //#endregion
 
 export namespace HelpersMerge {
@@ -80,7 +79,7 @@ export namespace HelpersMerge {
 
         Please add: ${path.basename(globPath)} to your baseline
 
-        or maybe forget ${chalk.bold('tnp install')} or ${chalk.bold('tnp link')} ?
+        or maybe forget ${CLI.chalk.bold('tnp install')} or ${CLI.chalk.bold('tnp link')} ?
 
         `)
       }
