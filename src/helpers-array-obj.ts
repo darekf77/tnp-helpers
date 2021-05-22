@@ -1,6 +1,6 @@
-import * as _ from 'lodash';
-import { Helpers } from './index';
+import { _ } from 'tnp-core';
 import * as fuzzy from 'fuzzy';
+import { Helpers } from './index';
 
 export class HelpersArrayObj {
 

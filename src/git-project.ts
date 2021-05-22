@@ -1,10 +1,14 @@
-import * as fse from 'fs-extra';
-import * as path from 'path';
-import * as _ from 'lodash';
-import chalk from 'chalk';
-
+import {
+  _,
+  //#region @backend
+  path,
+  //#endregion
+} from 'tnp-core';
 import { Project } from './project';
 import { HelpersTnp } from './helpers';
+//#region @backend
+import { CLI } from 'tnp-cli';
+//#endregion
 const Helpers = HelpersTnp.Instance;
 import { Models } from 'tnp-models';
 
@@ -23,7 +27,7 @@ export abstract class ProjectGit {
     }
     if (!options.cwd) { options.cwd = this.location; }
     if (options.showCommand) {
-      Helpers.info(`[[${chalk.underline('Executing shell command')}]]  "${command}" in [[${options.cwd}]]`);
+      Helpers.info(`[[${CLI.chalk.underline('Executing shell command')}]]  "${command}" in [[${options.cwd}]]`);
     }
     return Helpers.run(command, options);
   }

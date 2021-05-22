@@ -1,10 +1,10 @@
 //#region imports
-import * as child from 'child_process'
-import * as _ from 'lodash';
-import chalk from 'chalk';
-import * as fse from 'fs-extra';
-import * as os from 'os';
-import * as path from 'path';
+import {
+  _, os,
+  path, fse,
+  child_process
+} from 'tnp-core';
+import { CLI } from 'tnp-cli';
 import * as fkill from 'fkill';
 import * as dateformat from 'dateformat';
 
@@ -16,8 +16,8 @@ import { config } from 'tnp-config';
 import { Log, Level } from 'ng2-logger';
 declare const global: any;
 const prompts = require('prompts');
-import * as fuzzy from 'fuzzy'
-import * as inquirer from 'inquirer'
+import * as fuzzy from 'fuzzy';
+import * as inquirer from 'inquirer';
 import * as inquirerAutocomplete from 'inquirer-autocomplete-prompt';
 inquirer.registerPrompt('autocomplete', inquirerAutocomplete)
 //#endregion
@@ -46,10 +46,10 @@ export class HelpersProcess {
 
   async restartApplicationItself(nameOfApp: string) {
     Helpers.log(`Restarting ${nameOfApp}`);
-    return new Promise(resolve => {
+    return new Promise(() => {
       setTimeout(function () {
         process.on('exit', function () {
-          child.spawn(process.argv.shift(), [...process.argv, '--restarting'], {
+          child_process.spawn(process.argv.shift(), [...process.argv, '--restarting'], {
             cwd: process.cwd(),
             detached: true,
             stdio: 'inherit'
@@ -157,7 +157,7 @@ export class HelpersProcess {
     pageSize = 10
   ) {
 
-    function source(answers, input) {
+    function source(input) {
       input = input || '';
       return new Promise((resolve) => {
         const fuzzyResult = fuzzy.filter(input, choices.map(f => f.name));
@@ -229,7 +229,7 @@ export class HelpersProcess {
 
   getWorkingDirOfProcess(PID: number) {
     try {
-      const cwd = child.execSync(`lsof -p ${PID} | awk '$4=="cwd" {print $9}'`).toString().trim()
+      const cwd = child_process.execSync(`lsof -p ${PID} | awk '$4=="cwd" {print $9}'`).toString().trim()
       return cwd;
     } catch (e) {
       Helpers.error(e);
@@ -291,7 +291,7 @@ export class HelpersProcess {
       await Helpers.runSyncOrAsync(fn)
       Helpers.log(`${currentDate()} ${executionType} "${taskName}" Done\u2713`)
     } catch (error) {
-      Helpers.log(chalk.red(error));
+      Helpers.log(CLI.chalk.red(error));
       Helpers.log(`${currentDate()} ${executionType} ${taskName} ERROR`);
       process.exit(1);
     }
@@ -407,7 +407,7 @@ ${Helpers.terminalLine()}
 <-- ${isDirectory ? 'Path to directory' : 'Path to file'}: -->
 ${isDirectory ? pathToFileOrFolder.split('/').map(c => `/${c}`).join('').replace(/^\//, '') : (
         path.dirname(pathToFileOrFolder.split('/').map(c => `/${c}`).join('').replace(/^\//, ''))
-        + '\n/' + chalk.bold(path.basename(pathToFileOrFolder))
+        + '\n/' + CLI.chalk.bold(path.basename(pathToFileOrFolder))
       )
       }
 ${Helpers.terminalLine()}\n`;
@@ -447,7 +447,7 @@ ${Helpers.terminalLine()}\n`;
     return data as string;
   }
 
-  logProc(proc: child.ChildProcess, output = true, stdio,
+  logProc(proc: child_process.ChildProcess, output = true, stdio,
     outputLineReplace: (outputLine: string) => string, prefix: string,
     extractFromLine?: (string | Function)[]) {
     Helpers.processes.push(proc);
@@ -498,7 +498,7 @@ command: ${command}
 
   readonly bigMaxBuffer = 2024 * 500;
 
-  async waitForMessegeInStdout(proc: child.ChildProcess, message: string) {
+  async waitForMessegeInStdout(proc: child_process.ChildProcess, message: string) {
     return new Promise((resolve, reject) => {
       let resolved = false;
       proc.stdout.on('data', (data) => {
@@ -518,7 +518,7 @@ command: ${command}
           resolve(void 0);
         }
       })
-      proc.once('exit', (code) => {
+      proc.once('exit', () => {
         // console.log(`
 
         // [waitForMessegeInStdout] exit: ${code}
@@ -553,7 +553,7 @@ command: ${command}
     const maxBuffer = biggerBuffer ? Helpers.bigMaxBuffer : undefined;
     let stdio = Helpers.getStdio(options)
     Helpers.checkProcess(cwd, command);
-    return child.execSync(command, { stdio, cwd, maxBuffer } as any)
+    return child_process.execSync(command, { stdio, cwd, maxBuffer } as any)
   }
 
   runAsyncIn(command: string, options?: Models.dev.RunOptions) {
@@ -561,12 +561,12 @@ command: ${command}
     const maxBuffer = biggerBuffer ? Helpers.bigMaxBuffer : undefined;
     let stdio = Helpers.getStdio(options)
     Helpers.checkProcess(cwd, command);
-    let proc: child.ChildProcess;
+    let proc: child_process.ChildProcess;
     if (detach) {
       const cmd = _.first(command.split(' '));
       const argsForCmd = command.split(' ').slice(1);
       console.log(`cmd: "${cmd}",  args: "${argsForCmd.join(' ')}"`)
-      proc = child.spawn(cmd, argsForCmd, { cwd, detached: true });
+      proc = child_process.spawn(cmd, argsForCmd, { cwd, detached: true });
       console.log(`
 
       DETACHED PROCESS IS WORKING ON PID: ${proc.pid}
@@ -574,7 +574,7 @@ command: ${command}
       `)
       // proc = child.exec(`${command} &`, { cwd, maxBuffer, });
     } else {
-      proc = child.exec(command, { cwd, maxBuffer, });
+      proc = child_process.exec(command, { cwd, maxBuffer, });
     }
     return Helpers.logProc(proc,
       detach ? true : output,

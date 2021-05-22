@@ -1,5 +1,4 @@
-import * as _ from 'lodash';
-import * as path from 'path';
+import { _, path } from 'tnp-core';
 import { describe, before, beforeEach, it } from 'mocha';
 import { expect } from 'chai';
 import { Helpers } from '../index';

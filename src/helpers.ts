@@ -1,5 +1,4 @@
-import * as _ from 'lodash';
-
+import { _ } from 'tnp-core';
 import { HelpersArrayObj } from './helpers-array-obj';
 import { HelpersMessages } from './helpers-messages';
 import { HelpersStringsRegexes } from './helpers-strings-regexes';
@@ -8,10 +7,9 @@ import { HelpersStrings } from './helpers-strings';
 import { Helpers as HelperNg2Logger } from 'ng2-logger';
 import { conditionWait } from './condition-wait';
 //#region @backend
+import { child_process, os, crossPlatformPath } from 'tnp-core';
 import * as Task from 'task.js';
-import * as os from 'os';
-import * as child from 'child_process';
-const isElevated = require('is-elevated');
+import isElevated from 'is-elevated';
 import { URL } from 'url';
 import { HelpersGit } from './helpers-git.backend';
 import { HelpersCliTool } from './helpers-cli-tool.backend';
@@ -26,11 +24,12 @@ import { HelpersDependencies } from './helpers-dependencies.backend';
 import { HelpersPath } from './helpers-path.backend';
 import { HelpersNetwork } from './helpers-network.backend';
 import { HelpersJSON5 } from './helpers-json5.backend';
+import { CLI } from 'tnp-cli';
 //#endregion
 import { config, ConfigModels } from 'tnp-config';
 import { Helpers } from './index';
 import { CLASS } from 'typescript-class-helpers';
-import { Morphi, Models as MorphiModels } from 'morphi';
+import { Morphi } from 'morphi';
 
 
 export function applyMixins(derivedCtor: any, baseCtors: any[]) {
@@ -54,7 +53,7 @@ export class HelpersTnp {
 
 
   //#region @backend
-  readonly processes: child.ChildProcess[] = [];
+  readonly processes: child_process.ChildProcess[] = [];
   //#endregion
 
   private constructor(
@@ -120,6 +119,12 @@ export class HelpersTnp {
   get isNode() {
     return HelperNg2Logger.isNode;
   }
+
+  //#region @backend
+  slash(pathFromWindowsOrUnixType: string) {
+    return crossPlatformPath(pathFromWindowsOrUnixType);
+  }
+  //#endregion
 
   async isElevated() {
     //#region @backend
@@ -337,7 +342,7 @@ export class HelpersTnp {
   //#endregion
 
   //#region @backend
-  checkEnvironment = (deps?: ConfigModels.GlobalDependencies) => config.checkEnvironment(deps);
+  checkEnvironment = (deps?: ConfigModels.GlobalDependencies) => CLI.checkEnvironment(deps);
   //#endregion
   public applyMixins = applyMixins;
 }

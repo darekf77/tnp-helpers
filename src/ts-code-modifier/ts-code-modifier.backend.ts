@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import { _ } from 'tnp-core';
 import * as tsfmt from 'typescript-formatter';
 import { Helpers } from '../index';
 export class TsCodeModifer {
@@ -60,9 +60,7 @@ export class TsCodeModifer {
    */
   public formatFile(filePath: string) {
     tsfmt.processFiles([filePath], {
-      // dryRun?: boolean;
       verbose: true,
-      // baseDir: ['bundle', 'dist'].includes(path.basename(__dirname)) ? path.join(__dirname, '..') : __dirname,
       replace: true,
       verify: false,
       // tsconfig: true,

@@ -1,7 +1,10 @@
-import * as glob from 'glob';
+import {
+  _
+} from 'tnp-core';
 import { config } from 'tnp-config';
 import * as json5 from 'json5';
 import * as json5Writer from 'json5-writer';
+import * as glob from 'glob';
 import { Helpers } from './index';
 
 export class JSON5Helpers<STRUCTURE = {}> {

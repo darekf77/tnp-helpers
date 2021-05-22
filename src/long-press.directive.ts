@@ -7,10 +7,10 @@ import {
   HostListener
 } from '@angular/core';
 
-import * as _ from 'lodash';
+import { _ } from 'tnp-core';
 import { Log, Level } from 'ng2-logger';
 const log = Log.create(`[tnp-helpers] long-press`
-  ,Level.__NOTHING
+  , Level.__NOTHING
 )
 
 @Directive({ selector: '[long-press]' })

@@ -1,11 +1,13 @@
 //#region imports
-import * as _ from 'lodash';
-import * as child from 'child_process';
-import * as path from 'path';
-import * as fse from 'fs-extra';
+import {
+  _,
+  path,
+  fse,
+  child_process,
+} from 'tnp-core';
+import { CLI } from 'tnp-cli';
 import { Helpers } from './index';
 import type { Project } from './project';
-import chalk from 'chalk';
 //#endregion
 
 export class HelpersGit {
@@ -13,7 +15,7 @@ export class HelpersGit {
   lastCommitHash(directoryPath): string {
     try {
       const cwd = directoryPath;
-      let hash = child.execSync(`git rev-parse HEAD &> /dev/null && git log -1 --format="%H"`, { cwd }).toString().trim()
+      let hash = child_process.execSync(`git rev-parse HEAD &> /dev/null && git log -1 --format="%H"`, { cwd }).toString().trim()
       return hash;
     } catch (e) {
       Helpers.log(e, 1);
@@ -28,7 +30,7 @@ export class HelpersGit {
   penultimageCommitHash(directoryPath): string {
     try {
       const cwd = directoryPath;
-      let hash = child.execSync(`git rev-parse HEAD &> /dev/null && git log -2 --format="%H"`, { cwd }).toString().trim()
+      let hash = child_process.execSync(`git rev-parse HEAD &> /dev/null && git log -2 --format="%H"`, { cwd }).toString().trim()
       return hash;
     } catch (e) {
       Helpers.log(e, 1);
@@ -43,8 +45,8 @@ export class HelpersGit {
   lastTagHash(directoryPath): string {
     try {
       const cwd = directoryPath;
-      const tag = child.execSync(`git describe --tags $(git rev-list --tags --max-count=1)`, { cwd }).toString().trim();
-      let hash = child.execSync(`git log -1 --format=format:"%H" ${tag}`, { cwd }).toString().trim()
+      const tag = child_process.execSync(`git describe --tags $(git rev-list --tags --max-count=1)`, { cwd }).toString().trim();
+      let hash = child_process.execSync(`git log -1 --format=format:"%H" ${tag}`, { cwd }).toString().trim()
       return hash;
     } catch (e) {
       Helpers.log(e, 1);
@@ -59,7 +61,7 @@ export class HelpersGit {
   lastCommitDate(directoryPath): Date {
     try {
       const cwd = directoryPath;
-      let unixTimestamp = child.execSync(`git rev-parse HEAD &> /dev/null && git log -1 --pretty=format:%ct`, { cwd }).toString().trim()
+      let unixTimestamp = child_process.execSync(`git rev-parse HEAD &> /dev/null && git log -1 --pretty=format:%ct`, { cwd }).toString().trim()
       return new Date(Number(unixTimestamp) * 1000)
     } catch (e) {
       Helpers.log(e, 1);
@@ -73,8 +75,8 @@ export class HelpersGit {
   countCommits(cwd: string) {
     try {
       // git rev-parse HEAD &> /dev/null check if any commits
-      let currentLocalBranch = child.execSync(`git branch | sed -n '/\* /s///p'`, { cwd }).toString().trim()
-      let value = child.execSync(`git rev-parse HEAD &> /dev/null && git rev-list --count ${currentLocalBranch}`, { cwd }).toString().trim()
+      let currentLocalBranch = child_process.execSync(`git branch | sed -n '/\* /s///p'`, { cwd }).toString().trim()
+      let value = child_process.execSync(`git rev-parse HEAD &> /dev/null && git rev-list --count ${currentLocalBranch}`, { cwd }).toString().trim()
       return Number(value);
     } catch (e) {
       Helpers.log(e, 1);
@@ -87,7 +89,7 @@ export class HelpersGit {
   //#region get current branch name
   currentBranchName(cwd) {
     try {
-      const branchName = child.execSync(`git branch | sed -n '/\* /s///p'`, { cwd }).toString().trim()
+      const branchName = child_process.execSync(`git branch | sed -n '/\* /s///p'`, { cwd }).toString().trim()
       return branchName;
     } catch (e) {
       Helpers.error(e);
@@ -187,7 +189,7 @@ export class HelpersGit {
   //#endregion
 
   private pull(branchName = 'master', cwd = process.cwd()) {
-    child.execSync(`git pull --ff-only origin ${branchName}`, { cwd });
+    child_process.execSync(`git pull --ff-only origin ${branchName}`, { cwd });
   }
 
   //#region pull current branch
@@ -226,7 +228,7 @@ export class HelpersGit {
     Helpers.info(`Pulling git changes in "${directoryPath}" `)
     try {
       const cwd = directoryPath;
-      let currentLocalBranch = child.execSync(`git branch | sed -n '/\* /s///p'`, { cwd }).toString().trim()
+      let currentLocalBranch = child_process.execSync(`git branch | sed -n '/\* /s///p'`, { cwd }).toString().trim()
       Helpers.git.pull(currentLocalBranch, cwd);
       Helpers.info(`Branch "${currentLocalBranch}" updated successfully in ${path.basename(directoryPath)}`)
     } catch (e) {
@@ -264,7 +266,7 @@ export class HelpersGit {
   //#region get default branch for repo
   defaultRepoBranch(cwd: string) {
     try {
-      const defaultBranch = child
+      const defaultBranch = child_process
         .execSync(`git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'`, { cwd })
         .toString().trim()
       return defaultBranch;
@@ -278,10 +280,10 @@ export class HelpersGit {
   //#region checkout default branch
   checkoutDefaultBranch(directoryPath) {
     const cwd = directoryPath;
-    const defaultBranch = child
+    const defaultBranch = child_process
       .execSync(`git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'`, { cwd })
       .toString().trim()
-    child.execSync(`git checkout ${defaultBranch}`, { cwd });
+    child_process.execSync(`git checkout ${defaultBranch}`, { cwd });
   }
   //#endregion
 
@@ -333,7 +335,7 @@ export class HelpersGit {
         if (error?.stderr?.toString()?.search('remote: Not Found') !== -1) {
           Helpers.warn(`[tnp-helpers][git] Project not found :${url}`);
         } else {
-          Helpers.error(`Can't clone from url: ${chalk.bold(url)}..`, false, true);
+          Helpers.error(`Can't clone from url: ${CLI.chalk.bold(url)}..`, false, true);
         }
       }
     }

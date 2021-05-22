@@ -1,5 +1,5 @@
+import { path } from 'tnp-core';
 import * as glob from 'glob';
-import * as path from 'path';
 import { config } from 'tnp-config';
 import { BaselineSiteJoinprefix } from './constants';
 

@@ -1,9 +1,9 @@
-import * as _ from 'lodash';
-//#region @backend
-import * as fse from 'fs-extra';
-import * as path from 'path';
-import { Helpers } from 'tnp-helpers';
-//#endregion
+import {
+  _,
+  //#region @backend
+  path,
+  //#endregion
+} from 'tnp-core';
 
 export class HelpersEnvironment {
 

@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import { _ } from 'tnp-core';
 import { BaseFormlyComponent } from './base-formly-component';
 import { CLASS } from 'typescript-class-helpers';
 import {

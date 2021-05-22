@@ -1,11 +1,12 @@
-import * as fse from 'fs-extra';
-import * as fs from 'fs';
-import * as child from 'child_process';
-import * as _ from 'lodash';
+import {
+  _,
+  path,
+  fse,
+  os,
+  rimraf,
+  child_process,
+} from 'tnp-core';
 import * as  underscore from 'underscore';
-import * as path from 'path';
-import * as rimraf from 'rimraf';
-import * as os from 'os';
 import * as glob from 'glob';
 import { JSON10 } from 'json10';
 import * as crypto from 'crypto';
@@ -147,7 +148,7 @@ export class HelpersFileFolders {
     if (_.isUndefined(options.dontRenameWhenSlashAtEnd)) {
       options.dontRenameWhenSlashAtEnd = false;
     }
-    const { continueWhenExistedFolderDoesntExists, dontRenameWhenSlashAtEnd } = options;
+    const { continueWhenExistedFolderDoesntExists } = options;
 
     // console.log('Create link!')
 
@@ -272,8 +273,8 @@ export class HelpersFileFolders {
           target = path.win32.normalize(path.join(target, path.basename(link)))
         }
       }
-      if (fs.existsSync(target)) {
-        fs.unlinkSync(target);
+      if (fse.existsSync(target)) {
+        fse.unlinkSync(target);
       }
       target = path.win32.normalize(target)
       if (link === '.' || link === './') {
@@ -302,7 +303,7 @@ export class HelpersFileFolders {
       }
       command = `ln -sf "${link}" "${target}"`;
     }
-    child.execSync(command);
+    child_process.execSync(command);
   }
 
   requireUncached(module) {
@@ -671,7 +672,7 @@ export class HelpersFileFolders {
     let files = Helpers.getRecrusiveFilesFrom(dir);
 
     // use underscore for max()
-    return underscore.max(files, (f) => {
+    return underscore.max(files, (f) => { // TODO refactor to lodash
       // console.log(f);
       // ctime = creation time is used
       // replace with mtime for modification time
@@ -759,7 +760,7 @@ export class HelpersFileFolders {
     if (_.isArray(options.omitFolders) && options.omitFolders.length >= 1
       && _.isNil(options.filter) && _.isString(options.omitFoldersBaseFolder)
       && path.isAbsolute(options.omitFoldersBaseFolder)) {
-      options.filter = (src: string, dest: string) => {
+      options.filter = (src: string) => {
         // console.log('src',src)
         const baseFolder = _.first(src.replace(options.omitFoldersBaseFolder, '')
           .replace(/^\//, '').split('/'));

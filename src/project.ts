@@ -1,16 +1,12 @@
 //#region @backend
-import chalk from 'chalk';
-import * as fse from 'fs-extra';
-import * as path from 'path';
-import * as json5 from 'json5';
+import { fse, path } from 'tnp-core';
 export { ChildProcess } from 'child_process';
-import { ChildProcess } from 'child_process';
 import { ProjectGit } from './git-project';
-
+import { CLI } from 'tnp-cli';
 //#endregion
 declare const global: any;
 import { config, LibTypeArr, ConfigModels } from 'tnp-config';
-import * as _ from 'lodash';
+import { _ } from 'tnp-core';
 import { CLASS } from 'typescript-class-helpers';
 import { Models } from 'tnp-models';
 import { Morphi } from 'morphi';
@@ -73,7 +69,7 @@ export class Project<T extends Project<any> = any>
   public backupName: string;
   public resources: string[];
   public env: Models.env.EnvConfig;
-  public allowedEnvironments: Models.env.EnvironmentName[];
+  public allowedEnvironments: ConfigModels.EnvironmentName[];
 
   public children: T[];
   public grandpa: T;
@@ -200,7 +196,7 @@ export class Project<T extends Project<any> = any>
     //     : ('NO PROJECT FROM LOCATION ' + location))
 
     if (resultProject) {
-      Helpers.log(`[tnp-helpers][project.from] ${chalk.bold(resultProject.name)} from ...${location.substr(location.length - 100)}`, 1);
+      Helpers.log(`[tnp-helpers][project.from] ${CLI.chalk.bold(resultProject.name)} from ...${location.substr(location.length - 100)}`, 1);
     } else {
       if (PackageJSON) {
         Helpers.log(`[tnp-helpers][project.from] project not found in ${location}`, 1);
@@ -339,7 +335,7 @@ export class Project<T extends Project<any> = any>
     //#region @backendFunc
     const current = Project.From(process.cwd())
     if (!current) {
-      Helpers.warn(`[tnp-helpers] Current location is not a ${chalk.bold(config.frameworkName)} type project.
+      Helpers.warn(`[tnp-helpers] Current location is not a ${CLI.chalk.bold(config.frameworkName)} type project.
 
       location: "${process.cwd()}"
 

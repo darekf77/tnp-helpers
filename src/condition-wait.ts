@@ -1,5 +1,4 @@
-import * as _ from 'lodash';
-
+import { _ } from 'tnp-core';
 import { Helpers } from './index';
 
 export type Condition = {

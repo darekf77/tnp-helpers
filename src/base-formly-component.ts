@@ -7,7 +7,7 @@ import {
 import {
   FormControl,
   FormGroup
-} from '@angular/forms'
+} from '@angular/forms';
 import { Log, Level } from 'ng2-logger';
 import { DualComponentController } from './dual-component-ctrl';
 import { EventEmitter } from '@angular/core';

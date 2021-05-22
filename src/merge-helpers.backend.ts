@@ -1,9 +1,6 @@
 //#region imports
-import * as _ from 'lodash';
-import * as fse from 'fs-extra';
-import * as path from 'path';
+import { _, fse, path } from 'tnp-core';
 import * as glob from 'glob';
-import * as watch from 'watch'
 // local
 type Project = any;
 

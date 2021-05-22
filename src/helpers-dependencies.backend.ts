@@ -1,5 +1,5 @@
-import * as _ from 'lodash';
-import chalk from 'chalk';
+import { _ } from 'tnp-core';
+import { CLI } from 'tnp-cli';
 import { Helpers } from './index';
 import { Project } from './project';
 
@@ -28,8 +28,8 @@ export class HelpersDependencies {
           const v1 = deps[currentProjIndex];
           const v2 = deps[indexToReplace];
           if (v1.copyto.includes(v2.project) && (v2.copyto.includes(v1.project))) {
-            Helpers.warn(`Circural copyto between ${chalk.bold(v1.project.name)}(${currentProjIndex}) `
-              + ` and ${chalk.bold(v2.project.name)}(${indexToReplace})`)
+            Helpers.warn(`Circural copyto between ${CLI.chalk.bold(v1.project.name)}(${currentProjIndex}) `
+              + ` and ${CLI.chalk.bold(v2.project.name)}(${indexToReplace})`)
           } else {
             // if (last_currentProjIndex === currentProjIndex && last_indexToReplace === indexToReplace) {
             //   Helpers.warn(`Weird circural copyto between ${chalk.bold(v1.project.name)}(${currentProjIndex}) `

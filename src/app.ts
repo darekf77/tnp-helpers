@@ -1,6 +1,5 @@
 //#region @backend
-import * as  _ from 'lodash';
-
+import { _ } from 'tnp-core';
 import { Helpers } from './index';
 import { Models } from 'tnp-models';
 import { CoreLibCategoryArr } from 'tnp-config';

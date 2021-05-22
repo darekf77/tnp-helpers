@@ -1,11 +1,10 @@
 //#region @backend
-import chalk from 'chalk';
+import { CLI } from 'tnp-cli';
 declare const global: any;
 
 //#endregion
 import { config } from 'tnp-config';
 import { PROGRESS_DATA } from 'tnp-models';
-import { Level } from 'ng2-logger';
 import { Helpers } from './index';
 
 const KEY = {
@@ -76,9 +75,9 @@ export class HelpersMessages {
             global[KEY.LAST_ERROR] = json;
           }
           if (noTrace) {
-            !global.muteMessages && console.log(chalk.red(json));
+            !global.muteMessages && console.log(CLI.chalk.red(json));
           } else {
-            !global.muteMessages && console.trace(chalk.red(json));
+            !global.muteMessages && console.trace(CLI.chalk.red(json));
           }
         } else {
           if (global[KEY.LAST_ERROR] === json) {
@@ -125,9 +124,9 @@ export class HelpersMessages {
           global[KEY.LAST_ERROR] = details;
         }
         if (noTrace) {
-          !global.muteMessages && console.log(chalk.red(details));
+          !global.muteMessages && console.log(CLI.chalk.red(details));
         } else {
-          !global.muteMessages && console.trace(chalk.red(details));
+          !global.muteMessages && console.trace(CLI.chalk.red(details));
         }
       } else {
         if (global[KEY.LAST_ERROR] === details) {
@@ -163,7 +162,7 @@ export class HelpersMessages {
       } else {
         global[KEY.LAST_INFO] = details;
       }
-      console.log(chalk.green(details))
+      console.log(CLI.chalk.green(details))
       if (global.tnpNonInteractive) {
         PROGRESS_DATA.log({ msg: details })
       }
@@ -190,7 +189,7 @@ export class HelpersMessages {
         global[KEY.LAST_LOG] = details;
       }
       if (global.globalSystemToolMode) {
-        console.log(chalk.gray(details))
+        console.log(CLI.chalk.gray(details))
       }
       if (global.tnpNonInteractive) {
         PROGRESS_DATA.log({ msg: details })
@@ -215,9 +214,9 @@ export class HelpersMessages {
       global[KEY.LAST_WARN] = details;
     }
     if (trace) {
-      (!global.muteMessages && !global.hideWarnings) && console.trace(chalk.yellow(details))
+      (!global.muteMessages && !global.hideWarnings) && console.trace(CLI.chalk.yellow(details))
     } else {
-      (!global.muteMessages && !global.hideWarnings) && console.log(chalk.yellow(details))
+      (!global.muteMessages && !global.hideWarnings) && console.log(CLI.chalk.yellow(details))
     }
     //#endregion
   }

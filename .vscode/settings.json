@@ -55,5 +55,6 @@
   "workbench.colorTheme": "Default Light+",
   "tslint.autoFixOnSave": true,
   "eslint.enable": false,
-  "tslint.enable": false
+  "tslint.enable": false,
+  "typescript.tsdk": "node_modules\\typescript\\lib"
 }
