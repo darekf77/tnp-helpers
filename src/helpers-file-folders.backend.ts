@@ -142,7 +142,7 @@ export class HelpersFileFolders {
     existedFileOrFolder = crossPlatformPath(existedFileOrFolder);
     destinationPath = crossPlatformPath(destinationPath);
 
-    Helpers.info(`[tnp-helpers][create link] exited -> dest
+    Helpers.log(`[tnp-helpers][create link] exited -> dest
     ${existedFileOrFolder} ${destinationPath}`);
 
     options = options ? options : {};
@@ -238,7 +238,7 @@ export class HelpersFileFolders {
     }
 
 
-    rimraf.sync(link);
+    
 
     if (process.platform === 'win32') {
       target = path.win32.normalize(target).replace(/\\/g, '\\\\').replace(/\\$/,'');
@@ -258,9 +258,10 @@ export class HelpersFileFolders {
         target: "${target}"
         link: "${link}"
         command: "${winLinkCommand}"
-        `)
+        `,true,false)
       }
     } else {
+      rimraf.sync(link);
       fse.symlinkSync(target, link)
     }
   }
