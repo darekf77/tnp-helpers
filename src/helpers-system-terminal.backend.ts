@@ -1,8 +1,9 @@
+import { crossPlatformPath } from 'tnp-core';
 import * as ncp from 'copy-paste';
 import { Helpers } from './index';
 
 export class HelpersTerminal {
-  runInNewInstance(command: string, cwd = process.cwd()) {
+  runInNewInstance(command: string, cwd = crossPlatformPath(process.cwd())) {
     if (process.platform === 'darwin') {
 
       return Helpers.run(`osascript <<END

@@ -2,10 +2,11 @@
 import {
   _, os,
   path, fse,
-  child_process
+  child_process,
+  fkill,
+  crossPlatformPath,
 } from 'tnp-core';
 import { CLI } from 'tnp-cli';
-import * as fkill from 'fkill';
 import * as dateformat from 'dateformat';
 
 import type { Project } from './project';
@@ -19,7 +20,8 @@ const prompts = require('prompts');
 import * as fuzzy from 'fuzzy';
 import * as inquirer from 'inquirer';
 import * as inquirerAutocomplete from 'inquirer-autocomplete-prompt';
-inquirer.registerPrompt('autocomplete', inquirerAutocomplete)
+inquirer.registerPrompt('autocomplete', inquirerAutocomplete);
+import * as spawn from 'cross-spawn';
 //#endregion
 
 // TODO idea of procees someday to change
@@ -49,8 +51,8 @@ export class HelpersProcess {
     return new Promise(() => {
       setTimeout(function () {
         process.on('exit', function () {
-          child_process.spawn(process.argv.shift(), [...process.argv, '--restarting'], {
-            cwd: process.cwd(),
+          spawn(process.argv.shift(), [...process.argv, '--restarting'], {
+            cwd: crossPlatformPath(process.cwd()),
             detached: true,
             stdio: 'inherit'
           });
@@ -71,7 +73,7 @@ export class HelpersProcess {
   }
 
   async changeCwdWrapper(dir: string, functionToExecure: Function, logLevel: Level = Level.__NOTHING) {
-    const currentCwd = process.cwd();
+    const currentCwd = crossPlatformPath(process.cwd());
     Helpers.changeCwd(dir);
     Log.disableLogs(logLevel)
     await Helpers.runSyncOrAsync(functionToExecure);
@@ -87,10 +89,11 @@ export class HelpersProcess {
   }
 
   goToDir(dir = '..') {
-    const previous = process.cwd()
+    const previous = crossPlatformPath(process.cwd())
     try {
 
-      dir = path.isAbsolute(dir) ? dir : path.resolve(path.join(process.cwd(), dir));
+      dir = path.isAbsolute(dir) ? dir :
+        crossPlatformPath(path.resolve(path.join(crossPlatformPath(process.cwd()), dir)));
 
       if (path.basename(dir) === config.folder.external) {
 
@@ -236,7 +239,11 @@ export class HelpersProcess {
     }
   }
 
-  commnadOutputAsString(command: string, cwd = process.cwd(), biggerBuffer = false): string {
+  commnadOutputAsString(
+    command: string,
+    cwd = crossPlatformPath(process.cwd()),
+    biggerBuffer = false
+  ): string {
     let output = '';
     try {
       output = Helpers.run(command, { output: false, cwd, biggerBuffer }).sync().toString().trim()
@@ -319,7 +326,7 @@ export class HelpersProcess {
         return;
       }
       try {
-        await fkill(`:${port}`);
+        await fkill(`:${port}`, { force: true });
         // run(`fkill -f :${port} &> /dev/null`, { output: false }).sync()
         Helpers.info(`Processs killed successfully on port: ${port}`)
       } catch (e) {
@@ -566,7 +573,22 @@ command: ${command}
       const cmd = _.first(command.split(' '));
       const argsForCmd = command.split(' ').slice(1);
       console.log(`cmd: "${cmd}",  args: "${argsForCmd.join(' ')}"`)
-      proc = child_process.spawn(cmd, argsForCmd, { cwd, detached: true });
+      if (process.platform === 'win32') {
+        proc = spawn(cmd, argsForCmd, { cwd, detached: true });
+
+        // proc = child_process.spawn(cmd, argsForCmd, {
+        //   cwd,
+        //   detached: true,
+        //   // windowsVerbatimArguments: true,
+        //   shell: true,
+        //   // env: {
+        //     // NODE_ENV: 'production',
+        //   //   PATH: process.env.PATH
+        //   // }
+        // });
+      } else {
+        proc = child_process.spawn(cmd, argsForCmd, { cwd, detached: true });
+      }
       console.log(`
 
       DETACHED PROCESS IS WORKING ON PID: ${proc.pid}
@@ -590,7 +612,7 @@ command: ${command}
     const that = Helpers;
     return {
       run(command: string, folderPath: string = 'src', options: Models.system.WatchOptions) {
-        const { cwd = process.cwd(), wait } = options;
+        const { cwd = crossPlatformPath(process.cwd()), wait } = options;
         let cmd = `tnp command ${command}`;
         const toRun = `watch ${that.prepareWatchCommand(cmd)} ${folderPath} ${wait ? ('--wait=' + wait) : ''}`;
         console.log('WATCH COMMAND ', toRun)
@@ -598,7 +620,7 @@ command: ${command}
       },
 
       call(fn: Function | string, params: string, folderPath: string = 'src', options: Models.system.WatchOptions) {
-        const { cwd = process.cwd() } = options;
+        const { cwd = crossPlatformPath(process.cwd()) } = options;
         if (!fn) {
           Helpers.error(`Bad function: ${fn} for watcher on folder: ${folderPath}, with params: ${params}`)
         }
@@ -629,7 +651,7 @@ command: ${command}
     if (!options) options = {};
     if (options.output === undefined) options.output = true;
     if (options.biggerBuffer === undefined) options.biggerBuffer = false;
-    if (options.cwd === undefined) options.cwd = process.cwd()
+    if (options.cwd === undefined) options.cwd = crossPlatformPath(process.cwd())
     if (!_.isString(command)) {
       Helpers.error(`[tnp-helper] command is not a string`)
     }

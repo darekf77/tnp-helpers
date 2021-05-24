@@ -98,7 +98,7 @@ export class Project<T extends Project<any> = any>
   static typeFrom(location: string): ConfigModels.LibType {
     //#region @backendFunc
     const PackageJSON = CLASS.getBy('PackageJSON') as any;
-
+    location = crossPlatformPath(location);
     if (!fse.existsSync(location)) {
       return void 0;
     }
@@ -126,7 +126,7 @@ export class Project<T extends Project<any> = any>
     if (path.basename(location) === 'dist') {
       location = path.dirname(location);
     }
-    location = path.resolve(location);
+    location = crossPlatformPath(path.resolve(location));
     if (Project.emptyLocations.includes(location)) {
       if (location.search(`/${config.folder.bundle}`) === -1) {
         Helpers.log(`[project.from] empty location ${location}`, 2)
@@ -207,7 +207,7 @@ export class Project<T extends Project<any> = any>
           // if (name && name === path.basename(location)) { TODO think about it
           if (name) {
             resultProject = new Project();
-            resultProject.location = location;
+            resultProject.location = crossPlatformPath(location);
             resultProject.name = name;
             resultProject.type = Helpers.getValueFromJSON(path.join(location, 'package.json'), 'tnp.type');
           }
@@ -271,7 +271,7 @@ export class Project<T extends Project<any> = any>
       if (!path.isAbsolute(newAbsLocation)) {
         return;
       }
-      absoluteLocation = path.resolve(newAbsLocation);
+      absoluteLocation = crossPlatformPath(path.resolve(newAbsLocation));
       if (!fse.existsSync(absoluteLocation)) {
         return;
       }

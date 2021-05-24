@@ -5,6 +5,7 @@ import {
   os,
   rimraf,
   child_process,
+  crossPlatformPath,
 } from 'tnp-core';
 import * as  underscore from 'underscore';
 import * as glob from 'glob';
@@ -134,11 +135,15 @@ export class HelpersFileFolders {
   }
 
   createSymLink(existedFileOrFolder: string, destinationPath: string,
-    options?: { continueWhenExistedFolderDoesntExists?: boolean; dontRenameWhenSlashAtEnd?: boolean; }) {
+    options?: {
+      continueWhenExistedFolderDoesntExists?: boolean;
+      dontRenameWhenSlashAtEnd?: boolean;
+    }) {
+    existedFileOrFolder = crossPlatformPath(existedFileOrFolder);
+    destinationPath = crossPlatformPath(destinationPath);
 
-
-    // Helpers.log(`existedFileOrFolder ${existedFileOrFolder}`)
-    // Helpers.log(`destinationPath ${destinationPath}`)
+    Helpers.info(`[tnp-helpers][create link] exited -> dest
+    ${existedFileOrFolder} ${destinationPath}`);
 
     options = options ? options : {};
     if (_.isUndefined(options.continueWhenExistedFolderDoesntExists)) {
@@ -163,28 +168,34 @@ export class HelpersFileFolders {
       }
     }
 
+    /**
+     * support for
+     * pwd -> /mysource
+     * ln -s . /test/inside -> /test/inside/mysource
+     * ln -s ./ /test/inside -> /test/inside/mysource
+     */
     if (link === '.' || link === './') {
-      link = process.cwd()
+      link = crossPlatformPath(process.cwd());
     }
 
     if (!path.isAbsolute(link)) {
-      link = path.join(process.cwd(), link);
+      link = crossPlatformPath(path.join(crossPlatformPath(process.cwd()), link));
     }
 
     if (!path.isAbsolute(target)) {
-      target = path.join(process.cwd(), target);
+      target = crossPlatformPath(path.join(crossPlatformPath(process.cwd()), target));
     }
 
     if (link.endsWith('/')) {
-      link = path.join(link, path.basename(target))
+      link = crossPlatformPath(path.join(link, path.basename(target)))
     }
 
     if (!fse.existsSync(path.dirname(link))) {
       Helpers.mkdirp(path.dirname(link))
     }
 
-    const resolvedLink = path.resolve(link);
-    const resolvedTarget = path.resolve(target);
+    const resolvedLink = crossPlatformPath(path.resolve(link));
+    const resolvedTarget = crossPlatformPath(path.resolve(target));
     const exactSameLocations = (resolvedLink === resolvedTarget);
     // const tagetIsLink = Helpers.isLink(resolvedTarget);
     // const exactSameLinks = (tagetIsLink && (fse.readlinkSync(resolvedTarget) === resolvedLink));
@@ -228,14 +239,44 @@ export class HelpersFileFolders {
 
 
     rimraf.sync(link);
-    // Helpers.log(`target ${target}`)
-    // Helpers.log(`link ${link}`)
-    if(process.platform === 'win32') {
-      Helpers.info(`windows link: lnk ${target} ${link}`)
-      Helpers.run(`lnk ${target} ${link}`).sync();
+
+    if (process.platform === 'win32') {
+      target = path.win32.normalize(target).replace(/\\/g, '\\\\').replace(/\\$/,'');
+      link = path.win32.normalize(link).replace(/\\/g, '\\\\').replace(/\\$/,'');
+      Helpers.log(`windows link: lnk ${target} ${link}`);
+      // const winLinkCommand = `cmd  /c "mklink /D ${link} ${target}"`;
+      // const winLinkCommand = `export MSYS=winsymlinks:nativestrict && ln -s ${target} ${link}`;
+      const winLinkCommand = `mklink /j ${link} ${target}`;
+      
+      try {
+        Helpers.run(winLinkCommand, { biggerBuffer: false }).sync();
+      } catch (error) {
+        Helpers.error(error, true, false);
+        Helpers.error(`
+        command: "${winLinkCommand}"
+        [tnp-helpers] windows link error
+        target: "${target}"
+        link: "${link}"
+        command: "${winLinkCommand}"
+        `)
+      }
     } else {
       fse.symlinkSync(target, link)
-    }    
+    }
+  }
+
+  getTempFolder() {
+    let tmp = '/tmp';
+    if(process.platform === 'darwin') {
+      tmp = '/private/tmp';
+    }
+    if(process.platform === 'win32') {
+      tmp = crossPlatformPath( path.join( crossPlatformPath(os.homedir()) ,'/AppData/Local/Temp') )
+    }
+    if(!Helpers.exists(tmp)) {
+      Helpers.mkdirp(tmp);
+    }
+    return tmp;
   }
 
   // createMultiplatformLink(target: string, link: string) {
@@ -292,7 +333,7 @@ export class HelpersFileFolders {
   pathContainLink(p: string) {
     let previous: string;
     while (true) {
-      p = path.dirname(p);
+      p = crossPlatformPath(path.dirname(p));
       if (p === previous) {
         return false;
       }

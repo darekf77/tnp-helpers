@@ -1,11 +1,15 @@
-import { _, path } from 'tnp-core';
+import { _, path, crossPlatformPath } from 'tnp-core';
 import { describe, before, beforeEach, it } from 'mocha';
 import { expect } from 'chai';
 import { Helpers } from '../index';
 
 // const instance = BrowserDB.instance;
-const tempFilePath = path.join(process.cwd(), 'tmp-file-for-test.json5');
-const tempFilePath2 = path.join(process.cwd(), 'tmp-file-for-test2.json5');
+const tempFilePath = crossPlatformPath(
+  path.join(crossPlatformPath(process.cwd()), 'tmp-file-for-test.json5')
+);
+const tempFilePath2 = crossPlatformPath(
+  path.join(crossPlatformPath(process.cwd()), 'tmp-file-for-test2.json5')
+);
 let first = 'world';
 let second = 'poland';
 let json5Test = `
