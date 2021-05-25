@@ -108,28 +108,32 @@ export class HelpersFileFolders {
   }
 
   isLink(filePath: string) {
-
-    if (os.platform() === 'win32') {
+    if (!fse.existsSync(filePath)) {
+      return false;
+    }
+    filePath = Helpers.removeSlashAtEnd(filePath);
+    if (process.platform === 'win32') {
       filePath = path.win32.normalize(filePath);
       // console.log('extename: ', path.extname(filePath))
       return path.extname(filePath) === '.lnk';
     } else {
-      if (!fse.existsSync(filePath)) {
-        return false;
-      }
-      try {
-        filePath = Helpers.removeSlashAtEnd(filePath);
-        const command = `[[ -L "${filePath}" && -d "${filePath}" ]] && echo "symlink"`;
-        // console.log(command)
-        const res = Helpers.run(command, { output: false, biggerBuffer: false }).sync().toString()
-        return res.trim() === 'symlink'
-      } catch (error) {
-        return false;
+      if (process.platform === 'darwin') {
+        try {
+          const command = `[[ -L "${filePath}" && -d "${filePath}" ]] && echo "symlink"`;
+          // console.log(command)
+          const res = Helpers.run(command, { output: false, biggerBuffer: false }).sync().toString()
+          return res.trim() === 'symlink'
+        } catch (error) {
+          return false;
+        }
+      } else { // TODO QUICK FIX
+        return fse.lstatSync(filePath).isSymbolicLink();
       }
     }
   }
 
   renameFolder(from: string, to: string, cwd?: string) {
+    // const command = `mv  ${from}  ${to}`;
     const command = `renamer --find  ${from}  --replace  ${to} *`;
     Helpers.run(command, { cwd }).sync()
   }
@@ -238,16 +242,16 @@ export class HelpersFileFolders {
     }
 
 
-    
+
 
     if (process.platform === 'win32') {
-      target = path.win32.normalize(target).replace(/\\/g, '\\\\').replace(/\\$/,'');
-      link = path.win32.normalize(link).replace(/\\/g, '\\\\').replace(/\\$/,'');
+      target = path.win32.normalize(target).replace(/\\/g, '\\\\').replace(/\\$/, '');
+      link = path.win32.normalize(link).replace(/\\/g, '\\\\').replace(/\\$/, '');
       Helpers.log(`windows link: lnk ${target} ${link}`);
       // const winLinkCommand = `cmd  /c "mklink /D ${link} ${target}"`;
       // const winLinkCommand = `export MSYS=winsymlinks:nativestrict && ln -s ${target} ${link}`;
       const winLinkCommand = `mklink /j ${link} ${target}`;
-      
+
       try {
         Helpers.run(winLinkCommand, { biggerBuffer: false }).sync();
       } catch (error) {
@@ -258,7 +262,7 @@ export class HelpersFileFolders {
         target: "${target}"
         link: "${link}"
         command: "${winLinkCommand}"
-        `,true,false)
+        `, true, false)
       }
     } else {
       rimraf.sync(link);
@@ -268,13 +272,13 @@ export class HelpersFileFolders {
 
   getTempFolder() {
     let tmp = '/tmp';
-    if(process.platform === 'darwin') {
+    if (process.platform === 'darwin') {
       tmp = '/private/tmp';
     }
-    if(process.platform === 'win32') {
-      tmp = crossPlatformPath( path.join( crossPlatformPath(os.homedir()) ,'/AppData/Local/Temp') )
+    if (process.platform === 'win32') {
+      tmp = crossPlatformPath(path.join(crossPlatformPath(os.homedir()), '/AppData/Local/Temp'))
     }
-    if(!Helpers.exists(tmp)) {
+    if (!Helpers.exists(tmp)) {
       Helpers.mkdirp(tmp);
     }
     return tmp;

@@ -2,7 +2,7 @@ import { _ } from 'tnp-core';
 export class HelpersStringsRegexes {
 
   removeSlashAtEnd(s: string) {
-    s = s.endsWith(`/`) ? s.slice(0, s.length - 1) : s;
+    s = s?.endsWith(`/`) ? s.slice(0, s.length - 1) : s;
     return s;
   }
 

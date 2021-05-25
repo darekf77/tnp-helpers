@@ -160,7 +160,7 @@ export class HelpersProcess {
     pageSize = 10
   ) {
 
-    function source(input) {
+    function source(__, input) {
       input = input || '';
       return new Promise((resolve) => {
         const fuzzyResult = fuzzy.filter(input, choices.map(f => f.name));
