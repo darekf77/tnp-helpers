@@ -259,7 +259,7 @@
     "tnp-config": "~0.0.38",
     "tnp-core": "~0.0.6",
     "tnp-db": "~0.0.21",
-    "tnp-helpers": "~0.0.26",
+    "tnp-helpers": "~0.0.27",
     "tnp-ui": "~0.0.19",
     "ts-loader": "7.0.4",
     "ts-node": "~8.3.0",
@@ -286,5 +286,5 @@
     }
   },
   "private": false,
-  "lastBuildTagHash": "5798f22db76c5b786247441fbf5507e20354fb07"
+  "lastBuildTagHash": "109634f941ae8b8b8604d608b867fdb52bae6edd"
 }
