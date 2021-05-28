@@ -11,13 +11,13 @@ import * as  underscore from 'underscore';
 import * as glob from 'glob';
 import { JSON10 } from 'json10';
 import * as crypto from 'crypto';
-import * as json5 from 'json5';
+
 
 import { Helpers } from './index';
 import { config } from 'tnp-config';
 import { Models } from 'tnp-models';
 
-const encoding = 'utf8';
+
 
 export class HelpersFileFolders {
 
@@ -56,50 +56,15 @@ export class HelpersFileFolders {
     Helpers.writeFile(filepath, json);
   }
 
-  isFolder(pathToFileOrMaybeFolder: string) {
-    return pathToFileOrMaybeFolder && fse.existsSync(pathToFileOrMaybeFolder) &&
-      fse.lstatSync(pathToFileOrMaybeFolder).isDirectory();
-  }
-
-  isFile(pathToFileOrMaybeFolder: string) {
-    return pathToFileOrMaybeFolder && fse.existsSync(pathToFileOrMaybeFolder) &&
-      !fse.lstatSync(pathToFileOrMaybeFolder).isDirectory();
-  }
 
   /**
-   * return absolute paths for folders inside folders
+   * file size in bytes
    */
-  foldersFrom(pathToFolder: string | string[]) {
-    if (_.isArray(pathToFolder)) {
-      pathToFolder = path.join(...pathToFolder) as string;
+  size(filePath: string) {
+    if (!Helpers.exists(filePath) || Helpers.isFolder(filePath)) {
+      return null;
     }
-    if (!Helpers.exists(pathToFolder)) {
-      return [];
-    }
-    return fse.readdirSync(pathToFolder)
-      .map(f => path.join(pathToFolder as string, f))
-      .filter(f => fse.lstatSync(f).isDirectory())
-      ;
-  }
-
-  stringify(inputObject: any): string {
-    // if (_.isString(inputObject)) {
-    //   return inputObject;
-    // }
-    // if (_.isObject(inputObject)) {
-    //   config.log(inputObject)
-    //   Helpers.error(`[tnp-helpers] trying to stringify not a object`, false, true);
-    // }
-    return JSON.stringify(inputObject, null, 2);
-  }
-
-  parse<T = any>(jsonInstring: string, useJson5 = false) {
-    if (!_.isString(jsonInstring)) {
-      Helpers.log(jsonInstring)
-      Helpers.warn(`[tnp-helpers] Trying to parse no a string...`)
-      return jsonInstring;
-    }
-    return (useJson5 ? json5.parse(jsonInstring) : JSON.parse(jsonInstring)) as T;
+    return fse.lstatSync(filePath).size;
   }
 
 
@@ -107,167 +72,12 @@ export class HelpersFileFolders {
     return fse.readlinkSync(filePath);
   }
 
-  isLink(filePath: string) {
-    if (!fse.existsSync(filePath)) {
-      return false;
-    }
-    filePath = Helpers.removeSlashAtEnd(filePath);
-    if (process.platform === 'win32') {
-      filePath = path.win32.normalize(filePath);
-      // console.log('extename: ', path.extname(filePath))
-      return path.extname(filePath) === '.lnk';
-    } else {
-      if (process.platform === 'darwin') {
-        try {
-          const command = `[[ -L "${filePath}" && -d "${filePath}" ]] && echo "symlink"`;
-          // console.log(command)
-          const res = Helpers.run(command, { output: false, biggerBuffer: false }).sync().toString()
-          return res.trim() === 'symlink'
-        } catch (error) {
-          return false;
-        }
-      } else { // TODO QUICK FIX
-        return fse.lstatSync(filePath).isSymbolicLink();
-      }
-    }
-  }
+
 
   renameFolder(from: string, to: string, cwd?: string) {
     // const command = `mv  ${from}  ${to}`;
     const command = `renamer --find  ${from}  --replace  ${to} *`;
     Helpers.run(command, { cwd }).sync()
-  }
-
-  createSymLink(existedFileOrFolder: string, destinationPath: string,
-    options?: {
-      continueWhenExistedFolderDoesntExists?: boolean;
-      dontRenameWhenSlashAtEnd?: boolean;
-    }) {
-    existedFileOrFolder = crossPlatformPath(existedFileOrFolder);
-    destinationPath = crossPlatformPath(destinationPath);
-
-    Helpers.log(`[tnp-helpers][create link] exited -> dest
-    ${existedFileOrFolder} ${destinationPath}`);
-
-    options = options ? options : {};
-    if (_.isUndefined(options.continueWhenExistedFolderDoesntExists)) {
-      options.continueWhenExistedFolderDoesntExists = false;
-    }
-    if (_.isUndefined(options.dontRenameWhenSlashAtEnd)) {
-      options.dontRenameWhenSlashAtEnd = false;
-    }
-    const { continueWhenExistedFolderDoesntExists } = options;
-
-    // console.log('Create link!')
-
-
-    let target = existedFileOrFolder;
-    let link = destinationPath;
-
-    if (!fse.existsSync(existedFileOrFolder)) {
-      if (continueWhenExistedFolderDoesntExists) {
-        // just continue and create link to not existed folder
-      } else {
-        Helpers.error(`[helpers.createLink] target path doesn't exist: ${existedFileOrFolder}`)
-      }
-    }
-
-    /**
-     * support for
-     * pwd -> /mysource
-     * ln -s . /test/inside -> /test/inside/mysource
-     * ln -s ./ /test/inside -> /test/inside/mysource
-     */
-    if (link === '.' || link === './') {
-      link = crossPlatformPath(process.cwd());
-    }
-
-    if (!path.isAbsolute(link)) {
-      link = crossPlatformPath(path.join(crossPlatformPath(process.cwd()), link));
-    }
-
-    if (!path.isAbsolute(target)) {
-      target = crossPlatformPath(path.join(crossPlatformPath(process.cwd()), target));
-    }
-
-    if (link.endsWith('/')) {
-      link = crossPlatformPath(path.join(link, path.basename(target)))
-    }
-
-    if (!fse.existsSync(path.dirname(link))) {
-      Helpers.mkdirp(path.dirname(link))
-    }
-
-    const resolvedLink = crossPlatformPath(path.resolve(link));
-    const resolvedTarget = crossPlatformPath(path.resolve(target));
-    const exactSameLocations = (resolvedLink === resolvedTarget);
-    // const tagetIsLink = Helpers.isLink(resolvedTarget);
-    // const exactSameLinks = (tagetIsLink && (fse.readlinkSync(resolvedTarget) === resolvedLink));
-    // const exactSameOverrideTargetLink = (tagetIsLink && (fse.readlinkSync(resolvedTarget) === resolvedTarget));
-    const exactSameOVerrideTarget = (
-      !Helpers.isLink(resolvedLink)
-      && Helpers.exists(resolvedLink)
-      && !Helpers.isLink(resolvedTarget)
-      && Helpers.exists(resolvedTarget)
-      && Helpers.isFile(resolvedLink)
-      && Helpers.isFile(resolvedTarget) // TODO refactor this
-      && Helpers.readFile(resolvedLink) === Helpers.readFile(resolvedTarget)
-    );
-    if (exactSameLocations) {
-      Helpers.warn(`[createSymLink] Trying to link same location`);
-      return;
-    }
-    // if (exactSameLinks) {
-    //   Helpers.warn(`[createSymLink] Trying to link same link`);
-    //   return;
-    // }
-    // if (exactSameOverrideTargetLink) {
-    //   Helpers.warn(`[createSymLink] Trying to override same link with link to itself`);
-    //   return;
-    // }
-    if (exactSameOVerrideTarget) {
-      const linkContainerLink = Helpers.pathContainLink(resolvedLink);
-      const targetContainerLink = Helpers.pathContainLink(resolvedTarget);
-      if (
-        (!linkContainerLink && targetContainerLink)
-        || (linkContainerLink && !targetContainerLink)
-      ) {
-        Helpers.warn(`[createSymLink] Trying to override same file with link to itself:
-        ${resolvedLink}
-        to
-        ${resolvedTarget}
-        `);
-        return;
-      }
-    }
-
-
-
-
-    if (process.platform === 'win32') {
-      target = path.win32.normalize(target).replace(/\\/g, '\\\\').replace(/\\$/, '');
-      link = path.win32.normalize(link).replace(/\\/g, '\\\\').replace(/\\$/, '');
-      Helpers.log(`windows link: lnk ${target} ${link}`);
-      // const winLinkCommand = `cmd  /c "mklink /D ${link} ${target}"`;
-      // const winLinkCommand = `export MSYS=winsymlinks:nativestrict && ln -s ${target} ${link}`;
-      const winLinkCommand = `mklink /j ${link} ${target}`;
-
-      try {
-        Helpers.run(winLinkCommand, { biggerBuffer: false }).sync();
-      } catch (error) {
-        Helpers.error(error, true, false);
-        Helpers.error(`
-        command: "${winLinkCommand}"
-        [tnp-helpers] windows link error
-        target: "${target}"
-        link: "${link}"
-        command: "${winLinkCommand}"
-        `, true, false)
-      }
-    } else {
-      rimraf.sync(link);
-      fse.symlinkSync(target, link)
-    }
   }
 
   getTempFolder() {
@@ -335,22 +145,6 @@ export class HelpersFileFolders {
   //   child_process.execSync(command);
   // }
 
-  pathContainLink(p: string) {
-    let previous: string;
-    while (true) {
-      p = crossPlatformPath(path.dirname(p));
-      if (p === previous) {
-        return false;
-      }
-      if (Helpers.isLink(p)) {
-        return true;
-      }
-      if (!Helpers.exists(p)) {
-        return false;
-      }
-      previous = p;
-    }
-  }
 
   isPlainFileOrFolder(filePath) {
     return /^([a-zA-Z]|\-|\_|\@|\#|\$|\!|\^|\&|\*|\(|\))+$/.test(filePath);
@@ -443,7 +237,7 @@ export class HelpersFileFolders {
   }
 
   tryCopyFrom(source: string, destination: string, options = {}) {
-    Helpers.log(`Trying to copy from: ${source} to ${destination}`);
+    Helpers.info(`Trying to copy from: ${source} to ${destination}`);
     if (fse.existsSync(source) && !fse.lstatSync(source).isDirectory()) {
       // Helpers.warn(`[tryCopyFrom] This source is not directory: ${source} to ${destination}`);
       Helpers.copyFile(source, destination);
@@ -458,21 +252,27 @@ export class HelpersFileFolders {
         rimraf.sync(destMaybe);
       }
     }
+    options = _.merge({
+      overwrite: true,
+      recursive: true,
+    }, options);
+    if (process.platform === 'win32') { // @LAST
+      options['dereference'] = true;
+    }
+
     try {
-      fse.copySync(source, destination, _.merge({
-        overwrite: true,
-        recursive: true
-      }, options));
+      fse.copySync(source, destination, options);
     } catch (error) {
       rimraf.sync(destination);
-      fse.copySync(source, destination, _.merge({
-        overwrite: true,
-        recursive: true
-      }, options));
+      fse.copySync(source, destination, options);
     }
   }
 
   removeIfExists(absoluteFileOrFolderPath: string) {
+    if (process.platform === 'win32') {
+      rimraf.sync(absoluteFileOrFolderPath);
+      return;
+    }
     try {
       fse.unlinkSync(absoluteFileOrFolderPath);
     } catch (error) { }
@@ -486,6 +286,10 @@ export class HelpersFileFolders {
   }
 
   removeFileIfExists(absoluteFilePath: string, options?: { modifiedFiles?: Models.other.ModifiedFiles; }) {
+    if (process.platform === 'win32') {
+      rimraf.sync(absoluteFilePath);
+      return;
+    }
     // console.log(`removeFileIfExists: ${absoluteFilePath}`)
     const { modifiedFiles } = options || { modifiedFiles: { modifiedFiles: [] } };
     if (fse.existsSync(absoluteFilePath)) {
@@ -496,6 +300,10 @@ export class HelpersFileFolders {
 
   removeFolderIfExists(absoluteFolderPath: string, options?: { modifiedFiles?: Models.other.ModifiedFiles; }) {
     Helpers.log(`[helpers] Remove folder: ${absoluteFolderPath}`)
+    if (process.platform === 'win32') {
+      rimraf.sync(absoluteFolderPath);
+      return;
+    }
     const { modifiedFiles } = options || { modifiedFiles: { modifiedFiles: [] } };
     if (fse.existsSync(absoluteFolderPath)) {
       fse.removeSync(absoluteFolderPath);
@@ -568,39 +376,6 @@ export class HelpersFileFolders {
     rimraf.sync(fileOrFolderPathOrPatter);
   }
 
-  exists(folderOrFilePath: string | string[]) {
-    if (_.isArray(folderOrFilePath)) {
-      folderOrFilePath = path.join(...folderOrFilePath);
-    }
-    if (!folderOrFilePath) {
-      Helpers.warn(`[helpers][exists] Path is not a string, abort.. "${folderOrFilePath}"`, true);
-      return false;
-    }
-    if (!path.isAbsolute(folderOrFilePath)) {
-      Helpers.warn(`[helpers][exists] Path is not absolute, abort.. ${folderOrFilePath}`, true);
-      return false;
-    }
-    return fse.existsSync(folderOrFilePath);
-  }
-
-  mkdirp(folderPath: string | string[]) {
-    if (_.isArray(folderPath)) {
-      folderPath = path.join(...folderPath);
-    }
-    if (!path.isAbsolute(folderPath)) {
-      Helpers.warn(`[helpers][mkdirp] Path is not absolute, abort ${folderPath}`, true);
-      return;
-    }
-    if (_.isString(folderPath) && folderPath.startsWith('/tmp ') && os.platform() === 'darwin') {
-      Helpers.warn(`[helpers][mkdirp] On mac osx /tmp is changed to /private/tmp`, false);
-      folderPath = folderPath.replace(`/tmp/`, '/private/tmp/');
-    }
-    if (fse.existsSync(folderPath)) {
-      Helpers.warn(`[helpers][mkdirp] folder path already exists: ${folderPath}`, false);
-    } else {
-      fse.mkdirpSync(folderPath);
-    }
-  }
 
 
   findChildren<T>(location, createFn: (childLocation: string) => T): T[] {
@@ -948,65 +723,4 @@ ${sourceData}
     return path.resolve(fileOrFolderPath);
   }
 
-  /**
-   * wrapper for fs.readFileSync
-   */
-  readFile(absoluteFilePath: string, defaultValueWhenNotExists = void 0 as string): string | undefined {
-    if (!fse.existsSync(absoluteFilePath)) {
-      return defaultValueWhenNotExists;
-    }
-    if (fse.lstatSync(absoluteFilePath).isDirectory()) {
-      return defaultValueWhenNotExists;
-    }
-    return fse.readFileSync(absoluteFilePath, {
-      encoding
-    }).toString().trim();
-  }
-
-  readJson(absoluteFilePath: string, defaultValue = {}, useJson5 = false) {
-    if (!fse.existsSync(absoluteFilePath)) {
-      return {};
-    }
-    try {
-      const fileContent = Helpers.readFile(absoluteFilePath);
-      let json;
-      json = Helpers.parse(fileContent, useJson5 || absoluteFilePath.endsWith('.json5'));
-      return json;
-    } catch (error) {
-      return defaultValue;
-    }
-  }
-
-  /**
-   * wrapper for fs.writeFileSync
-   */
-  writeFile(absoluteFilePath: string | (string[]), input: string | object, dontWriteSameFile = true): boolean {
-    if (_.isArray(absoluteFilePath)) {
-      absoluteFilePath = path.join.apply(this, absoluteFilePath);
-    }
-    absoluteFilePath = absoluteFilePath as string;
-    if (!fse.existsSync(path.dirname(absoluteFilePath))) {
-      Helpers.mkdirp(path.dirname(absoluteFilePath));
-    }
-
-    if (_.isObject(input)) {
-      input = Helpers.stringify(input);
-    } else if (!_.isString(input)) {
-      input = ''
-    }
-    if (dontWriteSameFile) {
-      if (fse.existsSync(absoluteFilePath)) {
-        const existedInput = Helpers.readFile(absoluteFilePath);
-        if (input === existedInput) {
-          // Helpers.log(`[helpers][writeFile] not writing same file (good thing): ${absoluteFilePath}`);
-          return false;
-        }
-      }
-    }
-
-    fse.writeFileSync(absoluteFilePath, input, {
-      encoding
-    });
-    return true;
-  }
 }

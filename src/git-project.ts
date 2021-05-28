@@ -10,7 +10,7 @@ import { HelpersTnp } from './helpers';
 import { CLI } from 'tnp-cli';
 //#endregion
 const Helpers = HelpersTnp.Instance;
-import { Models } from 'tnp-models';
+import { RunOptions } from 'tnp-core';
 
 export abstract class ProjectGit {
 
@@ -20,7 +20,7 @@ export abstract class ProjectGit {
     return Helpers.commnadOutputAsString(command, this.location, false);
   }
 
-  public run(this: Project, command: string, options?: Models.dev.RunOptions) {
+  public run(this: Project, command: string, options?: RunOptions) {
     if (!options) { options = {}; }
     if (_.isUndefined(options.showCommand)) {
       options.showCommand = false;

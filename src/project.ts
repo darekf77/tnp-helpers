@@ -6,7 +6,7 @@ import { CLI } from 'tnp-cli';
 //#endregion
 declare const global: any;
 import { config, LibTypeArr, ConfigModels } from 'tnp-config';
-import { _ } from 'tnp-core';
+import { _, CoreConfig } from 'tnp-core';
 import { CLASS } from 'typescript-class-helpers';
 import { Models } from 'tnp-models';
 import { Morphi } from 'morphi';
@@ -327,7 +327,7 @@ export class Project<T extends Project<any> = any>
       return true;
     }
     //#region @backend
-    return !(!!global[config.message.globalSystemToolMode])
+    return !(!!global[CoreConfig.message.globalSystemToolMode])
     //#endregion
   }
 
@@ -389,10 +389,10 @@ export class Project<T extends Project<any> = any>
     if (!fse.existsSync(projectPath)) {
       Helpers.error(`
       ${projectPath}
-      ${projectPath.replace(/\//g,'\\\\')}
+      ${projectPath.replace(/\//g, '\\\\')}
       ${crossPlatformPath(projectPath)}
       [tnp-helpers] Bad library type "${libraryType}" for this framework version "${version}"
-      
+
       `, false, true);
     }
     return Project.From<T>(projectPath);

@@ -29,6 +29,7 @@ import { config, ConfigModels } from 'tnp-config';
 import { Helpers } from './index';
 import { CLASS } from 'typescript-class-helpers';
 import { Morphi } from 'morphi';
+import { CoreHelpers } from 'tnp-core';
 
 
 export function applyMixins(derivedCtor: any, baseCtors: any[]) {
@@ -39,10 +40,10 @@ export function applyMixins(derivedCtor: any, baseCtors: any[]) {
   });
 }
 
+// @ts-ignore
+export class HelpersTnp extends CoreHelpers {
 
-export class HelpersTnp {
-
-  private static _instance: HelpersTnp;
+  private static _instance: HelpersTnp & CoreHelpers;
   public static get Instance() {
     if (!HelpersTnp._instance) {
       HelpersTnp._instance = new HelpersTnp();
@@ -50,10 +51,6 @@ export class HelpersTnp {
     return HelpersTnp._instance;
   }
 
-
-  //#region @backend
-  readonly processes: child_process.ChildProcess[] = [];
-  //#endregion
 
   private constructor(
     //#region @backend
@@ -72,10 +69,8 @@ export class HelpersTnp {
     public strings = new HelpersStrings(),
 
   ) {
-
+    super();
   }
-
-
 
   CLIWRAP(f: Function, name: string) {
     CLASS.setName(f, name);
@@ -110,14 +105,6 @@ export class HelpersTnp {
     return url;
   }
   //#endregion
-
-  get isBrowser() {
-    return HelperNg2Logger.isBrowser;
-  }
-
-  get isNode() {
-    return HelperNg2Logger.isNode;
-  }
 
   //#region @backend
   slash(pathFromWindowsOrUnixType: string) {
@@ -161,19 +148,7 @@ export class HelpersTnp {
   }
   //#endregion
 
-  async runSyncOrAsync(fn: Function | [string, object], ...firstArg: any[]) {
-    if (_.isUndefined(fn)) {
-      return;
-    }
-    // let wasPromise = false;
-    let promisOrValue = _.isArray(fn) ? fn[1][fn[0]](...firstArg) : fn(...firstArg);
-    if (promisOrValue instanceof Promise) {
-      // wasPromise = true;
-      promisOrValue = Promise.resolve(promisOrValue)
-    }
-    // console.log('was promis ', wasPromise)
-    return promisOrValue;
-  }
+
 
   async mesureExectionInMs(
     description: string,

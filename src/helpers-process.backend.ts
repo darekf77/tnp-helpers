@@ -130,6 +130,10 @@ export class HelpersProcess {
 
   pressKeyAndContinue(message = 'Press enter to continue..') {
     Helpers.info(message);
+    if(process.platform === 'win32') {
+      spawn.sync('pause','', { shell: true, stdio: [0, 1, 2] });
+      return;
+    }
     require('child_process').spawnSync('read _ ', { shell: true, stdio: [0, 1, 2] });
     // return new Promise((resovle) => {
     //   Helpers.log(message);
@@ -283,27 +287,7 @@ export class HelpersProcess {
     // global.spinner && global.spinner.stop()
   }
 
-  async compilationWrapper(fn: () => void, taskName: string = 'Task',
-    executionType: 'Compilation of' | 'Code execution of' | 'Event:' = 'Compilation of') {
-    function currentDate() {
-      return `[${dateformat(new Date(), 'HH:MM:ss')}]`;
-    }
-    if (!fn || !_.isFunction(fn)) {
-      Helpers.error(`${executionType} wrapper: "${fn}" is not a function.`)
-      process.exit(1)
-    }
 
-    try {
-      Helpers.log(`${currentDate()} ${executionType} "${taskName}" Started..`)
-      await Helpers.runSyncOrAsync(fn)
-      Helpers.log(`${currentDate()} ${executionType} "${taskName}" Done\u2713`)
-    } catch (error) {
-      Helpers.log(CLI.chalk.red(error));
-      Helpers.log(`${currentDate()} ${executionType} ${taskName} ERROR`);
-      process.exit(1);
-    }
-
-  }
 
   terminalLine() {
     return _.times(process.stdout.columns, () => '-').join('')
@@ -364,20 +348,7 @@ export class HelpersProcess {
   }
 
 
-  cleanExit() {
-    Helpers.processes.forEach(p => {
-      p.kill('SIGINT')
-      p.kill('SIGTERM')
-      Helpers.log(`Killing child process on ${p.pid}`)
-    })
-    Helpers.log(`Killing parent on ${process.pid}`)
-    process.exit()
-  };
 
-  constructor() {
-    process.on('SIGINT', Helpers.cleanExit); // catch ctrl-c
-    process.on('SIGTERM', Helpers.cleanExit); // catch kill
-  }
 
 
   // process.on('uncaughtException', cleanExit)
@@ -420,90 +391,7 @@ ${isDirectory ? pathToFileOrFolder.split('/').map(c => `/${c}`).join('').replace
 ${Helpers.terminalLine()}\n`;
   };
 
-  modifyLineByLine(
-    data: string | Buffer | Error,
-    outputLineReplace: (outputLine: string) => string,
-    prefix: string,
-    extractFromLine?: (string | Function)[],
-  ) {
-    const checkExtract = (_.isArray(extractFromLine) && extractFromLine.length > 0);
-    let modifyOutput = _.isFunction(outputLineReplace);
-    if (modifyOutput && _.isString(data)) {
-      data = data.split(/\r?\n/).map(line => outputLineReplace(line)).join('\n');
-    }
-    if (prefix && _.isString(data)) {
-      return data.split('\n').map(singleLine => {
-        if (!singleLine || singleLine.trim().length === 0 || singleLine.trim() === '.') {
-          return singleLine;
-        }
-        if (checkExtract) {
-          const sFuncs = extractFromLine
-            .filter(f => _.isString(f))
-          if (sFuncs.filter(f => (singleLine.search(f as string) !== -1)).length === sFuncs.length) {
-            const fun = extractFromLine.find(f => _.isFunction(f));
-            if (fun) {
-              let s = singleLine;
-              sFuncs.forEach(f => { s = s.replace(f as string, '') });
-              (fun as Function)(s.trim());
-            }
-          }
-        }
-        return `${prefix} ${singleLine}`
-      }).join('\n');
-    }
-    return data as string;
-  }
 
-  logProc(proc: child_process.ChildProcess, output = true, stdio,
-    outputLineReplace: (outputLine: string) => string, prefix: string,
-    extractFromLine?: (string | Function)[]) {
-    Helpers.processes.push(proc);
-
-    if (stdio) {
-      // @ts-ignore
-      proc.stdio = stdio;
-    }
-
-
-    if (!prefix) {
-      prefix = '';
-    }
-
-    if (output) {
-      proc.stdout.on('data', (data) => {
-        process.stdout.write(Helpers.modifyLineByLine(data, outputLineReplace, prefix, extractFromLine))
-      })
-
-      proc.stdout.on('error', (data) => {
-        console.log(Helpers.modifyLineByLine(data, outputLineReplace, prefix, extractFromLine));
-      })
-
-      proc.stderr.on('data', (data) => {
-        process.stderr.write(Helpers.modifyLineByLine(data, outputLineReplace, prefix, extractFromLine))
-      })
-
-      proc.stderr.on('error', (data) => {
-        console.log(Helpers.modifyLineByLine(data, outputLineReplace, prefix, extractFromLine));
-      })
-
-    }
-
-    return proc;
-  }
-
-  checkProcess(dirPath: string, command: string) {
-    if (!fse.existsSync(dirPath)) {
-      Helpers.error(`
-Path for process cwd doesn't exist: ${dirPath}
-command: ${command}
-`);
-    }
-    if (!command) {
-      Helpers.error(`Bad command: ${command}`);
-    }
-  }
-
-  readonly bigMaxBuffer = 2024 * 500;
 
   async waitForMessegeInStdout(proc: child_process.ChildProcess, message: string) {
     return new Promise((resolve, reject) => {
@@ -539,70 +427,7 @@ command: ${command}
 
   }
 
-  getStdio(options?: Models.dev.RunOptions) {
-    const {
-      output, silence,
-      // pipeToParentProcerss = false,
-      // inheritFromParentProcerss = false
-    } = options;
-    let stdio = output ? [0, 1, 2] : ((_.isBoolean(silence) && silence) ? 'ignore' : undefined);
-    // if (pipeToParentProcerss) {
-    //   stdio = ['pipe', 'pipe', 'pipe'] as any;
-    // }
-    // if (inheritFromParentProcerss) {
-    //   stdio = ['inherit', 'inherit', 'inherit'] as any;
-    // }
-    return stdio;
-  }
 
-  runSyncIn(command: string, options?: Models.dev.RunOptions) {
-    const { cwd, biggerBuffer } = options;
-    const maxBuffer = biggerBuffer ? Helpers.bigMaxBuffer : undefined;
-    let stdio = Helpers.getStdio(options)
-    Helpers.checkProcess(cwd, command);
-    return child_process.execSync(command, { stdio, cwd, maxBuffer } as any)
-  }
-
-  runAsyncIn(command: string, options?: Models.dev.RunOptions) {
-    const { output, cwd, biggerBuffer, outputLineReplace, extractFromLine, detach } = options;
-    const maxBuffer = biggerBuffer ? Helpers.bigMaxBuffer : undefined;
-    let stdio = Helpers.getStdio(options)
-    Helpers.checkProcess(cwd, command);
-    let proc: child_process.ChildProcess;
-    if (detach) {
-      const cmd = _.first(command.split(' '));
-      const argsForCmd = command.split(' ').slice(1);
-      console.log(`cmd: "${cmd}",  args: "${argsForCmd.join(' ')}"`)
-      if (process.platform === 'win32') {
-        proc = spawn(cmd, argsForCmd, { cwd, detached: true });
-
-        // proc = child_process.spawn(cmd, argsForCmd, {
-        //   cwd,
-        //   detached: true,
-        //   // windowsVerbatimArguments: true,
-        //   shell: true,
-        //   // env: {
-        //     // NODE_ENV: 'production',
-        //   //   PATH: process.env.PATH
-        //   // }
-        // });
-      } else {
-        proc = child_process.spawn(cmd, argsForCmd, { cwd, detached: true });
-      }
-      console.log(`
-
-      DETACHED PROCESS IS WORKING ON PID: ${proc.pid}
-
-      `)
-      // proc = child.exec(`${command} &`, { cwd, maxBuffer, });
-    } else {
-      proc = child_process.exec(command, { cwd, maxBuffer, });
-    }
-    return Helpers.logProc(proc,
-      detach ? true : output,
-      detach ? void 0 : stdio,
-      outputLineReplace, options.prefix, extractFromLine);
-  }
 
   prepareWatchCommand(cmd) {
     return os.platform() === 'win32' ? `"${cmd}"` : `'${cmd}'`
@@ -645,125 +470,7 @@ command: ${command}
   }
 
 
-  run(command: string,
-    options?: Models.dev.RunOptions) {
 
-    if (!options) options = {};
-    if (options.output === undefined) options.output = true;
-    if (options.biggerBuffer === undefined) options.biggerBuffer = false;
-    if (options.cwd === undefined) options.cwd = crossPlatformPath(process.cwd())
-    if (!_.isString(command)) {
-      Helpers.error(`[tnp-helper] command is not a string`)
-    }
-    return {
-      sync(): Buffer {
-        if (_.isArray(options.extractFromLine)) {
-          Helpers.error(`[tnp-helper] extractFromLine only for:
-          - asyncAsPromise
-          - async
-          - unitlOutputContains
-
-          `, false, true);
-        }
-        if (_.isNumber(options.tryAgainWhenFailAfter) && options.tryAgainWhenFailAfter > 0) {
-          // TODO try again when fail
-          // try {
-          const proc = Helpers.runSyncIn(command, options);
-          return proc as any;
-          // } catch (error) {
-
-          //  TODO: WAIT FUNCTION HERE
-          //   return Helpers.run(command, options).sync()
-          // }
-        }
-        return Helpers.runSyncIn(command, options) as any;
-      },
-      async(detach = false) {
-        options.detach = detach;
-        return Helpers.runAsyncIn(command, options);
-      },
-      asyncAsPromise(): Promise<void> {
-        let isResolved = false;
-        return new Promise<any>((resolve, reject) => {
-          const proc = Helpers.runAsyncIn(command, options);
-          proc.on('exit', () => {
-            if (!isResolved) {
-              isResolved = true;
-              resolve(void 0);
-            }
-
-          });
-          proc.on('error', () => {
-            if (!isResolved) {
-              isResolved = true;
-              reject();
-            }
-          });
-        });
-      },
-      unitlOutputContains(stdoutMsg: string | string[], stderMsg?: string | string[]) {
-        let isResolved = false;
-        return new Promise<any>((resolve, reject) => {
-
-          if (_.isString(stdoutMsg)) {
-            stdoutMsg = [stdoutMsg];
-          }
-          if (_.isString(stderMsg)) {
-            stderMsg = [stderMsg];
-          }
-          if (!_.isArray(stdoutMsg)) {
-            reject(`[unitlOutputContains] Message not a array`);
-          }
-
-          const proc = Helpers.runAsyncIn(command, options);
-          proc.stderr.on('data', (message) => {
-            const data: string = message.toString().trim();
-            if (!isResolved) {
-              for (let index = 0; index < stderMsg.length; index++) {
-                const rejectm = stderMsg[index];
-                if ((data.search(rejectm) !== -1)) {
-                  Helpers.info(`[unitlOutputContains] Rejected move to next step...`);
-                  isResolved = true;
-                  reject();
-                  proc.kill('SIGINT');
-                  break;
-                }
-              }
-            }
-          });
-
-          proc.stdout.on('data', (message) => {
-            const data: string = message.toString().trim();
-
-            if (!isResolved) {
-              for (let index = 0; index < stdoutMsg.length; index++) {
-                const m = stdoutMsg[index];
-                if ((data.search(m) !== -1)) {
-                  Helpers.info(`[unitlOutputContains] Move to next step...`)
-                  isResolved = true;
-                  resolve(void 0);
-                  break;
-                }
-              }
-            }
-            if (!isResolved) {
-              for (let index = 0; index < stderMsg.length; index++) {
-                const rejectm = stderMsg[index];
-                if ((data.search(rejectm) !== -1)) {
-                  Helpers.info(`[unitlOutputContains] Rejected move to next step...`);
-                  isResolved = true;
-                  reject();
-                  proc.kill('SIGINT');
-                  break;
-                }
-              }
-            }
-
-          });
-        });
-      }
-    }
-  }
 
   //#endregion
 

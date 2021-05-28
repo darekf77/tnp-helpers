@@ -3,7 +3,7 @@ import { CLI } from 'tnp-cli';
 declare const global: any;
 
 //#endregion
-import { config } from 'tnp-config';
+import { CoreConfig } from 'tnp-core';
 import { PROGRESS_DATA } from 'tnp-models';
 import { Helpers } from './index';
 
@@ -54,6 +54,7 @@ export class HelpersMessages {
     global[KEY.LAST_ERROR] = void 0;
     global[KEY.LAST_INFO] = void 0;
   }
+
   error(details: any, noExit = false, noTrace = false) {
     if (Helpers.isBrowser) {
       console.error(details)
@@ -141,7 +142,7 @@ export class HelpersMessages {
 
     }
 
-    if (global[config.message.globalSystemToolMode]) {
+    if (global[CoreConfig.message.globalSystemToolMode]) {
       if (!noExit) {
         process.exit(1);
       }
