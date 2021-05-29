@@ -385,7 +385,7 @@ export class Project<T extends Project<any> = any>
       return singleFileProject as any;
     }
 
-    const projectPath = path.join(config.pathes.projectsExamples(version).projectByType(libraryType));
+    const projectPath = config.pathes.projectsExamples(version).projectByType(libraryType);
     if (!fse.existsSync(projectPath)) {
       Helpers.error(`
       ${projectPath}
