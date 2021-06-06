@@ -237,7 +237,8 @@ export class HelpersFileFolders {
   }
 
   tryCopyFrom(source: string, destination: string, options = {}) {
-    Helpers.info(`Trying to copy from: ${source} to ${destination}`);
+    Helpers.log(`Trying to copy from: ${source} to ${destination}`);
+
     if (fse.existsSync(source) && !fse.lstatSync(source).isDirectory()) {
       // Helpers.warn(`[tryCopyFrom] This source is not directory: ${source} to ${destination}`);
       Helpers.copyFile(source, destination);
