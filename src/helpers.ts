@@ -321,6 +321,7 @@ export class HelpersTnp extends CoreHelpers {
   public applyMixins = applyMixins;
 }
 
+// @ts-ignore
 export interface HelpersTnp extends
   HelpersMessages,
   HelpersStringsRegexes,
