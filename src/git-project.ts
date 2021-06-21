@@ -28,6 +28,8 @@ export abstract class ProjectGit {
     if (!options.cwd) { options.cwd = this.location; }
     if (options.showCommand) {
       Helpers.info(`[${CLI.chalk.underline('Executing shell command')}]  "${command}" in [${options.cwd}]`);
+    } else {
+      Helpers.log(`[${CLI.chalk.underline('Executing shell command')}]  "${command}" in [${options.cwd}]`);
     }
     return Helpers.run(command, options);
   }
