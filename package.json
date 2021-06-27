@@ -30,7 +30,7 @@
     "homepage": "https://github.com/darekf77/tnp-helpers#readme"
   },
   "name": "tnp-helpers",
-  "version": "0.0.32",
+  "version": "0.0.33",
   "description": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -192,7 +192,7 @@
     "lodash": "4.17.4",
     "lodash-walk-object": "~1.0.17",
     "lowdb": "1.0.0",
-    "magic-renamer": "0.0.6",
+    "magic-renamer": "0.0.7",
     "material-design-icons": "3.0.1",
     "method-override": "2.3.10",
     "minimist": "1.2.0",
@@ -257,7 +257,7 @@
     "task.js": "0.1.5",
     "tnp-cli": "~0.0.13",
     "tnp-config": "~0.0.62",
-    "tnp-core": "~0.0.19",
+    "tnp-core": "~0.0.20",
     "tnp-db": "~0.0.24",
     "tnp-helpers": "~0.0.32",
     "tnp-tools": "0.0.35",

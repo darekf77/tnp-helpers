@@ -383,7 +383,7 @@ export class HelpersFileFolders {
 
     const notAllowed: RegExp[] = [
       '\.vscode', 'node\_modules',
-      ..._.values(config.folder),
+      ...Helpers.values(config.folder),
       'e2e', 'tmp.*', 'dist.*', 'tests', 'module', 'browser', 'bundle*',
       'components', '\.git', 'bin', 'custom'
     ].map(s => new RegExp(s))
@@ -413,7 +413,7 @@ export class HelpersFileFolders {
 
     const notAllowed: RegExp[] = [
       '\.vscode', 'node\_modules',
-      ..._.values(config.folder),
+      ...Helpers.values(config.folder),
       'e2e', 'tmp.*', 'dist.*', 'tests',
       'module', 'browser', 'bundle*',
       'components', '\.git', '\.build', 'bin', 'custom'
