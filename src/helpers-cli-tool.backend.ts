@@ -76,7 +76,10 @@ export class HelpersCliTool {
     return { resolved, commandString: (commandString).join(' ') };
   }
 
-  cleanCommand<T extends { [k: string]: string | boolean | string[] | boolean[] }>(command: string | string[], minimistOption: T) {
+  cleanCommand<T extends { [k: string]: string | boolean | string[] | boolean[] }>(
+    command: string | string[],
+    minimistOption: T
+  ) {
     const isArray = _.isArray(command);
     if (isArray) {
       command = (command as string[]).join(' ');
@@ -84,6 +87,7 @@ export class HelpersCliTool {
     command = command as string;
     minimistOption = _.cloneDeep(minimistOption);
     delete minimistOption['_'];
+    delete minimistOption['>'];
     if (!_.isString(command)) {
       command = '';
     }
@@ -92,8 +96,7 @@ export class HelpersCliTool {
       if (!_.isArray(value)) {
         value = [value]
       }
-      value
-        .map(v => v.toString())
+      value.map(v => v.toString())
         .forEach(v => {
           [
             paramName,
@@ -101,8 +104,9 @@ export class HelpersCliTool {
             _.camelCase(paramName)
           ].forEach(p => {
             command = (command as string)
-              .replace(new RegExp(`--${p}=${v}`, ''), '')
-              .replace(new RegExp(`--${p}\ *${v}`, 'g'), '');
+              .replace(new RegExp((`\\-\\-${p}\\=${v}`), 'g'), '')
+              .replace(new RegExp((`\\-\\-${p}\\ *${v}`), 'g'), '')
+              .replace(new RegExp((`\\-\\-${p}`), 'g'), '')
           });
         })
     });
