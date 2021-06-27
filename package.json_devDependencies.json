@@ -205,7 +205,7 @@
   "task.js": "0.1.5",
   "tnp-cli": "~0.0.13",
   "tnp-config": "~0.0.62",
-  "tnp-core": "~0.0.18",
+  "tnp-core": "~0.0.19",
   "tnp-db": "~0.0.24",
   "tnp-helpers": "~0.0.30",
   "tnp-tools": "0.0.35",
