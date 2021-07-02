@@ -239,7 +239,7 @@ export class HelpersGit {
         await Helpers.questionYesNo(`Do you wanna try again ?`, async () => {
           await Helpers.git.pullCurrentBranch(directoryPath, askToRetry)
         }, () => {
-          process.exit(0)
+          process.exit(1)
         });
       }
     }
@@ -255,8 +255,8 @@ export class HelpersGit {
         Helpers.run(`git push ${force ? '-f' : ''} origin ${currentBranchName}`, { cwd }).sync()
         break;
       } catch (err) {
-        Helpers.error(`Not able to push branch ${currentBranchName} in:
-        ${cwd}`, false, true);
+        Helpers.error(`[tnp-helpers] Not able to push branch ${currentBranchName} in:
+        ${cwd}`, true, true);
         Helpers.pressKeyAndContinue(`Press any key to try again: `);
         continue;
       }
