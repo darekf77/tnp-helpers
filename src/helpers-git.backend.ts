@@ -42,11 +42,24 @@ export class HelpersGit {
   }
   //#endregion
 
+  //#region check tag exists
+  checkTagExists(tag: string, cwd = process.cwd()) {
+
+    const command = `git show-ref --tags ${tag}`.trim();
+    const result = (Helpers.commnadOutputAsString(command, cwd) || '') !== '';
+    return result;
+  }
+  //#endregion
+
+
   //#region get last tag hash
   lastTagHash(directoryPath): string {
     try {
       const cwd = directoryPath;
-      const tag = child_process.execSync(`git describe --tags $(git rev-list --tags --max-count=1)`, { cwd }).toString().trim();
+      const tag = Helpers.commnadOutputAsString(`git describe --tags $(git rev-list --tags --max-count=1)`, cwd);
+      if (!tag) {
+        return null;
+      }
       let hash = child_process.execSync(`git log -1 --format=format:"%H" ${tag}`, { cwd }).toString().trim()
       return hash;
     } catch (e) {
@@ -252,7 +265,7 @@ export class HelpersGit {
     while (true) {
       try {
         Helpers.info(`[git][push] ${force ? 'force' : ''} pushing current branch ${currentBranchName}`);
-        Helpers.run(`git push ${force ? '-f' : ''} origin ${currentBranchName}`, { cwd }).sync()
+        Helpers.run(`git push ${force ? '-f' : ''} origin ${currentBranchName} --tags`, { cwd }).sync()
         break;
       } catch (err) {
         Helpers.error(`[tnp-helpers] Not able to push branch ${currentBranchName} in:

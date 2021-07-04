@@ -130,8 +130,8 @@ export class HelpersProcess {
 
   pressKeyAndContinue(message = 'Press enter to continue..') {
     Helpers.info(message);
-    if(process.platform === 'win32') {
-      spawn.sync('pause','', { shell: true, stdio: [0, 1, 2] });
+    if (process.platform === 'win32') {
+      spawn.sync('pause', '', { shell: true, stdio: [0, 1, 2] });
       return;
     }
     require('child_process').spawnSync('read _ ', { shell: true, stdio: [0, 1, 2] });
