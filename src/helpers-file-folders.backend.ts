@@ -6,6 +6,7 @@ import {
   rimraf,
   child_process,
   crossPlatformPath,
+  json5,
 } from 'tnp-core';
 import * as  underscore from 'underscore';
 import * as glob from 'glob';
@@ -621,7 +622,25 @@ export class HelpersFileFolders {
           Helpers.warn(`[tnp-helpers] Not copying empty link from: ${sourceDir}
           `)
         } else {
-          fse.copySync(sourceDir, destinationDir, options);
+          const copyFn = () => {
+            try {
+              fse.copySync(sourceDir, destinationDir, options);
+            } catch (error) {
+              const exitOnError = global['tnpNonInteractive'];
+              Helpers.error(`[tnp-helper] Not able to copy folder:
+              from: ${sourceDir}
+              to: ${destinationDir}
+              options: ${json5.stringify(options)}
+              error: ${error?.message}
+              `, !exitOnError, !exitOnError);
+
+              Helpers.pressKeyAndContinue(`Press any key to repeat copy action...`);
+              copyFn();
+            }
+
+          };
+          copyFn();
+
         }
       }
 

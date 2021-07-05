@@ -129,7 +129,7 @@ export class HelpersProcess {
   }
 
   pressKeyAndContinue(message = 'Press enter to continue..') {
-    Helpers.info(message);
+    Helpers.info(message, true);
     if (process.platform === 'win32') {
       spawn.sync('pause', '', { shell: true, stdio: [0, 1, 2] });
       return;
