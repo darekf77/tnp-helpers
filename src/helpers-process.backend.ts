@@ -251,8 +251,9 @@ export class HelpersProcess {
     let output = '';
     try {
       output = Helpers.run(command, { output: false, cwd, biggerBuffer }).sync().toString().trim()
+      // console.log(output)
       const splited = (output || '').split('\n');
-      output = splited.pop();
+      output = (splited.pop() || '').replace(/[^\x00-\xFF]/g, '');
     } catch (e) {
       Helpers.warn(`[tnp-helepr] Not able to get output from command:
       "${command}"
