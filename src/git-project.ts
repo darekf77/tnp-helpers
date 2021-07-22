@@ -70,8 +70,8 @@ export abstract class ProjectGit {
       get thereAreSomeUncommitedChange() {
         return Helpers.git.checkIfthereAreSomeUncommitedChange(self.location);
       },
-      pullCurrentBranch() {
-        return Helpers.git.pullCurrentBranch(self.location);
+      pullCurrentBranch(askToRetry = false) {
+        return Helpers.git.pullCurrentBranch(self.location, askToRetry);
       },
       get currentBranchName() {
         return Helpers.git.currentBranchName(self.location);
@@ -91,8 +91,8 @@ export abstract class ProjectGit {
       penultimageCommitHash() {
         return Helpers.git.penultimageCommitHash(self.location)
       },
-      checkTagExists(tag:string) {
-        return Helpers.git.checkTagExists(tag,self.location)
+      checkTagExists(tag: string) {
+        return Helpers.git.checkTagExists(tag, self.location)
       },
       lastTagHash() {
         return Helpers.git.lastTagHash(self.location)
