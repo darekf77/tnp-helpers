@@ -203,7 +203,7 @@ export class HelpersGit {
   //#endregion
 
   private pull(branchName = 'master', cwd = crossPlatformPath(process.cwd())) {
-    child_process.execSync(`git pull --ff-only origin ${branchName}`, { cwd });
+    child_process.execSync(`git pull --tags --ff-only origin ${branchName}`, { cwd });
   }
 
   //#region pull current branch
