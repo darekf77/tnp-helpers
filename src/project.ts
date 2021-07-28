@@ -272,7 +272,7 @@ export class Project<T extends Project<any> = any>
         return;
       }
       absoluteLocation = crossPlatformPath(path.resolve(newAbsLocation));
-      if (!fse.existsSync(absoluteLocation)) {
+      if (!fse.existsSync(absoluteLocation) && absoluteLocation.split('/').length < 2) {
         return;
       }
       if (previousLocation === absoluteLocation) {
