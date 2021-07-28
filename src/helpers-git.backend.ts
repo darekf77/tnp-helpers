@@ -271,7 +271,8 @@ export class HelpersGit {
         Helpers.error(`[tnp-helpers] Not able to push branch ${currentBranchName} in:
         ${cwd}`, true, true);
         Helpers.pressKeyAndContinue(`Press any key to try again: `);
-        // TODO issue with press any key
+        // TODO issue 1:  issue with press any key
+        // TODO issue 2: Updates were rejected because the tag already exists in the remote
         continue;
       }
     }
