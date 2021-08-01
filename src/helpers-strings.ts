@@ -60,5 +60,9 @@ export class HelpersStrings {
     return res.filter(f => !!f && (f.trim() !== ''));
   }
 
+  removeDoubleOrMoreEmptyLines(s: string) {
+    return s?.replace(/(\r\n|\r|\n){2,}/g, '$1\n');
+  }
+
 }
 
