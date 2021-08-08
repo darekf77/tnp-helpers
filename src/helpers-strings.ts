@@ -61,6 +61,7 @@ export class HelpersStrings {
   }
 
   removeDoubleOrMoreEmptyLines(s: string) {
+    s = s?.split('\n').map(f => f.trimRight()).join('\n');
     return s?.replace(/(\r\n|\r|\n){2,}/g, '$1\n');
   }
 
