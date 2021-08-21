@@ -141,7 +141,7 @@
   "lodash": "4.17.4",
   "lodash-walk-object": "~1.0.20",
   "lowdb": "1.0.0",
-  "magic-renamer": "~0.0.9",
+  "magic-renamer": "~0.0.11",
   "material-design-icons": "3.0.1",
   "method-override": "2.3.10",
   "minimist": "1.2.0",
