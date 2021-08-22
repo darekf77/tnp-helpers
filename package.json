@@ -47,7 +47,7 @@
   "homepage": "https://github.com/darekf77/tnp-helpers#readme",
   "dependencies": {
     "json5-writer": "0.2.0",
-    "morphi": "~4.0.23",
+    "morphi": "~4.0.26",
     "tnp-models": "~0.0.29"
   },
   "devDependencies": {
@@ -248,7 +248,6 @@
     "sloc": "0.2.0",
     "socket.io": "2.4.1",
     "sort-package-json": "1.11.0",
-    "sqlite3": "4.0.9",
     "static-columns": "~1.0.23",
     "string-similarity": "4.0.2",
     "sudo-block": "3.0.0",
