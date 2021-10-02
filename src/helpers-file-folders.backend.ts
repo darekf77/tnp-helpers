@@ -546,7 +546,7 @@ export class HelpersFileFolders {
       omitFoldersBaseFolder?: string;
       copySymlinksAsFiles?: boolean;
       useTempFolder?: boolean;
-    }) {
+    } & fse.CopyOptionsSync) {
     // sourceDir = sourceDir ? (sourceDir.replace(/\/$/, '')) : sourceDir;
     // destinationDir = destinationDir ? (destinationDir.replace(/\/$/, '')) : destinationDir;
     if (!fse.existsSync(sourceDir)) {
