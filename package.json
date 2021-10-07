@@ -46,7 +46,7 @@
   },
   "homepage": "https://github.com/darekf77/tnp-helpers#readme",
   "dependencies": {
-    "json5-writer": "0.2.0",
+    "json5-writer": "~0.2.0",
     "morphi": "~4.0.43",
     "tnp-models": "~0.0.31"
   },
