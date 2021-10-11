@@ -387,7 +387,9 @@ export class HelpersFileFolders {
       ...Helpers.values(config.folder),
       'e2e', 'tmp.*', 'dist.*', 'tests', 'module', 'browser', 'bundle*',
       'components', '\.git', 'bin', 'custom'
-    ].map(s => new RegExp(s))
+    ].filter(f => {
+      return ![config.folder.external].includes(f) && _.isString(f);
+    }).map(s => new RegExp(s))
 
     const isDirectory = source => fse.lstatSync(source).isDirectory()
     const getDirectories = source =>
@@ -396,7 +398,8 @@ export class HelpersFileFolders {
     let subdirectories = getDirectories(location)
       .filter(f => {
         const folderNam = path.basename(f);
-        return (notAllowed.filter(p => p.test(folderNam)).length === 0);
+        const allowed= (notAllowed.filter(p => p.test(folderNam)).length === 0);
+        return allowed;
       })
 
     return subdirectories
