@@ -246,7 +246,7 @@ export class HelpersGit {
       Helpers.git.pull(currentLocalBranch, cwd);
       Helpers.info(`Branch "${currentLocalBranch}" updated successfully in ${path.basename(directoryPath)}`)
     } catch (e) {
-      // console.log(e)
+      console.log(e)
       Helpers.error(`Cannot update current branch in: ${directoryPath}`, askToRetry, true)
       if (askToRetry) {
         await Helpers.questionYesNo(`Do you wanna try again ?`, async () => {

@@ -441,13 +441,21 @@ export class HelpersFileFolders {
   }
 
 
-  getRecrusiveFilesFrom(dir): string[] {
+  getRecrusiveFilesFrom(dir: string, ommitFolders: string[] = []): string[] {
     let files = [];
-    const readed = fse.readdirSync(dir).map(f => {
+    const readedFilesAndFolders = fse.readdirSync(dir);
+    const readed = readedFilesAndFolders.map(f => {
       const fullPath = path.join(dir, f);
       // console.log(`is direcotry ${fse.lstatSync(fullPath).isDirectory()} `, fullPath)
       if (fse.lstatSync(fullPath).isDirectory()) {
-        Helpers.getRecrusiveFilesFrom(fullPath).forEach(aa => files.push(aa))
+        if (
+          ommitFolders.includes(path.basename(fullPath)) ||
+          ommitFolders.includes(path.basename(path.dirname(fullPath)))
+        ) {
+          // Helpers.log(`Omitting: ${fullPath}`)
+        } else {
+          Helpers.getRecrusiveFilesFrom(fullPath, ommitFolders).forEach(aa => files.push(aa))
+        }
       }
       return fullPath;
     })
@@ -542,6 +550,8 @@ export class HelpersFileFolders {
       filter?: any;
       overwrite?: boolean;
       recursive?: boolean;
+      asSeparatedFiles?: boolean,
+      asSeparatedFilesAllowNotCopied?: boolean,
       omitFolders?: string[];
       omitFoldersBaseFolder?: string;
       copySymlinksAsFiles?: boolean;
@@ -624,7 +634,42 @@ export class HelpersFileFolders {
         } else {
           const copyFn = () => {
             try {
-              fse.copySync(sourceDir, destinationDir, options);
+
+              if (options.asSeparatedFiles) {
+                const copyRecFn = (cwdForFiles) => {
+                  // if (path.basename(cwdForFiles) === 'plugins') {
+                  //   debugger
+                  // }
+                  const files = Helpers.getRecrusiveFilesFrom(cwdForFiles, options.omitFolders);
+                  for (let index = 0; index < files.length; index++) {
+                    const from = files[index];
+                    const to = from.replace(sourceDir, destinationDir);
+
+
+                    if (Helpers.isFolder(from)) {
+                      if (
+                        options.omitFolders.includes(path.basename(path.dirname(from))) ||
+                        options.omitFolders.includes(path.basename(from))
+                      ) {
+                        continue;
+                      } else {
+                        copyRecFn(from);
+                      }
+                    } else {
+                      if (options.asSeparatedFilesAllowNotCopied) {
+                        try {
+                          Helpers.copyFile(from, to);
+                        } catch (e) { }
+                      } else {
+                        Helpers.copyFile(from, to);
+                      }
+                    }
+                  }
+                }
+                copyRecFn(sourceDir);
+              } else {
+                fse.copySync(sourceDir, destinationDir, options);
+              }
             } catch (error) {
               const exitOnError = global['tnpNonInteractive'];
               Helpers.error(`[tnp-helper] Not able to copy folder:
