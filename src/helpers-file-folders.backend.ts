@@ -12,7 +12,7 @@ import * as  underscore from 'underscore';
 import * as glob from 'glob';
 import { JSON10 } from 'json10';
 import * as crypto from 'crypto';
-
+declare const global: any;
 
 import { Helpers } from './index';
 import { config } from 'tnp-config';
@@ -681,7 +681,7 @@ export class HelpersFileFolders {
               to: ${destinationDir}
               options: ${json5.stringify(options)}
               error: ${error?.message}
-              `, !exitOnError, !exitOnError);
+              `, !exitOnError, !global.hideLog );
 
               Helpers.pressKeyAndContinue(`Press any key to repeat copy action...`);
               copyFn();
