@@ -343,6 +343,7 @@ export class HelpersFileFolders {
       } else {
         rimraf.sync(dirpath)
       }
+      Helpers.log(`Remove done: ${dirpath}`)
       return;
     } catch (e) {
       Helpers.log(`Trying to remove directory: ${dirpath}`)
