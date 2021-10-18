@@ -30,7 +30,7 @@
     "homepage": "https://github.com/darekf77/tnp-helpers#readme"
   },
   "name": "tnp-helpers",
-  "version": "0.0.67",
+  "version": "0.0.69",
   "description": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -188,7 +188,7 @@
     "lodash": "4.17.4",
     "lodash-walk-object": "~1.0.32",
     "lowdb": "1.0.0",
-    "magic-renamer": "~0.0.17",
+    "magic-renamer": "~0.0.18",
     "material-design-icons": "3.0.1",
     "method-override": "2.3.10",
     "minimist": "1.2.0",
@@ -197,11 +197,11 @@
     "moment": "2.22.2",
     "ng-modal-lib": "0.0.6",
     "ng-packagr": "5.7.1",
-    "ng-talkback": "~2.4.22",
+    "ng-talkback": "~2.4.23",
     "ng2-file-upload": "1.3.0",
     "ng2-logger": "~8.0.17",
     "ng2-rest": "~11.0.39",
-    "ng4-icons": "~0.0.27",
+    "ng4-icons": "~0.0.28",
     "ng4-modal": "~0.0.28",
     "ngx-bootstrap": "5.2.0",
     "ngx-breadcrumbs": "0.0.3",
