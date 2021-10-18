@@ -233,7 +233,11 @@ export class HelpersGit {
   //#endregion
 
   //#region pull current branch
-  async pullCurrentBranch(directoryPath: string, askToRetry = false) {
+  async pullCurrentBranch(directoryPath: string, askToRetry = true) {
+    if(global['tnpNonInteractive']) {
+      askToRetry = false;
+    }
+    Helpers.info(`askToRetry: ${askToRetry}`)
     if (this.getOriginURL(directoryPath) === '') {
       Helpers.warn(`Not pulling branch without `
         + `remote origin url.... in folder ${path.basename(directoryPath)}`);
@@ -256,6 +260,7 @@ export class HelpersGit {
         });
       }
     }
+    Helpers.info(`DONE PULLING`)
   }
   //#endregion
 
