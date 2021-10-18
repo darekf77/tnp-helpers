@@ -30,7 +30,7 @@
     "homepage": "https://github.com/darekf77/tnp-helpers#readme"
   },
   "name": "tnp-helpers",
-  "version": "0.0.70",
+  "version": "0.0.72",
   "description": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
