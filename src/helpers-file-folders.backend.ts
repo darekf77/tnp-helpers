@@ -399,7 +399,7 @@ export class HelpersFileFolders {
     let subdirectories = getDirectories(location)
       .filter(f => {
         const folderNam = path.basename(f);
-        const allowed= (notAllowed.filter(p => p.test(folderNam)).length === 0);
+        const allowed = (notAllowed.filter(p => p.test(folderNam)).length === 0);
         return allowed;
       })
 
@@ -676,12 +676,13 @@ export class HelpersFileFolders {
               }
             } catch (error) {
               const exitOnError = global['tnpNonInteractive'];
+              const trace = global.hideLog;
               Helpers.error(`[tnp-helper] Not able to copy folder:
               from: ${sourceDir}
               to: ${destinationDir}
               options: ${json5.stringify(options)}
               error: ${error?.message}
-              `, !exitOnError, !global.hideLog );
+              `, !exitOnError, !trace);
 
               Helpers.pressKeyAndContinue(`Press any key to repeat copy action...`);
               copyFn();
