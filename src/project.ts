@@ -355,6 +355,7 @@ export class Project<T extends Project<any> = any>
   static get Tnp(): Project<any> {
     //#region @backendFunc
     let tnpPorject = Project.From(config.pathes.tnp_folder_location);
+    Helpers.log(`USING TNP PATH: ${config.pathes.tnp_folder_location}`)
     if (!tnpPorject && !global.globalSystemToolMode) {
       Helpers.error(`Not able to find tnp project in "${config.pathes.tnp_folder_location}".`)
     }
