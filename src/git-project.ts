@@ -70,6 +70,9 @@ export abstract class ProjectGit {
       get thereAreSomeUncommitedChange() {
         return Helpers.git.checkIfthereAreSomeUncommitedChange(self.location);
       },
+      thereAreSomeUncommitedChangeExcept(filesList: string[] = []) {
+        return Helpers.git.thereAreSomeUncommitedChangeExcept(filesList, self.location);
+      },
       pullCurrentBranch(askToRetry = false) {
         return Helpers.git.pullCurrentBranch(self.location, askToRetry);
       },

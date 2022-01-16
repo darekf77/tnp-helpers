@@ -234,7 +234,7 @@ export class HelpersGit {
 
   //#region pull current branch
   async pullCurrentBranch(directoryPath: string, askToRetry = true) {
-    if(global['tnpNonInteractive']) {
+    if (global['tnpNonInteractive']) {
       askToRetry = false;
     }
     Helpers.info(`askToRetry: ${askToRetry}`)
@@ -365,13 +365,26 @@ export class HelpersGit {
 
   //#region check if there are some uncommited changes
   checkIfthereAreSomeUncommitedChange(cwd: string) {
-    try {
-      return Helpers.run(`git diff --name-only`, { output: false, cwd }).sync().toString().trim() !== '';
-    } catch (error) {
-      return true;
-    }
+    return Helpers.git.thereAreSomeUncommitedChangeExcept([], cwd);
   }
   //#endregion
+
+  thereAreSomeUncommitedChangeExcept(filesList: string[] = [], cwd: string) {
+    filesList = filesList.map(f => crossPlatformPath(f))
+    try {
+      const res = Helpers.run(`git diff --name-only`, { output: false, cwd }).sync().toString().trim();
+      const list = !res ? [] : res
+        .split(/\r\n|\n|\r/)
+        .filter(f => {
+          f = f?.trim();
+          return !!f && !filesList.includes(crossPlatformPath(f));
+        });
+
+      return list.length > 0;
+    } catch (error) {
+      return false;
+    }
+  }
 
   //#region restore last version
   restoreLastVersion(cwd: string, localFilePath: string) {

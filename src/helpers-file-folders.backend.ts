@@ -258,7 +258,7 @@ export class HelpersFileFolders {
       overwrite: true,
       recursive: true,
     }, options);
-    if (process.platform === 'win32') { // @LAST
+    if (process.platform === 'win32') { // TODO QUICK_FIX
       options['dereference'] = true;
     }
 
