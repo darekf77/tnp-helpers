@@ -556,6 +556,7 @@ export class HelpersFileFolders {
       recursive?: boolean;
       asSeparatedFiles?: boolean,
       asSeparatedFilesAllowNotCopied?: boolean,
+      asSeparatedFilesSymlinkAsFile?: boolean;
       omitFolders?: string[];
       omitFoldersBaseFolder?: string;
       copySymlinksAsFiles?: boolean;
@@ -586,6 +587,14 @@ export class HelpersFileFolders {
 
     if (options.copySymlinksAsFiles) {
       options['dereference'] = true;
+    }
+
+    if (!options.omitFolders) {
+      options.omitFolders = [];
+    }
+
+    if(options.asSeparatedFilesSymlinkAsFile) {
+      options.asSeparatedFilesSymlinkAsFile = true;
     }
 
     // const [srcStat, destStat] = [
@@ -660,12 +669,19 @@ export class HelpersFileFolders {
                         copyRecFn(from);
                       }
                     } else {
+                      const copyFileFn = () => {
+                        if (!options.asSeparatedFilesSymlinkAsFile && Helpers.isLink(from)) {
+                          Helpers.createSymLink(from, to);
+                        } else {
+                          Helpers.copyFile(from, to);
+                        }
+                      };
                       if (options.asSeparatedFilesAllowNotCopied) {
                         try {
-                          Helpers.copyFile(from, to);
+                          copyFileFn();
                         } catch (e) { }
                       } else {
-                        Helpers.copyFile(from, to);
+                        copyFileFn();
                       }
                     }
                   }
@@ -730,7 +746,7 @@ export class HelpersFileFolders {
     }
 
     if (!fse.existsSync(sourcePath)) {
-      Helpers.warn(`[copyFile] No able to find source of ${sourcePath}`, true);
+      Helpers.warn(`[copyFile] No able to find source of ${sourcePath}`);
       return false;
     }
     if (fse.lstatSync(sourcePath).isDirectory()) {
