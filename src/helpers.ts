@@ -4,7 +4,6 @@ import { HelpersMessages } from './helpers-messages';
 import { HelpersStringsRegexes } from './helpers-strings-regexes';
 import { HelpersEnvironment } from './helpers-environment';
 import { HelpersStrings } from './helpers-strings';
-import { Helpers as HelperNg2Logger } from 'ng2-logger';
 import { conditionWait } from './condition-wait';
 //#region @backend
 import { child_process, os, crossPlatformPath } from 'tnp-core';
