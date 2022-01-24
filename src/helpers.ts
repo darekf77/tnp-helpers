@@ -14,7 +14,7 @@ import { HelpersGit } from './helpers-git.backend';
 import { HelpersCliTool } from './helpers-cli-tool.backend';
 import { HelpersMorphiFramework } from './helpers-morphi-framework.backend';
 import { HelpersProcess } from './helpers-process.backend';
-import { TsCodeModifer } from './ts-code-modifier';
+import { TsCodeModifer } from './ts-code';
 import { HelpersNpm } from './helpers-npm.backend';
 import { HelpersTerminal } from './helpers-system-terminal.backend';
 import { HelpersFileFolders } from './helpers-file-folders.backend';
@@ -22,6 +22,7 @@ import { HelpersDependencies } from './helpers-dependencies.backend';
 import { HelpersPath } from './helpers-path.backend';
 import { HelpersNetwork } from './helpers-network.backend';
 import { HelpersJSON5 } from './helpers-json5.backend';
+import { TsCodeExtractor } from './ts-code/ts-code-extractor';
 import { CLI } from 'tnp-cli';
 //#endregion
 import { config, ConfigModels } from 'tnp-config';
@@ -29,7 +30,6 @@ import { Helpers } from './index';
 import { CLASS } from 'typescript-class-helpers';
 import { Morphi } from 'morphi';
 import { CoreHelpers } from 'tnp-core';
-
 
 export function applyMixins(derivedCtor: any, baseCtors: any[]) {
   baseCtors.forEach(baseCtor => {
@@ -50,10 +50,10 @@ export class HelpersTnp extends CoreHelpers {
     return HelpersTnp._instance;
   }
 
-
   private constructor(
     //#region @backend
     public tsCodeModifier = new TsCodeModifer(),
+    public tsCodeExtractor = new TsCodeExtractor(),
     public cliTool = new HelpersCliTool(),
     public terminal = new HelpersTerminal(),
     public git = new HelpersGit(),
