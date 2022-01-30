@@ -1,35 +1,4 @@
 {
-  "tnp": {
-    "resources": [],
-    "type": "isomorphic-lib",
-    "version": "v2",
-    "linkedProjects": [],
-    "overrided": {
-      "ignoreDepsPattern": [],
-      "includeAsDev": [],
-      "includeOnly": [
-        "tnp-models",
-        "morphi",
-        "json5-writer"
-      ],
-      "dependencies": {},
-      "linkedFolders": []
-    },
-    "libReleaseOptions": {
-      "nodts": false,
-      "obscure": false,
-      "ugly": false
-    },
-    "scripts": {
-      "test": "echo \"Error: no test specified\" && exit 1"
-    },
-    "description": "",
-    "license": "MIT",
-    "private": false,
-    "author": "",
-    "homepage": "https://github.com/darekf77/tnp-helpers#readme",
-    "workerPlugins": {}
-  },
   "version": "0.0.0",
   "devDependencies": {
     "@angular-devkit/build-angular": "~0.901.3",
@@ -254,7 +223,7 @@
     "zone.js": "~0.10.2"
   },
   "dependencies": {
-    "json5-writer": "~0.2.0",
+    "json5-writer": "0.2.0",
     "morphi": "~4.0.54",
     "tnp-models": "~0.0.37"
   },
@@ -266,8 +235,5 @@
   "private": false,
   "author": "",
   "homepage": "https://github.com/darekf77/tnp-helpers#readme",
-  "name": "tnp-helpers",
-  "recreatedFrom": {
-    "tnp.json": true
-  }
+  "name": "tnp-helpers"
 }

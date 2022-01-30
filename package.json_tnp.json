@@ -1,8 +1,5 @@
 {
   "resources": [],
-  "type": "isomorphic-lib",
-  "version": "v2",
-  "linkedProjects": [],
   "overrided": {
     "ignoreDepsPattern": [],
     "includeAsDev": [],
@@ -14,11 +11,14 @@
     "dependencies": {},
     "linkedFolders": []
   },
+  "linkedProjects": [],
   "libReleaseOptions": {
     "nodts": false,
     "obscure": false,
     "ugly": false
   },
+  "type": "isomorphic-lib",
+  "version": "v2",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
