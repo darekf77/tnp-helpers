@@ -64,8 +64,8 @@ export abstract class ProjectGit {
       commit(args?: string) {
         return Helpers.git.commit(self.location, Project, args);
       },
-      pushCurrentBranch(force = false) {
-        return Helpers.git.pushCurrentBranch(self.location, force);
+      pushCurrentBranch(force = false, origin = 'origin') {
+        return Helpers.git.pushCurrentBranch(self.location, force, origin);
       },
       get thereAreSomeUncommitedChange() {
         return Helpers.git.checkIfthereAreSomeUncommitedChange(self.location);

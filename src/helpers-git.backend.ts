@@ -265,15 +265,15 @@ export class HelpersGit {
   //#endregion
 
   //#region push current branch
-  pushCurrentBranch(cwd: string, force = false) {
+  pushCurrentBranch(cwd: string, force = false, origin = 'origin') {
     const currentBranchName = Helpers.git.currentBranchName(cwd);
     while (true) {
       try {
-        Helpers.info(`[git][push] ${force ? 'force' : ''} pushing current branch ${currentBranchName}`);
-        Helpers.run(`git push ${force ? '-f' : ''} origin ${currentBranchName} --tags`, { cwd }).sync()
+        Helpers.info(`[git][push] ${force ? 'force' : ''} pushing current branch ${currentBranchName} , origin=${origin}`);
+        Helpers.run(`git push ${force ? '-f' : ''} ${origin} ${currentBranchName} --tags`, { cwd }).sync()
         break;
       } catch (err) {
-        Helpers.error(`[tnp-helpers] Not able to push branch ${currentBranchName} in:
+        Helpers.error(`[tnp-helpers] Not able to push branch ${currentBranchName} in (origin=${origin}):
         ${cwd}`, true, true);
         Helpers.pressKeyAndContinue(`Press any key to try again: `);
         // TODO issue 1:  issue with press any key
