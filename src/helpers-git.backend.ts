@@ -237,7 +237,7 @@ export class HelpersGit {
     if (global['tnpNonInteractive']) {
       askToRetry = false;
     }
-    Helpers.info(`askToRetry: ${askToRetry}`)
+    Helpers.log(`askToRetry: ${askToRetry}`)
     if (this.getOriginURL(directoryPath) === '') {
       Helpers.warn(`Not pulling branch without `
         + `remote origin url.... in folder ${path.basename(directoryPath)}`);
