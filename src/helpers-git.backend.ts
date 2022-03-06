@@ -51,6 +51,20 @@ export class HelpersGit {
   }
   //#endregion
 
+  lastTagVersionName(directoryPath: string) {
+    try {
+      const cwd = directoryPath;
+      const tag = Helpers.commnadOutputAsString(`git describe --tags $(git rev-list --tags --max-count=1)`, cwd);
+      if (!tag) {
+        return void 0;
+      }
+      return tag;
+    } catch (e) {
+      Helpers.warn(`[lastCommitHash] Not able to get last commit version name for repository in ${directoryPath}`)
+      return void 0;
+    }
+  }
+
 
   //#region get last tag hash
   lastTagHash(directoryPath): string {

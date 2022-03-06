@@ -100,6 +100,9 @@ export abstract class ProjectGit {
       lastTagHash() {
         return Helpers.git.lastTagHash(self.location)
       },
+      get lastTagVersionName() {
+        return (Helpers.git.lastTagVersionName(self.location) || '')
+      },
       /**
        * TODO does this make any sense
        */
