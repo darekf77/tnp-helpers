@@ -13,6 +13,13 @@ export class HelpersArrayObj {
     }
   }
 
+  second(arr) {
+    if (!Array.isArray(arr) || arr.length < 2) {
+      return void 0;
+    }
+    return  arr[1];
+  }
+
   arrayMoveElementBefore<T = any>(arr: any[], a: any, b: any, prop?: keyof T) {
     let indexA = prop ? arr.findIndex(elem => elem[prop] === a[prop]) : arr.indexOf(a);
     _.pullAt(arr, indexA);

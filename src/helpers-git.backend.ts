@@ -372,7 +372,7 @@ export class HelpersGit {
   thereAreSomeUncommitedChangeExcept(filesList: string[] = [], cwd: string) {
     filesList = filesList.map(f => crossPlatformPath(f))
     try {
-      const res = Helpers.run(`git diff --name-only`, { output: false, cwd }).sync().toString().trim();
+      const res = Helpers.run(`git ls-files --deleted --modified --others --exclude-standard`, { output: false, cwd }).sync().toString().trim();
       const list = !res ? [] : res
         .split(/\r\n|\n|\r/)
         .filter(f => {
