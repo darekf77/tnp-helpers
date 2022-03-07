@@ -1,5 +1,5 @@
 {
-  "version": "13.0.1",
+  "version": "13.0.2",
   "devDependencies": {
     "@angular-devkit/build-angular": "~13.2.5",
     "@angular/animations": "~13.2.0",
@@ -191,7 +191,7 @@
   },
   "dependencies": {
     "json5-writer": "0.2.0",
-    "morphi": "~13.0.2",
+    "morphi": "~13.0.3",
     "tnp-models": "~13.0.3"
   },
   "scripts": {
