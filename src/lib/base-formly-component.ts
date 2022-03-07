@@ -18,7 +18,7 @@ const log = Log.create('base formly component', Level.__NOTHING)
 @Component({
   selector: 'app-base-formly-component-meta',
   template: `<div></div>`
-})
+}) // @ts-ignore
 export abstract class BaseFormlyComponent<T extends DualComponentController = DualComponentController>
   extends FieldType
   implements OnInit, Partial<DualComponentController<T>>, AfterViewInit {
