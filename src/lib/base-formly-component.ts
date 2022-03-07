@@ -69,6 +69,7 @@ export abstract class BaseFormlyComponent<T extends DualComponentController = Du
 
 
 
+  // @ts-ignore
   @Input() formControl: FormControl;
   protected handlers: Subscription[] = [];
 
