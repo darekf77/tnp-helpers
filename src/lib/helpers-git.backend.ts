@@ -60,7 +60,7 @@ export class HelpersGit {
       }
       return tag;
     } catch (e) {
-      Helpers.warn(`[lastCommitHash] Not able to get last commit version name for repository in ${directoryPath}`)
+      Helpers.warn(`[lastCommitHash] Not able to get last commit version name for repository in ${directoryPath}`,false)
       return void 0;
     }
   }

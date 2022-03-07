@@ -1,6 +1,5 @@
 import { _ } from 'tnp-core';
 import { HelpersArrayObj } from './helpers-array-obj';
-import { HelpersMessages } from './helpers-messages';
 import { HelpersStringsRegexes } from './helpers-strings-regexes';
 import { HelpersEnvironment } from './helpers-environment';
 import { HelpersStrings } from './helpers-strings';
@@ -322,7 +321,6 @@ export class HelpersTnp extends CoreHelpers {
 
 // @ts-ignore
 export interface HelpersTnp extends
-  HelpersMessages,
   HelpersStringsRegexes,
   HelpersEnvironment
   //#region @backend
@@ -333,7 +331,6 @@ export interface HelpersTnp extends
 { }
 
 applyMixins(HelpersTnp, [
-  HelpersMessages,
   HelpersStringsRegexes,
   HelpersEnvironment,
   //#region @backend

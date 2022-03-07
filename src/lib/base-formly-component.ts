@@ -67,10 +67,8 @@ export abstract class BaseFormlyComponent<T extends DualComponentController = Du
     return this.path;
   }
 
-
-
   // @ts-ignore
-  @Input() formControl: FormControl;
+  // @Input() formControl: FormControl; // TODO QUICK_FIX
   protected handlers: Subscription[] = [];
 
   ngOnDestroy(): void {
@@ -124,6 +122,7 @@ export abstract class BaseFormlyComponent<T extends DualComponentController = Du
     //   })
     //   //   this.formControl = new FormControl({})
     // }
+    // @ts-ignore
     this.change.next(this.ctrl.value);
   }
 
