@@ -66,7 +66,7 @@ export abstract class DualComponentController<T = any> {
     return this.getValContext('defaultValue') as any;
   }
 
-  get formControl(): FormControl {
+  get formControl(): any {// FormControl { // TODO QUICK_FIX
     return this.getValContext('formControl') as any;
   }
 
@@ -127,6 +127,7 @@ export abstract class DualComponentController<T = any> {
   set value(v) {
     if (this.isFormlyMode) {
       this.cmp.field.formControl.setValue(v);
+      // @ts-ignore
       this.cmp.change.next(v);
       return;
     }
