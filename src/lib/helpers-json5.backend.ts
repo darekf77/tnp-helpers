@@ -3,7 +3,7 @@ import {
 } from 'tnp-core';
 import { config } from 'tnp-config';
 import * as json5 from 'json5';
-import * as json5Writer from 'json5-writer';
+import * as json5Writer from 'json10-writer';
 import * as glob from 'glob';
 import { Helpers } from './index';
 

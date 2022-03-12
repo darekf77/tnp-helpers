@@ -6,7 +6,7 @@
     "includeOnly": [
       "tnp-models",
       "morphi",
-      "json5-writer"
+      "json10-writer"
     ],
     "dependencies": {},
     "linkedFolders": []
