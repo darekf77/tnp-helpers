@@ -1,3 +1,4 @@
+//#region @browser
 import { Subscription } from 'rxjs';
 import { OnDestroy, OnInit, Component, Input } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
@@ -50,3 +51,4 @@ export abstract class BaseComponentForRouter extends BaseComponent {
   }
 
 }
+//#endregion

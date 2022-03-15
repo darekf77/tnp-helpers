@@ -53,6 +53,8 @@ export class Project<T extends Project<any> = any>
   public isBasedOnOtherProject: boolean;
   public isForRecreation: boolean;
   public isContainer: boolean;
+  public isSmartContainer: boolean;
+  public isSmartContainerChild: boolean;
   public isContainerWithLinkedProjects: boolean;
   public isContainerChild: boolean;
   public isContainerCoreProject: boolean;

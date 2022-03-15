@@ -72,6 +72,13 @@ export class HelpersProcess {
     // TODO other oses
   }
 
+  generatedFileWrap(content: string) {
+    return `${content}
+  // [${config.frameworkName}] GENERATED CONTENT FOR BACKEND VERSION
+  // [${config.frameworkName}] GENERATED CONTENT FOR BACKEND VERSION
+          `.trim()
+  }
+
   async changeCwdWrapper(dir: string, functionToExecure: Function, logLevel: Level = Level.__NOTHING) {
     const currentCwd = crossPlatformPath(process.cwd());
     Helpers.changeCwd(dir);

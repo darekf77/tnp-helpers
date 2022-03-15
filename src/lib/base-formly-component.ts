@@ -1,3 +1,4 @@
+//#region @browser
 import { Subscription } from 'rxjs';
 import { FieldType, FormlyFieldConfig } from '@ngx-formly/core';
 
@@ -127,3 +128,4 @@ export abstract class BaseFormlyComponent<T extends DualComponentController = Du
   }
 
 }
+//#endregion
