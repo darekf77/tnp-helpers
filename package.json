@@ -1,5 +1,5 @@
 {
-  "version": "13.0.8",
+  "version": "13.0.9",
   "dependencies": {
     "json10-writer": "~13.0.4",
     "morphi": "~13.0.8",
@@ -123,6 +123,7 @@
     "express-fileupload": "0.4.0",
     "fbgraph": "1.4.1",
     "file-loader": "1.1.5",
+    "firedev": "^13",
     "firedev-crud": "~13.0.7",
     "firedev-crud-deamon": "~13.0.2",
     "firedev-ports": "~13.0.3",
@@ -212,6 +213,7 @@
     "sudo-block": "3.0.0",
     "systeminformation": "3.45.7",
     "task.js": "0.1.5",
+    "tnp": "^13",
     "tnp-cli": "~13.0.1",
     "tnp-config": "~13.0.1",
     "tnp-core": "~13.0.2",
