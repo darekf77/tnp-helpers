@@ -13,5 +13,6 @@
   "private": false,
   "author": "",
   "homepage": "https://github.com/darekf77/tnp-helpers#readme",
-  "name": "tnp-helpers"
+  "name": "tnp-helpers",
+  "devDependencies": {}
 }
