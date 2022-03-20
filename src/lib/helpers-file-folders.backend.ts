@@ -593,7 +593,7 @@ export class HelpersFileFolders {
       options.omitFolders = [];
     }
 
-    if(options.asSeparatedFilesSymlinkAsFile) {
+    if (options.asSeparatedFilesSymlinkAsFile) {
       options.asSeparatedFilesSymlinkAsFile = true;
     }
 
@@ -759,7 +759,12 @@ export class HelpersFileFolders {
       return false;
     }
     const destDirPath = path.dirname(destinationPath);
-    debugMode && Helpers.log(`[copyFile] destDirPath: ${destDirPath}`);
+    // Helpers.log(`destDirPath exits:  ${fse.existsSync(destDirPath)}, "${destDirPath}"`)
+    // Helpers.log(`[copyFile] destDirPath: ${destDirPath}`);
+    // if (Helpers.isLink(destDirPath)) {
+    //   Helpers.removeFileIfExists(destDirPath)
+    // }
+
     if (!fse.existsSync(destDirPath)) {
       Helpers.mkdirp(destDirPath);
     }
