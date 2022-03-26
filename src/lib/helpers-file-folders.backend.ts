@@ -641,7 +641,11 @@ export class HelpersFileFolders {
         fse.copySync(sourceDir, tempDestination, options);
         fse.copySync(tempDestination, destinationDir, options);
       } else {
-        if ((sourceDir === path.resolve(sourceDir)) && Helpers.isLink(sourceDir) && !Helpers.exists(fse.readlinkSync(sourceDir))) {
+        if (
+          (sourceDir === path.resolve(sourceDir))
+          && Helpers.isExistedSymlink(sourceDir)
+          && !Helpers.exists(fse.readlinkSync(sourceDir))
+        ) {
           Helpers.warn(`[tnp-helpers] Not copying empty link from: ${sourceDir}
           `)
         } else {
@@ -670,7 +674,7 @@ export class HelpersFileFolders {
                       }
                     } else {
                       const copyFileFn = () => {
-                        if (!options.asSeparatedFilesSymlinkAsFile && Helpers.isLink(from)) {
+                        if (!options.asSeparatedFilesSymlinkAsFile && Helpers.isExistedSymlink(from)) {
                           Helpers.createSymLink(from, to);
                         } else {
                           Helpers.copyFile(from, to);
@@ -759,11 +763,7 @@ export class HelpersFileFolders {
       return false;
     }
     const destDirPath = path.dirname(destinationPath);
-    // Helpers.log(`destDirPath exits:  ${fse.existsSync(destDirPath)}, "${destDirPath}"`)
-    // Helpers.log(`[copyFile] destDirPath: ${destDirPath}`);
-    // if (Helpers.isLink(destDirPath)) {
-    //   Helpers.removeFileIfExists(destDirPath)
-    // }
+
 
     if (!fse.existsSync(destDirPath)) {
       Helpers.mkdirp(destDirPath);
