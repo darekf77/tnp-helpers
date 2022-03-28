@@ -60,7 +60,7 @@ export class HelpersGit {
       }
       return tag;
     } catch (e) {
-      Helpers.warn(`[lastCommitHash] Not able to get last commit version name for repository in ${directoryPath}`,false)
+      Helpers.warn(`[lastCommitHash] Not able to get last commit version name for repository in ${directoryPath}`, false)
       return void 0;
     }
   }
@@ -332,7 +332,8 @@ export class HelpersGit {
       override?: boolean;
     }) {
     const ALWAYS_HTTPS = true;
-    if (!url.endsWith('.git')) {
+
+    if ((url.split(' ').length === 1) && !url.endsWith('.git')) {
       url = (url + '.git')
     }
     if (ALWAYS_HTTPS) {
