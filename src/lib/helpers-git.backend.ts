@@ -154,6 +154,7 @@ export class HelpersGit {
         `)
       gitRootProject.run(`git add --all . `).sync()
     } catch (error) {
+      Helpers.log(error)
       Helpers.warn(`Failed to 'git add --all .' in:
         ${gitRootProject.location}`);
     }
@@ -172,9 +173,11 @@ export class HelpersGit {
       "${args}"
       location: ${cwd}
       `)
-      Helpers.run(`git commit --no-verify ${args}`, { cwd }).sync()
+      var cmdddd = `git commit --no-verify ${args}`;
+      Helpers.run(cmdddd, { cwd }).sync()
     } catch (error) {
-      Helpers.warn(`[git][commit] not able to commit what is`);
+      Helpers.log(error)
+      Helpers.warn(`[git][commit] not able to commit what is with command: ${cmdddd}`);
     }
   }
   //#endregion
