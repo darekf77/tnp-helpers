@@ -59,6 +59,7 @@ export class Project<T extends Project<any> = any>
   public isContainerChild: boolean;
   public isContainerCoreProject: boolean;
   public isStandaloneProject: boolean;
+  public isMonorepo: boolean;
   public isUnknowNpmProject: boolean;
   public isNaviCli: boolean;
   public useFramework: boolean;
