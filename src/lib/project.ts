@@ -397,7 +397,7 @@ export class Project<T extends Project<any> = any>
       ${crossPlatformPath(projectPath)}
       [tnp-helpers] Bad library type "${libraryType}" for this framework version "${version}"
 
-      `, false, true);
+      `, false, false);
     }
     return Project.From<T>(projectPath);
     //#endregion
