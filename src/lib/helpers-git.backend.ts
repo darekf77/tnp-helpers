@@ -9,6 +9,7 @@ import {
 import { CLI } from 'tnp-cli';
 import { Helpers } from './index';
 import type { Project } from './project';
+import { config } from 'tnp-config';
 //#endregion
 
 export class HelpersGit {
@@ -183,11 +184,11 @@ export class HelpersGit {
   //#endregion
 
   //#region get remote origin
-  getOriginURL(cwd: string) {
+  getOriginURL(cwd: string, differentOriginName = '') {
     let url = '';
     try {
       // git config --get remote.origin.url
-      url = Helpers.run(`git config --get remote.origin.url`,
+      url = Helpers.run(`git config --get remote.${differentOriginName ? differentOriginName : 'origin'}.url`,
         { output: false, cwd }).sync().toString().trim()
     } catch (error) {
 
@@ -286,8 +287,9 @@ export class HelpersGit {
     const currentBranchName = Helpers.git.currentBranchName(cwd);
     while (true) {
       try {
-        Helpers.info(`[git][push] ${force ? 'force' : ''} pushing current branch ${currentBranchName} , origin=${origin}`);
-        Helpers.run(`git push ${force ? '-f' : ''} ${origin} ${currentBranchName} --tags`, { cwd }).sync()
+        const command = `git push ${force ? '-f' : ''} ${origin} ${currentBranchName} --tags`;
+        Helpers.info(`[git][push] ${force ? 'force' : ''} pushing current branch ${currentBranchName} , origin=${Helpers.git.getOriginURL(cwd)}`);
+        Helpers.run(command, { cwd }).sync()
         break;
       } catch (err) {
         Helpers.error(`[tnp-helpers] Not able to push branch ${currentBranchName} in (origin=${origin}):
@@ -334,31 +336,51 @@ export class HelpersGit {
       throwErrors?: boolean;
       override?: boolean;
     }) {
-    const ALWAYS_HTTPS = true;
+    // const ALWAYS_HTTPS = true;
 
-    if ((url.split(' ').length === 1) && !url.endsWith('.git')) {
-      url = (url + '.git')
+    if (url.split(' ').length > 2) {
+      // const [rUrl, rDest] = url.split(' ');
+      Helpers.error(`[tnp-helpers]incorrect clone url "${url}"`)
     }
-    if (ALWAYS_HTTPS) {
-      if (!url.startsWith('https://')) {
-        const [serverPart, pathPart] = url.split(':');
-        const server = (serverPart || '').replace('git@', '');
-        url = `https://${server}/${pathPart}`;
+
+    if (url.split(' ').length === 2) {
+      const [rUrl, rDest] = url.split(' ');
+      if (destinationFolderName) {
+        Helpers.error(`[tnp-helpers] wrong cloning argument
+
+        url = "${url}"
+        destinationFolderName = "${destinationFolderName}"
+
+        cant use both at the same time
+        `)
+      } else {
+        destinationFolderName = rDest;
+        url = rUrl;
       }
     }
 
-    const cloneFolderName = path.join(
+    if (!url.endsWith('.git')) {
+      url = (url + '.git')
+    }
+
+    const cloneFolderPath = path.join(
       cwd,
-      (!!destinationFolderName && destinationFolderName.trim() !== '') ? destinationFolderName : path.basename(url)
-    );
+      (!!destinationFolderName && destinationFolderName.trim() !== '')
+        ? destinationFolderName
+        : path.basename(url)
+    ).trim().replace('.git', '');
+    // console.log({ cloneFolderPath })
+
     if (override) {
-      Helpers.remove(cloneFolderName)
-    } else if (Helpers.exists(cloneFolderName) && Helpers.exists(path.join(cloneFolderName, '.git'))) {
-      Helpers.warn(`Alread cloned ${path.basename(cloneFolderName)}...`);
+      Helpers.remove(cloneFolderPath)
+    } else if (Helpers.exists(cloneFolderPath) && Helpers.exists(path.join(cloneFolderPath, '.git'))) {
+      Helpers.warn(`Alread cloned ${path.basename(cloneFolderPath)}...`);
       return;
     }
 
-    const commnad = `git -c http.sslVerify=false clone ${url} ${destinationFolderName}`;
+    const commnad = url.startsWith(`https://`)
+      ? `git -c http.sslVerify=false clone ${url} ${path.basename(cloneFolderPath)}`
+      : `git clone ${url} ${path.basename(cloneFolderPath)}`;
     Helpers.info(`
 
     Cloning:
@@ -378,6 +400,15 @@ export class HelpersGit {
         }
       }
     }
+    const packageJson = path.join(cloneFolderPath, config.file.package_json);
+    // Helpers.info(packageJson)
+    if (!Helpers.exists(packageJson)) {
+      Helpers.info(`Recreating unexited package.json for project ${path.basename(cloneFolderPath)}..`);
+      try {
+        Helpers.run(`npm init -y`, { cwd: cloneFolderPath, output: false }).sync();
+      } catch (error) { }
+    }
+
   }
   //#endregion
 
