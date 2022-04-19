@@ -1,5 +1,5 @@
 {
-  "version": "13.0.21",
+  "version": "13.0.22",
   "dependencies": {
     "json10-writer": "~13.0.11",
     "morphi": "~13.0.29",
@@ -173,7 +173,7 @@
     "mocha": "5.2.0",
     "moment": "2.22.2",
     "ng-packagr": "13.0.0",
-    "ng-talkback": "13.0.10",
+    "ng-talkback": "~13.0.10",
     "ng2-logger": "~13.0.11",
     "ng2-rest": "~13.0.14",
     "ng4-icons": "~13.0.12",
@@ -220,7 +220,7 @@
     "task.js": "0.1.5",
     "tnp-cli": "~13.0.12",
     "tnp-config": "~13.0.16",
-    "tnp-core": "~13.0.36",
+    "tnp-core": "~13.0.37",
     "tnp-db": "~13.0.23",
     "tnp-helpers": "~13.0.19",
     "tnp-ui": "~13.0.13",
