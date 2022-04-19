@@ -191,7 +191,7 @@ export class HelpersGit {
       url = Helpers.run(`git config --get remote.${differentOriginName ? differentOriginName : 'origin'}.url`,
         { output: false, cwd }).sync().toString().trim()
     } catch (error) {
-
+      return '< not able to get origin >'
     }
     return url;
   }
@@ -231,7 +231,7 @@ export class HelpersGit {
         + `remote origin url.... in folder ${path.basename(directoryPath)}`);
       return;
     }
-    Helpers.info(`Pulling git changes in "${directoryPath}" `)
+    Helpers.info(`Pulling git changes in "${directoryPath}" , origin=${Helpers.git.getOriginURL(directoryPath)} `)
     try {
       const cwd = directoryPath;
       Helpers.git.pull(branchName, cwd);
@@ -261,7 +261,7 @@ export class HelpersGit {
         + `remote origin url.... in folder ${path.basename(directoryPath)}`);
       return;
     }
-    Helpers.info(`Pulling git changes in "${directoryPath}" `)
+    Helpers.info(`Pulling git changes in "${directoryPath}", origin=${Helpers.git.getOriginURL(directoryPath)}  `)
     try {
       const cwd = directoryPath;
       let currentLocalBranch = child_process.execSync(`git branch | sed -n '/\* /s///p'`, { cwd }).toString().trim()
