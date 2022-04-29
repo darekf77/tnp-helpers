@@ -79,6 +79,9 @@ export abstract class ProjectGit {
       get currentBranchName() {
         return Helpers.git.currentBranchName(self.location);
       },
+      getBranchesNamesBy(pattern: string | RegExp) {
+        return Helpers.git.getBranchesNames(self.location, pattern);
+      },
       resetHard() {
         self.run(`git reset --hard`).sync()
       },

@@ -115,6 +115,30 @@ export class HelpersGit {
   }
   //#endregion
 
+  //#region get branches names
+  getBranchesNames(cwd: string, pattern: string | RegExp): string[] {
+    try {
+      const branchPattern = (pattern instanceof RegExp ? (pattern.source) : pattern).replace(/[^a-zA-Z]+/g, '.');
+      const branchNames = child_process.execSync(`git branch -a | grep '${branchPattern}'`, { cwd })
+        .toString()
+        .trim()
+        .split('\n')
+        .map(l => l.replace('*', '').trim())
+        .filter(l => {
+          if (pattern instanceof RegExp) {
+            return pattern.test(l);
+          }
+          return true;
+        });
+      return branchNames
+    } catch (e) {
+      Helpers.warn(e.message);
+      return [];
+    }
+  }
+  //#endregion
+
+
   //#region get current branch name
   currentBranchName(cwd) {
     try {
@@ -458,5 +482,8 @@ export class HelpersGit {
     });
   }
   //#endregion
+
+
+
 
 }
