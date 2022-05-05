@@ -55,7 +55,11 @@ export class HelpersGit {
   lastTagVersionName(directoryPath: string) {
     try {
       const cwd = directoryPath;
-      const tag = Helpers.commnadOutputAsString(`git describe --tags $(git rev-list --tags --max-count=1)`, cwd);
+      let command = `git describe --tags $(git rev-list --tags --max-count=1)`;
+      if(process.platform === 'win32') {
+        command = 'git describe --tags --abbrev=0';
+      }
+      const tag = Helpers.commnadOutputAsString(command, cwd);
       if (!tag) {
         return void 0;
       }
@@ -71,7 +75,12 @@ export class HelpersGit {
   lastTagHash(directoryPath): string {
     try {
       const cwd = directoryPath;
-      const tag = Helpers.commnadOutputAsString(`git describe --tags $(git rev-list --tags --max-count=1)`, cwd);
+
+      let command = `git describe --tags $(git rev-list --tags --max-count=1)`
+      if(process.platform === 'win32') {
+        command = 'git describe --tags --abbrev=0';
+      }
+      const tag = Helpers.commnadOutputAsString(command, cwd);
       if (!tag) {
         return null;
       }
@@ -245,7 +254,7 @@ export class HelpersGit {
   //#endregion
 
   private pull(branchName = 'master', cwd = crossPlatformPath(process.cwd())) {
-    child_process.execSync(`git pull --tags --ff-only origin ${branchName}`, { cwd });
+    child_process.execSync(`git pull --tags --rebase origin ${branchName}`, { cwd });
   }
 
   //#region pull current branch

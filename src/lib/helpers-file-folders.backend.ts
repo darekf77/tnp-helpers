@@ -303,7 +303,8 @@ export class HelpersFileFolders {
   removeFolderIfExists(absoluteFolderPath: string, options?: { modifiedFiles?: Models.other.ModifiedFiles; }) {
     Helpers.log(`[helpers] Remove folder: ${absoluteFolderPath}`)
     if (process.platform === 'win32') {
-      rimraf.sync(absoluteFolderPath);
+      // rimraf.sync(absoluteFolderPath);
+      this.tryRemoveDir(absoluteFolderPath)
       return;
     }
     const { modifiedFiles } = options || { modifiedFiles: { modifiedFiles: [] } };
@@ -346,7 +347,18 @@ export class HelpersFileFolders {
       Helpers.log(`Remove done: ${dirpath}`)
       return;
     } catch (e) {
-      Helpers.log(`Trying to remove directory: ${dirpath}`)
+      Helpers.warn(`
+      
+      Trying to remove directory: ${dirpath}
+      
+
+      (USER ACTION REQUIRED!!!)
+      Please check if you did't open 
+      ${dirpath}
+      in windows explorer
+
+
+      `)
       Helpers.sleep(1);
       Helpers.tryRemoveDir(dirpath, contentOnly);
     }
