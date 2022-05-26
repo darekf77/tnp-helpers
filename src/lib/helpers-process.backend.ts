@@ -253,12 +253,18 @@ export class HelpersProcess {
   commnadOutputAsString(
     command: string,
     cwd = crossPlatformPath(process.cwd()),
-    biggerBuffer = false
+    biggerBuffer = false,
+    showWholeCommandNotOnlyLastLine = false
   ): string {
     let output = '';
     try {
       output = Helpers.run(command, { output: false, cwd, biggerBuffer }).sync().toString().trim()
-      // console.log(output)
+      // console.log({
+      //   output
+      // })
+      if (showWholeCommandNotOnlyLastLine) {
+        return output.replace(/[^\x00-\xFF]/g, '')
+      }
       const splited = (output || '').split('\n');
       output = (splited.pop() || '').replace(/[^\x00-\xFF]/g, '');
     } catch (e) {

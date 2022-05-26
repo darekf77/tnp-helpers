@@ -56,7 +56,7 @@ export class HelpersGit {
     try {
       const cwd = directoryPath;
       let command = `git describe --tags $(git rev-list --tags --max-count=1)`;
-      if(process.platform === 'win32') {
+      if (process.platform === 'win32') {
         command = 'git describe --tags --abbrev=0';
       }
       const tag = Helpers.commnadOutputAsString(command, cwd);
@@ -77,7 +77,7 @@ export class HelpersGit {
       const cwd = directoryPath;
 
       let command = `git describe --tags $(git rev-list --tags --max-count=1)`
-      if(process.platform === 'win32') {
+      if (process.platform === 'win32') {
         command = 'git describe --tags --abbrev=0';
       }
       const tag = Helpers.commnadOutputAsString(command, cwd);
@@ -125,23 +125,36 @@ export class HelpersGit {
   //#endregion
 
   //#region get branches names
-  getBranchesNames(cwd: string, pattern: string | RegExp): string[] {
+  getBranchesNames(cwd: string, pattern?: string | RegExp): string[] {
     try {
-      const branchPattern = (pattern instanceof RegExp ? (pattern.source) : pattern).replace(/[^a-zA-Z]+/g, '.');
-      const branchNames = child_process.execSync(`git branch -a | grep '${branchPattern}'`, { cwd })
+      let branchPattern = pattern;
+      if (_.isString(pattern)) {
+        branchPattern = new RegExp(pattern.replace(/[^a-zA-Z0-9]+/g, '.*'));
+      }
+      const command = `git branch -a`;
+      // console.log({ command, cwd })
+      const branchNames = Helpers.commnadOutputAsString(command, cwd, true, true)
+      // console.log({ branchNames })
+
+      const _branchNames = branchNames
         .toString()
         .trim()
         .split('\n')
         .map(l => l.replace('*', '').trim())
         .filter(l => {
-          if (pattern instanceof RegExp) {
-            return pattern.test(l);
+          // console.log('testing: ' + l)
+          if (_.isRegExp(branchPattern)) {
+            const match = branchPattern.test(l);
+            return match;
           }
+          // if (_.isString(pattern)) {
+          //   return l.search(pattern)
+          // }
           return true;
         });
-      return branchNames
+      return _branchNames;
     } catch (e) {
-      Helpers.warn(e.message);
+      console.log(e);
       return [];
     }
   }
