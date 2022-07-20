@@ -250,6 +250,33 @@ export class HelpersProcess {
     }
   }
 
+  async commnadOutputAsStringAsync(
+    command: string,
+    cwd = crossPlatformPath(process.cwd()),
+    biggerBuffer = false,
+    showWholeCommandNotOnlyLastLine = false
+  ): Promise<string> {
+    let output = '';
+    try {
+      output = await Helpers.command(command).getherOutput();
+      // console.log({
+      //   output
+      // })
+      if (showWholeCommandNotOnlyLastLine) {
+        // console.log('SHHOW WOLE', output)
+        return output.replace(/[^\x00-\xFF]/g, '')
+      }
+      const splited = (output || '').split('\n');
+      output = (splited.pop() || '').replace(/[^\x00-\xFF]/g, '');
+    } catch (e) {
+      Helpers.warn(`[tnp-helepr] Not able to get output from command:
+      "${command}"
+      `);
+    }
+    return output;
+  }
+
+
   commnadOutputAsString(
     command: string,
     cwd = crossPlatformPath(process.cwd()),
