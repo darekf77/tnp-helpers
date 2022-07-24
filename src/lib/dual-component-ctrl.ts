@@ -1,3 +1,4 @@
+//#region @browser
 import { _ } from 'tnp-core';
 import { BaseFormlyComponent } from './base-formly-component';
 import { CLASS } from 'typescript-class-helpers';
@@ -140,3 +141,4 @@ export abstract class DualComponentController<T = any> {
 
 
 }
+//#endregion
