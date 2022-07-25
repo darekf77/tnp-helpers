@@ -188,6 +188,9 @@ export class Project<T extends Project<any> = any>
     if (type === 'navi') {
       resultProject = new (getClassFunction('ProjectNavi'))(location);
     }
+    if (type === 'leaf') {
+      resultProject = new (getClassFunction('ProjectLeaf'))(location);
+    }
     if (type === 'unknow-npm-project') {
       resultProject = new (getClassFunction('ProjectUnknowNpm'))(location);
     }

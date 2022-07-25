@@ -1,4 +1,4 @@
-import { _, path } from 'tnp-core';
+import { _, path, fse } from 'tnp-core';
 import { Helpers } from './index';
 import type { Project } from './project';
 import { CLASS } from 'typescript-class-helpers';
@@ -230,4 +230,100 @@ export class HelpersCliTool {
     return { isMatch, restOfArgs };
   }
 
+  //#region @backend
+  globalArgumentsParser(argsv: string[]) {
+
+    let options = require('minimist')(argsv);
+    const toCheck = {
+      'tnpNonInteractive': void 0,
+      'findNearestProject': void 0,
+      'findNearestProjectWithGitRoot': void 0,
+      'findNearestProjectType': void 0,
+      'findNearestProjectTypeWithGitRoot': void 0,
+      'cwd': void 0
+    };
+    Object.keys(toCheck).forEach(key => {
+      toCheck[key] = options[key];
+    });
+    options = _.cloneDeep(toCheck);
+    const {
+      findNearestProjectWithGitRoot,
+      findNearestProjectTypeWithGitRoot,
+      cwd,
+    } = options;
+    let {
+      findNearestProject,
+      findNearestProjectType,
+    } = options;
+
+    Object
+      .keys(options)
+      .filter(key => key.startsWith('tnp'))
+      .forEach(key => {
+        options[key] = !!options[key];
+        global[key] = options[key];
+      });
+
+    let cwdFromArgs = cwd;
+    const findProjectWithGitRoot = !!findNearestProjectWithGitRoot ||
+      !!findNearestProjectTypeWithGitRoot;
+
+    if (!!findNearestProjectWithGitRoot) {
+      findNearestProject = findNearestProjectWithGitRoot;
+    }
+    if (_.isString(findNearestProjectTypeWithGitRoot)) {
+      findNearestProjectType = findNearestProjectTypeWithGitRoot;
+    }
+
+    if (_.isString(cwdFromArgs)) {
+      let nearest: Project;
+      if (findNearestProject || _.isString(findNearestProjectType)) {
+        const classProject = CLASS.getBy('Project');
+        nearest = (classProject as typeof Project).nearestTo(cwdFromArgs, {
+          type: findNearestProjectType,
+          findGitRoot: findProjectWithGitRoot,
+        });
+        if (!nearest) {
+          Helpers.error(`Not able to find neerest project for arguments: [\n ${argsv.join(',\n')}\n]`, false, true);
+        }
+      }
+      if (nearest) {
+        cwdFromArgs = nearest.location;
+      }
+      if (fse.existsSync(cwdFromArgs) && !fse.lstatSync(cwdFromArgs).isDirectory()) {
+        cwdFromArgs = path.dirname(cwdFromArgs);
+      }
+      if (fse.existsSync(cwdFromArgs) && fse.lstatSync(cwdFromArgs).isDirectory()) {
+        process.chdir(cwdFromArgs);
+      } else {
+        Helpers.error(`Incorrect --cwd argument for args: [\n ${argsv.join(',\n')}\n]`, false, true);
+      }
+
+    }
+    argsv = removeArg('findNearestProjectType', argsv);
+
+    Object.keys(toCheck).forEach(argName => {
+      argsv = removeArg(argName, argsv);
+    });
+
+    return argsv;
+  }
+  //#endregion
+
+}
+
+
+function removeArg(arg: string, argsv: string[]) {
+  argsv = argsv.filter((f, i) => {
+    const regexString = `^\\-\\-(${arg}$|${arg}\\=)+`;
+    if ((new RegExp(regexString)).test(f)) {
+      const nextParam = argsv[i + 1];
+      if (nextParam && !nextParam.startsWith(`--`)) {
+        argsv[i + 1] = '';
+      }
+      return false;
+    }
+    return true;
+  }).filter(f => !!f);
+  return argsv;
 }
