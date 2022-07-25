@@ -94,6 +94,9 @@ export abstract class ProjectGit {
       lastCommitHash() {
         return Helpers.git.lastCommitHash(self.location)
       },
+      lastCommitMessage() {
+        return Helpers.git.lastCommitMessage(self.location)
+      },
       penultimageCommitHash() {
         return Helpers.git.penultimageCommitHash(self.location)
       },

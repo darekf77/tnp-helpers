@@ -109,6 +109,20 @@ export class HelpersGit {
   }
   //#endregion
 
+  //#region get last commit date
+  lastCommitMessage(directoryPath): string {
+    try {
+      const cwd = directoryPath;
+      let unixTimestamp = child_process.execSync(`git log -1 --pretty=%B`, { cwd }).toString().trim()
+      return unixTimestamp;
+    } catch (e) {
+      Helpers.log(e, 1);
+      Helpers.log(`[lastCommitMessage] Cannot display last commit message in branch in: ${directoryPath}`, 1)
+      return null;
+    }
+  }
+  //#endregion
+
   //#region get number of commit in repository
   countCommits(cwd: string) {
     try {
@@ -330,11 +344,17 @@ export class HelpersGit {
 
   //#region push current branch
   pushCurrentBranch(cwd: string, force = false, origin = 'origin') {
+
     const currentBranchName = Helpers.git.currentBranchName(cwd);
+    Helpers.info(`
+    Pushing current branch (remote=${origin}): ${currentBranchName}
+    `);
     while (true) {
       try {
         const command = `git push ${force ? '-f' : ''} ${origin} ${currentBranchName} --tags`;
-        Helpers.info(`[git][push] ${force ? 'force' : ''} pushing current branch ${currentBranchName} , origin=${Helpers.git.getOriginURL(cwd)}`);
+        Helpers.info(`[git][push] ${force ? 'force' : ''} pushing current branch ${currentBranchName} ,`
+          + ` origin=${Helpers.git.getOriginURL(cwd, origin)}`);
+
         Helpers.run(command, { cwd }).sync()
         break;
       } catch (err) {
