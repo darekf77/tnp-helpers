@@ -348,12 +348,12 @@ export class HelpersFileFolders {
       return;
     } catch (e) {
       Helpers.warn(`
-      
+
       Trying to remove directory: ${dirpath}
-      
+
 
       (USER ACTION REQUIRED!!!)
-      Please check if you did't open 
+      Please check if you did't open
       ${dirpath}
       in windows explorer
 
@@ -382,7 +382,10 @@ export class HelpersFileFolders {
     });
   }
 
-  remove(fileOrFolderPathOrPatter: string, exactFolder = false) {
+  remove(fileOrFolderPathOrPatter: string | string[], exactFolder = false) {
+    if (Array.isArray(fileOrFolderPathOrPatter)) {
+      fileOrFolderPathOrPatter = path.join(...fileOrFolderPathOrPatter);
+    }
     Helpers.log(`[tnp-helpers][remove]: ${fileOrFolderPathOrPatter}`);
     if (exactFolder) {
       rimraf.sync(fileOrFolderPathOrPatter, { glob: false, disableGlob: true, });
