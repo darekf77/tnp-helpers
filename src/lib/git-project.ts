@@ -2,6 +2,7 @@ import {
   _,
   //#region @backend
   path,
+  child_process,
   //#endregion
 } from 'tnp-core';
 import { Project } from './project';
@@ -10,7 +11,7 @@ import { HelpersTnp } from './helpers';
 import { CLI } from 'tnp-cli';
 //#endregion
 const Helpers = HelpersTnp.Instance;
-import { RunOptions } from 'tnp-core';
+import { RunOptions, ExecuteOptions } from 'tnp-core';
 
 export abstract class ProjectGit {
 
@@ -18,6 +19,21 @@ export abstract class ProjectGit {
 
   public runCommandGetString(this: Project, command: string) {
     return Helpers.commnadOutputAsString(command, this.location, false);
+  }
+
+  public async execute(this: Project, command: string,
+    options?: ExecuteOptions & { showCommand?: boolean }) {
+    if (_.isUndefined(options.showCommand)) {
+      options.showCommand = false;
+    }
+    if (!options) { options = {}; }
+    const cwd = this.location;
+    if (options.showCommand) {
+      Helpers.info(`[${CLI.chalk.underline('Executing shell command')}]  "${command}" in [${cwd}]`);
+    } else {
+      Helpers.log(`[${CLI.chalk.underline('Executing shell command')}]  "${command}" in [${cwd}]`);
+    }
+    return await Helpers.execute(child_process.exec(command, { cwd }), options as any);
   }
 
   public run(this: Project, command: string, options?: RunOptions) {
