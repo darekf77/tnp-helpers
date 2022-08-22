@@ -50,7 +50,7 @@ export class HelpersArrayObj {
       .filter(function (item) {
         return seen.hasOwnProperty(uniqueProperty ? item[uniqueProperty] : item) ? false
           : (seen[uniqueProperty ? item[uniqueProperty] : item] = true);
-      });
+      }) as T[];
   }
 
   sortKeys(obj) {

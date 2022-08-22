@@ -18,7 +18,9 @@ import { Helpers } from './index';
 import { config } from 'tnp-config';
 import { Models } from 'tnp-models';
 
-
+export interface GetRecrusiveFilesFromOptions {
+  // withNameOnly?: string; // TODO
+}
 
 export class HelpersFileFolders {
 
@@ -459,25 +461,33 @@ export class HelpersFileFolders {
       .filter(c => !!c);
   }
 
-
-  getRecrusiveFilesFrom(dir: string, ommitFolders: string[] = []): string[] {
+  getRecrusiveFilesFrom(
+    dir: string,
+    ommitFolders: string[] = [],
+    options?: GetRecrusiveFilesFromOptions
+  ): string[] {
+    options = options ? options : {};
+    // const withNameOnly = options.withNameOnly;
     let files = [];
     const readedFilesAndFolders = fse.readdirSync(dir);
-    const readed = readedFilesAndFolders.map(f => {
-      const fullPath = path.join(dir, f);
-      // console.log(`is direcotry ${fse.lstatSync(fullPath).isDirectory()} `, fullPath)
-      if (fse.lstatSync(fullPath).isDirectory()) {
-        if (
-          ommitFolders.includes(path.basename(fullPath)) ||
-          ommitFolders.includes(path.basename(path.dirname(fullPath)))
-        ) {
-          // Helpers.log(`Omitting: ${fullPath}`)
-        } else {
-          Helpers.getRecrusiveFilesFrom(fullPath, ommitFolders).forEach(aa => files.push(aa))
+    const readed = readedFilesAndFolders
+      .map(f => {
+        const fullPath = path.join(dir, f);
+        // console.log(`is direcotry ${fse.lstatSync(fullPath).isDirectory()} `, fullPath)
+        if (fse.lstatSync(fullPath).isDirectory()) {
+          if (
+            ommitFolders.includes(path.basename(fullPath)) ||
+            ommitFolders.includes(path.basename(path.dirname(fullPath)))
+          ) {
+            // Helpers.log(`Omitting: ${fullPath}`)
+          } else {
+            Helpers
+              .getRecrusiveFilesFrom(fullPath, ommitFolders, options)
+              .forEach(aa => files.push(aa))
+          }
         }
-      }
-      return fullPath;
-    })
+        return fullPath;
+      })
     if (Array.isArray(readed)) {
       readed.forEach(r => files.push(r))
     }
