@@ -208,12 +208,12 @@ export class HelpersTnp extends CoreHelpers {
     })
   }
 
-  getBrowserVerPath(moduleName?: string) {
+  getBrowserVerPath(moduleName?: string, websql: boolean = false) {
     //#region @backend
     if (!moduleName) {
-      return config.folder.browser;
+      return websql ? config.folder.websql : config.folder.browser;
     }
-    return `${config.folder.browser}-for-${moduleName}`;
+    return `${websql ? config.folder.websql : config.folder.browser}-for-${moduleName}`;
     //#endregion
   }
 
