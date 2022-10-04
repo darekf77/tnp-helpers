@@ -1,5 +1,6 @@
 {
   "resources": [],
+
   "overrided": {
     "ignoreDepsPattern": [],
     "includeAsDev": [],
@@ -11,24 +12,31 @@
     "dependencies": {},
     "linkedFolders": []
   },
+
   "linkedProjects": [],
+  'linkedRepos': [],
+
   "libReleaseOptions": {
     "nodts": false,
     "obscure": false,
     "ugly": false
   },
+
   "type": "isomorphic-lib",
   "version": "v3",
-   "scripts": {
-     "test": "echo \"Error: no test specified\" && exit 1"
-   },
+
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+
   "description": "",
   "license": "MIT",
   "private": false,
   "author": "",
   "homepage": "https://github.com/darekf77/tnp-helpers#readme",
   "workerPlugins": {},
+
   "additionalNpmNames": [
    "firedev-helpers"
- ]
+ ],
 }
