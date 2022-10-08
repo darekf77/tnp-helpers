@@ -469,7 +469,7 @@ export class HelpersFileFolders {
     options = options ? options : {};
     // const withNameOnly = options.withNameOnly;
     let files = [];
-    const readedFilesAndFolders = fse.readdirSync(dir);
+    const readedFilesAndFolders = fse.existsSync(dir) ? fse.readdirSync(dir) : [];
     const readed = readedFilesAndFolders
       .map(f => {
         const fullPath = path.join(dir, f);
@@ -485,9 +485,11 @@ export class HelpersFileFolders {
               .getRecrusiveFilesFrom(fullPath, ommitFolders, options)
               .forEach(aa => files.push(aa))
           }
+          return;
         }
         return fullPath;
       })
+      .filter(f => !!f)
     if (Array.isArray(readed)) {
       readed.forEach(r => files.push(r))
     }
