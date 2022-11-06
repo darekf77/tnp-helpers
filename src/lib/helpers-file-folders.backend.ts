@@ -17,6 +17,7 @@ declare const global: any;
 import { Helpers } from './index';
 import { config } from 'tnp-config';
 import { Models } from 'tnp-models';
+const trace = !global.hideLog;
 
 export interface GetRecrusiveFilesFromOptions {
   // withNameOnly?: string; // TODO
@@ -592,7 +593,12 @@ export class HelpersFileFolders {
     // sourceDir = sourceDir ? (sourceDir.replace(/\/$/, '')) : sourceDir;
     // destinationDir = destinationDir ? (destinationDir.replace(/\/$/, '')) : destinationDir;
     if (!fse.existsSync(sourceDir)) {
-      Helpers.warn(`[helper][copy] Source dir doesnt exist: ${sourceDir} for destination: ${destinationDir}`);
+      if(trace) {
+        console.trace(`tnp-helper][copy] Source dir doesnt exist: ${sourceDir} for destination: ${destinationDir}`);
+      } else {
+        Helpers.warn(`[tnp-helper][copy] Source dir doesnt exist: ${sourceDir} for destination: ${destinationDir}`);
+      }
+
       return;
     }
     if (!fse.existsSync(path.dirname(destinationDir))) {
@@ -629,7 +635,7 @@ export class HelpersFileFolders {
     //   fse.existsSync(destinationDir) && fse.statSync(destinationDir),
     // ];
     // if (destStat && destStat.ino && destStat.dev && destStat.ino === srcStat.ino && destStat.dev === srcStat.dev) {
-    //   Helpers.warn(`[helper][copy] Same location stats.. Trying to copy same source and destination:
+    //   Helpers.warn(`[tnp-helper][copy] Same location stats.. Trying to copy same source and destination:
     //   from: ${sourceDir}
     //   to: ${destinationDir}
     //   `);
@@ -651,7 +657,7 @@ export class HelpersFileFolders {
     }
 
     if (sourceDir === destinationDir || path.resolve(sourceDir) === path.resolve(destinationDir)) {
-      Helpers.warn(`[helper][copy] Trying to copy same source and destination
+      Helpers.warn(`[tnp-helper][copy] Trying to copy same source and destination
       from: ${sourceDir}
       to: ${destinationDir}
       `);
@@ -723,7 +729,7 @@ export class HelpersFileFolders {
               }
             } catch (error) {
               const exitOnError = global['tnpNonInteractive'];
-              const trace = global.hideLog;
+
               Helpers.error(`[tnp-helper] Not able to copy folder:
               from: ${sourceDir}
               to: ${destinationDir}

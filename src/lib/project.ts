@@ -186,6 +186,15 @@ export class Project<T extends Project<any> = any>
       resultProject = new (getClassFunction('ProjectContainer'))(location);
     }
     if (type === 'navi') {
+      if (['tnp', 'firedev'].includes(config.frameworkName)) {
+        Helpers.error(`
+!!!
+!!!
+        THIS SHOULD NOT BE NAVI PROJECT: ${location}
+!!!
+!!!
+        `, true, true);
+      }
       resultProject = new (getClassFunction('ProjectNavi'))(location);
     }
     if (type === 'leaf') {
@@ -361,7 +370,7 @@ export class Project<T extends Project<any> = any>
   static get Tnp(): Project<any> {
     //#region @backendFunc
     let tnpPorject = Project.From(config.pathes.tnp_folder_location);
-    Helpers.log(`USING TNP PATH: ${config.pathes.tnp_folder_location}`)
+    Helpers.log(`Using ${config.frameworkName} path: ${config.pathes.tnp_folder_location}`, 1)
     if (!tnpPorject && !global.globalSystemToolMode) {
       Helpers.error(`Not able to find tnp project in "${config.pathes.tnp_folder_location}".`)
     }
