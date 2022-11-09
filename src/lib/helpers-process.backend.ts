@@ -322,9 +322,9 @@ export class HelpersProcess {
       return `[${dateformat(new Date(), 'HH:MM:ss')}]`;
     }
     // global.spinner && global.spinner.start()
-    Helpers.info(`${currentDate()} "${taskName}" Started..`)
+    Helpers.taskStarted(`${currentDate()} "${taskName}" Started..`)
     await Helpers.runSyncOrAsync(fn);
-    Helpers.info(`${currentDate()} "${taskName}" Done\u2713`)
+    Helpers.taskDone(`${currentDate()} "${taskName}" Done`)
     // global.spinner && global.spinner.stop()
   }
 

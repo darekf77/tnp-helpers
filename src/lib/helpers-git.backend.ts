@@ -357,9 +357,10 @@ export class HelpersGit {
   pushCurrentBranch(cwd: string, force = false, origin = 'origin') {
 
     const currentBranchName = Helpers.git.currentBranchName(cwd);
-    Helpers.info(`
+    const taskName  = `
     Pushing current branch (remote=${origin}): ${currentBranchName}
-    `);
+    `
+    Helpers.info(taskName);
     while (true) {
       try {
         const command = `git push ${force ? '-f' : ''} ${origin} ${currentBranchName} --tags`;
@@ -367,6 +368,7 @@ export class HelpersGit {
           + ` origin=${Helpers.git.getOriginURL(cwd, origin)}`);
 
         Helpers.run(command, { cwd }).sync()
+        Helpers.info(taskName);
         break;
       } catch (err) {
         Helpers.error(`[tnp-helpers] Not able to push branch ${currentBranchName} in (origin=${origin}):

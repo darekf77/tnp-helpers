@@ -37,7 +37,7 @@ export abstract class ProjectGit {
   }
 
   public run(this: Project, command: string, options?: RunOptions) {
-    console.log(`command: ${command}`)
+    Helpers.log(`command: ${command}`)
     if (!options) { options = {}; }
     if (_.isUndefined(options.showCommand)) {
       options.showCommand = false;
