@@ -177,7 +177,7 @@ export class HelpersFileFolders {
 
     (() => {
       const stringForRegex = `require\\(("|')\\.\\/([a-zA-Z0-9]|\\/|\\-|\\_|\\+|\\.)*("|')\\)`;
-      Helpers.log(`stringForRegex: ${stringForRegex}`, 1);
+      Helpers.log(`[tnp-helpre][require][${jsFilePath}] stringForRegex: ${stringForRegex}`, 1);
 
       fileContent = fileContent.split('\n').map(line => {
         const matches = line.match(new RegExp(stringForRegex));
@@ -200,7 +200,7 @@ export class HelpersFileFolders {
 
     (() => {
       const stringForRegex = `require\\(("|')([a-zA-Z0-9]|\\/|\\-|\\_|\\+|\\.)*("|')\\)`;
-      Helpers.log(`stringForRegex: ${stringForRegex}`);
+      Helpers.log(`[tnp-helpre][require][${jsFilePath}] stringForRegex: ${stringForRegex}`, 1);
 
       fileContent = fileContent.split('\n').map(line => {
         // console.log(`LINE: "${line}"`)
@@ -242,6 +242,13 @@ export class HelpersFileFolders {
 
   tryCopyFrom(source: string, destination: string, options = {}) {
     Helpers.log(`Trying to copy from: ${source} to ${destination}`);
+    destination = crossPlatformPath(destination);
+    source = crossPlatformPath(source);
+
+    if (source === destination) {
+      Helpers.warn('[tnp-helpers] Probably error... trying to copy the same folder...')
+      return;
+    }
 
     if (fse.existsSync(source) && !fse.lstatSync(source).isDirectory()) {
       // Helpers.warn(`[tryCopyFrom] This source is not directory: ${source} to ${destination}`);
@@ -333,14 +340,11 @@ export class HelpersFileFolders {
 
   tryRemoveDir(dirpath: string, contentOnly = false) {
     if (!fse.existsSync(dirpath)) {
-      console.warn(`Folder ${path.basename(dirpath)} doesn't exist.`)
+      Helpers.warn(`Folder ${path.basename(dirpath)} doesn't exist.`)
       return;
     }
     Helpers.log(`[tnp-helpers][tryRemoveDir]: ${dirpath}`);
-    // if (dirpath == '/Users/dfilipiak/projects/npm/firedev-projects/container-v2/workspace-v2') {
-    //   console.trace('aaaaaaaa')
-    //   process.exit(0)
-    // }
+
     try {
       if (contentOnly) {
         rimraf.sync(`${dirpath}/*`)
@@ -593,12 +597,7 @@ export class HelpersFileFolders {
     // sourceDir = sourceDir ? (sourceDir.replace(/\/$/, '')) : sourceDir;
     // destinationDir = destinationDir ? (destinationDir.replace(/\/$/, '')) : destinationDir;
     if (!fse.existsSync(sourceDir)) {
-      if(trace) {
-        console.trace(`tnp-helper][copy] Source dir doesnt exist: ${sourceDir} for destination: ${destinationDir}`);
-      } else {
-        Helpers.warn(`[tnp-helper][copy] Source dir doesnt exist: ${sourceDir} for destination: ${destinationDir}`);
-      }
-
+      Helpers.warn(`[tnp-helper][copy] Source dir doesnt exist: ${sourceDir} for destination: ${destinationDir}`, trace);
       return;
     }
     if (!fse.existsSync(path.dirname(destinationDir))) {
@@ -662,10 +661,10 @@ export class HelpersFileFolders {
       to: ${destinationDir}
       `);
     } else {
-      // console.warn('filter', _.isFunction(options.filter));
-      // console.warn('sourceDir', sourceDir);
-      // console.warn('destinationDir', destinationDir);
-      // console.log(JSON.stringify(options))
+      // Helpers.warn('filter', _.isFunction(options.filter));
+      // Helpers.warn('sourceDir', sourceDir);
+      // Helpers.warn('destinationDir', destinationDir);
+      // Helpers.log(JSON.stringify(options))
       // try {
 
       if (options.useTempFolder) {

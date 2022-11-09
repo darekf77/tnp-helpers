@@ -1,4 +1,5 @@
 import { _ } from 'tnp-core';
+import { Helpers } from './index';
 
 export class HelpersStrings {
 
@@ -17,14 +18,15 @@ export class HelpersStrings {
    */
   interpolateString<T = any>(value: string) {
     if (typeof value !== 'string') {
-      console.warn('[ss-logic][helper] Value for interpolation is not string: ', value);
+      Helpers.warn('[ss-logic][helper] Value for interpolation is not string: ', value);
       return value;
     }
 
     return {
       withParameters(parameters: T) {
         if (typeof parameters !== 'object') {
-          console.warn('[ss-logic][helper] Parameters are not a object: ', parameters);
+          Helpers.log(parameters as any);
+          Helpers.warn('[ss-logic][helper] Parameters are not a object: ');
           return value;
         }
         return value.replace(/{([^{}]*)}/g, function (a, b) {

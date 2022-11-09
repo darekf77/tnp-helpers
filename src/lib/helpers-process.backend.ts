@@ -477,22 +477,27 @@ ${Helpers.terminalLine()}\n`;
   get watcher() {
     const that = Helpers;
     return {
+      /**
+       * @deprecated
+       */
       run(command: string, folderPath: string = 'src', options: Models.system.WatchOptions) {
         const { cwd = crossPlatformPath(process.cwd()), wait } = options;
         let cmd = `tnp command ${command}`;
         const toRun = `watch ${that.prepareWatchCommand(cmd)} ${folderPath} ${wait ? ('--wait=' + wait) : ''}`;
-        console.log('WATCH COMMAND ', toRun)
+        Helpers.log(`WATCH COMMAND ${toRun}`)
         return that.run(toRun, { cwd }).async()
       },
-
+      /**
+       * @deprecated
+       */
       call(fn: Function | string, params: string, folderPath: string = 'src', options: Models.system.WatchOptions) {
         const { cwd = crossPlatformPath(process.cwd()) } = options;
         if (!fn) {
           Helpers.error(`Bad function: ${fn} for watcher on folder: ${folderPath}, with params: ${params}`)
         }
         const fnName = typeof fn === 'function' ? CLASS.getName(fn) : fn;
-        // console.log('Function name ', fnName)
-        let cmd = `tnp ${Helpers.cliTool.simplifiedCmd(fnName)} ${params}`;
+        // Helpers.log('Function name ', fnName)
+        let cmd = `${config.frameworkName} ${Helpers.cliTool.simplifiedCmd(fnName)} ${params}`;
         const toRun = `watch ${that.prepareWatchCommand(cmd)} ${folderPath}`;
         return that.run(toRun, { cwd }).async()
       }

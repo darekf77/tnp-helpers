@@ -22,8 +22,8 @@ export namespace HelpersMerge {
   export function getPrefixedPathInJoin(relativeFilePath: string, project: Project) {
 
     const dirPath = path.dirname(relativeFilePath);
-    // console.log('dirPath', dirPath)
-    // console.log('project', project && project.name)
+    // Helpers.log('dirPath', dirPath)
+    // Helpers.log('project', project && project.name)
     const resultPath = path.join(
       project.location,
       dirPath,
@@ -63,7 +63,7 @@ export namespace HelpersMerge {
       project.location,
       config.folder.custom);
     const files = glob.sync(`${globPath}/**/*.*`);
-    // console.log('CUSTOM FIELS', files)
+    // Helpers.log('CUSTOM FIELS', files)
 
     return files;
   }
@@ -91,7 +91,7 @@ export namespace HelpersMerge {
       }
 
     })
-    // console.log('allBaselineFiles', files)
+    // Helpers.log('allBaselineFiles', files)
 
     return files;
   }
@@ -106,7 +106,7 @@ export namespace HelpersMerge {
         : project.name
       , config.folder.node_modules)
 
-    // console.log('toReplace', toReplace)
+    // Helpers.log('toReplace', toReplace)
     const resultPath = pathToBaselineThroughtNodeModules(project).replace(`${toReplace}/`, '')
     return resultPath;
   }
@@ -122,9 +122,9 @@ export namespace HelpersMerge {
 
   export function relativePathesBaseline(project: Project) {
     let baselineFiles: string[] = allBaselineFiles(project);
-    // console.log('baselineFiles', baselineFiles)
+    // Helpers.log('baselineFiles', baselineFiles)
     const baselineReplacePath = pathToBaselineThroughtNodeModules(project);
-    // console.log('baselineReplacePath', baselineReplacePath)
+    // Helpers.log('baselineReplacePath', baselineReplacePath)
 
     baselineFiles = baselineFiles.map(f => f.replace(baselineReplacePath, ''))
 
@@ -133,9 +133,9 @@ export namespace HelpersMerge {
 
   export function relativePathesCustom(project: Project) {
     let customFiles: string[] = allCustomFiles(project);
-    // console.log('customFiles', customFiles)
+    // Helpers.log('customFiles', customFiles)
     const customReplacePath = path.join(project.location, config.folder.custom);
-    // console.log('customReplacePath', customReplacePath)
+    // Helpers.log('customReplacePath', customReplacePath)
 
     customFiles = customFiles.map(f => f.replace(customReplacePath, ''))
 

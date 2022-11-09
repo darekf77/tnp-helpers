@@ -17,7 +17,7 @@ export class HelpersGit {
   lastCommitHash(directoryPath): string {
     try {
       const cwd = directoryPath;
-      let hash = child_process.execSync(`git rev-parse HEAD &> /dev/null && git log -1 --format="%H"`, { cwd }).toString().trim()
+      let hash = this.isGitRepo(cwd) && child_process.execSync(`git log -1 --format="%H"`, { cwd }).toString().trim()
       return hash;
     } catch (e) {
       Helpers.log(e, 1);
@@ -32,7 +32,7 @@ export class HelpersGit {
   penultimageCommitHash(directoryPath): string {
     try {
       const cwd = directoryPath;
-      let hash = child_process.execSync(`git rev-parse HEAD &> /dev/null && git log -2 --format="%H"`, { cwd }).toString().trim()
+      let hash = this.isGitRepo(cwd) && child_process.execSync(`git log -2 --format="%H"`, { cwd }).toString().trim()
       return hash;
     } catch (e) {
       Helpers.log(e, 1);
@@ -96,14 +96,18 @@ export class HelpersGit {
   //#endregion
 
   //#region get last commit date
-  lastCommitDate(directoryPath): Date {
+  lastCommitDate(cwd: string): Date {
     try {
-      const cwd = directoryPath;
-      let unixTimestamp = child_process.execSync(`git rev-parse HEAD &> /dev/null && git log -1 --pretty=format:%ct`, { cwd }).toString().trim()
+      let unixTimestamp = this.isGitRepo(cwd)
+        && child_process
+          .execSync(`git log -1 --pretty=format:%ct`, { cwd })
+          .toString()
+          .trim()
+
       return new Date(Number(unixTimestamp) * 1000)
     } catch (e) {
       Helpers.log(e, 1);
-      Helpers.log(`[lastCommitDate] Cannot counts commits in branch in: ${directoryPath}`, 1)
+      Helpers.log(`[lastCommitDate] Cannot counts commits in branch in: ${cwd}`, 1)
       return null;
     }
   }
@@ -127,8 +131,12 @@ export class HelpersGit {
   countCommits(cwd: string) {
     try {
       // git rev-parse HEAD &> /dev/null check if any commits
-      let currentLocalBranch = child_process.execSync(`git branch | sed -n '/\* /s///p'`, { cwd }).toString().trim()
-      let value = child_process.execSync(`git rev-parse HEAD &> /dev/null && git rev-list --count ${currentLocalBranch}`, { cwd }).toString().trim()
+      let currentLocalBranch = this.currentBranchName(cwd);
+      let value = this.isGitRepo(cwd) && child_process
+        .execSync(`git rev-list --count ${currentLocalBranch}`, { cwd })
+        .toString()
+        .trim()
+
       return Number(value);
     } catch (e) {
       Helpers.log(e, 1);
@@ -168,7 +176,7 @@ export class HelpersGit {
         });
       return _branchNames;
     } catch (e) {
-      console.log(e);
+      Helpers.log(e);
       return [];
     }
   }
@@ -259,12 +267,15 @@ export class HelpersGit {
 
   //#region is git root
   isGitRoot(cwd: string) {
-    return fse.existsSync(path.join(cwd, '.git'))
+    return this.isGitRepo(cwd) && fse.existsSync(path.join(cwd, '.git'))
   }
   //#endregion
 
   //#region is git repo
   isGitRepo(cwd: string) {
+    // if(this.isGitRoot(cwd)) {
+    //   return true;
+    // }
     try {
       var test = Helpers.run('git rev-parse --is-inside-work-tree',
         {
@@ -377,7 +388,7 @@ export class HelpersGit {
         .toString().trim()
       return defaultBranch;
     } catch (e) {
-      console.log(e)
+      Helpers.log(e)
       Helpers.error(`Cannot find default branch for repo in : ${cwd}`)
     }
   }

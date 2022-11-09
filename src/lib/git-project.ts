@@ -37,6 +37,7 @@ export abstract class ProjectGit {
   }
 
   public run(this: Project, command: string, options?: RunOptions) {
+    console.log(`command: ${command}`)
     if (!options) { options = {}; }
     if (_.isUndefined(options.showCommand)) {
       options.showCommand = false;
@@ -102,12 +103,15 @@ export abstract class ProjectGit {
         self.run(`git reset --hard`).sync()
       },
       countComits() {
+        // console.log('COUNT')
         return Helpers.git.countCommits(self.location);
       },
       lastCommitDate() {
+        // console.log('LATS CMD ADDET')
         return Helpers.git.lastCommitDate(self.location)
       },
       lastCommitHash() {
+        // console.log('LAST HASH')
         return Helpers.git.lastCommitHash(self.location)
       },
       lastCommitMessage() {

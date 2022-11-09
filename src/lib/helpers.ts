@@ -285,8 +285,8 @@ export class HelpersTnp extends CoreHelpers {
       .sort()
       .reverse()
       .find(key => maxesForWorkes[key] <= dataToSplit.length));
-    // console.log('workersNumber', workersNumber)
-    // console.log('_.isNumber(workersNumber)', _.isNumber(workersNumber))
+    // Helpers.log('workersNumber', workersNumber)
+    // Helpers.log('_.isNumber(workersNumber)', _.isNumber(workersNumber))
 
     let chunks: (any[])[] = [];
     if (_.isNumber(workersNumber)) {
@@ -304,8 +304,8 @@ export class HelpersTnp extends CoreHelpers {
     for (let n = 0; n < chunks.length; n++) {
       ((chunks, n) => {
         const dataChunk = chunks[n];
-        console.log(`worker ${n} ` + dataChunk.join(',\t'))
-        // console.log('pass to worker', Helpers)
+        Helpers.log(`worker ${n} ` + dataChunk.join(',\t'))
+        // Helpers.log('pass to worker', Helpers)
         let task = new Task({
           globals: _.merge(globals, {
             n,
