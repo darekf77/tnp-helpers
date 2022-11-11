@@ -5,6 +5,7 @@ import {
   child_process,
   fkill,
   crossPlatformPath,
+  chalk,
 } from 'tnp-core';
 import { CLI } from 'tnp-cli';
 import * as dateformat from 'dateformat';
@@ -136,7 +137,7 @@ export class HelpersProcess {
   }
 
   pressKeyAndContinue(message = 'Press enter to continue..') {
-    Helpers.info(message, true);
+    console.log(chalk.bold(message) );
     if (process.platform === 'win32') {
       spawn.sync('pause', '', { shell: true, stdio: [0, 1, 2] });
       return;
