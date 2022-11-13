@@ -17,6 +17,7 @@ declare const global: any;
 import { Helpers } from './index';
 import { config } from 'tnp-config';
 import { Models } from 'tnp-models';
+import type { Project } from './project';
 const trace = !global.hideLog;
 
 export interface GetRecrusiveFilesFromOptions {
@@ -589,11 +590,29 @@ export class HelpersFileFolders {
       asSeparatedFiles?: boolean,
       asSeparatedFilesAllowNotCopied?: boolean,
       asSeparatedFilesSymlinkAsFile?: boolean;
+      /**
+       * folders to omit: example: ['src','node_modules']
+       *
+       * This option works only with omitFoldersBaseFolder
+       */
       omitFolders?: string[];
+      /**
+       * absolute path for base folder for omitFolder option
+       */
       omitFoldersBaseFolder?: string;
       copySymlinksAsFiles?: boolean;
       useTempFolder?: boolean;
     } & fse.CopyOptionsSync) {
+
+    Helpers.log(`Copying from:
+
+    ${sourceDir}
+    to
+    ${destinationDir}
+
+    `);
+    Helpers.log(options);
+
     // sourceDir = sourceDir ? (sourceDir.replace(/\/$/, '')) : sourceDir;
     // destinationDir = destinationDir ? (destinationDir.replace(/\/$/, '')) : destinationDir;
     if (!fse.existsSync(sourceDir)) {
@@ -643,16 +662,7 @@ export class HelpersFileFolders {
     if (_.isArray(options.omitFolders) && options.omitFolders.length >= 1
       && _.isNil(options.filter) && _.isString(options.omitFoldersBaseFolder)
       && path.isAbsolute(options.omitFoldersBaseFolder)) {
-      options.filter = (src: string) => {
-        // console.log('src',src)
-        const baseFolder = _.first(src.replace(options.omitFoldersBaseFolder, '')
-          .replace(/^\//, '').split('/'));
-        if (!baseFolder || baseFolder.trim() === '') {
-          return true;
-        }
-        const isAllowed = _.isUndefined(options.omitFolders.find(f => baseFolder.startsWith(f)));
-        return isAllowed;
-      };
+      options.filter = Helpers.filterDontCopy(options.omitFolders, options.omitFoldersBaseFolder);
     }
 
     if (sourceDir === destinationDir || path.resolve(sourceDir) === path.resolve(destinationDir)) {
@@ -728,7 +738,7 @@ export class HelpersFileFolders {
               }
             } catch (error) {
               const exitOnError = global['tnpNonInteractive'];
-
+              Helpers.log(error)
               Helpers.error(`[tnp-helper] Not able to copy folder:
               from: ${sourceDir}
               to: ${destinationDir}
@@ -754,6 +764,49 @@ export class HelpersFileFolders {
 
     }
   }
+
+
+  filterDontCopy(basePathFoldersTosSkip: string[], projectOrBasepath: Project | string) {
+
+    return (src: string, dest: string) => {
+      // console.log('src', src)
+      src = crossPlatformPath(src);
+      const baseFolder = _.first(crossPlatformPath(src)
+        .replace(crossPlatformPath(_.isString(projectOrBasepath) ? projectOrBasepath : projectOrBasepath.location), '')
+        .replace(/^\//, '').split('/'));
+
+      // console.log('baseFolder', baseFolder)
+      if (!baseFolder || baseFolder.trim() === '') {
+        return true;
+      }
+      const isAllowed = _.isUndefined(basePathFoldersTosSkip
+        .find(f => baseFolder.startsWith(crossPlatformPath(f))));
+
+      // console.log('isAllowed', isAllowed)
+      return isAllowed;
+    };
+
+  }
+
+  filterOnlyCopy(basePathFoldersOnlyToInclude: string[], projectOrBasepath: Project | string) {
+
+    return (src: string, dest: string) => {
+      src = crossPlatformPath(src);
+      const baseFolder = _.first(crossPlatformPath(src)
+        .replace(crossPlatformPath(_.isString(projectOrBasepath) ? projectOrBasepath : projectOrBasepath.location), '')
+        .replace(/^\//, '').split('/'));
+
+      if (!baseFolder || baseFolder.trim() === '') {
+        return true;
+      }
+      const isAllowed = !_.isUndefined(basePathFoldersOnlyToInclude
+        .find(f => baseFolder.startsWith(crossPlatformPath(f))));
+
+      return isAllowed;
+    };
+
+  }
+
 
   copyFile(sourcePath: string, destinationPath: string,
     options?: {
