@@ -3,7 +3,7 @@
   "dependencies": {
     "json10-writer": "~13.0.21",
     "morphi": "~13.0.48",
-    "tnp-models": "~13.0.27"
+    "tnp-models": "~13.1.1"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
