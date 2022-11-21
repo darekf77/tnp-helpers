@@ -298,6 +298,7 @@ export class HelpersProcess {
     } catch (e) {
       Helpers.warn(`[tnp-helepr] Not able to get output from command:
       "${command}"
+      cwd: ${cwd}
       `);
     }
     return output;

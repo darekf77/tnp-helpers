@@ -76,11 +76,7 @@ export class HelpersGit {
     try {
       const cwd = directoryPath;
 
-      let command = `git describe --tags $(git rev-list --tags --max-count=1)`
-      if (process.platform === 'win32') {
-        command = 'git describe --tags --abbrev=0';
-      }
-      const tag = Helpers.commnadOutputAsString(command, cwd);
+      const tag = Helpers.git.lastTagVersionName(cwd);
       if (!tag) {
         return null;
       }
@@ -357,7 +353,7 @@ export class HelpersGit {
   pushCurrentBranch(cwd: string, force = false, origin = 'origin') {
 
     const currentBranchName = Helpers.git.currentBranchName(cwd);
-    const taskName  = `
+    const taskName = `
     Pushing current branch (remote=${origin}): ${currentBranchName}
     `
     Helpers.info(taskName);
