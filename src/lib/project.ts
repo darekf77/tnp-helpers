@@ -11,6 +11,7 @@ import { CLASS } from 'typescript-class-helpers';
 import { Models } from 'tnp-models';
 import { Morphi } from 'morphi';
 import { HelpersTnp } from './helpers';
+import type { CopyManager } from '../../../../src/lib/project/features/copy-manager';
 const Helpers = HelpersTnp.Instance;
 
 export type EmptyProjectStructure = {
@@ -419,11 +420,19 @@ export class Project<T extends Project<any> = any>
     //#region @backendFunc
     const that = this;
 
+    const className = CLASS.getName(classFn);
+
     const prefixedName = `__${variableName}`
     Object.defineProperty(this, variableName, {
       get: function () {
         if (!that[prefixedName]) {
-          that[prefixedName] = new (classFn as any)(that);
+          if (className === 'CopyManager') {
+            const CopyMangerClass = CLASS.getBy('CopyManager') as typeof CopyManager;
+            that[prefixedName] = CopyMangerClass.for(this);
+          } else {
+            that[prefixedName] = new (classFn as any)(that);
+          }
+
         }
         return that[prefixedName];
       },
