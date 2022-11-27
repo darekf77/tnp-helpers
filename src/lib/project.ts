@@ -11,7 +11,7 @@ import { CLASS } from 'typescript-class-helpers';
 import { Models } from 'tnp-models';
 import { Morphi } from 'morphi';
 import { HelpersTnp } from './helpers';
-import type { CopyManager } from '../../../../src/lib/project/features/copy-manager';
+
 const Helpers = HelpersTnp.Instance;
 
 export type EmptyProjectStructure = {
@@ -427,7 +427,7 @@ export class Project<T extends Project<any> = any>
       get: function () {
         if (!that[prefixedName]) {
           if (className === 'CopyManager') {
-            const CopyMangerClass = CLASS.getBy('CopyManager') as typeof CopyManager;
+            const CopyMangerClass = CLASS.getBy('CopyManager') as any; // TODO @LAST
             that[prefixedName] = CopyMangerClass.for(this);
           } else {
             that[prefixedName] = new (classFn as any)(that);
