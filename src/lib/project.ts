@@ -76,6 +76,7 @@ export class Project<T extends Project<any> = any>
   public allowedEnvironments: ConfigModels.EnvironmentName[];
 
   public children: T[];
+  public smartContainerBuildTarget: T;
   public grandpa: T;
 
   public distribution: T;
@@ -119,8 +120,13 @@ export class Project<T extends Project<any> = any>
     Project.projects = Project.projects.filter(f => f !== project);
   }
 
-  public static From<T = Project<any>>(location: string): T {
+  public static From<T = Project<any>>(locationOfProj: string | string[]): T {
     //#region @backendFunc
+    if (Array.isArray(locationOfProj)) {
+      locationOfProj = locationOfProj.join('/');
+    }
+    let location = locationOfProj.replace(/\/\//g, '/');
+
     const PackageJSON = CLASS.getBy('PackageJSON') as any;
 
     if (!_.isString(location)) {
@@ -368,6 +374,9 @@ export class Project<T extends Project<any> = any>
   }
   //#endregion
 
+  /**
+   * @deprecated
+   */
   static get Tnp(): Project<any> {
     //#region @backendFunc
     let tnpPorject = Project.From(config.pathes.tnp_folder_location);

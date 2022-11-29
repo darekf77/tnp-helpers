@@ -394,7 +394,7 @@ export class HelpersFileFolders {
     if (Array.isArray(fileOrFolderPathOrPatter)) {
       fileOrFolderPathOrPatter = path.join(...fileOrFolderPathOrPatter);
     }
-    Helpers.log(`[tnp-helpers][remove]: ${fileOrFolderPathOrPatter}`);
+    Helpers.log(`[tnp-helpers][remove]: ${fileOrFolderPathOrPatter}`, 1);
     if (exactFolder) {
       rimraf.sync(fileOrFolderPathOrPatter, { glob: false, disableGlob: true, });
       return;
@@ -610,8 +610,8 @@ export class HelpersFileFolders {
     to
     ${destinationDir}
 
-    `);
-    Helpers.log(options);
+    `, 1);
+    Helpers.log(options, 1);
 
     // sourceDir = sourceDir ? (sourceDir.replace(/\/$/, '')) : sourceDir;
     // destinationDir = destinationDir ? (destinationDir.replace(/\/$/, '')) : destinationDir;
@@ -847,12 +847,28 @@ export class HelpersFileFolders {
       Helpers.warn(`[copyFile] Trying to copy same file ${sourcePath}`);
       return false;
     }
-    const destDirPath = path.dirname(destinationPath);
+    let destDirPath = path.dirname(destinationPath);
 
+    if (Helpers.isFolder(destinationPath)) {
+      Helpers.removeFolderIfExists(destinationPath)
+    }
 
-    if (!fse.existsSync(destDirPath)) {
+    if (!Helpers.isSymlinkFileExitedOrUnexisted(destDirPath) && !fse.existsSync(destDirPath)) {
       Helpers.mkdirp(destDirPath);
     }
+
+
+    //#region it is good code
+    if (Helpers.isExistedSymlink(destDirPath)) {
+      destDirPath = fse.realpathSync(destDirPath);
+      const newDestinationPath = crossPlatformPath(path.join(destDirPath, path.basename(destinationPath)));
+      if (Helpers.isFolder(newDestinationPath)) {
+        Helpers.removeFolderIfExists(newDestinationPath)
+      }
+
+      destinationPath = newDestinationPath;
+    }
+    //#endregion
 
     if (dontCopySameContent && fse.existsSync(destinationPath)) {
       const destinationContent = Helpers.readFile(destinationPath);

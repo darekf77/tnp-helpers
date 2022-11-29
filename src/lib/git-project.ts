@@ -106,6 +106,9 @@ export abstract class ProjectGit {
         // console.log('COUNT')
         return Helpers.git.countCommits(self.location);
       },
+      hasAnyCommits() {
+        return Helpers.git.hasAnyCommits(self.location);
+      },
       lastCommitDate() {
         // console.log('LATS CMD ADDET')
         return Helpers.git.lastCommitDate(self.location)
