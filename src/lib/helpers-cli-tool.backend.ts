@@ -3,6 +3,10 @@ import { Helpers } from './index';
 import type { Project } from './project';
 import { CLASS } from 'typescript-class-helpers';
 import { config } from 'tnp-config';
+import { ConfigModels, LibTypeArr } from 'tnp-config';
+//#region @backend
+import { CLI } from 'tnp-cli';
+//#endregion
 
 export class HelpersCliTool {
 
@@ -231,6 +235,117 @@ export class HelpersCliTool {
   }
 
   //#region @backend
+  /**
+   * @todo TODO replace with funciton below
+   */
+  globalArgumentsParserTnp(argsv: string[]) {
+
+    Helpers.log(`[${config.frameworkName}] Fixing global arguments started...`)
+    let options = require('minimist')(argsv);
+    const toCheck = {
+      'tnpNonInteractive': void 0,
+      'findNearestProject': void 0,
+      'findNearestProjectWithGitRoot': void 0,
+      'findNearestProjectType': void 0,
+      'findNearestProjectTypeWithGitRoot': void 0,
+      'cwd': void 0
+    };
+    Object.keys(toCheck).forEach(key => {
+      toCheck[key] = options[key];
+    });
+    options = _.cloneDeep(toCheck);
+    let {
+      tnpNonInteractive,
+      findNearestProject,
+      findNearestProjectWithGitRoot,
+      findNearestProjectType,
+      findNearestProjectTypeWithGitRoot,
+      cwd
+    } = options;
+
+    Object
+      .keys(options)
+      .filter(key => key.startsWith('tnp'))
+      .forEach(key => {
+        options[key] = !!options[key];
+        global[key] = options[key];
+        // Helpers.log(`[start.backend] assigned to global: ${key}:${global[key]}`)
+      });
+
+
+
+    if (global['tnpNoColorsMode']) {
+      CLI.chalk.level = 0;
+    }
+
+    let cwdFromArgs = cwd;
+    const findProjectWithGitRoot = !!findNearestProjectWithGitRoot ||
+      !!findNearestProjectTypeWithGitRoot;
+
+    if (_.isBoolean(findNearestProjectType)) {
+      Helpers.error(`argument --findNearestProjectType `
+        + `needs to be library type:\n ${LibTypeArr.join(', ')}`, false, true);
+    }
+    if (_.isBoolean(findNearestProjectTypeWithGitRoot)) {
+      Helpers.error(`argument --findNearestProjectTypeWithGitRoot `
+        + `needs to be library type:\n ${LibTypeArr.join(', ')}`, false, true);
+    }
+
+    if (!!findNearestProjectWithGitRoot) {
+      findNearestProject = findNearestProjectWithGitRoot;
+    }
+    if (_.isString(findNearestProjectTypeWithGitRoot)) {
+      findNearestProjectType = findNearestProjectTypeWithGitRoot;
+    }
+
+    if (_.isString(cwdFromArgs)) {
+      if (findNearestProject || _.isString(findNearestProjectType)) {
+        // Helpers.log('look for nearest')
+        const ProjectClass = CLASS.getBy('Project') as typeof Project;
+        var nearest = ProjectClass.nearestTo<Project>(cwdFromArgs, {
+          type: findNearestProjectType,
+          findGitRoot: findProjectWithGitRoot,
+        });
+        if (!nearest) {
+          Helpers.error(`Not able to find neerest project for arguments: [\n ${argsv.join(',\n')}\n]`, false, true)
+        }
+      }
+      if (nearest) {
+        cwdFromArgs = nearest.location;
+      }
+      if (fse.existsSync(cwdFromArgs) && !fse.lstatSync(cwdFromArgs).isDirectory()) {
+        cwdFromArgs = path.dirname(cwdFromArgs);
+      }
+      if (fse.existsSync(cwdFromArgs) && fse.lstatSync(cwdFromArgs).isDirectory()) {
+        process.chdir(cwdFromArgs);
+      } else {
+        Helpers.error(`[${config.frameworkName}] Incorrect --cwd argument `
+          + `for args: [\n ${argsv.join(',\n')}\n]`, false, true)
+      }
+
+    }
+    argsv = Helpers.cliTool.removeArgTnp('findNearestProjectType', argsv);
+
+    // process.exit(0)
+    Object.keys(toCheck).forEach(argName => {
+      argsv = Helpers.cliTool.removeArgTnp(argName, argsv);
+    });
+
+    // Object
+    //   .keys(global)
+    //   .filter(key => key.startsWith('tnp'))
+    //   .forEach(key => {
+    //     Helpers.log(`globa.${key} = ${global[key]}`)
+    //   })
+    // Helpers.log('after remove', argsv)
+    // process.exit(0)
+    Helpers.log(`Fixing global arguments finish.`)
+    return argsv.join(' ');
+  }
+
+  /**
+   * @todo TODO replace with funciton above
+   */
   globalArgumentsParser(argsv: string[]) {
 
     let options = require('minimist')(argsv);
@@ -300,30 +415,95 @@ export class HelpersCliTool {
       }
 
     }
-    argsv = removeArg('findNearestProjectType', argsv);
+    argsv = Helpers.cliTool.removeArg('findNearestProjectType', argsv);
 
     Object.keys(toCheck).forEach(argName => {
-      argsv = removeArg(argName, argsv);
+      argsv = Helpers.cliTool.removeArg(argName, argsv);
     });
 
     return argsv;
   }
   //#endregion
 
-}
-
-
-function removeArg(arg: string, argsv: string[]) {
-  argsv = argsv.filter((f, i) => {
-    const regexString = `^\\-\\-(${arg}$|${arg}\\=)+`;
-    if ((new RegExp(regexString)).test(f)) {
-      const nextParam = argsv[i + 1];
-      if (nextParam && !nextParam.startsWith(`--`)) {
-        argsv[i + 1] = '';
+  //#region remove non interactive mode args
+  // TODO unify remove arg functions
+  removeArg(arg: string, argsv: string[]) {
+    argsv = argsv.filter((f, i) => {
+      const regexString = `^\\-\\-(${arg}$|${arg}\\=)+`;
+      if ((new RegExp(regexString)).test(f)) {
+        const nextParam = argsv[i + 1];
+        if (nextParam && !nextParam.startsWith(`--`)) {
+          argsv[i + 1] = '';
+        }
+        return false;
       }
-      return false;
+      return true;
+    }).filter(f => !!f);
+    return argsv;
+  }
+  removeArgTnp(arg: string, argsv: string[]) {
+    argsv = argsv.filter((f, i) => {
+      const regexString = `^\\-\\-(${arg}$|${arg}\\=)+`;
+      // Helpers.log(regexString)
+      if ((new RegExp(regexString)).test(f)) {
+        // Helpers.log(`true: ${f}`)
+        const nextParam = argsv[i + 1];
+        if (nextParam && !nextParam.startsWith(`--`)) {
+          argsv[i + 1] = '';
+        }
+        return false;
+      } else {
+        // Helpers.log(`false: ${f}`)
+      }
+      return true;
+    }).filter(f => !!f);
+    return argsv;
+  }
+
+  removeArgFromString(
+    argsString: string,
+    argsToClear: string[] = ['websql', 'skipNodeModules', 'skipCopyToSelection', 'skipSmartContainerDistBundleInit', 'copyto'],
+  ) {
+    const argsObj = require('minimist')(argsString.split(' '))
+    for (let index = 0; index < argsToClear.length; index++) {
+      const element = argsToClear[index];
+
+      const value = argsObj[element];
+      const replaceForV = (v) => {
+        if (!v) {
+          v = '';
+        }
+        v = `${v}`;
+        argsString = argsString.replace(
+          new RegExp(`\\-+${Helpers.escapeStringForRegEx(element)}\\s*${Helpers.escapeStringForRegEx(v)}`, 'g'),
+          '',
+        );
+        argsString = argsString.replace(
+          new RegExp(`\\-+${Helpers.escapeStringForRegEx(element)}\\=${Helpers.escapeStringForRegEx(v)}`, 'g'),
+          '',
+        );
+      }
+      if (_.isArray(value)) {
+        for (let index = 0; index < value.length; index++) {
+          replaceForV(value[index]);
+        }
+      } else {
+        replaceForV(value);
+      }
+
+      argsString = argsString.replace(`--${element} true`, '');
+      argsString = argsString.replace(`--${element} false`, '');
+      argsString = argsString.replace(`--${element}=true`, '');
+      argsString = argsString.replace(`--${element}=false`, '');
+      argsString = argsString.replace(`--${element}`, '');
+      argsString = argsString.replace(`-${element}`, '');
     }
-    return true;
-  }).filter(f => !!f);
-  return argsv;
+    return argsString;
+  }
+  //#endregion
+
+
 }
+
+
+
