@@ -18,7 +18,10 @@ import { Helpers } from './index';
 import { config } from 'tnp-config';
 import { Models } from 'tnp-models';
 import type { Project } from './project';
+
+//#region @backend
 const trace = !global.hideLog;
+//#endregion
 
 export interface GetRecrusiveFilesFromOptions {
   // withNameOnly?: string; // TODO
