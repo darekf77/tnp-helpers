@@ -80,8 +80,6 @@ export class HelpersFileFolders {
     return fse.readlinkSync(filePath);
   }
 
-
-
   renameFolder(from: string, to: string, cwd?: string) {
     // const command = `mv  ${from}  ${to}`;
     const command = `renamer --find  ${from}  --replace  ${to} *`;
@@ -623,6 +621,9 @@ export class HelpersFileFolders {
       return;
     }
     if (!fse.existsSync(path.dirname(destinationDir))) {
+      if (Helpers.isUnexistedLink(path.dirname(destinationDir))) {
+        Helpers.removeFileIfExists(path.dirname(destinationDir))
+      }
       Helpers.mkdirp(path.dirname(destinationDir));
     }
     if (!options) {

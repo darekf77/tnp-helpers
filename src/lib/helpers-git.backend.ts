@@ -158,7 +158,11 @@ export class HelpersGit {
   hasAnyCommits(cwd: string) {
     Helpers.log('[hasAnyCommits] ' + cwd, 1)
     try {
-      child_process.execSync('git rev-parse HEAD &> /dev/null', { cwd }).toString().trim()
+      if (process.platform === 'win32') {
+        child_process.execSync('git rev-parse HEAD', { cwd }).toString().trim()
+      } else {
+        child_process.execSync('git rev-parse HEAD &> /dev/null', { cwd }).toString().trim()
+      }
       return true;
     } catch (e) {
       return false
