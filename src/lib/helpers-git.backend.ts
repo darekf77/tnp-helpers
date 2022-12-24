@@ -280,6 +280,12 @@ export class HelpersGit {
   //#endregion
 
   //#region get remote origin
+  /**
+   * example: https://github.com/darekf77/tnp-helpers.git
+   *
+   * Note: address ends with .git always
+   *
+   */
   getOriginURL(cwd: string, differentOriginName = '') {
     Helpers.log('[getOriginURL] ' + cwd, 1)
     let url = '';
@@ -289,6 +295,9 @@ export class HelpersGit {
         { output: false, cwd }).sync().toString().trim()
     } catch (error) {
       return '< not able to get origin >'
+    }
+    if(!url.endsWith('.git')) {
+      return `${url}.git`;
     }
     return url;
   }
