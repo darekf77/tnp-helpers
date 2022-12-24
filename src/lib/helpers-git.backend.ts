@@ -170,6 +170,18 @@ export class HelpersGit {
   }
   //#endregion
 
+   //#region get number of commit in repository
+   isInMergeProcess(cwd: string) {
+    Helpers.log('[hasAnyCommits] ' + cwd, 1)
+    try {
+      const message = (child_process.execSync(`git status`, { cwd }) || '').toString().trim()
+      return message.search('Unmerged paths:') !== -1;
+    } catch (e) {
+      return false
+    }
+  }
+  //#endregion
+
   //#region get branches names
   getBranchesNames(cwd: string, pattern?: string | RegExp): string[] {
     Helpers.log('[getBranchesNames] ' + cwd, 1)

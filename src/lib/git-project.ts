@@ -109,6 +109,9 @@ export abstract class ProjectGit {
       hasAnyCommits() {
         return Helpers.git.hasAnyCommits(self.location);
       },
+      get isInMergeProcess() {
+        return Helpers.git.isInMergeProcess(self.location);
+      },
       lastCommitDate() {
         // console.log('LATS CMD ADDET')
         return Helpers.git.lastCommitDate(self.location)
