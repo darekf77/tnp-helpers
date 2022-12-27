@@ -670,7 +670,7 @@ export class HelpersFileFolders {
       Helpers.warn(`[tnp-helper][copy] Trying to copy same source and destination
       from: ${sourceDir}
       to: ${destinationDir}
-      `, trace);
+      `);
     } else {
       // Helpers.warn('filter', _.isFunction(options.filter));
       // Helpers.warn('sourceDir', sourceDir);
