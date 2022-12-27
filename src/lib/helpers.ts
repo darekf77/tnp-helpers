@@ -122,7 +122,7 @@ export class HelpersTnp extends CoreHelpers {
   async isElevated() {
     //#region @backend
     if (!(await isElevated())) {
-      Helpers.error(`[tnp-helpers] Please run this program as sudo (or admin on windows)`, false, true)
+      Helpers.error(`[firedev-helpers] Please run this program as sudo (or admin on windows)`, false, true)
     }
     //#endregion
   }

@@ -149,13 +149,13 @@ export class Project<T extends Project<any> = any>
       return alreadyExist as any;
     }
     if (!fse.existsSync(location)) {
-      Helpers.log(`[tnp-helpers][project.from] Cannot find project in location: ${location}`, 1);
+      Helpers.log(`[firedev-helpers][project.from] Cannot find project in location: ${location}`, 1);
       Project.emptyLocations.push(location);
       return;
     }
     if (PackageJSON && !PackageJSON.fromLocation(location)) {
       if (!isDockerProject(location)) {
-        Helpers.log(`[tnp-helpers][project.from] Cannot find package.json in location: ${location}`, 1);
+        Helpers.log(`[firedev-helpers][project.from] Cannot find package.json in location: ${location}`, 1);
         Project.emptyLocations.push(location);
         return;
       }
@@ -163,7 +163,7 @@ export class Project<T extends Project<any> = any>
     let type = this.typeFrom(location);
     PackageJSON && checkIfTypeIsNotCorrect(type, location);
 
-    // Helpers.log(`[tnp-helpers] Type "${type}" for ${location} `)
+    // Helpers.log(`[firedev-helpers] Type "${type}" for ${location} `)
     let resultProject: Project<any>;
     if (type === 'isomorphic-lib') {
       resultProject = new (getClassFunction('ProjectIsomorphicLib'))(location);
@@ -218,10 +218,10 @@ export class Project<T extends Project<any> = any>
     //     : ('NO PROJECT FROM LOCATION ' + location))
 
     if (resultProject) {
-      Helpers.log(`[tnp-helpers][project.from] ${CLI.chalk.bold(resultProject.name)} from ...${location.substr(location.length - 100)}`, 1);
+      Helpers.log(`[firedev-helpers][project.from] ${CLI.chalk.bold(resultProject.name)} from ...${location.substr(location.length - 100)}`, 1);
     } else {
       if (PackageJSON) {
-        Helpers.log(`[tnp-helpers][project.from] project not found in ${location}`, 1);
+        Helpers.log(`[firedev-helpers][project.from] project not found in ${location}`, 1);
       } else {
         const packagejsonpath = path.join(location, 'package.json');
         if (fse.existsSync(packagejsonpath)) {
@@ -250,7 +250,7 @@ export class Project<T extends Project<any> = any>
     const { type, findGitRoot, onlyOutSideNodeModules } = options;
 
     if (_.isString(type) && !LibTypeArr.includes(type)) {
-      Helpers.error(`[tnp-helpers][project.nearestTo] wrong type: ${type}`, false, true)
+      Helpers.error(`[firedev-helpers][project.nearestTo] wrong type: ${type}`, false, true)
     }
     if (fse.existsSync(absoluteLocation)) {
       absoluteLocation = fse.realpathSync(absoluteLocation);
@@ -357,7 +357,7 @@ export class Project<T extends Project<any> = any>
     //#region @backendFunc
     const current = Project.From(process.cwd())
     if (!current) {
-      Helpers.warn(`[tnp-helpers] Current location is not a ${CLI.chalk.bold(config.frameworkName)} type project.
+      Helpers.warn(`[firedev-helpers] Current location is not a ${CLI.chalk.bold(config.frameworkName)} type project.
 
       location: "${process.cwd()}"
 
@@ -417,7 +417,7 @@ export class Project<T extends Project<any> = any>
       ${projectPath}
       ${projectPath.replace(/\//g, '\\\\')}
       ${crossPlatformPath(projectPath)}
-      [tnp-helpers] Bad library type "${libraryType}" for this framework version "${version}"
+      [firedev-helpers] Bad library type "${libraryType}" for this framework version "${version}"
 
       `, false, false);
     }
@@ -501,7 +501,7 @@ function isDockerProject(location: string) {
 function getClassFunction(className) {
   const classFN = CLASS.getBy(className) as any;
   if (!classFN) {
-    Helpers.error(`[tnp-helpers][Project.From] cannot find class function by name ${className}`)
+    Helpers.error(`[firedev-helpers][Project.From] cannot find class function by name ${className}`)
   }
   return classFN;
 }

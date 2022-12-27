@@ -9,7 +9,7 @@ import {
 
 import { _ } from 'tnp-core';
 import { Log, Level } from 'ng2-logger';
-const log = Log.create(`[tnp-helpers] long-press`
+const log = Log.create(`[firedev-helpers] long-press`
   , Level.__NOTHING
 )
 

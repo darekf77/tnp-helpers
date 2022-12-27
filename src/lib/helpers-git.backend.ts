@@ -244,7 +244,7 @@ export class HelpersGit {
     try {
       Helpers.run(`git commit -m "${customMessage}"`, { cwd }).sync()
     } catch (error) {
-      Helpers.warn(`Failed to git commit -m "${customMessage}"`);
+      Helpers.warn(`[firedev-helpers][git][commitWhatIs] Failed to git commit -m "${customMessage}"`);
     }
   }
   //#endregion
@@ -258,7 +258,7 @@ export class HelpersGit {
 
     const gitRootProject = ProjectClass.nearestTo(cwd, { findGitRoot: true });
     try {
-      Helpers.info(`[git][commit] Adding current git changes in git root:
+      Helpers.info(`[firedev-helpers][git][commit] Adding current git changes in git root:
         ${gitRootProject.location}
         `)
       gitRootProject.run(`git add --all . `).sync()
@@ -278,7 +278,7 @@ export class HelpersGit {
       args = `-m ${addBrackets ? `"${args}"` : args}`;
     }
     try {
-      Helpers.info(`[git][commit] trying to commit what it with argument:
+      Helpers.info(`[firedev-helpers][git][commit] trying to commit what it with argument:
       "${args}"
       location: ${cwd}
       `)
@@ -286,7 +286,7 @@ export class HelpersGit {
       Helpers.run(cmdddd, { cwd }).sync()
     } catch (error) {
       Helpers.log(error)
-      Helpers.warn(`[git][commit] not able to commit what is with command: ${cmdddd}`);
+      Helpers.warn(`[firedev-helpers][git][commit] not able to commit what is with command: ${cmdddd}`);
     }
   }
   //#endregion
@@ -425,7 +425,7 @@ export class HelpersGit {
         Helpers.info(taskName);
         break;
       } catch (err) {
-        Helpers.error(`[tnp-helpers] Not able to push branch ${currentBranchName} in (origin=${origin}):
+        Helpers.error(`[firedev-helpers] Not able to push branch ${currentBranchName} in (origin=${origin}):
         ${cwd}`, true, true);
         Helpers.pressKeyAndContinue(`Press any key to try again: `);
         // TODO issue 1:  issue with press any key
@@ -475,13 +475,13 @@ export class HelpersGit {
 
     if (url.split(' ').length > 2) {
       // const [rUrl, rDest] = url.split(' ');
-      Helpers.error(`[tnp-helpers]incorrect clone url "${url}"`)
+      Helpers.error(`[firedev-helpers]incorrect clone url "${url}"`)
     }
 
     if (url.split(' ').length === 2) {
       const [rUrl, rDest] = url.split(' ');
       if (destinationFolderName) {
-        Helpers.error(`[tnp-helpers] wrong cloning argument
+        Helpers.error(`[firedev-helpers] wrong cloning argument
 
         url = "${url}"
         destinationFolderName = "${destinationFolderName}"
@@ -529,7 +529,7 @@ export class HelpersGit {
         Helpers.run(commnad, { cwd, output: false }).sync();
       } catch (error) {
         if (error?.stderr?.toString()?.search('remote: Not Found') !== -1) {
-          Helpers.warn(`[tnp-helpers][git] Project not found :${url}`);
+          Helpers.warn(`[firedev-helpers][git] Project not found :${url}`);
         } else {
           Helpers.error(`Can't clone from url: ${CLI.chalk.bold(url)}..`, false, true);
         }

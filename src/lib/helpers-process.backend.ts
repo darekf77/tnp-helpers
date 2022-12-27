@@ -349,7 +349,7 @@ export class HelpersProcess {
       const org = port;
       port = Number(port);
       if (!_.isNumber(port)) {
-        Helpers.warn(`[tnp-helpers] Can't kill on port: "${org}"`);
+        Helpers.warn(`[firedev-helpers] Can't kill on port: "${org}"`);
         return;
       }
       try {

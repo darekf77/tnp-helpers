@@ -19,9 +19,6 @@ import { config } from 'tnp-config';
 import { Models } from 'tnp-models';
 import type { Project } from './project';
 
-//#region @backend
-const trace = !global.hideLog;
-//#endregion
 
 export interface GetRecrusiveFilesFromOptions {
   // withNameOnly?: string; // TODO
@@ -248,7 +245,7 @@ export class HelpersFileFolders {
     source = crossPlatformPath(source);
 
     if (source === destination) {
-      Helpers.warn('[tnp-helpers] Probably error... trying to copy the same folder...')
+      Helpers.warn('[firedev-helpers] Probably error... trying to copy the same folder...')
       return;
     }
 
@@ -342,10 +339,10 @@ export class HelpersFileFolders {
 
   tryRemoveDir(dirpath: string, contentOnly = false) {
     if (!fse.existsSync(dirpath)) {
-      Helpers.warn(`Folder ${path.basename(dirpath)} doesn't exist.`)
+      Helpers.warn(`[firedev-helper][tryRemoveDir] Folder ${path.basename(dirpath)} doesn't exist.`)
       return;
     }
-    Helpers.log(`[tnp-helpers][tryRemoveDir]: ${dirpath}`);
+    Helpers.log(`[firedev-helpers][tryRemoveDir]: ${dirpath}`);
 
     try {
       if (contentOnly) {
@@ -395,7 +392,7 @@ export class HelpersFileFolders {
     if (Array.isArray(fileOrFolderPathOrPatter)) {
       fileOrFolderPathOrPatter = path.join(...fileOrFolderPathOrPatter);
     }
-    Helpers.log(`[tnp-helpers][remove]: ${fileOrFolderPathOrPatter}`, 1);
+    Helpers.log(`[firedev-helpers][remove]: ${fileOrFolderPathOrPatter}`, 1);
     if (exactFolder) {
       rimraf.sync(fileOrFolderPathOrPatter, { glob: false, disableGlob: true, });
       return;
@@ -617,7 +614,7 @@ export class HelpersFileFolders {
     // sourceDir = sourceDir ? (sourceDir.replace(/\/$/, '')) : sourceDir;
     // destinationDir = destinationDir ? (destinationDir.replace(/\/$/, '')) : destinationDir;
     if (!fse.existsSync(sourceDir)) {
-      Helpers.warn(`[tnp-helper][copy] Source dir doesnt exist: ${sourceDir} for destination: ${destinationDir}`, trace);
+      Helpers.warn(`[tnp-helper][copy] Source dir doesnt exist: ${sourceDir} for destination: ${destinationDir}`);
       return;
     }
     if (!fse.existsSync(path.dirname(destinationDir))) {
@@ -673,7 +670,7 @@ export class HelpersFileFolders {
       Helpers.warn(`[tnp-helper][copy] Trying to copy same source and destination
       from: ${sourceDir}
       to: ${destinationDir}
-      `);
+      `, trace);
     } else {
       // Helpers.warn('filter', _.isFunction(options.filter));
       // Helpers.warn('sourceDir', sourceDir);
@@ -692,7 +689,7 @@ export class HelpersFileFolders {
           && Helpers.isExistedSymlink(sourceDir)
           && !Helpers.exists(fse.readlinkSync(sourceDir))
         ) {
-          Helpers.warn(`[tnp-helpers] Not copying empty link from: ${sourceDir}
+          Helpers.warn(`[firedev-helpers] Not copying empty link from: ${sourceDir}
           `)
         } else {
           const copyFn = () => {
@@ -748,7 +745,7 @@ export class HelpersFileFolders {
               to: ${destinationDir}
               options: ${json5.stringify(options)}
               error: ${error?.message}
-              `, !exitOnError, !trace);
+              `, !exitOnError);
 
               Helpers.pressKeyAndContinue(`Press any key to repeat copy action...`);
               copyFn();
@@ -835,20 +832,20 @@ export class HelpersFileFolders {
     }
     const { debugMode, fast, transformTextFn, dontCopySameContent, modifiedFiles } = options;
     if (_.isFunction(transformTextFn) && fast) {
-      Helpers.error(`[copyFile] You cannot use  transformTextFn in fast mode`);
+      Helpers.error(`[firedev-helpers][copyFile] You cannot use  transformTextFn in fast mode`);
     }
 
     if (!fse.existsSync(sourcePath)) {
-      Helpers.warn(`[copyFile] No able to find source of ${sourcePath}`);
+      Helpers.warn(`[firedev-helpers][copyFile] No able to find source of ${sourcePath}`);
       return false;
     }
     if (fse.lstatSync(sourcePath).isDirectory()) {
-      Helpers.warn(`[copyFile] Trying to copy directory as file: ${sourcePath}`, false)
+      Helpers.warn(`[firedev-helpers][copyFile] Trying to copy directory as file: ${sourcePath}`, false)
       return false;
     }
 
     if (sourcePath === destinationPath) {
-      Helpers.warn(`[copyFile] Trying to copy same file ${sourcePath}`);
+      Helpers.warn(`[firedev-helpers][copyFile] Trying to copy same file ${sourcePath}`);
       return false;
     }
     let destDirPath = path.dirname(destinationPath);
@@ -895,7 +892,7 @@ export class HelpersFileFolders {
       }
 
       debugMode && Helpers.log(`
-[copyFile] Write to: ${destinationPath} file:
+      [firedev-helpers][copyFile] Write to: ${destinationPath} file:
 ============================================================================================
 ${sourceData}
 ============================================================================================

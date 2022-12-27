@@ -75,7 +75,7 @@ export namespace HelpersMerge {
     project.baseline.customizableFilesAndFolders.forEach(customizableFileOrFolder => {
       let globPath = path.join(pathToBaselineThroughtNodeModules(project), customizableFileOrFolder)
       if (!fse.existsSync(globPath)) {
-        Helpers.error(`Custombizable folder of file doesn't exist: ${globPath}
+        Helpers.error(`[firedev-helpers][allBaselineFiles] Custombizable folder of file doesn't exist: ${globPath}
 
         Please add: ${path.basename(globPath)} to your baseline
 
