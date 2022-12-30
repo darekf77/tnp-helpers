@@ -7,7 +7,7 @@ export * from './merge-helpers.backend';
 // export * from './git-project';
 export const Helpers = Base.Instance;
 export * from './project';
-
+export * from './firedev-models';
 
 //#region @browser
 export { BaseComponent, BaseComponentForRouter } from './base-component';

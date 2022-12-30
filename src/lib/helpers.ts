@@ -23,6 +23,7 @@ import { HelpersNetwork } from './helpers-network.backend';
 import { HelpersJSON5 } from './helpers-json5.backend';
 import { TsCodeExtractor } from './ts-code/ts-code-extractor';
 import { CLI } from 'tnp-cli';
+import { HelpersVscode } from './helpers-vscode.backend';
 //#endregion
 import { config, ConfigModels } from 'tnp-config';
 import { Helpers } from './index';
@@ -30,6 +31,7 @@ import { CLASS } from 'typescript-class-helpers';
 import { Morphi } from 'morphi';
 import { CoreHelpers } from 'tnp-core';
 import { HelpersNumber } from './helpers-numbers';
+
 
 export function applyMixins(derivedCtor: any, baseCtors: any[]) {
   baseCtors.forEach(baseCtor => {
@@ -63,6 +65,7 @@ export class HelpersTnp extends CoreHelpers {
     public path = new HelpersPath(),
     public network = new HelpersNetwork(),
     public json5 = new HelpersJSON5(),
+    public vscode = new HelpersVscode(),
     //#endregion
     public arrays = new HelpersArrayObj(),
     public strings = new HelpersStrings(),
