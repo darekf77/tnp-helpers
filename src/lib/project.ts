@@ -368,11 +368,6 @@ export class Project<T extends Project<any> = any>
     //#endregion
   }
 
-  //#region @backend
-  static get NaviCliLocation() {
-    return path.resolve(path.join(Project.Tnp.location, '../navi-cli'));
-  }
-  //#endregion
 
   /**
    * @deprecated
