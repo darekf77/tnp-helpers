@@ -192,7 +192,10 @@ export class HelpersGit {
       }
       const command = `git branch -a`;
       // console.log({ command, cwd })
-      const branchNames = Helpers.commnadOutputAsString(command, cwd, true, true)
+      const branchNames = Helpers.commnadOutputAsString(command, cwd,{
+        biggerBuffer: true,
+        showWholeCommandNotOnlyLastLine: true,
+      })
       // console.log({ branchNames })
 
       const _branchNames = branchNames

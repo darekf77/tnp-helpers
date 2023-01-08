@@ -18,7 +18,7 @@ export abstract class ProjectGit {
   //#region @backend
 
   public runCommandGetString(this: Project, command: string) {
-    return Helpers.commnadOutputAsString(command, this.location, false);
+    return Helpers.commnadOutputAsString(command, this.location, { biggerBuffer: false });
   }
 
   public async execute(this: Project, command: string,
