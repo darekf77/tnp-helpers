@@ -5,7 +5,7 @@ import { HelpersEnvironment } from './helpers-environment';
 import { HelpersStrings } from './helpers-strings';
 import { conditionWait } from './condition-wait';
 //#region @backend
-import { child_process, os, crossPlatformPath } from 'tnp-core';
+import { os, crossPlatformPath } from 'tnp-core';
 import * as Task from 'task.js';
 import { isElevated } from 'tnp-core';
 import { URL } from 'url';

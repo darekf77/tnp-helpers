@@ -4,7 +4,6 @@ import {
   fse,
   os,
   rimraf,
-  child_process,
   crossPlatformPath,
   json5,
 } from 'tnp-core';
@@ -383,23 +382,35 @@ export class HelpersFileFolders {
       Helpers.warn(`[move] Destination path is not absolute: ${to}`)
       return;
     }
+
+    if (Helpers.isUnexistedLink(to)) {
+      Helpers.remove(to);
+    }
+
+    if (Helpers.isUnexistedLink(path.dirname(to))) {
+      Helpers.remove(path.dirname(to));
+    }
+
+    // if (!Helpers.exists(path.dirname(to))) {
+    //   if (Helpers.isUnexistedLink(path.dirname(to))) {
+    //     Helpers.remove(path.dirname(to));
+    //   } else  {
+    //     Helpers.remove(path.dirname(to));
+    //     Helpers.mkdirp(path.dirname(to));
+    //   }
+    // }
+
+    // if(Helpers.isSymlinkFileExitedOrUnexisted(to)) {
+    //   Helpers.error(`You are trying to move into symlink location:
+    //   from: ${from}
+    //   to: ${to}
+    //   `)
+    // }
+
     fse.moveSync(from, to, {
       overwrite: true
     });
   }
-
-  remove(fileOrFolderPathOrPatter: string | string[], exactFolder = false) {
-    if (Array.isArray(fileOrFolderPathOrPatter)) {
-      fileOrFolderPathOrPatter = path.join(...fileOrFolderPathOrPatter);
-    }
-    Helpers.log(`[firedev-helpers][remove]: ${fileOrFolderPathOrPatter}`, 1);
-    if (exactFolder) {
-      rimraf.sync(fileOrFolderPathOrPatter, { glob: false, disableGlob: true, });
-      return;
-    }
-    rimraf.sync(fileOrFolderPathOrPatter);
-  }
-
 
 
   findChildren<T>(location, createFn: (childLocation: string) => T): T[] {

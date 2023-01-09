@@ -426,6 +426,7 @@ export class Project<T extends Project<any> = any>
 
     const className = CLASS.getName(classFn);
 
+    // @ts-ignore
     const prefixedName = `__${variableName}`
     Object.defineProperty(this, variableName, {
       get: function () {
@@ -460,10 +461,12 @@ export class Project<T extends Project<any> = any>
   }
 
   forEmptyStructure(): EmptyProjectStructure[] {
+    //#region @backendFunc
     return [
       { relativePath: config.file.package_json, includeContent: true },
       { relativePath: config.folder.src },
     ];
+    //#endregion
   }
 
 }

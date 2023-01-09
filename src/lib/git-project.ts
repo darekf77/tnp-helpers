@@ -33,7 +33,7 @@ export abstract class ProjectGit {
     } else {
       Helpers.log(`[${CLI.chalk.underline('Executing shell command')}]  "${command}" in [${cwd}]`);
     }
-    return await Helpers.execute(child_process.exec(command, { cwd }), options as any);
+    return await Helpers.execute(command, cwd, options as any);
   }
 
   public run(this: Project, command: string, options?: RunOptions) {
