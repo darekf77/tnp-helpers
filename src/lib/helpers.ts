@@ -185,10 +185,10 @@ export class HelpersTnp extends CoreHelpers {
     //@ts-ignore
     var end = new Date() - start
     if (Morphi.IsBrowser) {
-      Helpers.info(`Execution time: ${end.toString()}ms for "${description}"`);
+      Helpers.log(`Execution time: ${end.toString()}ms for "${description}"`);
     }
     //#region @backend
-    Helpers.info(`Execution time: ${CLI.chalk.bold(end.toString())}ms for "${CLI.chalk.bold(description)}"`);
+    Helpers.log(`Execution time: ${CLI.chalk.bold(end.toString())}ms for "${CLI.chalk.bold(description)}"`);
     //#endregion
     return end;
   }

@@ -1,5 +1,5 @@
 {
-  "version": "13.1.11",
+  "version": "13.1.12",
   "dependencies": {
     "json10-writer": "~13.1.28",
     "morphi": "~13.1.32",
@@ -140,7 +140,7 @@
     "http-proxy": "1.16.2",
     "http-proxy-middleware": "0.19.1",
     "http-server": "0.11.1",
-    "incremental-compiler": "~13.1.10",
+    "incremental-compiler": "~13.1.11",
     "inquirer": "7.3.3",
     "inquirer-autocomplete-prompt": "1.3.0",
     "is-elevated": "3.0.0",
@@ -223,7 +223,7 @@
     "systeminformation": "3.45.7",
     "task.js": "0.1.5",
     "tnp-cli": "~13.1.41",
-    "tnp-config": "~13.1.53",
+    "tnp-config": "~13.1.54",
     "tnp-core": "~13.1.58",
     "tnp-db": "~13.1.7",
     "tnp-helpers": "~13.1.11",
