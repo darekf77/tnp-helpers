@@ -137,7 +137,7 @@ export class HelpersProcess {
   }
 
   pressKeyAndContinue(message = 'Press enter to continue..') {
-    console.log(chalk.bold(message) );
+    console.log(chalk.bold(message));
     if (process.platform === 'win32') {
       spawn.sync('pause', '', { shell: true, stdio: [0, 1, 2] });
       return;
@@ -427,7 +427,39 @@ ${Helpers.terminalLine()}\n`;
     }
   }
 
+  async waitForMessegeInStdout(proc: child_process.ChildProcess, message: string) {
+    return new Promise((resolve, reject) => {
+      let resolved = false;
+      proc.stdout.on('data', (data) => {
 
+        // console.log(`
+
+        // [waitForMessegeInStdout] data: ${data}
+        // [waitForMessegeInStdout] data typeof: ${typeof data}
+
+        // `);
+        if (_.isObject(data) && _.isFunction(data.toString)) {
+          data = data.toString()
+        }
+
+        if (_.isString(data) && data.search(message) !== -1) {
+          resolved = true;
+          resolve(void 0);
+        }
+      })
+      proc.once('exit', () => {
+        // console.log(`
+
+        // [waitForMessegeInStdout] exit: ${code}
+
+        // `);
+        if (!resolved) {
+          reject();
+        }
+      })
+    })
+
+  }
 
 
   //#endregion
