@@ -31,7 +31,9 @@ import { CLASS } from 'typescript-class-helpers';
 import { Morphi } from 'morphi';
 import { CoreHelpers } from 'tnp-core';
 import { HelpersNumber } from './helpers-numbers';
-
+//#region @browser
+import { HelpersBrowaser } from './helpers-browser';
+//#endregion
 
 export function applyMixins(derivedCtor: any, baseCtors: any[]) {
   baseCtors.forEach(baseCtor => {
@@ -70,6 +72,9 @@ export class HelpersTnp extends CoreHelpers {
     public arrays = new HelpersArrayObj(),
     public strings = new HelpersStrings(),
     public numbers = new HelpersNumber(),
+    //#region @browser
+    public browser = HelpersBrowaser.instance,
+    //#endregion
 
   ) {
     super();
