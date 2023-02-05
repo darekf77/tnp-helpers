@@ -290,7 +290,7 @@ export class HelpersGit {
       Helpers.run(cmdddd, { cwd }).sync()
     } catch (error) {
       Helpers.log(error)
-      Helpers.warn(`[firedev-helpers][git][commit] not able to commit what is with command: ${cmdddd}`);
+      Helpers.log(`[firedev-helpers][git][commit] not able to commit what is with command: ${cmdddd}`);
     }
   }
   //#endregion
