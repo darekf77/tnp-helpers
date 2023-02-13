@@ -283,9 +283,6 @@ export class HelpersProcess {
     return _.times(process.stdout.columns, () => '-').join('')
   }
 
-  killProcess(byPid: number) {
-    Helpers.run(`kill -9 ${byPid}`).sync()
-  }
 
   async killProcessByPort(portOrPortsToKill: number | number[]) {
     if (!_.isArray(portOrPortsToKill)) {
