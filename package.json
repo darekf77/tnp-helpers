@@ -1,8 +1,8 @@
 {
-  "version": "13.1.14",
+  "version": "13.1.15",
   "dependencies": {
     "json10-writer": "~13.1.28",
-    "morphi": "~13.1.32",
+    "morphi": "~13.1.33",
     "tnp-models": "~13.1.9"
   },
   "scripts": {
@@ -224,8 +224,8 @@
     "systeminformation": "3.45.7",
     "task.js": "0.1.5",
     "tnp-cli": "~13.1.41",
-    "tnp-config": "~13.1.54",
-    "tnp-core": "~13.1.58",
+    "tnp-config": "~13.1.55",
+    "tnp-core": "~13.1.61",
     "tnp-db": "~13.1.7",
     "tnp-helpers": "~13.1.14",
     "tnp-ui": "~13.1.27",
