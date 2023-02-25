@@ -312,7 +312,7 @@ export class HelpersFileFolders {
     Helpers.log(`[helpers] Remove folder: ${absoluteFolderPath}`)
     if (process.platform === 'win32') {
       // rimraf.sync(absoluteFolderPath);
-      this.tryRemoveDir(absoluteFolderPath)
+      this.tryRemoveDir(absoluteFolderPath, false, true)
       return;
     }
     const { modifiedFiles } = options || { modifiedFiles: { modifiedFiles: [] } };
@@ -336,9 +336,11 @@ export class HelpersFileFolders {
   //   }
   // };
 
-  tryRemoveDir(dirpath: string, contentOnly = false) {
+  tryRemoveDir(dirpath: string, contentOnly = false, omitWarningNotExisted = false) {
     if (!fse.existsSync(dirpath)) {
-      Helpers.warn(`[firedev-helper][tryRemoveDir] Folder ${path.basename(dirpath)} doesn't exist.`)
+      if (!omitWarningNotExisted) {
+        Helpers.warn(`[firedev-helper][tryRemoveDir] Folder ${path.basename(dirpath)} doesn't exist.`)
+      }
       return;
     }
     Helpers.log(`[firedev-helpers][tryRemoveDir]: ${dirpath}`);
