@@ -462,7 +462,7 @@ export class HelpersCliTool {
 
   removeArgFromString(
     argsString: string,
-    argsToClear: string[] = ['websql', 'skipNodeModules', 'skipCopyToSelection', 'skipSmartContainerDistBundleInit', 'copyto'],
+    argsToClear: string[] = ['websql', 'serveApp', 'skipNodeModules', 'skipCopyToSelection', 'skipSmartContainerDistBundleInit', 'copyto'],
   ) {
     const argsObj = require('minimist')(argsString.split(' '))
     for (let index = 0; index < argsToClear.length; index++) {
