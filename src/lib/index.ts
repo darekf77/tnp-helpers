@@ -10,6 +10,7 @@ export * from './project';
 export * from './firedev-models';
 
 //#region @browser
+export { SerializedSubject } from './angular.helper';
 export { BaseComponent, BaseComponentForRouter } from './base-component';
 export { BaseFormlyComponent } from './base-formly-component';
 export { DualComponentController } from './dual-component-ctrl';

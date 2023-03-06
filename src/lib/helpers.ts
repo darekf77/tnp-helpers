@@ -33,6 +33,8 @@ import { CoreHelpers } from 'tnp-core';
 import { HelpersNumber } from './helpers-numbers';
 //#region @browser
 import { HelpersBrowaser } from './helpers-browser';
+
+import { NgHelpers } from './angular.helper';
 //#endregion
 
 export function applyMixins(derivedCtor: any, baseCtors: any[]) {
@@ -74,8 +76,8 @@ export class HelpersTnp extends CoreHelpers {
     public numbers = new HelpersNumber(),
     //#region @browser
     public browser = HelpersBrowaser.instance,
+    public ng = NgHelpers
     //#endregion
-
   ) {
     super();
   }
