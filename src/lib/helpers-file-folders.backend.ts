@@ -175,7 +175,7 @@ export class HelpersFileFolders {
 
     (() => {
       const stringForRegex = `require\\(("|')\\.\\/([a-zA-Z0-9]|\\/|\\-|\\_|\\+|\\.)*("|')\\)`;
-      Helpers.log(`[tnp-helpre][require][${jsFilePath}] stringForRegex: ${stringForRegex}`, 1);
+      Helpers.log(`[firedev-helpre][require][${jsFilePath}] stringForRegex: ${stringForRegex}`, 1);
 
       fileContent = fileContent.split('\n').map(line => {
         const matches = line.match(new RegExp(stringForRegex));
@@ -198,7 +198,7 @@ export class HelpersFileFolders {
 
     (() => {
       const stringForRegex = `require\\(("|')([a-zA-Z0-9]|\\/|\\-|\\_|\\+|\\.)*("|')\\)`;
-      Helpers.log(`[tnp-helpre][require][${jsFilePath}] stringForRegex: ${stringForRegex}`, 1);
+      Helpers.log(`[firedev-helpre][require][${jsFilePath}] stringForRegex: ${stringForRegex}`, 1);
 
       fileContent = fileContent.split('\n').map(line => {
         // console.log(`LINE: "${line}"`)
@@ -627,7 +627,7 @@ export class HelpersFileFolders {
     // sourceDir = sourceDir ? (sourceDir.replace(/\/$/, '')) : sourceDir;
     // destinationDir = destinationDir ? (destinationDir.replace(/\/$/, '')) : destinationDir;
     if (!fse.existsSync(sourceDir)) {
-      Helpers.warn(`[tnp-helper][copy] Source dir doesnt exist: ${sourceDir} for destination: ${destinationDir}`);
+      Helpers.warn(`[firedev -helper][copy] Source dir doesnt exist: ${sourceDir} for destination: ${destinationDir}`);
       return;
     }
     if (!fse.existsSync(path.dirname(destinationDir))) {
@@ -667,7 +667,7 @@ export class HelpersFileFolders {
     //   fse.existsSync(destinationDir) && fse.statSync(destinationDir),
     // ];
     // if (destStat && destStat.ino && destStat.dev && destStat.ino === srcStat.ino && destStat.dev === srcStat.dev) {
-    //   Helpers.warn(`[tnp-helper][copy] Same location stats.. Trying to copy same source and destination:
+    //   Helpers.warn(`[firedev-helper][copy] Same location stats.. Trying to copy same source and destination:
     //   from: ${sourceDir}
     //   to: ${destinationDir}
     //   `);
@@ -680,7 +680,7 @@ export class HelpersFileFolders {
     }
 
     if (sourceDir === destinationDir || path.resolve(sourceDir) === path.resolve(destinationDir)) {
-      Helpers.warn(`[tnp-helper][copy] Trying to copy same source and destination
+      Helpers.warn(`[firedev-helper][copy] Trying to copy same source and destination
       from: ${sourceDir}
       to: ${destinationDir}
       `);
@@ -753,7 +753,7 @@ export class HelpersFileFolders {
             } catch (error) {
               const exitOnError = global['tnpNonInteractive'];
               Helpers.log(error)
-              Helpers.error(`[tnp-helper] Not able to copy folder:
+              Helpers.error(`[firedev-helper] Not able to copy folder:
               from: ${sourceDir}
               to: ${destinationDir}
               options: ${json5.stringify(options)}

@@ -27,7 +27,7 @@ let json5Test2 = `
     `;
 
 
-describe('tnp-helpers json5', () => {
+describe('firedev-helpers json5', () => {
 
   beforeEach(() => {
     Helpers.removeFileIfExists(tempFilePath);
