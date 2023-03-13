@@ -513,6 +513,17 @@ export class HelpersFileFolders {
     return files;
   }
 
+  checkIfNameAllowedForFiredevProj(folderName: string) {
+    const notAllowed: RegExp[] = [
+      '^\.vscode$', '^node\_modules$',
+      ...Helpers.values(config.tempFolders).map(v => `^${v}$`),
+      '^e2e$', '^tmp.*', '^dist.*', '^tests$', '^module$', '^browser', 'bundle*',
+      '^components$', '\.git', '^bin$', '^custom$', '^linked\-repos$',
+    ].map(s => new RegExp(s))
+
+    return notAllowed.filter(p => p.test(folderName)).length === 0;
+  }
+
   getLinesFromFiles(filename: string, lineCount?: number) {
     return new Promise<string[]>((resolve, reject) => {
       let stream = fse.createReadStream(filename, {
