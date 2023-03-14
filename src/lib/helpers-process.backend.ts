@@ -163,7 +163,22 @@ export class HelpersProcess {
       pageSize: 10,
       loop: false,
     } as any) as any;
-    return res.value;
+    return res.value as T;
+  }
+
+  async multipleChoicesAsk<T = string>(
+    question: string,
+    choices: { name: string; value: T; }[]
+  ) {
+    const res = await inquirer.prompt({
+      type: 'checkbox',
+      name: 'value',
+      message: question,
+      choices,
+      pageSize: 10,
+      loop: false,
+    } as any) as any;
+    return res.value as T[];
   }
 
   async autocompleteAsk<T = string>(
