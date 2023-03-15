@@ -638,7 +638,7 @@ export class HelpersFileFolders {
     // sourceDir = sourceDir ? (sourceDir.replace(/\/$/, '')) : sourceDir;
     // destinationDir = destinationDir ? (destinationDir.replace(/\/$/, '')) : destinationDir;
     if (!fse.existsSync(sourceDir)) {
-      Helpers.warn(`[firedev -helper][copy] Source dir doesnt exist: ${sourceDir} for destination: ${destinationDir}`);
+      Helpers.warn(`[firedev-helper][copy] Source dir doesnt exist: ${sourceDir} for destination: ${destinationDir}`);
       return;
     }
     if (!fse.existsSync(path.dirname(destinationDir))) {
