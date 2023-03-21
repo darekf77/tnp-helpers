@@ -3,7 +3,9 @@ import { HelpersArrayObj } from './helpers-array-obj';
 import { HelpersStringsRegexes } from './helpers-strings-regexes';
 import { HelpersEnvironment } from './helpers-environment';
 import { HelpersStrings } from './helpers-strings';
+import { HelpersConsoleGui } from './helpers-console-gui';
 import { conditionWait } from './condition-wait';
+
 //#region @backend
 import { os, crossPlatformPath } from 'tnp-core';
 import * as Task from 'task.js';
@@ -35,6 +37,7 @@ import { HelpersNumber } from './helpers-numbers';
 import { HelpersBrowaser } from './helpers-browser';
 
 import { NgHelpers } from './angular.helper';
+
 //#endregion
 
 export function applyMixins(derivedCtor: any, baseCtors: any[]) {
@@ -74,6 +77,7 @@ export class HelpersTnp extends CoreHelpers {
     public arrays = new HelpersArrayObj(),
     public strings = new HelpersStrings(),
     public numbers = new HelpersNumber(),
+    public consoleGui = new HelpersConsoleGui(),
     //#region @browser
     public browser = HelpersBrowaser.instance,
     public ng = NgHelpers
