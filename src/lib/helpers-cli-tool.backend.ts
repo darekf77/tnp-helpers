@@ -243,6 +243,7 @@ export class HelpersCliTool {
     Helpers.log(`[${config.frameworkName}] Fixing global arguments started...`)
     let options = require('minimist')(argsv);
     const toCheck = {
+      'tnpShowProgress': void 0,
       'tnpNonInteractive': void 0,
       'findNearestProject': void 0,
       'findNearestProjectWithGitRoot': void 0,
@@ -255,6 +256,7 @@ export class HelpersCliTool {
     });
     options = _.cloneDeep(toCheck);
     let {
+      tnpShowProgress,
       tnpNonInteractive,
       findNearestProject,
       findNearestProjectWithGitRoot,
@@ -351,6 +353,7 @@ export class HelpersCliTool {
     let options = require('minimist')(argsv);
     const toCheck = {
       'tnpNonInteractive': void 0,
+      'tnpShowProgress': void 0,
       'findNearestProject': void 0,
       'findNearestProjectWithGitRoot': void 0,
       'findNearestProjectType': void 0,
