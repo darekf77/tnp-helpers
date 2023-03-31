@@ -397,7 +397,7 @@ export class HelpersGit {
       Helpers.git.pull(currentLocalBranch, cwd);
       Helpers.info(`[firedev-helpers] Branch "${currentLocalBranch}" updated successfully in ${path.basename(cwd)}`)
     } catch (e) {
-      console.log(e)
+      // console.log(e)
       Helpers.error(`[firedev-helpers] Cannot update current branch in: ${cwd}`, askToRetry, true)
       if (askToRetry) {
         await Helpers.questionYesNo(`Do you wanna try again ?`, async () => {

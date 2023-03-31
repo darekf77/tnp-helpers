@@ -1,5 +1,5 @@
 {
-  "version": "13.1.20",
+  "version": "13.1.21",
   "dependencies": {
     "json10-writer": "~13.1.30",
     "morphi": "~13.1.38",
