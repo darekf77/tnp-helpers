@@ -161,6 +161,7 @@
     "karma-jasmine": "4.0.0",
     "karma-jasmine-html-reporter": "1.7.0",
     "lnk": "1.0.1",
+    "localforage": "1.10.0",
     "lockfile": "1.0.4",
     "lodash": "4.17.4",
     "lodash-walk-object": "~13.1.32",
