@@ -72,7 +72,6 @@ export class Project<T extends Project<any> = any>
   public type: ConfigModels.LibType;
   public backupName: string;
   public resources: string[];
-  public env: Models.env.EnvConfig;
   public allowedEnvironments: ConfigModels.EnvironmentName[];
 
   public children: T[];
