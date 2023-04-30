@@ -1,0 +1,1 @@
+Assets from this folder can be used in npm package.

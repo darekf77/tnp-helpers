@@ -623,6 +623,7 @@ export class HelpersFileFolders {
        */
       omitFoldersBaseFolder?: string;
       copySymlinksAsFiles?: boolean;
+      copySymlinksAsFilesDeleteUnexistedLinksFromSourceFirst?: boolean;
       useTempFolder?: boolean;
     } & fse.CopyOptionsSync) {
 
@@ -688,6 +689,16 @@ export class HelpersFileFolders {
       && _.isNil(options.filter) && _.isString(options.omitFoldersBaseFolder)
       && path.isAbsolute(options.omitFoldersBaseFolder)) {
       options.filter = Helpers.filterDontCopy(options.omitFolders, options.omitFoldersBaseFolder);
+    }
+
+    if (options.copySymlinksAsFilesDeleteUnexistedLinksFromSourceFirst) {
+      const files = Helpers.filesFrom(sourceDir, true, true);
+      for (let index = 0; index < files.length; index++) {
+        const file = files[index];
+        if (Helpers.isUnexistedLink(file)) {
+          Helpers.remove(file, true);
+        }
+      }
     }
 
     if (sourceDir === destinationDir || path.resolve(sourceDir) === path.resolve(destinationDir)) {
