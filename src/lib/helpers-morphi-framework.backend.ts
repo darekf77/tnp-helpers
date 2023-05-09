@@ -25,10 +25,19 @@ export class HelpersMorphiFramework {
           !p.endsWith('Service.ts') &&
           !p.endsWith('.d.ts') &&
           !p.endsWith('.spec.ts') &&
+          !p.endsWith('.e2e-spec.ts') &&
           !p.endsWith('.component.ts') &&
+          !p.endsWith('.container.ts') &&
           !p.endsWith('.module.ts') &&
+          !p.endsWith('.models.ts') &&
           !p.endsWith('.service.ts') &&
+          !p.endsWith('.guard.ts') &&
+          !p.endsWith('.test.ts') &&
           !p.endsWith('.model.ts') &&
+          !p.endsWith('.pipe.ts') &&
+          !p.endsWith('.class.ts') &&
+          !p.endsWith('.directive.ts') &&
+          !p.endsWith('.interface.ts') &&
           !(['index.ts', 'app.ts', 'controllers.ts', 'entities.ts'].includes(path.basename(p)));
       })
   }
