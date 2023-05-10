@@ -129,6 +129,9 @@ export abstract class ProjectGit {
       checkTagExists(tag: string) {
         return Helpers.git.checkTagExists(tag, self.location)
       },
+      lastTagNameForMajorVersion(ver) {
+
+      },
       lastTagHash() {
         return Helpers.git.lastTagHash(self.location)
       },

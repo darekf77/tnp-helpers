@@ -78,6 +78,39 @@ export class HelpersGit {
   }
 
 
+
+  //#region get last tag hash
+  /**
+   *
+   * @param cwd di
+   * @param majorVersion example v1, or v2
+   * @returns name of trag
+   */
+  lastTagNameForMajorVersion(cwd, majorVersion: string): string {
+    Helpers.log('[firedev-helpers][lastTagNameForMajorVersion] ' + cwd, 1);
+    const tag = Helpers.git.lastTagVersionName(cwd);
+    if (!tag) {
+      return null;
+    }
+    let tagName = void 0 as string;
+    try {
+      let nameOfTag = child_process.execSync(`git describe --match "v${majorVersion.replace('v', '')}.*" `
+        + `--abbrev=0 --tags $(git rev-list --tags --max-count=1)`, { cwd }).toString().trim()
+      if (nameOfTag) {
+        return nameOfTag;
+      }
+    } catch (e) { }
+    try {
+      let nameOfTag = child_process.execSync(`git describe --match "${majorVersion.replace('v', '')}.*" `
+        + `--abbrev=0 --tags $(git rev-list --tags --max-count=1)`, { cwd }).toString().trim()
+      if (nameOfTag) {
+        return nameOfTag;
+      }
+    } catch (e) { }
+  }
+  //#endregion
+
+
   //#region get last tag hash
   lastTagHash(cwd): string {
     Helpers.log('[firedev-helpers][lastTagHash] ' + cwd, 1)
@@ -170,8 +203,8 @@ export class HelpersGit {
   }
   //#endregion
 
-   //#region get number of commit in repository
-   isInMergeProcess(cwd: string) {
+  //#region get number of commit in repository
+  isInMergeProcess(cwd: string) {
     Helpers.log('[firedev-helpers][hasAnyCommits] ' + cwd, 1)
     try {
       const message = (child_process.execSync(`git status`, { cwd }) || '').toString().trim()
@@ -192,7 +225,7 @@ export class HelpersGit {
       }
       const command = `git branch -a`;
       // console.log({ command, cwd })
-      const branchNames = Helpers.commnadOutputAsString(command, cwd,{
+      const branchNames = Helpers.commnadOutputAsString(command, cwd, {
         biggerBuffer: true,
         showWholeCommandNotOnlyLastLine: true,
       })
@@ -312,7 +345,7 @@ export class HelpersGit {
     } catch (error) {
       return '< not able to get origin >'
     }
-    if(!url.endsWith('.git')) {
+    if (!url.endsWith('.git')) {
       return `${url}.git`;
     }
     return url;
