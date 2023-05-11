@@ -87,26 +87,27 @@ export class HelpersGit {
    * @returns name of trag
    */
   lastTagNameForMajorVersion(cwd, majorVersion: string): string {
-    Helpers.log('[firedev-helpers][lastTagNameForMajorVersion] ' + cwd, 1);
+    Helpers.log('[firedev-helpers][lastTagNameForMajorVersion] ' + cwd + '  major ver:' + majorVersion);
     const tag = Helpers.git.lastTagVersionName(cwd);
     if (!tag) {
-      return null;
+      return void 0;
     }
     let tagName = void 0 as string;
     try {
-      let nameOfTag = child_process.execSync(`git describe --match "v${majorVersion.replace('v', '')}.*" `
-        + `--abbrev=0 --tags $(git rev-list --tags --max-count=1)`, { cwd }).toString().trim()
-      if (nameOfTag) {
-        return nameOfTag;
+      tagName = child_process.execSync(`git describe --match "v${majorVersion.toString().replace('v', '')}.*" `
+        + `--abbrev=0 --tags $(git rev-list --tags --max-count=1)`, { cwd }).toString().trim();
+      if (tagName) {
+        return tagName;
       }
     } catch (e) { }
     try {
-      let nameOfTag = child_process.execSync(`git describe --match "${majorVersion.replace('v', '')}.*" `
+      tagName = child_process.execSync(`git describe --match "${majorVersion.toString().replace('v', '')}.*" `
         + `--abbrev=0 --tags $(git rev-list --tags --max-count=1)`, { cwd }).toString().trim()
-      if (nameOfTag) {
-        return nameOfTag;
+      if (tagName) {
+        return tagName;
       }
     } catch (e) { }
+    return void 0;
   }
   //#endregion
 
