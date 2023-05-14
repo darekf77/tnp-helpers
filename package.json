@@ -1,9 +1,9 @@
 {
-  "version": "13.1.31",
+  "version": "13.1.32",
   "dependencies": {
     "json10-writer": "~13.1.38",
     "morphi": "~13.2.5",
-    "tnp-models": "~13.1.22"
+    "tnp-models": "~13.1.23"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -134,7 +134,7 @@
     "firedev-crud": "~13.1.47",
     "firedev-crud-deamon": "~13.1.37",
     "firedev-ports": "~13.1.41",
-    "firedev-storage": "~13.2.31",
+    "firedev-storage": "~13.2.32",
     "firedev-typeorm": "~13.1.25",
     "firedev-ui": "~13.1.20",
     "fkill": "6.1.0",
@@ -230,7 +230,7 @@
     "socket.io": "2.4.1",
     "sort-package-json": "1.11.0",
     "sql.js": "1.8.0",
-    "static-columns": "~13.3.3",
+    "static-columns": "~13.3.5",
     "string-similarity": "4.0.2",
     "sudo-block": "3.0.0",
     "systeminformation": "3.45.7",
