@@ -92,6 +92,7 @@ export class HelpersGit {
     if (!tag) {
       return void 0;
     }
+    // git describe --match "v1.1.*" --abbrev=0 --tags $(git rev-list --tags --max-count=1)
     let tagName = void 0 as string;
     try {
       tagName = child_process.execSync(`git describe --match "v${majorVersion.toString().replace('v', '')}.*" `
