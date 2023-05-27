@@ -1,8 +1,8 @@
 {
-  "version": "13.1.35",
+  "version": "13.1.36",
   "dependencies": {
     "json10-writer": "~13.1.39",
-    "morphi": "~13.2.6",
+    "morphi": "~13.2.7",
     "task.js": "0.1.5",
     "tnp-models": "~13.1.26"
   },
