@@ -6,6 +6,7 @@
     "includeAsDev": [],
     "includeOnly": [
       "tnp-models",
+      'task.js',
       "morphi",
       "json10-writer"
     ],
