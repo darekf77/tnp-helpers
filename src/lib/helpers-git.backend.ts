@@ -95,15 +95,27 @@ export class HelpersGit {
     // git describe --match "v1.1.*" --abbrev=0 --tags $(git rev-list --tags --max-count=1)
     let tagName = void 0 as string;
     try {
-      tagName = child_process.execSync(`git describe --match "v${majorVersion.toString().replace('v', '')}.*" `
+      if(process.platform === 'win32') {
+        tagName = child_process.execSync(`git describe --match "v${majorVersion.toString().replace('v', '')}.*" `
+        + `--abbrev=0 `, { cwd }).toString().trim();
+      } else {
+        tagName = child_process.execSync(`git describe --match "v${majorVersion.toString().replace('v', '')}.*" `
         + `--abbrev=0 --tags $(git rev-list --tags --max-count=1)`, { cwd }).toString().trim();
+      }
+
       if (tagName) {
         return tagName;
       }
     } catch (e) { }
     try {
-      tagName = child_process.execSync(`git describe --match "${majorVersion.toString().replace('v', '')}.*" `
+      if(process.platform === 'win32') {
+        tagName = child_process.execSync(`git describe --match "${majorVersion.toString().replace('v', '')}.*" `
+        + `--abbrev=0`, { cwd }).toString().trim()
+      } {
+        tagName = child_process.execSync(`git describe --match "${majorVersion.toString().replace('v', '')}.*" `
         + `--abbrev=0 --tags $(git rev-list --tags --max-count=1)`, { cwd }).toString().trim()
+      }
+
       if (tagName) {
         return tagName;
       }
