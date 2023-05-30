@@ -4,14 +4,17 @@
   "overrided": {
     "ignoreDepsPattern": [],
     "includeAsDev": [],
+
     "includeOnly": [
       "tnp-models",
       'task.js',
       "morphi",
       "json10-writer"
     ],
+
     "dependencies": {},
-    "linkedFolders": []
+    "linkedFolders": [],
+    'npmFixes': [],
   },
 
   "linkedProjects": [],
