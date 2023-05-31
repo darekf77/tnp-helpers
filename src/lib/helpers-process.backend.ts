@@ -283,7 +283,7 @@ export class HelpersProcess {
 
   async actionWrapper(fn: () => void, taskName: string = 'Task') {
     function currentDate() {
-      return `[${dateformat(new Date(), 'HH:MM:ss')}]`;
+      return `[${dateformat(new Date(), 'dd-mm-yyyy HH:MM:ss')}]`;
     }
     // global.spinner && global.spinner.start()
     Helpers.taskStarted(`${currentDate()} "${taskName}" Started..`)
