@@ -95,12 +95,12 @@ export class HelpersGit {
     // git describe --match "v1.1.*" --abbrev=0 --tags $(git rev-list --tags --max-count=1)
     let tagName = void 0 as string;
     try {
-      if(process.platform === 'win32') {
+      if (process.platform === 'win32') {
         tagName = child_process.execSync(`git describe --match "v${majorVersion.toString().replace('v', '')}.*" `
-        + `--abbrev=0 `, { cwd }).toString().trim();
+          + `--abbrev=0 `, { cwd }).toString().trim();
       } else {
         tagName = child_process.execSync(`git describe --match "v${majorVersion.toString().replace('v', '')}.*" `
-        + `--abbrev=0 --tags $(git rev-list --tags --max-count=1)`, { cwd }).toString().trim();
+          + `--abbrev=0 --tags $(git rev-list --tags --max-count=1)`, { cwd }).toString().trim();
       }
 
       if (tagName) {
@@ -108,12 +108,12 @@ export class HelpersGit {
       }
     } catch (e) { }
     try {
-      if(process.platform === 'win32') {
+      if (process.platform === 'win32') {
         tagName = child_process.execSync(`git describe --match "${majorVersion.toString().replace('v', '')}.*" `
-        + `--abbrev=0`, { cwd }).toString().trim()
+          + `--abbrev=0`, { cwd }).toString().trim()
       } {
         tagName = child_process.execSync(`git describe --match "${majorVersion.toString().replace('v', '')}.*" `
-        + `--abbrev=0 --tags $(git rev-list --tags --max-count=1)`, { cwd }).toString().trim()
+          + `--abbrev=0 --tags $(git rev-list --tags --max-count=1)`, { cwd }).toString().trim()
       }
 
       if (tagName) {
@@ -368,8 +368,27 @@ export class HelpersGit {
 
   //#region is git root
   isGitRoot(cwd: string) {
-    Helpers.log('[firedev-helpers][isGitRoot] ' + cwd, 1)
-    return this.isGitRepo(cwd) && fse.existsSync(path.join(cwd, '.git'))
+    Helpers.log('[firedev-helpers][isGitRoot] ' + cwd, 1);
+    if (!fse.existsSync(crossPlatformPath([cwd, '.git']))) {
+      return false;
+    }
+    Helpers.log('[firedev-helpers][isGitRepo] ' + cwd, 1)
+
+    try {
+      var rootGitCwd = Helpers.run('git rev-parse --show-toplevel',
+        {
+          biggerBuffer: false,
+          cwd,
+          output: false
+        }).sync()?.toString()?.trim();
+      // console.log({
+      //   rootGitCwd,
+      //   cwd
+      // })
+      return rootGitCwd && (crossPlatformPath(rootGitCwd) === crossPlatformPath(cwd));
+    } catch (e) {
+      return false;
+    }
   }
   //#endregion
 
