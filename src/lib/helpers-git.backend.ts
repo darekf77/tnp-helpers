@@ -94,13 +94,24 @@ export class HelpersGit {
     }
     // git describe --match "v1.1.*" --abbrev=0 --tags $(git rev-list --tags --max-count=1)
     let tagName = void 0 as string;
+    const cm1 = `git describe --match "v${majorVersion.toString().replace('v', '')}.*" `
+      + `--abbrev=0 `;
+    const cm2 = `git describe --match "v${majorVersion.toString().replace('v', '')}.*" `
+      + `--abbrev=0 --tags $(git rev-list --tags --max-count=1)`;
+
+    const cm3 = `git describe --match "${majorVersion.toString().replace('v', '')}.*" `
+      + `--abbrev=0`;
+    const cm4 = `git describe --match "${majorVersion.toString().replace('v', '')}.*" `
+      + `--abbrev=0 --tags $(git rev-list --tags --max-count=1)`
+    // console.log({
+    //   cm1, cm2, cm3, cm4
+    // })
+
     try {
       if (process.platform === 'win32') {
-        tagName = child_process.execSync(`git describe --match "v${majorVersion.toString().replace('v', '')}.*" `
-          + `--abbrev=0 `, { cwd }).toString().trim();
+        tagName = child_process.execSync(cm1, { cwd }).toString().trim();
       } else {
-        tagName = child_process.execSync(`git describe --match "v${majorVersion.toString().replace('v', '')}.*" `
-          + `--abbrev=0 --tags $(git rev-list --tags --max-count=1)`, { cwd }).toString().trim();
+        tagName = child_process.execSync(cm2, { cwd }).toString().trim();
       }
 
       if (tagName) {
@@ -109,11 +120,9 @@ export class HelpersGit {
     } catch (e) { }
     try {
       if (process.platform === 'win32') {
-        tagName = child_process.execSync(`git describe --match "${majorVersion.toString().replace('v', '')}.*" `
-          + `--abbrev=0`, { cwd }).toString().trim()
-      } {
-        tagName = child_process.execSync(`git describe --match "${majorVersion.toString().replace('v', '')}.*" `
-          + `--abbrev=0 --tags $(git rev-list --tags --max-count=1)`, { cwd }).toString().trim()
+        tagName = child_process.execSync(cm3, { cwd }).toString().trim()
+      } else {
+        tagName = child_process.execSync(cm4, { cwd }).toString().trim()
       }
 
       if (tagName) {
