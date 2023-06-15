@@ -360,13 +360,17 @@ export class HelpersGit {
    */
   getOriginURL(cwd: string, differentOriginName = '') {
     Helpers.log('[firedev-helpers][getOriginURL] ' + cwd, 1)
+    if (!this.isGitRepo(cwd)) {
+      return;
+    }
     let url = '';
     try {
       // git config --get remote.origin.url
       url = Helpers.run(`git config --get remote.${differentOriginName ? differentOriginName : 'origin'}.url`,
         { output: false, cwd }).sync().toString().trim()
     } catch (error) {
-      return '< not able to get origin >'
+      console.log(error)
+      return void 0;
     }
     if (!url.endsWith('.git')) {
       return `${url}.git`;

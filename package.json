@@ -39,12 +39,12 @@
       "firedev-helpers"
     ]
   },
-  "version": "16.0.5",
+  "version": "16.0.6",
   "dependencies": {
     "json10-writer": "~16.0.44",
     "morphi": "~16.0.5",
     "task.js": "0.1.5",
-    "tnp-models": "~16.0.32"
+    "tnp-models": "~16.0.34"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -178,7 +178,7 @@
     "firedev-ports": "~16.0.48",
     "firedev-storage": "~16.0.40",
     "firedev-typeorm": "~16.0.37",
-    "firedev-ui": "~16.0.6",
+    "firedev-ui": "~16.0.7",
     "fkill": "6.1.0",
     "font-awesome": "4.7.0",
     "form-data": "4.0.0",
@@ -273,15 +273,15 @@
     "socket.io": "2.4.1",
     "sort-package-json": "1.11.0",
     "sql.js": "1.8.0",
-    "static-columns": "~16.0.4",
+    "static-columns": "~16.0.5",
     "string-similarity": "4.0.2",
     "sudo-block": "3.0.0",
     "sweetalert2": "11.7.12",
     "systeminformation": "3.45.7",
     "threads": "1.7.0",
     "tnp-cli": "~16.0.5",
-    "tnp-config": "~16.0.6",
-    "tnp-core": "~16.0.9",
+    "tnp-config": "~16.0.8",
+    "tnp-core": "~16.0.10",
     "tnp-db": "~16.0.26",
     "tnp-helpers": "~16.0.5",
     "ts-debug": "1.3.0",
