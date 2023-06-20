@@ -39,12 +39,12 @@
       "firedev-helpers"
     ]
   },
-  "version": "16.0.6",
+  "version": "16.0.7",
   "dependencies": {
     "json10-writer": "~16.0.44",
-    "morphi": "~16.0.5",
+    "morphi": "~16.0.6",
     "task.js": "0.1.5",
-    "tnp-models": "~16.0.34"
+    "tnp-models": "~16.0.35"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -177,6 +177,7 @@
     "firedev-crud-deamon": "~16.0.43",
     "firedev-ports": "~16.0.48",
     "firedev-storage": "~16.0.40",
+    "firedev-type-sql": "~16.0.1",
     "firedev-typeorm": "~16.0.37",
     "firedev-ui": "~16.0.7",
     "fkill": "6.1.0",
@@ -229,7 +230,7 @@
     "ng-in-viewport": "15.0.2",
     "ng-lock": "16.0.1",
     "ng-packagr": "16.0.1",
-    "ng-talkback": "~13.1.19",
+    "ng-talkback": "~16.0.1",
     "ng2-logger": "~16.0.4",
     "ng2-rest": "~16.0.12",
     "ngx-ace-wrapper": "14.0.0",
@@ -242,7 +243,7 @@
     "ngx-scrolltop": "6.0.0",
     "ngx-store": "3.1.1",
     "ngx-typed-js": "2.1.1",
-    "node-cli-tester": "~13.1.19",
+    "node-cli-tester": "~16.0.2",
     "node-localstorage": "2.1.6",
     "node-notifier": "6.0.0",
     "nodemon": "1.14.11",
@@ -263,7 +264,7 @@
     "ps-node": "0.1.6",
     "q": "1.5.1",
     "randomcolor": "0.5.3",
-    "record-replay-req-res-scenario": "~13.1.20",
+    "record-replay-req-res-scenario": "~16.0.1",
     "reflect-metadata": "0.1.10",
     "rimraf": "2.6.2",
     "rxjs": "~7.8.0",
@@ -292,12 +293,11 @@
     "typeorm": "~0.3.10",
     "typescript": "~5.0.2",
     "typescript-class-helpers": "~16.0.16",
-    "typescript-formatter": "~7.2.2",
     "underscore": "1.9.1",
     "uuid": "8.3.2",
     "validator": "9.2.0",
     "video.js": "8.3.0",
-    "vpn-split": "~13.1.23",
+    "vpn-split": "~16.0.1",
     "watch": "1.0.2",
     "yup": "1.1.1",
     "zone.js": "~0.13.0"

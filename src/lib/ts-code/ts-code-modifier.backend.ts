@@ -1,5 +1,5 @@
 import { _ } from 'tnp-core';
-import * as tsfmt from 'typescript-formatter';
+// import * as tsfmt from 'typescript-formatter'; // TODO
 import { Helpers } from '../index';
 export class TsCodeModifer {
 
@@ -59,15 +59,15 @@ export class TsCodeModifer {
    * Format JS, TS file
    */
   public formatFile(filePath: string) {
-    tsfmt.processFiles([filePath], {
-      verbose: true,
-      replace: true,
-      verify: false,
-      // tsconfig: true,
-      // tslint: true,
-      // editorconfig: true,
-      tsfmt: true,
-    } as any)
+    // tsfmt.processFiles([filePath], {
+    //   verbose: true,
+    //   replace: true,
+    //   verify: false,
+    //   // tsconfig: true,
+    //   // tslint: true,
+    //   // editorconfig: true,
+    //   tsfmt: true,
+    // } as any)
   }
 
 }
