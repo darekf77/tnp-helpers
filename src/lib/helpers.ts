@@ -35,6 +35,20 @@ import { HelpersBrowser } from './for-browser/helpers-browser';
 import { HelpersAngular } from './for-browser/angular.helper';
 //#endregion
 
+/**
+ * Mixing for multiclass inheritance
+ *
+ * How to use It:
+ *
+ * class Wolverine {}
+ * class Jean {}
+ * export class Child {}
+ * export interface MyChild implements Wolverine, Jean {}
+ * applyMixing(Child,[Wolverine, Jean]);
+ *
+ * @param derivedCtor Target Class
+ * @param baseCtors Base Classes
+ */
 export function applyMixins(derivedCtor: any, baseCtors: any[]) {
   baseCtors.forEach(baseCtor => {
     Object.getOwnPropertyNames(baseCtor.prototype).forEach(name => {
