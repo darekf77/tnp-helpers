@@ -1,5 +1,5 @@
 import { _ } from 'tnp-core';
-import { Helpers } from '../index';
+import { Helpers } from '../../index';
 
 export type ClassMeta = {
   className: string,

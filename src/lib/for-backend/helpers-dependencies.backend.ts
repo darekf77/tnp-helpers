@@ -1,7 +1,7 @@
 import { _ } from 'tnp-core';
 import { CLI } from 'tnp-cli';
-import { Helpers } from './index';
-import { Project } from './project';
+import { Helpers } from '../index';
+import { Project } from '../project';
 
 export class HelpersDependencies {
   sort<P extends Project = Project>(deps: { project: P; copyto: P[] }[]) {

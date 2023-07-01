@@ -1,6 +1,6 @@
 import { crossPlatformPath } from 'tnp-core';
 import * as ncp from 'copy-paste';
-import { Helpers } from './index';
+import { Helpers } from '../index';
 
 export class HelpersTerminal {
   runInNewInstance(command: string, cwd = crossPlatformPath(process.cwd())) {

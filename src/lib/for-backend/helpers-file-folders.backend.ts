@@ -13,10 +13,10 @@ import { JSON10 } from 'json10';
 import * as crypto from 'crypto';
 declare const global: any;
 
-import { Helpers } from './index';
+import { Helpers } from '../index';
 import { config } from 'tnp-config';
 import { Models } from 'tnp-models';
-import type { Project } from './project';
+import type { Project } from '../project';
 
 
 export interface GetRecrusiveFilesFromOptions {

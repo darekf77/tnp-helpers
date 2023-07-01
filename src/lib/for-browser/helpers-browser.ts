@@ -3,10 +3,10 @@
 
 const key = Symbol('[firedev-helpers] helper browser key')
 
-export class HelpersBrowaser {
+export class HelpersBrowser {
 
   private static callbacks = [];
-  static onInit(callback: (ins: HelpersBrowaser) => any) {
+  static onInit(callback: (ins: HelpersBrowser) => any) {
     this.callbacks.push(callback);
   }
 
@@ -21,14 +21,14 @@ export class HelpersBrowaser {
 
   readonly tabId: number;
 
-  private static inst: HelpersBrowaser;
+  private static inst: HelpersBrowser;
   init = (() => {
     const win = this.win;
 
     if (!win[key]) {
-      win[key] = new HelpersBrowaser(win);
+      win[key] = new HelpersBrowser(win);
     }
-    HelpersBrowaser.inst = win[key];
+    HelpersBrowser.inst = win[key];
   })();
 
   private constructor(win: Window) {
@@ -49,7 +49,7 @@ export class HelpersBrowaser {
         // @ts-ignore
         this.tabId = Math.floor(Math.random() * 1000000) + (new Date()).getTime();
       }
-      HelpersBrowaser.callbacks.forEach((c) => {
+      HelpersBrowser.callbacks.forEach((c) => {
         c(this);
       });
     })
@@ -59,7 +59,7 @@ export class HelpersBrowaser {
 
 
   static get instance() {
-    return HelpersBrowaser.inst;
+    return HelpersBrowser.inst;
   }
 
 }

@@ -1,6 +1,6 @@
 import { _, path, fse } from 'tnp-core';
-import { Helpers } from './index';
-import type { Project } from './project';
+import { Helpers } from '../index';
+import type { Project } from '../project';
 import { CLASS } from 'typescript-class-helpers';
 import { config } from 'tnp-config';
 import { ConfigModels, LibTypeArr } from 'tnp-config';

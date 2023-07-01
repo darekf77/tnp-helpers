@@ -18,7 +18,7 @@ export class HelpersStrings {
    */
   interpolateString<T = any>(value: string) {
     if (typeof value !== 'string') {
-      Helpers.warn('[ss-logic][helper] Value for interpolation is not string: ', value);
+      Helpers.warn('[firedev-heleprs] Value for interpolation is not string: ', value);
       return value;
     }
 
@@ -26,7 +26,7 @@ export class HelpersStrings {
       withParameters(parameters: T) {
         if (typeof parameters !== 'object') {
           Helpers.log(parameters as any);
-          Helpers.warn('[ss-logic][helper] Parameters are not a object: ');
+          Helpers.warn('[firedev-heleprs] Parameters are not a object: ');
           return value;
         }
         return value.replace(/{([^{}]*)}/g, function (a, b) {
@@ -38,6 +38,11 @@ export class HelpersStrings {
 
   }
 
+  /**
+   *
+   * @param pixelsCss exmaple: 100px
+   * @returns number value
+   */
   numValue(pixelsCss: string) {
     // tslint:disable-next-line:radix
     return parseInt(pixelsCss.replace('px', ''));

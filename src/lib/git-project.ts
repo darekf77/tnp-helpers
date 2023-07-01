@@ -6,11 +6,11 @@ import {
   //#endregion
 } from 'tnp-core';
 import { Project } from './project';
-import { HelpersTnp } from './helpers';
+import { HelpersFiredev } from './helpers';
 //#region @backend
 import { CLI } from 'tnp-cli';
 //#endregion
-const Helpers = HelpersTnp.Instance;
+const Helpers = HelpersFiredev.Instance;
 import { RunOptions, ExecuteOptions } from 'tnp-core';
 
 export abstract class ProjectGit {

@@ -1,43 +1,38 @@
 import { _ } from 'tnp-core';
 import { HelpersArrayObj } from './helpers-array-obj';
 import { HelpersStringsRegexes } from './helpers-strings-regexes';
-import { HelpersEnvironment } from './helpers-environment';
 import { HelpersStrings } from './helpers-strings';
-import { HelpersConsoleGui } from './helpers-console-gui';
-import { conditionWait } from './condition-wait';
-
+import { HelpersBinary} from './helpers-binary';
 //#region @backend
+import { HelpersConsoleGui } from './for-backend/helpers-console-gui';
 import { os, crossPlatformPath } from 'tnp-core';
 import * as Task from 'task.js';
 import { isElevated } from 'tnp-core';
 import { URL } from 'url';
-import { HelpersGit } from './helpers-git.backend';
-import { HelpersCliTool } from './helpers-cli-tool.backend';
-import { HelpersMorphiFramework } from './helpers-morphi-framework.backend';
-import { HelpersProcess } from './helpers-process.backend';
-import { TsCodeModifer } from './ts-code';
-import { HelpersNpm } from './helpers-npm.backend';
-import { HelpersTerminal } from './helpers-system-terminal.backend';
-import { HelpersFileFolders } from './helpers-file-folders.backend';
-import { HelpersDependencies } from './helpers-dependencies.backend';
-import { HelpersPath } from './helpers-path.backend';
-import { HelpersNetwork } from './helpers-network.backend';
+import { HelpersGit } from './for-backend/helpers-git.backend';
+import { HelpersCliTool } from './for-backend/helpers-cli-tool.backend';
+import { HelpersProcess } from './for-backend/helpers-process.backend';
+import { TsCodeModifer } from './for-backend/ts-code';
+import { HelpersNpm } from './for-backend/helpers-npm.backend';
+import { HelpersTerminal } from './for-backend/helpers-system-terminal.backend';
+import { HelpersFileFolders } from './for-backend/helpers-file-folders.backend';
+import { HelpersDependencies } from './for-backend/helpers-dependencies.backend';
+import { HelpersPath } from './for-backend/helpers-path.backend';
+import { HelpersNetwork } from './for-backend/helpers-network.backend';
 import { HelpersJSON5 } from './helpers-json5.backend';
-import { TsCodeExtractor } from './ts-code/ts-code-extractor';
+import { TsCodeExtractor } from './for-backend/ts-code/ts-code-extractor';
 import { CLI } from 'tnp-cli';
-import { HelpersVscode } from './helpers-vscode.backend';
+import { HelpersVscode } from './for-backend/helpers-vscode.backend';
 //#endregion
 import { config, ConfigModels } from 'tnp-config';
-import { Helpers } from './index';
+import { Helpers, Validators } from './index';
 import { CLASS } from 'typescript-class-helpers';
 import { Morphi } from 'morphi';
 import { CoreHelpers } from 'tnp-core';
 import { HelpersNumber } from './helpers-numbers';
 //#region @browser
-import { HelpersBrowaser } from './helpers-browser';
-
-import { NgHelpers } from './angular.helper';
-
+import { HelpersBrowser } from './for-browser/helpers-browser';
+import { HelpersAngular } from './for-browser/angular.helper';
 //#endregion
 
 export function applyMixins(derivedCtor: any, baseCtors: any[]) {
@@ -49,14 +44,14 @@ export function applyMixins(derivedCtor: any, baseCtors: any[]) {
 }
 
 // @ts-ignore
-export class HelpersTnp extends CoreHelpers {
+export class HelpersFiredev extends CoreHelpers {
 
-  private static _instance: HelpersTnp & CoreHelpers;
+  private static _instance: HelpersFiredev & CoreHelpers;
   public static get Instance() {
-    if (!HelpersTnp._instance) {
-      HelpersTnp._instance = new HelpersTnp();
+    if (!HelpersFiredev._instance) {
+      HelpersFiredev._instance = new HelpersFiredev();
     }
-    return HelpersTnp._instance;
+    return HelpersFiredev._instance;
   }
 
   private constructor(
@@ -67,20 +62,20 @@ export class HelpersTnp extends CoreHelpers {
     public terminal = new HelpersTerminal(),
     public git = new HelpersGit(),
     public npm = new HelpersNpm(),
-    public morphi = new HelpersMorphiFramework(),
     public deps = new HelpersDependencies(),
     public path = new HelpersPath(),
     public network = new HelpersNetwork(),
     public json5 = new HelpersJSON5(),
     public vscode = new HelpersVscode(),
+    public consoleGui = new HelpersConsoleGui(),
     //#endregion
     public arrays = new HelpersArrayObj(),
     public strings = new HelpersStrings(),
     public numbers = new HelpersNumber(),
-    public consoleGui = new HelpersConsoleGui(),
+    public binary = new HelpersBinary(),
     //#region @browser
-    public browser = HelpersBrowaser.instance,
-    public ng = NgHelpers
+    public browser = HelpersBrowser.instance,
+    public ng = HelpersAngular
     //#endregion
   ) {
     super();
@@ -111,7 +106,7 @@ export class HelpersTnp extends CoreHelpers {
       try {
         url = new URL(portOrHost);
       } catch (error) { }
-      if (Helpers.isValidIp(portOrHost)) {
+      if (Validators.network.isValidIp(portOrHost)) {
         try {
           url = new URL(`http://${portOrHost}`);
         } catch (error) {
@@ -203,8 +198,6 @@ export class HelpersTnp extends CoreHelpers {
     //#endregion
     return end;
   }
-
-  conditionWait = conditionWait;
 
   waitForCondition(conditionFn: (any) => boolean, howOfftenCheckInMs = 1000) {
     return new Promise(async (resolve, reject) => {
@@ -343,9 +336,8 @@ export class HelpersTnp extends CoreHelpers {
 }
 
 // @ts-ignore
-export interface HelpersTnp extends
-  HelpersStringsRegexes,
-  HelpersEnvironment
+export interface HelpersFiredev extends
+  HelpersStringsRegexes
   //#region @backend
   ,
   HelpersProcess,
@@ -353,9 +345,8 @@ export interface HelpersTnp extends
 //#endregion
 { }
 
-applyMixins(HelpersTnp, [
+applyMixins(HelpersFiredev, [
   HelpersStringsRegexes,
-  HelpersEnvironment,
   //#region @backend
   HelpersProcess,
   HelpersFileFolders,

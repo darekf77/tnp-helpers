@@ -7,8 +7,8 @@ import {
   crossPlatformPath,
 } from 'tnp-core';
 import { CLI } from 'tnp-cli';
-import { Helpers } from './index';
-import type { Project } from './project';
+import { Helpers } from '../index';
+import type { Project } from '../project';
 import { config } from 'tnp-config';
 //#endregion
 

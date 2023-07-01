@@ -4,13 +4,15 @@ import { Observable, Subject } from "rxjs";
 const componentContextSymbol = Symbol();
 const componentsDestroy$Subjects = {};
 
-export class SerializedSubject<T> {
-  constructor(
-    public id: string
-  ) { }
-}
 
-export namespace NgHelpers {
+export namespace HelpersAngular {
+
+  export class SerializedSubject<T> {
+    constructor(
+      public id: string
+    ) { }
+  }
+
 
   function subjectId(destroySubject: Subject<any>): SerializedSubject<any> {
     const id = Math.random().toString(36).substring(2);

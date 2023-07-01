@@ -1,8 +1,10 @@
+//#region import
 //#region @backend
 import { fse, path, crossPlatformPath } from 'tnp-core';
 export { ChildProcess } from 'child_process';
 import { ProjectGit } from './git-project';
 import { CLI } from 'tnp-cli';
+import { ValidatorsFiredev } from './validators/validators-firedev';
 //#endregion
 declare const global: any;
 import { config, LibTypeArr, ConfigModels } from 'tnp-config';
@@ -10,89 +12,18 @@ import { _, CoreConfig } from 'tnp-core';
 import { CLASS } from 'typescript-class-helpers';
 import { Models } from 'tnp-models';
 import { Morphi } from 'morphi';
-import { HelpersTnp } from './helpers';
+import { HelpersFiredev } from './helpers';
+import { EmptyProjectStructure } from './models';
+const Helpers = HelpersFiredev.Instance;
+//#endregion
 
-const Helpers = HelpersTnp.Instance;
-
-export type EmptyProjectStructure = {
-  includeContent?: boolean;
-  relativePath: string;
-  relativeLinkFrom?: string;
-};
 
 export class Project<T extends Project<any> = any>
   //#region @backend
   extends ProjectGit
 //#endregion
 {
-  //#region @backend
-  @Morphi.Orm.Column.Primary({ type: 'varchar', length: 400 })
-  //#endregion
-
-  protected cache = {};
-
-  /**
-   * Do use this variable for comparatios
-   * ONLY FOR VIEWING
-   */
-  public readonly _type: ConfigModels.LibType;
-  public browser: Pick<Project<any>, 'location' | 'name'> = {} as any;
-  public location: string;
-  public name: string;
-  public genericName: string;
-  public isWorkspace: boolean;
-  public isVscodeExtension: boolean;
-  public isDocker: boolean;
-  public isSite: boolean;
-  public isSiteInStrictMode?: boolean;
-  public isSiteInDependencyMode?: boolean;
-  public isCoreProject: boolean;
-  public isCommandLineToolOnly: boolean;
-  public isGenerated: boolean;
-  public isGeneratedForRelease: boolean;
-  public isWorkspaceChildProject: boolean;
-  public isBasedOnOtherProject: boolean;
-  public isForRecreation: boolean;
-  public isContainer: boolean;
-  public isSmartContainer: boolean;
-  public isSmartContainerChild: boolean;
-  public isContainerWithLinkedProjects: boolean;
-  public isContainerChild: boolean;
-  public isContainerCoreProject: boolean;
-  public isStandaloneProject: boolean;
-  public isMonorepo: boolean;
-  public isUnknowNpmProject: boolean;
-  public isNaviCli: boolean;
-  public useFramework: boolean;
-  public defaultPort?: number;
-  public version: string;
-  public lastNpmVersion?: string;
-  public _routerTargetHttp?: string;
-  public customizableFilesAndFolders: string[];
-  public type: ConfigModels.LibType;
-  public backupName: string;
-  public resources: string[];
-  public env?: any;
-  public allowedEnvironments: ConfigModels.EnvironmentName[];
-
-  public children: T[];
-  public smartContainerBuildTarget: T;
-  public grandpa: T;
-
-  public distribution: T;
-
-  public childrenThatAreLibs?: T[];
-
-  public childrenThatAreClients?: T[];
-
-  public childrenThatAreThirdPartyInNodeModules?: T[];
-
-  public parent: T;
-
-  public preview: T;
-
-  public baseline: T;
-
+  //#region static
   public static projects: Project<any>[] = [];
   /**
    * To speed up checking folder I am keeping pathes for alterdy checked folder
@@ -154,7 +85,7 @@ export class Project<T extends Project<any> = any>
       return;
     }
     if (PackageJSON && !PackageJSON.fromLocation(location)) {
-      if (!isDockerProject(location)) {
+      if (!ValidatorsFiredev.isDockerProject(location)) {
         Helpers.log(`[firedev-helpers][project.from] Cannot find package.json in location: ${location}`, 1);
         Project.emptyLocations.push(location);
         return;
@@ -197,10 +128,10 @@ export class Project<T extends Project<any> = any>
         Helpers.error(`
 !!!
 !!!
-        THIS SHOULD NOT BE NAVI PROJECT: ${location}
+       THIS SHOULD NOT BE NAVI PROJECT: ${location}
 !!!
 !!!
-        `, true, true);
+       `, true, true);
       }
       resultProject = new (getClassFunction('ProjectNavi'))(location);
     }
@@ -359,9 +290,9 @@ export class Project<T extends Project<any> = any>
     if (!current) {
       Helpers.warn(`[firedev-helpers] Current location is not a ${CLI.chalk.bold(config.frameworkName)} type project.
 
-      location: "${process.cwd()}"
+     location: "${process.cwd()}"
 
-      }`);
+     }`);
       return void 0;
     }
     return current;
@@ -409,17 +340,85 @@ export class Project<T extends Project<any> = any>
     const projectPath = config.pathes.projectsExamples(version).projectByType(libraryType);
     if (!fse.existsSync(projectPath)) {
       Helpers.error(`
-      ${projectPath}
-      ${projectPath.replace(/\//g, '\\\\')}
-      ${crossPlatformPath(projectPath)}
-      [firedev-helpers] Bad library type "${libraryType}" for this framework version "${version}"
+     ${projectPath}
+     ${projectPath.replace(/\//g, '\\\\')}
+     ${crossPlatformPath(projectPath)}
+     [firedev-helpers] Bad library type "${libraryType}" for this framework version "${version}"
 
-      `, false, false);
+     `, false, false);
     }
     return Project.From<T>(projectPath);
     //#endregion
   }
+  //#endregion
 
+  //#region fields & gettters
+  protected cache = {};
+
+  /**
+   * Do use this variable for comparatios
+   * ONLY FOR VIEWING
+   */
+  public readonly _type: ConfigModels.LibType;
+  public browser: Pick<Project<any>, 'location' | 'name'> = {} as any;
+  public location: string;
+  public name: string;
+  public genericName: string;
+  public isWorkspace: boolean;
+  public isVscodeExtension: boolean;
+  public isDocker: boolean;
+  public isSite: boolean;
+  public isSiteInStrictMode?: boolean;
+  public isSiteInDependencyMode?: boolean;
+  public isCoreProject: boolean;
+  public isCommandLineToolOnly: boolean;
+  public isGenerated: boolean;
+  public isGeneratedForRelease: boolean;
+  public isWorkspaceChildProject: boolean;
+  public isBasedOnOtherProject: boolean;
+  public isForRecreation: boolean;
+  public isContainer: boolean;
+  public isSmartContainer: boolean;
+  public isSmartContainerChild: boolean;
+  public isContainerWithLinkedProjects: boolean;
+  public isContainerChild: boolean;
+  public isContainerCoreProject: boolean;
+  public isStandaloneProject: boolean;
+  public isMonorepo: boolean;
+  public isUnknowNpmProject: boolean;
+  public isNaviCli: boolean;
+  public useFramework: boolean;
+  public defaultPort?: number;
+  public version: string;
+  public lastNpmVersion?: string;
+  public _routerTargetHttp?: string;
+  public customizableFilesAndFolders: string[];
+  public type: ConfigModels.LibType;
+  public backupName: string;
+  public resources: string[];
+  public env?: any;
+  public allowedEnvironments: ConfigModels.EnvironmentName[];
+
+  public children: T[];
+  public smartContainerBuildTarget: T;
+  public grandpa: T;
+
+  public distribution: T;
+
+  public childrenThatAreLibs?: T[];
+
+  public childrenThatAreClients?: T[];
+
+  public childrenThatAreThirdPartyInNodeModules?: T[];
+
+  public parent: T;
+
+  public preview: T;
+
+  public baseline: T;
+  //#endregion
+
+  //#region methods
   defineProperty<T>(variableName: keyof T, classFn: Function) {
     //#region @backendFunc
     const that = this;
@@ -468,34 +467,13 @@ export class Project<T extends Project<any> = any>
     ];
     //#endregion
   }
+  //#endregion
 
 }
 
-
-export type ProjectBuild = { project: Project; appBuild: boolean; };
 
 
 //#region @backend
-function isDockerProject(location: string) {
-  if (fse.existsSync(path.join(location, 'Dockerfile'))) {
-    const packageJson = path.join(location, 'package.json');
-    if (!Helpers.exists(packageJson)) {
-      Helpers.writeFile(packageJson, {
-        "name": path.basename(location),
-        "version": "0.0.0"
-      })
-    }
-    const pj = Helpers.readJson(packageJson);
-    pj[config.frameworkName] = {
-      "type": "docker",
-      "version": "v2"
-    }
-    Helpers.writeFile(packageJson, pj)
-    return true;
-  }
-  return false;
-}
-
 function getClassFunction(className) {
   const classFN = CLASS.getBy(className) as any;
   if (!classFN) {

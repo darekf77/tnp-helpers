@@ -10,8 +10,8 @@ import {
 import { CLI } from 'tnp-cli';
 import * as dateformat from 'dateformat';
 
-import type { Project } from './project';
-import { Helpers } from './index';
+import type { Project } from '../project';
+import { Helpers } from '../index';
 import { Models } from 'tnp-models';
 import { CLASS } from 'typescript-class-helpers';
 import { config } from 'tnp-config';

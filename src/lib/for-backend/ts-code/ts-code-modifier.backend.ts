@@ -1,6 +1,6 @@
 import { _ } from 'tnp-core';
 // import * as tsfmt from 'typescript-formatter'; // TODO
-import { Helpers } from '../index';
+import { Helpers } from '../../index';
 export class TsCodeModifer {
 
 

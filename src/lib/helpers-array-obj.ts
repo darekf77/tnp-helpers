@@ -1,6 +1,6 @@
 import { _ } from 'tnp-core';
 import * as fuzzy from 'fuzzy';
-import { Helpers } from './index';
+
 
 export class HelpersArrayObj {
 
@@ -55,10 +55,10 @@ export class HelpersArrayObj {
 
   sortKeys(obj) {
     if (_.isArray(obj)) {
-      return obj.map(Helpers.arrays.sortKeys);
+      return obj.map(this.sortKeys);
     }
     if (_.isObject(obj)) {
-      return _.fromPairs(_.keys(obj).sort().map(key => [key, Helpers.arrays.sortKeys(obj[key])]));
+      return _.fromPairs(_.keys(obj).sort().map(key => [key, this.sortKeys(obj[key])]));
     }
     return obj;
   };

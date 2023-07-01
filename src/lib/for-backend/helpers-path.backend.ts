@@ -1,7 +1,7 @@
 import { _, path } from 'tnp-core';
 import { config } from 'tnp-config';
-import { BaselineSiteJoinprefix } from './constants';
-import { Helpers } from './index';
+import { BaselineSiteJoinprefix } from 'tnp-config';
+import { Helpers } from '../index';
 
 export class HelpersPath {
 

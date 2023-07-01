@@ -1,19 +1,10 @@
-import { HelpersTnp as Base } from './helpers';
-export * from './constants';
-export { Condition } from './condition-wait';
-//#region @backend
-export * from './merge-helpers.backend';
+export * from './validators/validators';
+//#region @browser
+export { HelpersAngular } from './for-browser/angular.helper';
 //#endregion
-// export * from './git-project';
+
+import { HelpersFiredev as Base } from './helpers';
 export const Helpers = Base.Instance;
 export * from './project';
-export * from './firedev-models';
+export * from './models';
 
-//#region @browser
-export { SerializedSubject } from './angular.helper';
-export { BaseComponent, BaseComponentForRouter } from './base-component';
-export { BaseFormlyComponent } from './base-formly-component';
-export { DualComponentController } from './dual-component-ctrl';
-export { ResizeService } from './resize-service';
-export { LongPress } from './long-press.directive';
-//#endregion
