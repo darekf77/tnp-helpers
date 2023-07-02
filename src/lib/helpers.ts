@@ -347,6 +347,9 @@ export class HelpersFiredev extends CoreHelpers {
   checkEnvironment = (deps?: ConfigModels.GlobalDependencies) => CLI.checkEnvironment(deps);
   //#endregion
   public applyMixins = applyMixins;
+
+  isValidIp = Validators.network.isValidIp;
+  isValidGitRepuUrl = Validators.git.isValidRepoUrl;
 }
 
 // @ts-ignore
