@@ -238,6 +238,9 @@ export class HelpersFileFolders {
     }
   }
 
+  /**
+   * @deprecated
+   */
   tryCopyFrom(source: string, destination: string, options = {}) {
     Helpers.log(`Trying to copy from: ${source} to ${destination}`);
     destination = crossPlatformPath(destination);
@@ -336,6 +339,9 @@ export class HelpersFileFolders {
   //   }
   // };
 
+  /**
+   * @deprecated
+   */
   tryRemoveDir(dirpath: string, contentOnly = false, omitWarningNotExisted = false) {
     if (!fse.existsSync(dirpath)) {
       if (!omitWarningNotExisted) {

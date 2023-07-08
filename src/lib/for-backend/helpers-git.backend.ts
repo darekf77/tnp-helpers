@@ -9,8 +9,9 @@ import {
 import { CLI } from 'tnp-cli';
 import { Helpers } from '../index';
 import type { Project } from '../project';
-import { config } from 'tnp-config';
+import { config, ConfigModels } from 'tnp-config';
 //#endregion
+
 
 export class HelpersGit {
 
@@ -545,14 +546,21 @@ export class HelpersGit {
   //#endregion
 
   //#region clone
-  clone({ cwd, url, destinationFolderName = '', throwErrors, override }:
-    {
-      cwd: string;
-      url: string;
-      destinationFolderName?: string;
-      throwErrors?: boolean;
-      override?: boolean;
-    }) {
+  clone({ cwd, url, destinationFolderName = '', throwErrors, override }: {
+    cwd: string;
+    url: string;
+    destinationFolderName?: string;
+    throwErrors?: boolean;
+    override?: boolean;
+  }) {
+    cwd = crossPlatformPath(cwd);
+    if (!Helpers.exists(cwd)) {
+      try {
+        Helpers.mkdirp(cwd);
+      } catch (error) {
+        Helpers.warn(`Not able to recreate path ${cwd}`)
+      }
+    }
     Helpers.log('[clone] ' + cwd, 1)
     // const ALWAYS_HTTPS = true;
 

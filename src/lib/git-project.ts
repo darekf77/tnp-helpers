@@ -17,6 +17,7 @@ export abstract class ProjectGit {
 
   //#region @backend
 
+
   public runCommandGetString(this: Project, command: string) {
     return Helpers.commnadOutputAsString(command, this.location, { biggerBuffer: false });
   }
@@ -139,6 +140,9 @@ export abstract class ProjectGit {
       },
       lastTagHash() {
         return Helpers.git.lastTagHash(self.location)
+      },
+      get remoteOriginUrl() {
+        return  Helpers.git.getOriginURL(self.location);
       },
       get lastTagVersionName() {
         return (Helpers.git.lastTagVersionName(self.location) || '')

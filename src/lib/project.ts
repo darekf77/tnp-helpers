@@ -17,7 +17,11 @@ import { EmptyProjectStructure } from './models';
 const Helpers = HelpersFiredev.Instance;
 //#endregion
 
-
+/**
+ * @deprecated
+ *
+ * use BaseProject instead
+ */
 export class Project<T extends Project<any> = any>
   //#region @backend
   extends ProjectGit
