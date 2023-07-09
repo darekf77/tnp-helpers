@@ -20,9 +20,9 @@ const takenPorts = [];
 export class BaseProjectResolver<T> {
   //#region class body
   protected readonly NPM_PROJECT_KEY = 'npm';
-  private projects: (T & BaseProject)[] = [];
-  private emptyLocations: string[] = [];
-  constructor(private classFn: any) { }
+  protected projects: (T & BaseProject)[] = [];
+  protected emptyLocations: string[] = [];
+  constructor(protected classFn: any) { }
   get allowedTypes(): string[] {
     //#region @websqlFunc
     return [this.NPM_PROJECT_KEY];
@@ -66,7 +66,7 @@ export class BaseProjectResolver<T> {
     if (Array.isArray(locationOfProject)) {
       locationOfProject = locationOfProject.join('/');
     }
-    let location = locationOfProject.replace(/\/\//g, '/');
+    let location = crossPlatformPath(locationOfProject.replace(/\/\//g, '/'));
 
     if (!_.isString(location)) {
       Helpers.warn(`[project.from] location is not a string`)
@@ -97,11 +97,11 @@ export class BaseProjectResolver<T> {
       const pj = Helpers.readJson(crossPlatformPath([location, config.file.package_json]))
 
       // @ts-ignore
-      resultProject.location = path.basename(location);
-      // @ts-ignore
-      resultProject.type = type;
+      resultProject.basename = path.basename(location);
       // @ts-ignore
       resultProject.location = location;
+      // @ts-ignore
+      resultProject.type = type;
       // @ts-ignore
       resultProject.packageJSON = pj;
       // @ts-ignore
@@ -242,6 +242,7 @@ export class BaseProject<T = any>
    * only available after executing *this.assignFreePort()*
    */
   readonly port: string;
+
 
   get parent(): T {
     //#region @websqlFunc

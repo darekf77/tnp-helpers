@@ -423,9 +423,15 @@ export class HelpersFileFolders {
 
   findChildren<T>(location, createFn: (childLocation: string) => T): T[] {
 
+    let folders = Helpers.values(config.folder);
+    folders = folders.filter(f => ![
+      config.folder.shared,
+      // @LAST add something more here ?
+    ].includes(f));
+
     const notAllowed: RegExp[] = [
       '\.vscode', 'node\_modules',
-      ...Helpers.values(config.folder),
+      ...folders,
       'e2e', 'tmp.*', 'dist.*', 'tests', 'module', 'browser', 'bundle*',
       'components', '\.git', 'bin', 'custom'
     ].filter(f => {
