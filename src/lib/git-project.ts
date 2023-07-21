@@ -147,6 +147,9 @@ export abstract class ProjectGit {
       get lastTagVersionName() {
         return (Helpers.git.lastTagVersionName(self.location) || '')
       },
+      get stagedFiles(): string[] {
+        return Helpers.git.stagedFiles(self.location);
+      },
       /**
        * TODO does this make any sense
        */

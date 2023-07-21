@@ -630,13 +630,9 @@ export class HelpersGit {
     // Helpers.info(packageJson)
     if (!Helpers.exists(packageJson)) {
       Helpers.info(`[firedev-helpers] Recreating unexited package.json for project ${path.basename(cloneFolderPath)}..`);
-      if (Helpers.exists(cloneFolderPath)) {
-        try {
-
-          Helpers.run(`npm init -y`, { cwd: cloneFolderPath, output: false }).sync();
-
-        } catch (error) { }
-      }
+      try {
+        Helpers.run(`npm init -y`, { cwd: cloneFolderPath, output: false }).sync();
+      } catch (error) { }
     }
 
   }
@@ -693,6 +689,21 @@ export class HelpersGit {
   }
   //#endregion
 
+  /**
+   * 
+   * @param cwd 
+   * @returns absolute pathes to stages files
+   */
+  stagedFiles(cwd: string): string[] {
+    cwd = crossPlatformPath(cwd).replace(/\/$/, '');
+    const command = `git diff --name-only --cached`.trim();
+    const result = (Helpers.commnadOutputAsString(command, cwd, {
+      showWholeCommandNotOnlyLastLine: true,
+    }) || '');
+    return (result ? result.split('\n') : []).map(relative => {
+      return crossPlatformPath([cwd, relative]);
+    })
+  }
 
 
 
