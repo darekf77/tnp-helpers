@@ -2,7 +2,6 @@ import { _ } from 'tnp-core';
 import { HelpersArrayObj } from './helpers-array-obj';
 import { HelpersStringsRegexes } from './helpers-strings-regexes';
 import { HelpersStrings } from './helpers-strings';
-import { HelpersBinary} from './helpers-binary';
 //#region @backend
 import { HelpersConsoleGui } from './for-backend/helpers-console-gui';
 import { os, crossPlatformPath } from 'tnp-core';
@@ -27,7 +26,6 @@ import { HelpersVscode } from './for-backend/helpers-vscode.backend';
 import { config, ConfigModels } from 'tnp-config';
 import { Helpers, Validators } from './index';
 import { CLASS } from 'typescript-class-helpers';
-import { Morphi } from 'morphi';
 import { CoreHelpers } from 'tnp-core';
 import { HelpersNumber } from './helpers-numbers';
 //#region @browser
@@ -86,7 +84,6 @@ export class HelpersFiredev extends CoreHelpers {
     public arrays = new HelpersArrayObj(),
     public strings = new HelpersStrings(),
     public numbers = new HelpersNumber(),
-    public binary = new HelpersBinary(),
     //#region @browser
     public browser = HelpersBrowser.instance,
     public ng = HelpersAngular
@@ -188,7 +185,7 @@ export class HelpersFiredev extends CoreHelpers {
     await Helpers.runSyncOrAsync(functionToExecute, ...functionArguments);
     //@ts-ignore
     var end = new Date() - start
-    if (Morphi.IsBrowser) {
+    if (Helpers.isBrowser) {
       Helpers.info(`Execution time: ${end.toString()}ms for "${description}"`);
     }
     //#region @backend
@@ -204,7 +201,7 @@ export class HelpersFiredev extends CoreHelpers {
     functionToExecute();
     //@ts-ignore
     var end = new Date() - start
-    if (Morphi.IsBrowser) {
+    if (Helpers.isBrowser) {
       Helpers.log(`Execution time: ${end.toString()}ms for "${description}"`);
     }
     //#region @backend

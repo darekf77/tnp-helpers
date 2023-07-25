@@ -10,8 +10,6 @@ declare const global: any;
 import { config, LibTypeArr, ConfigModels } from 'tnp-config';
 import { _, CoreConfig } from 'tnp-core';
 import { CLASS } from 'typescript-class-helpers';
-import { Models } from 'tnp-models';
-import { Morphi } from 'morphi';
 import { HelpersFiredev } from './helpers';
 import { EmptyProjectStructure } from './models';
 const Helpers = HelpersFiredev.Instance;

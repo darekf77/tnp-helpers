@@ -7,7 +7,6 @@
       "includeOnly": [
         "tnp-models",
         "task.js",
-        "morphi",
         "json10-writer"
       ],
       "dependencies": {},
@@ -42,7 +41,6 @@
   "version": "16.0.10",
   "dependencies": {
     "json10-writer": "~16.0.45",
-    "morphi": "~16.2.3",
     "task.js": "0.1.5",
     "tnp-models": "~16.0.36"
   },
@@ -238,6 +236,7 @@
     "mkdirp": "0.5.1",
     "mocha": "10.2.0",
     "moment": "2.29.3",
+    "morphi": "~16.2.3",
     "ng-for-track-by-property": "16.0.1",
     "ng-in-viewport": "15.0.2",
     "ng-lock": "16.0.1",

@@ -31,7 +31,7 @@ export class BaseProjectResolver<T> {
   }
 
   get Current(): T {
-    //#region @websqlFunc
+    //#region @backendFunc
     const current = (this.classFn).From(process.cwd())
     if (!current) {
       Helpers.warn(`[firedev-helpers] Current location is not a ${CLI.chalk.bold(config.frameworkName)} type project.
