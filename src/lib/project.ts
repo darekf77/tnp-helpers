@@ -436,7 +436,11 @@ export class Project<T extends Project<any> = any>
             const CopyMangerClass = CLASS.getBy('CopyManager') as any; // TODO @LAST
             that[prefixedName] = CopyMangerClass.for(this);
           } else {
-            that[prefixedName] = new (classFn as any)(that);
+            if(typeof classFn === 'function') {
+              that[prefixedName] = new (classFn as any)(that);
+            } else {
+              Helpers.warn(`[firedev-helpers] Cannot create dynamic instance of class "${_.kebabCase(prefixedName.replace('__',''))}".`)
+            }
           }
 
         }
