@@ -626,14 +626,14 @@ export class HelpersGit {
         }
       }
     }
-    const packageJson = path.join(cloneFolderPath, config.file.package_json);
+    // const packageJson = path.join(cloneFolderPath, config.file.package_json);
     // Helpers.info(packageJson)
-    if (!Helpers.exists(packageJson)) {
-      Helpers.info(`[firedev-helpers] Recreating unexited package.json for project ${path.basename(cloneFolderPath)}..`);
-      try {
-        Helpers.run(`npm init -y`, { cwd: cloneFolderPath, output: false }).sync();
-      } catch (error) { }
-    }
+    // if (!Helpers.exists(packageJson) && Helpers.exists(cloneFolderPath)) {
+    //   Helpers.info(`[firedev-helpers] Recreating unexited package.json for project ${path.basename(cloneFolderPath)}..`);
+    //   try {
+    //     Helpers.run(`npm init -y`, { cwd: cloneFolderPath, output: false }).sync();
+    //   } catch (error) { }
+    // }
 
   }
   //#endregion
@@ -690,8 +690,8 @@ export class HelpersGit {
   //#endregion
 
   /**
-   * 
-   * @param cwd 
+   *
+   * @param cwd
    * @returns absolute pathes to stages files
    */
   stagedFiles(cwd: string): string[] {
