@@ -101,26 +101,11 @@ export class Project<T extends Project<any> = any>
     if (type === 'isomorphic-lib') {
       resultProject = new (getClassFunction('ProjectIsomorphicLib'))(location);
     }
-    if (type === 'angular-lib') {
-      resultProject = new (getClassFunction('ProjectAngularLib'))(location);
-    }
-    if (type === 'electron-client') {
-      resultProject = new (getClassFunction('ProjectElectronClient'))(location);
-    }
     if (type === 'vscode-ext') {
       resultProject = new (getClassFunction('ProjectVscodeExt'))(location);
     }
-    if (type === 'angular-client') {
-      resultProject = new (getClassFunction('ProjectAngularClient'))(location);
-    }
-    if (type === 'workspace') {
-      resultProject = new (getClassFunction('ProjectWorkspace'))(location);
-    }
     if (type === 'docker') {
       resultProject = new (getClassFunction('ProjectDocker'))(location);
-    }
-    if (type === 'ionic-client') {
-      resultProject = new (getClassFunction('ProjectIonicClient'))(location);
     }
     if (type === 'container') {
       resultProject = new (getClassFunction('ProjectContainer'))(location);
@@ -265,11 +250,6 @@ export class Project<T extends Project<any> = any>
   }
 
   public static DefaultPortByType(type: ConfigModels.LibType): number {
-    if (type === 'workspace') { return 5000; }
-    if (type === 'angular-client') { return 4300; }
-    if (type === 'angular-lib') { return 4250; }
-    if (type === 'electron-client') { return 4350; }
-    if (type === 'ionic-client') { return 8080; }
     if (type === 'docker') { return 5000; }
     if (type === 'isomorphic-lib') { return 4000; }
     if (type === 'container' || type === 'unknow-npm-project') {
@@ -325,12 +305,9 @@ export class Project<T extends Project<any> = any>
   ): T {
     //#region @backendFunc
 
-    if (libraryType === 'workspace') {
-      const workspaceProject = Project.From(config.pathes.projectsExamples(version).workspace);
-      return workspaceProject as any;
-    }
     if (libraryType === 'container') {
-      const containerProject = Project.From(config.pathes.projectsExamples(version).container);
+      const pathToContainer = config.pathes.projectsExamples(version).container;
+      const containerProject = Project.From(pathToContainer);
       return containerProject as any;
     }
 
@@ -366,18 +343,11 @@ export class Project<T extends Project<any> = any>
   public location: string;
   public name: string;
   public genericName: string;
-  public isWorkspace: boolean;
   public isVscodeExtension: boolean;
   public isDocker: boolean;
-  public isSite: boolean;
-  public isSiteInStrictMode?: boolean;
-  public isSiteInDependencyMode?: boolean;
   public isCoreProject: boolean;
   public isCommandLineToolOnly: boolean;
-  public isGenerated: boolean;
   public isGeneratedForRelease: boolean;
-  public isWorkspaceChildProject: boolean;
-  public isBasedOnOtherProject: boolean;
   public isForRecreation: boolean;
   public isContainer: boolean;
   public isSmartContainer: boolean;
@@ -393,8 +363,6 @@ export class Project<T extends Project<any> = any>
   public defaultPort?: number;
   public version: string;
   public lastNpmVersion?: string;
-  public _routerTargetHttp?: string;
-  public customizableFilesAndFolders: string[];
   public type: ConfigModels.LibType;
   public backupName: string;
   public resources: string[];
@@ -409,15 +377,10 @@ export class Project<T extends Project<any> = any>
 
   public childrenThatAreLibs?: T[];
 
-  public childrenThatAreClients?: T[];
-
   public childrenThatAreThirdPartyInNodeModules?: T[];
 
   public parent: T;
 
-  public preview: T;
-
-  public baseline: T;
   //#endregion
 
   //#region methods
@@ -436,10 +399,10 @@ export class Project<T extends Project<any> = any>
             const CopyMangerClass = CLASS.getBy('CopyManager') as any; // TODO @LAST
             that[prefixedName] = CopyMangerClass.for(this);
           } else {
-            if(typeof classFn === 'function') {
+            if (typeof classFn === 'function') {
               that[prefixedName] = new (classFn as any)(that);
             } else {
-              Helpers.warn(`[firedev-helpers] Cannot create dynamic instance of class "${_.kebabCase(prefixedName.replace('__',''))}".`)
+              Helpers.warn(`[firedev-helpers] Cannot create dynamic instance of class "${_.kebabCase(prefixedName.replace('__', ''))}".`)
             }
           }
 

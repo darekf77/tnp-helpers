@@ -164,7 +164,7 @@ export class HelpersCliTool {
   }
 
   /**
-   * Resolve child project when accessing from parent workspace, container etc...
+   * Resolve child project when accessing from parent container etc...
    * @param args string or string[] from cli args
    * @param CurrentProject project from process.cwd()
    */
