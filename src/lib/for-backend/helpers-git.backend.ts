@@ -492,6 +492,11 @@ export class HelpersGit {
   //#endregion
 
   //#region push current branch
+  /**
+   * @deprecared
+   *
+   * use pushCurrentRepoBranch
+   */
   pushCurrentBranch(cwd: string, force = false, origin = 'origin') {
     Helpers.log('[firedev-helpers][pushCurrentBranch] ' + cwd, 1)
     const currentBranchName = Helpers.git.currentBranchName(cwd);
@@ -520,6 +525,42 @@ export class HelpersGit {
   }
   //#endregion
 
+  //#region push current branch
+  /**
+   * @returns info if process succeed
+   */
+  async pushCurrentRepoBranch(cwd: string, force = false, askToRetry = false, origin = 'origin'): Promise<boolean> {
+    Helpers.log('[firedev-helpers][pushCurrentBranch] ' + cwd, 1)
+    const currentBranchName = Helpers.git.currentBranchName(cwd);
+    const taskName = `
+    Pushing current branch (remote=${origin}): ${currentBranchName}
+    `
+    Helpers.info(taskName);
+    while (true) {
+      try {
+        const command = `git push ${force ? '-f' : ''} ${origin} ${currentBranchName} --tags`;
+        Helpers.info(`[git][push] ${force ? 'force' : ''} pushing current branch ${currentBranchName} ,`
+          + ` origin=${Helpers.git.getOriginURL(cwd, origin)}`);
+
+        Helpers.run(command, { cwd }).sync()
+        Helpers.info(taskName);
+        break;
+      } catch (err) {
+        Helpers.error(`[firedev-helpers] Not able to push branch ${currentBranchName} in (origin=${origin}):
+        ${cwd}`, true, true);
+        if (!askToRetry) {
+          return;
+        }
+        if (Helpers.questionYesNo('Try again to push this branch ?')) {
+          continue;
+        }
+        return false;
+      }
+    }
+    return true;
+  }
+  //#endregion
+
   //#region get default branch for repo
   defaultRepoBranch(cwd: string) {
     Helpers.log('[defaultRepoBranch] ' + cwd, 1)
@@ -542,6 +583,33 @@ export class HelpersGit {
       .execSync(`git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'`, { cwd })
       .toString().trim()
     child_process.execSync(`git checkout ${defaultBranch}`, { cwd });
+  }
+  //#endregion
+
+
+  //#region checkout
+  checkout(checkoutFromBranch: string, targetBranch: string, origin = 'origin', cwd) {
+    Helpers.log('[checkout] ' + cwd, 1);
+    child_process.execSync(`git fetch`, { cwd });
+    const currentBranchName = this.currentBranchName(cwd);
+    if (currentBranchName === targetBranch) {
+      Helpers.info('Already on proper branch.. just pulling')
+      child_process.execSync(`git reset --hard`, { cwd });
+      child_process.execSync(`git pull ${origin} ${checkoutFromBranch}`, { cwd });
+    } else {
+      const targetBranchExists = this.getBranchesNames(cwd).filter(f => targetBranch === f).length > 0;
+      child_process.execSync(`git reset --hard`, { cwd });
+      if (currentBranchName !== checkoutFromBranch) {
+        child_process.execSync(`git checkout ${checkoutFromBranch}`, { cwd });
+      }
+      child_process.execSync(`git pull ${origin} ${checkoutFromBranch}`, { cwd });
+      if (targetBranchExists) {
+        child_process.execSync(`git checkout ${targetBranch}`, { cwd });
+        child_process.execSync(`git rebase ${checkoutFromBranch}`, { cwd });
+      } else {
+        child_process.execSync(`git checkout -b ${targetBranch}`, { cwd });
+      }
+    }
   }
   //#endregion
 

@@ -85,6 +85,9 @@ export abstract class ProjectGit {
       pushCurrentBranch(force = false, origin = 'origin') {
         return Helpers.git.pushCurrentBranch(self.location, force, origin);
       },
+      pushCurrentRepoBranch(force = false, askToRetry = false, origin = 'origin') {
+        return Helpers.git.pushCurrentRepoBranch(self.location, force, askToRetry, origin);
+      },
       get thereAreSomeUncommitedChange() {
         return Helpers.git.checkIfthereAreSomeUncommitedChange(self.location);
       },
@@ -130,6 +133,9 @@ export abstract class ProjectGit {
       checkTagExists(tag: string) {
         return Helpers.git.checkTagExists(tag, self.location)
       },
+      checkout(checkoutFromBranch: string, branch: string, origin = 'origin') {
+        return Helpers.git.checkout(checkoutFromBranch, branch, origin, self.location)
+      },
       /**
        *
        * @param majorVersion example: v1, v2 etc.
@@ -142,7 +148,7 @@ export abstract class ProjectGit {
         return Helpers.git.lastTagHash(self.location)
       },
       get remoteOriginUrl() {
-        return  Helpers.git.getOriginURL(self.location);
+        return Helpers.git.getOriginURL(self.location);
       },
       get lastTagVersionName() {
         return (Helpers.git.lastTagVersionName(self.location) || '')
