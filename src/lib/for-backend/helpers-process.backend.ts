@@ -299,7 +299,10 @@ export class HelpersProcess {
   }
 
 
-  async killProcessByPort(portOrPortsToKill: number | number[]) {
+  async killProcessByPort(portOrPortsToKill: number | number[], options?: {
+    silent?: boolean
+  }) {
+    const showOutoput = (!options || !options.silent);
     if (!_.isArray(portOrPortsToKill)) {
       portOrPortsToKill = [portOrPortsToKill];
     }
@@ -308,15 +311,15 @@ export class HelpersProcess {
       const org = port;
       port = Number(port);
       if (!_.isNumber(port)) {
-        Helpers.warn(`[firedev-helpers] Can't kill on port: "${org}"`);
+        showOutoput && Helpers.warn(`[firedev-helpers] Can't kill on port: "${org}"`);
         return;
       }
       try {
         await fkill(`:${port}`, { force: true });
         // run(`fkill -f :${port} &> /dev/null`, { output: false }).sync()
-        Helpers.info(`Processs killed successfully on port: ${port}`)
+        showOutoput && Helpers.info(`Processs killed successfully on port: ${port}`);
       } catch (e) {
-        Helpers.warn(`No process to kill  on port: ${port}... `)
+        showOutoput && Helpers.warn(`No process to kill  on port: ${port}... `);
       }
 
 

@@ -1,6 +1,6 @@
 //#region import
 //#region @backend
-import { fse, path, crossPlatformPath } from 'tnp-core';
+import { fse, path, crossPlatformPath, portfinder } from 'tnp-core';
 export { ChildProcess } from 'child_process';
 import { ProjectGit } from './git-project';
 import { CLI } from 'tnp-cli';
@@ -14,6 +14,8 @@ import { HelpersFiredev } from './helpers';
 import { EmptyProjectStructure } from './models';
 const Helpers = HelpersFiredev.Instance;
 //#endregion
+
+const takenPorts = [];
 
 /**
  * @deprecated
@@ -426,6 +428,30 @@ export class Project<T extends Project<any> = any>
 
   public typeIsNot(this: Project, ...types: ConfigModels.LibType[]) {
     return !this.typeIs(...types);
+  }
+
+  async assignFreePort(startFrom: number, howManyFreePortsAfterThatPort: number = 0): Promise<number> {
+    //#region @backendFunc
+    const max = 2000;
+    let i = 0;
+    while (takenPorts.includes(startFrom)) {
+      startFrom += (1 + howManyFreePortsAfterThatPort);
+    }
+    while (true) {
+      try {
+        const port = await portfinder.getPortPromise({ port: startFrom });
+        takenPorts.push(port);
+        return port;
+      } catch (err) {
+        console.log(err)
+        Helpers.warn(`Trying to assign port  :${startFrom} but already in use.`, false);
+      }
+      startFrom += 1;
+      if (i++ === max) {
+        Helpers.error(`[firedev-helpers]] failed to assign free port after ${max} trys...`);
+      }
+    }
+    //#endregion
   }
 
   forEmptyStructure(): EmptyProjectStructure[] {

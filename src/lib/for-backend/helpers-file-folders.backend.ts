@@ -883,7 +883,7 @@ export class HelpersFileFolders {
     }
 
     if (!fse.existsSync(sourcePath)) {
-      Helpers.warn(`[firedev-helpers][copyFile] No able to find source of ${sourcePath}`);
+      Helpers.logWarn(`[firedev-helpers][copyFile] No able to find source of ${sourcePath}`);
       return false;
     }
     if (fse.lstatSync(sourcePath).isDirectory()) {

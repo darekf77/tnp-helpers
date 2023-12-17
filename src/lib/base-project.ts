@@ -345,6 +345,7 @@ export class BaseProject<T = any>
       startFrom += 1;
     }
     while (true) {
+
       try {
         const port = await portfinder.getPortPromise({ port: startFrom });
         takenPorts.push(port);
@@ -354,6 +355,7 @@ export class BaseProject<T = any>
       } catch (err) {
         Helpers.warn(`Trying to assign port  :${startFrom} but already in use.`, false);
       }
+      startFrom += 1;
       if (i++ === max) {
         Helpers.error(`[firedev-helpers]] failed to assign free port after ${max} trys...`);
       }
