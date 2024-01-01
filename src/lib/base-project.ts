@@ -11,211 +11,12 @@ import { config } from 'tnp-config';
 import { _ } from 'tnp-core';
 import { HelpersFiredev } from './helpers';
 import { Models } from 'tnp-models';
+import { BaseProjectResolver } from './base-project-resolver';
 
 const Helpers = HelpersFiredev.Instance;
 //#endregion
 
 const takenPorts = [];
-
-export class BaseProjectResolver<T> {
-  //#region class body
-  protected readonly NPM_PROJECT_KEY = 'npm';
-  protected projects: (T & BaseProject)[] = [];
-  protected emptyLocations: string[] = [];
-  constructor(protected classFn: any) { }
-  get allowedTypes(): string[] {
-    //#region @websqlFunc
-    return [this.NPM_PROJECT_KEY];
-    // throw `Please override this getter [allowedTypes] in your child class or  ${CLI.chalk.bold(config.frameworkName)}`;
-    //#endregion
-  }
-
-  get Current(): T {
-    //#region @backendFunc
-    const current = (this.classFn).From(process.cwd())
-    if (!current) {
-      Helpers.warn(`[firedev-helpers] Current location is not a ${CLI.chalk.bold(config.frameworkName)} type project.
-
-     location: "${process.cwd()}"
-
-     }`);
-      return void 0;
-    }
-    return current;
-    //#endregion
-  }
-
-  /**
-   * override this
-   */
-  typeFrom<T>(location: string): string {
-    //#region @backendFunc
-    if (Helpers.exists(crossPlatformPath([location, config.file.package_json]))) {
-      return this.NPM_PROJECT_KEY;
-    }
-    // throw `Please override this function [typeFrom] in your child class or  ${CLI.chalk.bold(config.frameworkName)}`;
-    //#endregion
-  }
-
-
-  From(locationOfProject: string | string[]): T {
-    // console.log({
-    //   locationOfProj
-    // })
-    //#region @websqlFunc
-    if (Array.isArray(locationOfProject)) {
-      locationOfProject = locationOfProject.join('/');
-    }
-    let location = crossPlatformPath(locationOfProject.replace(/\/\//g, '/'));
-
-    if (!_.isString(location)) {
-      Helpers.warn(`[project.from] location is not a string`)
-      return;
-    }
-    if (path.basename(location) === 'dist') {
-      location = path.dirname(location);
-    }
-    location = crossPlatformPath(path.resolve(location));
-
-    const alreadyExist = this.projects.find(l => l.location.trim() === location.trim());
-    if (alreadyExist) {
-      return alreadyExist as any;
-    }
-
-    //#region @backend
-    if (!fse.existsSync(location)) {
-      Helpers.log(`[firedev-helpers][project.from] Cannot find project in location: ${location}`, 1);
-      this.emptyLocations.push(location);
-      return;
-    }
-
-
-    let type = this.typeFrom(location);
-    if (type) {
-      let resultProject = new (this.classFn)() as BaseProject;
-
-      const pj = Helpers.readJson(crossPlatformPath([location, config.file.package_json]))
-
-      // @ts-ignore
-      resultProject.basename = path.basename(location);
-      // @ts-ignore
-      resultProject.location = location;
-      // @ts-ignore
-      resultProject.type = type;
-      // @ts-ignore
-      resultProject.packageJSON = pj;
-      // @ts-ignore
-      resultProject.ins = this;
-
-      return resultProject as any;
-    }
-    //#endregion
-
-    //#endregion
-  }
-
-  nearestTo(
-    absoluteLocation: string,
-    options?: { type?: (string | string[]); findGitRoot?: boolean; onlyOutSideNodeModules?: boolean }): T {
-    //#region @backendFunc
-
-    options = options || {};
-    const { type, findGitRoot, onlyOutSideNodeModules } = options;
-
-    if (_.isString(type) && !this.allowedTypes.includes(type)) {
-      Helpers.error(`[firedev-helpers][project.nearestTo] wrong type: ${type}`, false, true)
-    }
-    if (fse.existsSync(absoluteLocation)) {
-      absoluteLocation = fse.realpathSync(absoluteLocation);
-    }
-    if (fse.existsSync(absoluteLocation) && !fse.lstatSync(absoluteLocation).isDirectory()) {
-      absoluteLocation = path.dirname(absoluteLocation);
-    }
-
-    let project: (T & BaseProject);
-    let previousLocation: string;
-    while (true) {
-      if (onlyOutSideNodeModules && (path.basename(path.dirname(absoluteLocation)) === 'node_modules')) {
-        absoluteLocation = path.dirname(path.dirname(absoluteLocation));
-      }
-      project = this.From(absoluteLocation) as any;
-      if (_.isString(type)) {
-        if (this.allowedTypes.includes(project?.type)) {
-          if (findGitRoot) {
-            if (project.git.isGitRoot) {
-              break;
-            }
-          } else {
-            break;
-          }
-        }
-      } else {
-        if (project) {
-          if (findGitRoot) {
-            if (project.git.isGitRoot) {
-              break;
-            }
-          } else {
-            break;
-          }
-        }
-      }
-
-      previousLocation = absoluteLocation;
-      const newAbsLocation = path.join(absoluteLocation, '..');
-      if (!path.isAbsolute(newAbsLocation)) {
-        return;
-      }
-      absoluteLocation = crossPlatformPath(path.resolve(newAbsLocation));
-      if (!fse.existsSync(absoluteLocation) && absoluteLocation.split('/').length < 2) {
-        return;
-      }
-      if (previousLocation === absoluteLocation) {
-        return;
-      }
-    }
-    return project as any;
-    //#endregion
-  }
-
-
-  unload(project: T) {
-    this.projects = this.projects.filter(f => f !== project);
-  }
-
-
-  allProjectFrom(absoluteLocation: string, stopOnCwd: string = '/') {
-    //#region @backendFunc
-    const projects = {};
-    const projectsList = [];
-    let previousAbsLocation: string;
-    while (absoluteLocation.startsWith(stopOnCwd)) {
-
-      if (previousAbsLocation === absoluteLocation) {
-        break;
-      }
-
-
-
-      const proj = this.nearestTo(absoluteLocation) as any as BaseProject;
-      if (proj) {
-        if (projects[proj.location]) {
-          break;
-        }
-        projects[proj.location] = proj;
-        projectsList.push(proj);
-        previousAbsLocation = absoluteLocation;
-        absoluteLocation = path.dirname(proj.location);
-        continue;
-      }
-      break;
-    }
-    return projectsList as T[];
-    //#endregion
-  }
-
-  //#endregion
-}
 
 
 export class BaseProject<T = any>
@@ -236,6 +37,17 @@ export class BaseProject<T = any>
   readonly type: string;
   get version() {
     return this.packageJSON?.version;
+  }
+
+  get dependencies() {
+    return this.packageJSON?.dependencies;
+  }
+  get tnp() {
+    return this.packageJSON?.tnp;
+  }
+
+  get firedev() {
+    return this.packageJSON?.firedev;
   }
   protected readonly packageJSON: Models.npm.IPackageJSON;
   /**
@@ -334,25 +146,22 @@ export class BaseProject<T = any>
     //#endregion
   }
 
-  async assignFreePort(startFrom: number = 4200): Promise<Number> {
+
+
+  async assignFreePort(startFrom: number, howManyFreePortsAfterThatPort: number = 0): Promise<number> {
     //#region @backendFunc
-    if (_.isNumber(this.port) && this.port >= startFrom) {
-      return startFrom;
-    }
     const max = 2000;
     let i = 0;
     while (takenPorts.includes(startFrom)) {
-      startFrom += 1;
+      startFrom += (1 + howManyFreePortsAfterThatPort);
     }
     while (true) {
-
       try {
         const port = await portfinder.getPortPromise({ port: startFrom });
         takenPorts.push(port);
-        // @ts-ignore
-        this.port = port;
         return port;
       } catch (err) {
+        console.log(err)
         Helpers.warn(`Trying to assign port  :${startFrom} but already in use.`, false);
       }
       startFrom += 1;

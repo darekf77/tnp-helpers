@@ -97,7 +97,7 @@ export class HelpersFiredev extends CoreHelpers {
     return f;
   }
 
-  //#region @backend
+
 
 
   // replaceInvisibleCharacters(s: string) {
@@ -131,7 +131,7 @@ export class HelpersFiredev extends CoreHelpers {
     }
     return url;
   }
-  //#endregion
+
 
   //#region @backend
   slash(pathFromWindowsOrUnixType: string) {

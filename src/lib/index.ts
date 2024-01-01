@@ -11,5 +11,6 @@ import { HelpersFiredev as Base } from './helpers';
 export const Helpers = Base.Instance;
 export * from './project';
 export * from './base-project';
+export * from './base-project-resolver';
 export * from './models';
 
