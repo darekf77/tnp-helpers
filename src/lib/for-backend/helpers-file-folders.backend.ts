@@ -14,7 +14,7 @@ import * as crypto from 'crypto';
 declare const global: any;
 
 import { Helpers } from '../index';
-import { config } from 'tnp-config';
+import { config } from 'tnp-config/src';
 import { Models } from 'tnp-models';
 import type { Project } from '../project';
 
@@ -430,13 +430,13 @@ export class HelpersFileFolders {
     ].includes(f));
 
     const notAllowed: RegExp[] = [
-      '\.vscode', 'node\_modules',
+      '.vscode', 'node_modules',
       ...folders,
       'e2e', 'tmp.*', 'dist.*', 'tests', 'module', 'browser', 'bundle*',
-      'components', '\.git', 'bin', 'custom'
+      'components', '.git', 'bin', 'custom'
     ].filter(f => {
       return ![config.folder.external].includes(f) && _.isString(f);
-    }).map(s => new RegExp(s))
+    }).map(s => new RegExp(`^${Helpers.escapeStringForRegEx(s)}$`))
 
     const isDirectory = source => fse.lstatSync(source).isDirectory()
     const getDirectories = source =>
@@ -448,6 +448,7 @@ export class HelpersFileFolders {
         const allowed = (notAllowed.filter(p => p.test(folderNam)).length === 0);
         return allowed;
       })
+    // console.log(subdirectories)
 
     return subdirectories
       .map(dir => {
@@ -457,6 +458,9 @@ export class HelpersFileFolders {
       .filter(c => !!c)
   }
 
+  /**
+   * @deprecated
+   */
   findChildrenNavi<T>(location, createFn: (childLocation: string) => T): T[] {
     if (!fse.existsSync(location)) {
       return []

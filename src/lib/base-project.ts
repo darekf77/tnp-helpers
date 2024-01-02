@@ -13,6 +13,7 @@ import { HelpersFiredev } from './helpers';
 import { Models } from 'tnp-models';
 import { BaseProjectResolver } from './base-project-resolver';
 
+
 const Helpers = HelpersFiredev.Instance;
 //#endregion
 
@@ -39,9 +40,46 @@ export class BaseProject<T = any>
     return this.packageJSON?.version;
   }
 
+  /**
+   * npm dependencies
+   */
   get dependencies() {
-    return this.packageJSON?.dependencies;
+    return (this.packageJSON ? this.packageJSON.dependencies : {}) || {};
   }
+
+  /**
+   * peerDependencies dependencies
+   */
+  get peerDependencies() {
+    return (this.packageJSON ? this.packageJSON.peerDependencies : {}) || {};
+  }
+
+  /**
+   * devDependencies dependencies
+   */
+  get devDependencies() {
+    return (this.packageJSON ? this.packageJSON.devDependencies : {}) || {};
+  }
+
+  /**
+   * resolutions dependencies
+   */
+  get resolutions() {
+    return (this.packageJSON ? this.packageJSON['resolutions'] : {}) || {};
+  }
+
+  /**
+   *  object with all deps from package json
+   */
+  get allDependencies(): { [packageName: string]: string } {
+    return _.merge({
+      ...this.devDependencies,
+      ...this.peerDependencies,
+      ...this.dependencies,
+      ...this.resolutions
+    }) as any;
+  }
+
   get tnp() {
     return this.packageJSON?.tnp;
   }
@@ -98,8 +136,11 @@ export class BaseProject<T = any>
     //#endregion
   }
 
-  pathFor(relativePath: string) {
+  pathFor(relativePath: string | string[]) {
     //#region @backendFunc
+    if (Array.isArray(relativePath)) {
+      relativePath = relativePath.join('/');
+    }
     if (path.isAbsolute(relativePath)) {
       Helpers.error(`Cannot join relative path with absolute: ${relativePath}`);
     }
@@ -146,6 +187,26 @@ export class BaseProject<T = any>
     //#endregion
   }
 
+  linkNodeModulesTo(proj: Partial<BaseProject>) {
+    //#region @backendFunc
+    const source = this.pathFor(config.folder.node_modules);
+    const dest = proj.pathFor(config.folder.node_modules);
+    Helpers.remove(dest, true);
+    Helpers.createSymLink(source, dest);
+    //#endregion
+  }
+
+  reinstallNodeModules(forcerRemoveNodeModules = false) {
+    //#region @backendFunc
+    Helpers.taskStarted(`Reinstalling node_modules in ${this.genericName}`);
+    const source = this.pathFor(config.folder.node_modules);
+    if(forcerRemoveNodeModules) {
+      Helpers.remove(source, true);
+    }
+    this.run('yarn install').sync();
+    Helpers.taskDone(`Reinstalling done for ${this.genericName}`);
+    //#endregion
+  }
 
 
   async assignFreePort(startFrom: number, howManyFreePortsAfterThatPort: number = 0): Promise<number> {
