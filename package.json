@@ -38,7 +38,7 @@
       "firedev-helpers"
     ]
   },
-  "version": "16.5.5",
+  "version": "16.5.6",
   "dependencies": {
     "json10-writer": "~16.5.5",
     "task.js": "0.1.5",
