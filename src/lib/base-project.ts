@@ -200,7 +200,7 @@ export class BaseProject<T = any>
     //#region @backendFunc
     Helpers.taskStarted(`Reinstalling node_modules in ${this.genericName}`);
     const source = this.pathFor(config.folder.node_modules);
-    if(forcerRemoveNodeModules) {
+    if (forcerRemoveNodeModules) {
       Helpers.remove(source, true);
     }
     this.run('yarn install').sync();
@@ -209,17 +209,23 @@ export class BaseProject<T = any>
   }
 
 
-  async assignFreePort(startFrom: number, howManyFreePortsAfterThatPort: number = 0): Promise<number> {
+  async assignFreePort(startFrom: number = 4200, howManyFreePortsAfterThatPort: number = 0): Promise<number> {
     //#region @backendFunc
+    if (_.isNumber(this.port) && this.port >= startFrom) {
+      return startFrom;
+    }
     const max = 2000;
     let i = 0;
     while (takenPorts.includes(startFrom)) {
       startFrom += (1 + howManyFreePortsAfterThatPort);
     }
     while (true) {
+
       try {
         const port = await portfinder.getPortPromise({ port: startFrom });
         takenPorts.push(port);
+        // @ts-ignore
+        this.port = port;
         return port;
       } catch (err) {
         console.log(err)
