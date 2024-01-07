@@ -26,6 +26,88 @@ export class BaseProject<T = any>
 //#endregion
 {
   static ins = new BaseProjectResolver<BaseProject>(BaseProject);
+
+  public static sortGroupOfProject<T extends BaseProject<any> = BaseProject<any>>(projects: T[], resoveDepsArray: (proj: T) => string[], projNameToCompare: (proj: T) => string): T[] {
+
+    const visited: { [key: string]: boolean } = {};
+    const stack: { [key: string]: boolean } = {};
+    const result: T[] = [];
+
+    const visit = (project: T) => {
+      if (stack[projNameToCompare(project)]) {
+        // Circular dependency detected
+        Helpers.error(`Circular dependency detected involving project: ${projNameToCompare(project)}`);
+      }
+
+      if (!visited[projNameToCompare(project)]) {
+        visited[projNameToCompare(project)] = true;
+        stack[projNameToCompare(project)] = true;
+
+        const depsResolved = resoveDepsArray(project);
+        depsResolved.forEach(dependency => {
+          const dependentProject = projects.find(p => {
+            // console.log(`comparing :"${projNameToCompare(p)}" and "${dependency}"`)
+            return projNameToCompare(p) === dependency;
+          });
+          if (dependentProject) {
+            visit(dependentProject);
+          }
+        });
+
+        stack[projNameToCompare(project)] = false;
+        result.push(project);
+      }
+    };
+
+    projects.forEach(project => visit(project));
+    return result;
+    // return result.reverse(); // Reverse the result to get the correct order
+  }
+
+  // public static sortGroupOfProject<T extends BaseProject<any> = BaseProject<any>>(projects: T[], resoveDepsArray: (proj: T) => string[], projNameToCompare: (proj: T) => string) {
+  //   if (projects.length === 0) {
+  //     return [];
+  //   }
+  //   let i = 0;
+  //   let maxNoup = 0;
+  //   let MAX_NO_UPDATE_IN_ROW = (projects.length + 1);
+  //   let count = 1;
+  //   while (true) {
+  //     const res = projects[i];
+  //     const updateTriggered = !_.isUndefined(projects.slice(i + 1).find((res2) => {
+  //       const res2Name = projNameToCompare(res2);
+  //       if (projNameToCompare(res) === res2Name) {
+  //         return false;
+  //       }
+  //       const depsResolved = resoveDepsArray(res);
+  //       if (!_.isUndefined(depsResolved.find(resovledName => resovledName === res2Name))) {
+  //         // console.log(`+ ${res.name} has no dependency ${res2.name}`, 1)
+  //         projects = Helpers.arrays.arrayMoveElementBefore<T>(projects, res2, res, 'location');
+  //         return true;
+  //       }
+  //       return false;
+  //     }));
+  //     if (i === (projects.length - 1)) {
+  //       i = 0;
+  //     } else {
+  //       i++;
+  //     }
+
+  //     if (updateTriggered) {
+  //       console.log(`Sort(${++count})\n${projects.map(c => c.genericName).join('\n')}\n `, 1);
+  //       maxNoup = 0;
+  //       continue;
+  //     } else {
+  //       maxNoup++;
+  //       console.log(`SORT NO UPDATE..`)
+  //     }
+  //     if (maxNoup === MAX_NO_UPDATE_IN_ROW) {
+  //       break;
+  //     }
+  //   }
+
+  //   return projects;
+  // }
   readonly ins: BaseProjectResolver<T>;
   /**
    * it do not need to be realt path

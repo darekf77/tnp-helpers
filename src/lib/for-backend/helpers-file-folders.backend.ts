@@ -421,8 +421,8 @@ export class HelpersFileFolders {
   }
 
 
-  findChildren<T>(location, createFn: (childLocation: string) => T): T[] {
-
+  findChildren<T>(location, createFn: (childLocation: string) => T, options?: { allowAllNames: boolean; }): T[] {
+    const { allowAllNames } = options || {};
     let folders = Helpers.values(config.folder);
     folders = folders.filter(f => ![
       config.folder.shared,
@@ -431,9 +431,11 @@ export class HelpersFileFolders {
 
     const notAllowed: RegExp[] = [
       '.vscode', 'node_modules',
-      ...folders,
-      'e2e', 'tmp.*', 'dist.*', 'tests', 'module', 'browser', 'bundle*',
-      'components', '.git', 'bin', 'custom'
+      ...(allowAllNames ? [] : [
+        ...folders,
+        'e2e', 'tmp.*', 'dist.*', 'tests', 'module', 'browser', 'bundle*',
+        'components', '.git', 'bin', 'custom'
+      ])
     ].filter(f => {
       return ![config.folder.external].includes(f) && _.isString(f);
     }).map(s => new RegExp(`^${Helpers.escapeStringForRegEx(s)}$`))
