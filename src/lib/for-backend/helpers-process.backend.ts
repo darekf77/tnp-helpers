@@ -22,6 +22,7 @@ import * as fuzzy from 'fuzzy';
 import * as inquirer from 'inquirer';
 import * as inquirerAutocomplete from 'inquirer-autocomplete-prompt';
 inquirer.registerPrompt('autocomplete', inquirerAutocomplete);
+const { AutoComplete } = require('enquirer');
 import * as spawn from 'cross-spawn';
 //#endregion
 
@@ -166,19 +167,40 @@ export class HelpersProcess {
     return res.value as T;
   }
 
-  async multipleChoicesAsk<T = string>(
+  async multipleChoicesAsk(
     question: string,
-    choices: { name: string; value: T; }[]
-  ) {
-    const res = await inquirer.prompt({
-      type: 'checkbox',
-      name: 'value',
-      message: question,
-      choices,
-      pageSize: 10,
-      loop: false,
-    } as any) as any;
-    return res.value as T[];
+    choices: { name: string; value: string; }[],
+    autocomplete: boolean = false,
+  ): Promise<string[]> {
+    if (autocomplete) {
+      // console.log({ choices })
+      // Helpers.pressKeyAndContinue()
+      const prompt = new AutoComplete({
+        name: 'value',
+        message: question,
+        limit: 10,
+        multiple: true,
+        choices,
+        hint: '- Space to select. Return to submit',
+        footer() {
+          return CLI.chalk.green('(Scroll up and down to reveal more choices)');
+        },
+      });
+
+      const res = await prompt.run();
+      // console.log({ res })
+      return res;
+    } else {
+      const res = await inquirer.prompt({
+        type: 'checkbox',
+        name: 'value',
+        message: question,
+        choices,
+        pageSize: 10,
+        loop: false,
+      } as any) as any;
+      return res.value;
+    }
   }
 
   async autocompleteAsk<T = string>(

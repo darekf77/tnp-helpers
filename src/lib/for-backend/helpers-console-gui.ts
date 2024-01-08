@@ -30,11 +30,12 @@ export class HelpersConsoleGui {
   //#endregion
 
   //#region @backend
-  multiselect = async <T = string>(
+  multiselect = async (
     questionMessage: string,
-    choices: { name: string; value: T; }[]
+    choices: { name: string; value: string; }[],
+    autocomplete?: boolean
   ) => {
-    return await Helpers.multipleChoicesAsk(questionMessage, choices);
+    return await Helpers.multipleChoicesAsk(questionMessage, choices, !!autocomplete);
   }
   //#endregion
 

@@ -9,6 +9,15 @@
       "tnp-models",
       'task.js',
       "json10-writer"
+      // 'enquirer',
+      // 'inquirer-autocomplete-prompt',
+      // 'cross-spawn',
+      // 'fuzzy',
+      // 'tnp-models',
+      // 'dateformat',
+      // 'express',
+      // 'crypto',
+      // 'underscore',
     ],
 
     "dependencies": {},
