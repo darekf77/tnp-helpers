@@ -170,6 +170,7 @@ export class BaseProject<T = any>
     return this.packageJSON?.firedev;
   }
   protected readonly packageJSON: Models.npm.IPackageJSON;
+
   /**
    * only available after executing *this.assignFreePort()*
    */
