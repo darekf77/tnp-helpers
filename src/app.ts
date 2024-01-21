@@ -1,8 +1,38 @@
-//#region @notForNpm
-//#region @backend
+//#region @browser
+
+import { NgModule } from '@angular/core';
+
+import { Component, OnInit } from '@angular/core';
+
+@Component({
+  selector: 'app-tnp-helpers',
+  template: `
+  hello world
+  `
+})
+
+export class TnpHelpersComponent implements OnInit {
+  constructor() { }
+
+  ngOnInit() { }
+}
+
+@NgModule({
+  imports: [],
+  exports: [TnpHelpersComponent],
+  declarations: [TnpHelpersComponent],
+  providers: [],
+})
+export class TnpHelpersModule { }
+
+//#endregion
+
+
 import { _ } from 'tnp-core';
+//#region @backend
 import { Helpers } from './index';
 import { Models } from 'tnp-models';
+//#endregion
 import { CoreLibCategoryArr } from 'tnp-config';
 
 async function start() {
@@ -11,6 +41,7 @@ async function start() {
     return `file${n}`;
   });
 
+  //#region @backend
   await Helpers.workerCalculateArray(
     data,
     () => {
@@ -39,10 +70,10 @@ async function start() {
       tnpModels: Models
     }
   });
+  //#endregion
 
 }
 
 
 export default start;
-//#endregion
-//#endregion
+
