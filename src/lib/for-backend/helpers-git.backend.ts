@@ -213,10 +213,11 @@ export class HelpersGit {
 
   //#region get number of commit in repository
   hasAnyCommits(cwd: string) {
-    Helpers.log('[firedev-helpers][hasAnyCommits] ' + cwd, 1)
+    // con.log('[firedev-helpers][hasAnyCommits] ' + cwd, 1)
     try {
       if (process.platform === 'win32') {
-        child_process.execSync('git rev-parse HEAD', { cwd }).toString().trim()
+        Helpers.run('git rev-parse HEAD',{ cwd, silence: true, output: false }).sync()
+        // child_process.execSync('git rev-parse HEAD', { cwd, stdio: ['pipe',] }).toString().trim()
       } else {
         child_process.execSync('git rev-parse HEAD &> /dev/null', { cwd }).toString().trim()
       }
