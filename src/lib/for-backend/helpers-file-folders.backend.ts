@@ -6,7 +6,7 @@ import {
   rimraf,
   crossPlatformPath,
   json5,
-} from 'tnp-core';
+} from 'tnp-core/src';
 import * as  underscore from 'underscore';
 import * as glob from 'glob';
 import { JSON10 } from 'json10';
@@ -15,7 +15,7 @@ declare const global: any;
 
 import { Helpers } from '../index';
 import { config } from 'tnp-config/src';
-import { Models } from 'tnp-models';
+import { Models } from 'tnp-models/src';
 import type { Project } from '../project';
 
 
@@ -805,7 +805,21 @@ export class HelpersFileFolders {
             }
 
           };
-          copyFn();
+          if (process.platform === 'win32') {
+            while (true) {
+              try {
+                copyFn();
+                break;
+              } catch (error) {
+                Helpers.warn(`WARNING not able to copy .. trying again`)
+                Helpers.sleep(1);
+                continue;
+              }
+            }
+          } else {
+            copyFn();
+          }
+
 
         }
       }
