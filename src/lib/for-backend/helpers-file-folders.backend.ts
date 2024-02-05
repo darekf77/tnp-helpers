@@ -643,6 +643,7 @@ export class HelpersFileFolders {
       copySymlinksAsFiles?: boolean;
       copySymlinksAsFilesDeleteUnexistedLinksFromSourceFirst?: boolean;
       useTempFolder?: boolean;
+      dontAskOnError?: boolean;
     } & fse.CopyOptionsSync) {
 
     Helpers.log(`Copying from:
@@ -793,14 +794,16 @@ export class HelpersFileFolders {
             } catch (error) {
               const exitOnError = global['tnpNonInteractive'];
               Helpers.log(error)
-              Helpers.error(`[firedev-helper] Not able to copy folder:
-              from: ${sourceDir}
-              to: ${destinationDir}
-              options: ${json5.stringify(options)}
-              error: ${error?.message}
-              `, !exitOnError);
+              if (!options!.dontAskOnError) {
+                Helpers.error(`[firedev-helper] Not able to copy folder:
+                from: ${sourceDir}
+                to: ${destinationDir}
+                options: ${json5.stringify(options)}
+                error: ${error?.message}
+                `, !exitOnError);
 
-              Helpers.pressKeyAndContinue(`Press any key to repeat copy action...`);
+                Helpers.pressKeyAndContinue(`Press any key to repeat copy action...`);
+              }
               copyFn();
             }
 
