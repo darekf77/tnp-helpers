@@ -73,7 +73,7 @@ export class Project<T extends Project<any> = any>
     }
     location = crossPlatformPath(path.resolve(location));
     if (Project.emptyLocations.includes(location)) {
-      if (location.search(`/${config.folder.bundle}`) === -1) {
+      if (location.search(`/${config.folder.dist}`) === -1) {
         Helpers.log(`[project.from] empty location ${location}`, 2)
         return;
       }
@@ -259,7 +259,7 @@ export class Project<T extends Project<any> = any>
     }
   }
 
-  public static get isBundleMode() {
+  public static get isReleaseDistMode() {
     if (Helpers.isBrowser) {
       return true;
     }
