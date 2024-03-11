@@ -206,12 +206,12 @@ export class HelpersCliTool {
   /**
    * Check if your function name fits into command line param
    *
-   * @param name name of function
+   * @param functionOrClassName name of function or class
    * @param restOfArgs arguments from command line
    */
-  match(name: string, restOfArgs: string[]): { isMatch: boolean; restOfArgs: string[] } {
+  match(functionOrClassName: string, restOfArgs: string[], classMethodsNames: string[] = []): { isMatch: boolean; restOfArgs: string[], methodNameToCall?: string; } {
     let isMatch = false;
-
+    let methodNameToCall: string;
     let counter = 0;
     isMatch = !!restOfArgs
       .filter(a => !a.startsWith('--')) // TODO fix this also for other special paramters
@@ -222,16 +222,32 @@ export class HelpersCliTool {
           return false
         }
         // console.log(`counter ok for ${vv}`)
-        const nameInKC = Helpers.cliTool.simplifiedCmd(name);
+        const nameInKC = Helpers.cliTool.simplifiedCmd(functionOrClassName);
         const argInKC = Helpers.cliTool.simplifiedCmd(vv);
 
-        const condition = (nameInKC === argInKC)
+        let condition = (nameInKC === argInKC);
+
         if (condition) {
           restOfArgs = _.slice(restOfArgs, i + 1, restOfArgs.length);
+        } else {
+          for (let index = 0; index < classMethodsNames.length; index++) {
+            const classMethod = classMethodsNames[index];
+            const nameMethodInKC = Helpers.cliTool.simplifiedCmd(nameInKC + classMethod);
+            // console.log({
+            //   nameMethodInKC,
+            //   argInKC
+            // })
+            condition = (nameMethodInKC === argInKC);
+            if (condition) {
+              restOfArgs = _.slice(restOfArgs, i + 1, restOfArgs.length);
+              methodNameToCall = classMethod;
+              break;
+            }
+          }
         }
         return condition;
       });
-    return { isMatch, restOfArgs };
+    return { isMatch, restOfArgs, methodNameToCall };
   }
 
   //#region @backend
