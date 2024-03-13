@@ -101,16 +101,20 @@ export class Project<T extends Project<any> = any>
     // Helpers.log(`[firedev-helpers] Type "${type}" for ${location} `)
     let resultProject: Project<any>;
     if (type === 'isomorphic-lib') {
-      resultProject = new (getClassFunction('ProjectIsomorphicLib'))(location);
+      const ProjectIsomorphicLib = require('tnp/lib/project/abstract/project/project').ProjectIsomorphicLib
+      resultProject = new (ProjectIsomorphicLib)(location);
     }
     if (type === 'vscode-ext') {
-      resultProject = new (getClassFunction('ProjectVscodeExt'))(location);
+      const ProjectVscodeExt = require('tnp/lib/project/abstract/project/project').ProjectVscodeExt
+      resultProject = new (ProjectVscodeExt)(location);
     }
     if (type === 'docker') {
-      resultProject = new (getClassFunction('ProjectDocker'))(location);
+      const ProjectDocker = require('tnp/lib/project/abstract/project/project').ProjectDocker
+      resultProject = new (ProjectDocker)(location);
     }
     if (type === 'container') {
-      resultProject = new (getClassFunction('ProjectContainer'))(location);
+      const ProjectContainer = require('tnp/lib/project/abstract/project/project').ProjectContainer
+      resultProject = new (ProjectContainer)(location);
     }
     if (type === 'navi') {
       if (['tnp', 'firedev'].includes(config.frameworkName)) {
@@ -122,16 +126,24 @@ export class Project<T extends Project<any> = any>
 !!!
        `, true, true);
       }
-      resultProject = new (getClassFunction('ProjectNavi'))(location);
+      // resultProject = new (getClassFunction('ProjectNavi'))(location);
+      const ProjectNavi = require('tnp/lib/project/abstract/project/project').ProjectNavi;
+      resultProject = new (ProjectNavi)(location);
     }
     if (type === 'leaf') {
-      resultProject = new (getClassFunction('ProjectLeaf'))(location);
+      // resultProject = new (getClassFunction('ProjectLeaf'))(location);
+      const ProjectLeaf = require('tnp/lib/project/abstract/project/project').ProjectLeaf;
+      resultProject = new (ProjectLeaf)(location);
     }
     if (type === 'unknow-npm-project') {
-      resultProject = new (getClassFunction('ProjectUnknowNpm'))(location);
+      // resultProject = new (getClassFunction('ProjectUnknowNpm'))(location);
+      const ProjectUnknowNpm = require('tnp/lib/project/abstract/project/project').ProjectUnknowNpm;
+      resultProject = new (ProjectUnknowNpm)(location);
     }
     if (type === 'scenario') {
-      resultProject = new (getClassFunction('ProjectScenarioReqRes'))(location);
+      // resultProject = new (getClassFunction('ProjectScenarioReqRes'))(location);
+      const ProjectScenarioReqRes = require('tnp/lib/project/abstract/project/project').ProjectScenarioReqRes;
+      resultProject = new (ProjectScenarioReqRes)(location);
     }
 
     // log(resultProject ? (`PROJECT ${resultProject.type} in ${location}`)
