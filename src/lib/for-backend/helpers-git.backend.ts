@@ -8,8 +8,7 @@ import {
 } from 'tnp-core';
 import { CLI } from 'tnp-cli';
 import { Helpers } from '../index';
-import type { Project } from '../project';
-import { config, ConfigModels } from 'tnp-config';
+import type { BaseProject } from '../index';
 //#endregion
 
 
@@ -216,7 +215,7 @@ export class HelpersGit {
     // con.log('[firedev-helpers][hasAnyCommits] ' + cwd, 1)
     try {
       if (process.platform === 'win32') {
-        Helpers.run('git rev-parse HEAD',{ cwd, silence: true, output: false }).sync()
+        Helpers.run('git rev-parse HEAD', { cwd, silence: true, output: false }).sync()
         // child_process.execSync('git rev-parse HEAD', { cwd, stdio: ['pipe',] }).toString().trim()
       } else {
         child_process.execSync('git rev-parse HEAD &> /dev/null', { cwd }).toString().trim()
@@ -312,13 +311,13 @@ export class HelpersGit {
   //#endregion
 
   //#region commit
-  commit(cwd: string, ProjectClass: typeof Project, args?: string) {
+  commit(cwd: string, ProjectClass: typeof BaseProject, args?: string) {
     Helpers.log('[firedev-helpers][commit] ' + cwd, 1)
     if (!_.isString(args)) {
       args = 'update'
     }
 
-    const gitRootProject = ProjectClass.nearestTo(cwd, { findGitRoot: true });
+    const gitRootProject = ProjectClass.ins.nearestTo(cwd, { findGitRoot: true });
     try {
       Helpers.info(`[firedev-helpers][git][commit] Adding current git changes in git root:
         ${gitRootProject.location}

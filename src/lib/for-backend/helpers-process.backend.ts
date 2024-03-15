@@ -10,7 +10,7 @@ import {
 import { CLI } from 'tnp-cli';
 import * as dateformat from 'dateformat';
 
-import type { Project } from '../project';
+import type { BaseProject } from '../index';
 import { Helpers } from '../index';
 import { Models } from 'tnp-models';
 import { CLASS } from 'typescript-class-helpers';
@@ -107,8 +107,8 @@ export class HelpersProcess {
       if (path.basename(dir) === config.folder.external) {
 
         const belowExternal = path.resolve(path.join(dir, '..'))
-        const classProject = CLASS.getBy('Project');
-        if (fse.existsSync(belowExternal) && !!(classProject as typeof Project).From(belowExternal)) {
+        const classProject = CLASS.getBy('Project') as typeof BaseProject;
+        if (fse.existsSync(belowExternal) && !!(classProject).ins.From(belowExternal)) {
           dir = belowExternal;
         }
       }

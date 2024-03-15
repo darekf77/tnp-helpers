@@ -16,7 +16,7 @@ declare const global: any;
 import { Helpers } from '../index';
 import { config } from 'tnp-config/src';
 import { Models } from 'tnp-models/src';
-import type { Project } from '../project';
+
 
 
 export interface GetRecrusiveFilesFromOptions {
@@ -837,13 +837,13 @@ export class HelpersFileFolders {
   }
 
 
-  filterDontCopy(basePathFoldersTosSkip: string[], projectOrBasepath: Project | string) {
+  filterDontCopy(basePathFoldersTosSkip: string[], projectOrBasepath: string) {
 
     return (src: string, dest: string) => {
       // console.log('src', src)
       src = crossPlatformPath(src);
       const baseFolder = _.first(crossPlatformPath(src)
-        .replace(crossPlatformPath(_.isString(projectOrBasepath) ? projectOrBasepath : projectOrBasepath.location), '')
+        .replace(crossPlatformPath(projectOrBasepath), '')
         .replace(/^\//, '').split('/'));
 
       // console.log('baseFolder', baseFolder)
@@ -859,12 +859,12 @@ export class HelpersFileFolders {
 
   }
 
-  filterOnlyCopy(basePathFoldersOnlyToInclude: string[], projectOrBasepath: Project | string) {
+  filterOnlyCopy(basePathFoldersOnlyToInclude: string[], projectOrBasepath: string) {
 
     return (src: string, dest: string) => {
       src = crossPlatformPath(src);
       const baseFolder = _.first(crossPlatformPath(src)
-        .replace(crossPlatformPath(_.isString(projectOrBasepath) ? projectOrBasepath : projectOrBasepath.location), '')
+        .replace(crossPlatformPath(projectOrBasepath), '')
         .replace(/^\//, '').split('/'));
 
       if (!baseFolder || baseFolder.trim() === '') {

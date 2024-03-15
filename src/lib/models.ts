@@ -1,4 +1,4 @@
-import type { Project } from "./project";
+import type { BaseProject } from "./base-project";
 
 export type EmptyProjectStructure = {
   includeContent?: boolean;
@@ -6,4 +6,4 @@ export type EmptyProjectStructure = {
   relativeLinkFrom?: string;
 };
 
-export type ProjectBuild = { project: Project; appBuild: boolean; };
+export type ProjectBuild = { project: BaseProject; appBuild: boolean; };

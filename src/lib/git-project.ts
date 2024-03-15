@@ -5,7 +5,7 @@ import {
   child_process,
   //#endregion
 } from 'tnp-core';
-import { Project } from './project';
+import type { BaseProject } from './index';
 import { HelpersFiredev } from './helpers';
 //#region @backend
 import { CLI } from 'tnp-cli';
@@ -18,11 +18,11 @@ export abstract class ProjectGit {
   //#region @backend
 
 
-  public runCommandGetString(this: Project, command: string) {
+  public runCommandGetString(this: BaseProject, command: string) {
     return Helpers.commnadOutputAsString(command, this.location, { biggerBuffer: false });
   }
 
-  public async execute(this: Project, command: string,
+  public async execute(this: BaseProject, command: string,
     options?: ExecuteOptions & { showCommand?: boolean }) {
     if (_.isUndefined(options.showCommand)) {
       options.showCommand = false;
@@ -37,7 +37,7 @@ export abstract class ProjectGit {
     return await Helpers.execute(command, cwd, options as any);
   }
 
-  public run(this: Project, command: string, options?: RunOptions) {
+  public run(this: BaseProject, command: string, options?: RunOptions) {
     Helpers.log(`command: ${command}`)
     if (!options) { options = {}; }
     if (_.isUndefined(options.showCommand)) {
@@ -55,7 +55,7 @@ export abstract class ProjectGit {
 
   //#region @backend
   // @ts-ignore
-  public get git(this: Project) {
+  public get git(this: BaseProject) {
     const self = this;
     return {
       clone(url: string, destinationFolderName = '') {
@@ -80,7 +80,7 @@ export abstract class ProjectGit {
         await Helpers.git.pullCurrentBranch(self.location, askToRetry);
       },
       commit(args?: string) {
-        return Helpers.git.commit(self.location, Project, args);
+        return Helpers.git.commit(self.location, Object.getPrototypeOf(this), args);
       },
       pushCurrentBranch(force = false, origin = 'origin') {
         return Helpers.git.pushCurrentBranch(self.location, force, origin);

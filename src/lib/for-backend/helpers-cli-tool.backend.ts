@@ -1,9 +1,9 @@
 import { _, path, fse } from 'tnp-core';
 import { Helpers } from '../index';
-import type { Project } from '../project';
 import { CLASS } from 'typescript-class-helpers';
 import { config } from 'tnp-config';
 import { ConfigModels, LibTypeArr } from 'tnp-config';
+import type { BaseProject } from '../index';
 //#region @backend
 import { CLI } from 'tnp-cli';
 //#endregion
@@ -147,61 +147,6 @@ export class HelpersCliTool {
       .trim()
   }
 
-  resolveProject<T = Project>(args: string | string[], CurrentProject: Project, ProjectClass: typeof Project): T {
-    if (!CurrentProject) {
-      return void 0;
-    }
-    if (_.isString(args)) {
-      args = args.split(' ');
-    }
-    let firstArg = _.first(args).replace(/\/$/, '');
-    if (firstArg) {
-      if (path.isAbsolute(firstArg)) {
-        return ProjectClass.From(firstArg);
-      }
-      return ProjectClass.From(path.join(CurrentProject.location, firstArg));
-    }
-  }
-
-  /**
-   * Resolve child project when accessing from parent container etc...
-   * @param args string or string[] from cli args
-   * @param CurrentProject project from process.cwd()
-   */
-  resolveChildProject(args: string | string[], CurrentProject: Project): Project {
-    if (!CurrentProject) {
-      return void 0;
-    }
-    if (_.isString(args)) {
-      args = args.split(' ');
-    }
-    let firstArg = _.first(args);
-    if (firstArg) {
-      firstArg = firstArg.replace(/\/$/, '');
-      const child = CurrentProject.children.find(c => c.name === firstArg);
-      if (child) {
-        CurrentProject = child;
-      }
-    }
-    return CurrentProject;
-  }
-
-  resolveProjectsFromArgs(args: string | string[], CurrentProject: Project, ProjectClass: typeof Project): Project[] {
-    const projects = [];
-    if (!CurrentProject) {
-      return [];
-    }
-    if (_.isString(args)) {
-      args = args.split(' ');
-    }
-    args.forEach(a => {
-      const child = ProjectClass.From(path.join(CurrentProject.location, a));
-      if (child) {
-        projects.push(child);
-      }
-    });
-    return projects;
-  }
 
   /**
    * Check if your function name fits into command line param
@@ -253,6 +198,7 @@ export class HelpersCliTool {
   //#region @backend
   /**
    * @todo TODO replace with funciton below
+   * @deprecated
    */
   globalArgumentsParserTnp(argsv: string[]) {
 
@@ -319,8 +265,8 @@ export class HelpersCliTool {
     if (_.isString(cwdFromArgs)) {
       if (findNearestProject || _.isString(findNearestProjectType)) {
         // Helpers.log('look for nearest')
-        const ProjectClass = CLASS.getBy('Project') as typeof Project;
-        var nearest = ProjectClass.nearestTo<Project>(cwdFromArgs, {
+        const ProjectClass = CLASS.getBy('Project') as typeof BaseProject;
+        var nearest = ProjectClass.ins.nearestTo(cwdFromArgs, {
           type: findNearestProjectType,
           findGitRoot: findProjectWithGitRoot,
         });
@@ -410,10 +356,10 @@ export class HelpersCliTool {
     }
 
     if (_.isString(cwdFromArgs)) {
-      let nearest: Project;
+      let nearest: BaseProject;
       if (findNearestProject || _.isString(findNearestProjectType)) {
         const classProject = CLASS.getBy('Project');
-        nearest = (classProject as typeof Project).nearestTo(cwdFromArgs, {
+        nearest = (classProject as typeof BaseProject).ins.nearestTo(cwdFromArgs, {
           type: findNearestProjectType,
           findGitRoot: findProjectWithGitRoot,
         });

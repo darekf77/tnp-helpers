@@ -1,6 +1,5 @@
 
 import {
-  Helpers,
   //#region @backend
   fse, child_process
   //#endregion
@@ -9,15 +8,22 @@ import {
 export { ChildProcess } from 'child_process';
 import { CLI } from 'tnp-cli';
 //#endregion
+import { Helpers } from '../index';
 import { path, crossPlatformPath } from 'tnp-core';
 import { config } from 'tnp-config';
 import { _ } from 'tnp-core';
 import type { BaseProject } from './base-project';
 
-export class BaseProjectResolver<T> {
+
+
+export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
 
   protected readonly NPM_PROJECT_KEY = 'npm';
-  protected projects: (T & BaseProject)[] = [];
+  protected projects: T[] = [];
+  /**
+   * To speed up checking folder I am keeping pathes for alterdy checked folder
+   * This may break things that are creating new projects
+   */
   protected emptyLocations: string[] = [];
   constructor(protected classFn: any) { }
   get allowedTypes(): string[] {
@@ -93,8 +99,6 @@ export class BaseProjectResolver<T> {
 
       const pj = Helpers.readJson(crossPlatformPath([location, config.file.package_json]))
 
-      // @ts-ignore
-      resultProject.basename = path.basename(location);
       // @ts-ignore
       resultProject.location = location;
       // @ts-ignore
@@ -180,6 +184,20 @@ export class BaseProjectResolver<T> {
     this.projects = this.projects.filter(f => f !== project);
   }
 
+  remove(project: T) {
+    //#region @backend
+    const location = project.location;
+    this.projects = this.projects.filter(p => p.location !== location);
+    Helpers.tryRemoveDir(location);
+    //#endregion
+  }
+
+  add(project: T) {
+    //#region @backend
+    this.projects.push(project);
+    //#endregion
+  }
+
 
   allProjectFrom(absoluteLocation: string, stopOnCwd: string = '/') {
     //#region @backendFunc
@@ -191,8 +209,6 @@ export class BaseProjectResolver<T> {
       if (previousAbsLocation === absoluteLocation) {
         break;
       }
-
-
 
       const proj = this.nearestTo(absoluteLocation) as any as BaseProject;
       if (proj) {
@@ -208,6 +224,33 @@ export class BaseProjectResolver<T> {
       break;
     }
     return projectsList as T[];
+    //#endregion
+  }
+
+  /**
+   * Resolve child project when accessing from parent container etc...
+   * @param args string or string[] from cli args
+   * @param CurrentProject project from process.cwd()
+   */
+  resolveChildProject(args: string | string[]): T {
+    //#region @backendFunc
+    const currentProject = this.Current;
+
+    if (!currentProject) {
+      return void 0 as any;
+    }
+    if (_.isString(args)) {
+      args = args.split(' ');
+    }
+    let firstArg = _.first(args);
+    if (firstArg) {
+      firstArg = firstArg.replace(/\/$/, '');
+      const child = currentProject.children.find(c => c.name === firstArg);
+      if (child) { // @ts-ignore
+        currentProject = child;
+      }
+    }
+    return currentProject;
     //#endregion
   }
 

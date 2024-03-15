@@ -12,6 +12,7 @@ import { _ } from 'tnp-core';
 import { HelpersFiredev } from './helpers';
 import { Models } from 'tnp-models';
 import { BaseProjectResolver } from './base-project-resolver';
+import { CLASS } from 'typescript-class-helpers';
 
 
 const Helpers = HelpersFiredev.Instance;
@@ -20,13 +21,18 @@ const Helpers = HelpersFiredev.Instance;
 const takenPorts = [];
 
 
-export class BaseProject<T = any>
+export abstract class BaseProject<T extends BaseProject = any>
   //#region @backend
   extends ProjectGit
 //#endregion
 {
-  static ins = new BaseProjectResolver<BaseProject>(BaseProject);
+  //#region static
 
+  //#region static / instance of resovle
+  static ins = new BaseProjectResolver<BaseProject>(BaseProject);
+  //#endregion
+
+  //#region static / sort group of projects
   public static sortGroupOfProject<T extends BaseProject<any> = BaseProject<any>>(projects: T[], resoveDepsArray: (proj: T) => string[], projNameToCompare: (proj: T) => string): T[] {
 
     const visited: { [key: string]: boolean } = {};
@@ -63,57 +69,20 @@ export class BaseProject<T = any>
     return result;
     // return result.reverse(); // Reverse the result to get the correct order
   }
+  //#endregion
 
-  // public static sortGroupOfProject<T extends BaseProject<any> = BaseProject<any>>(projects: T[], resoveDepsArray: (proj: T) => string[], projNameToCompare: (proj: T) => string) {
-  //   if (projects.length === 0) {
-  //     return [];
-  //   }
-  //   let i = 0;
-  //   let maxNoup = 0;
-  //   let MAX_NO_UPDATE_IN_ROW = (projects.length + 1);
-  //   let count = 1;
-  //   while (true) {
-  //     const res = projects[i];
-  //     const updateTriggered = !_.isUndefined(projects.slice(i + 1).find((res2) => {
-  //       const res2Name = projNameToCompare(res2);
-  //       if (projNameToCompare(res) === res2Name) {
-  //         return false;
-  //       }
-  //       const depsResolved = resoveDepsArray(res);
-  //       if (!_.isUndefined(depsResolved.find(resovledName => resovledName === res2Name))) {
-  //         // console.log(`+ ${res.name} has no dependency ${res2.name}`, 1)
-  //         projects = Helpers.arrays.arrayMoveElementBefore<T>(projects, res2, res, 'location');
-  //         return true;
-  //       }
-  //       return false;
-  //     }));
-  //     if (i === (projects.length - 1)) {
-  //       i = 0;
-  //     } else {
-  //       i++;
-  //     }
-
-  //     if (updateTriggered) {
-  //       console.log(`Sort(${++count})\n${projects.map(c => c.genericName).join('\n')}\n `, 1);
-  //       maxNoup = 0;
-  //       continue;
-  //     } else {
-  //       maxNoup++;
-  //       console.log(`SORT NO UPDATE..`)
-  //     }
-  //     if (maxNoup === MAX_NO_UPDATE_IN_ROW) {
-  //       break;
-  //     }
-  //   }
-
-  //   return projects;
-  // }
-  readonly ins: BaseProjectResolver<T>;
+  //#endregion
+  public cache: any = {};
+  abstract readonly ins: BaseProjectResolver<T>;
   /**
-   * it do not need to be realt path
+   * doesn't need to be real path -> can be link
    */
   readonly location: string;
-  readonly basename: string;
+  get basename(): string {
+    //#region @websqlFunc
+    return path.basename(this.location);
+    //#endregion
+  }
   get name() {
     return this.packageJSON?.name;
   }
@@ -176,6 +145,7 @@ export class BaseProject<T = any>
    */
   readonly port: string;
 
+  abstract readonly children: T[];
 
   get parent(): T {
     //#region @websqlFunc
@@ -319,6 +289,59 @@ export class BaseProject<T = any>
         Helpers.error(`[firedev-helpers]] failed to assign free port after ${max} trys...`);
       }
     }
+    //#endregion
+  }
+
+
+  filterOnlyCopy(basePathFoldersOnlyToInclude: string[]) {
+    //#region @backendFunc
+    const projectOrBasepath: BaseProject = this;
+    return Helpers.filterOnlyCopy(basePathFoldersOnlyToInclude, projectOrBasepath.location);
+    //#endregion
+  }
+
+  removeItself() {
+    //#region @backend
+    this.ins.remove(this as any);
+    //#endregion
+  }
+
+  filterDontCopy(basePathFoldersTosSkip: string[]) {
+    //#region @backendFunc
+    const projectOrBasepath: BaseProject = this;
+    return Helpers.filterDontCopy(basePathFoldersTosSkip, projectOrBasepath.location);
+    //#endregion
+  }
+
+  defineProperty<T>(variableName: keyof T, classFn: Function) {
+    //#region @backendFunc
+    const that = this;
+
+    const className = CLASS.getName(classFn);
+
+    // @ts-ignore
+    const prefixedName = `__${variableName}`
+    Object.defineProperty(this, variableName, {
+      get: function () {
+        if (!that[prefixedName]) {
+          if (className === 'CopyManager') {
+            const CopyMangerClass = CLASS.getBy('CopyManager') as any; // TODO @LAST
+            that[prefixedName] = CopyMangerClass.for(this);
+          } else {
+            if (typeof classFn === 'function') {
+              that[prefixedName] = new (classFn as any)(that);
+            } else {
+              Helpers.warn(`[firedev-helpers] Cannot create dynamic instance of class "${_.kebabCase(prefixedName.replace('__', ''))}".`)
+            }
+          }
+
+        }
+        return that[prefixedName];
+      },
+      set: function (v) {
+        that[prefixedName] = v;
+      },
+    })
     //#endregion
   }
 
