@@ -8,7 +8,7 @@ import {
 export { ChildProcess } from 'child_process';
 import { CLI } from 'tnp-cli';
 //#endregion
-import { Helpers } from '../index';
+import { Helpers } from './index';
 import { path, crossPlatformPath } from 'tnp-core';
 import { config } from 'tnp-config';
 import { _ } from 'tnp-core';
@@ -253,6 +253,8 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
     return currentProject;
     //#endregion
   }
+
+
 
 }
 

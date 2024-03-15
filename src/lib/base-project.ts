@@ -73,11 +73,14 @@ export abstract class BaseProject<T extends BaseProject = any>
 
   //#endregion
   public cache: any = {};
+
+  // @ts-ignore
+  constructor(readonly location: string) { }
   abstract readonly ins: BaseProjectResolver<T>;
   /**
    * doesn't need to be real path -> can be link
    */
-  readonly location: string;
+
   get basename(): string {
     //#region @websqlFunc
     return path.basename(this.location);
@@ -145,11 +148,44 @@ export abstract class BaseProject<T extends BaseProject = any>
    */
   readonly port: string;
 
-  abstract readonly children: T[];
+  /**
+   * alias to getAllChildren
+   */
+  get children(): T[] {
+    //#region @websqlFunc
+    return this.getAllChildren();
+    //#endregion
+  }
+
+
+  child(nameOrBasename: string, errors = true): T {
+    //#region @websqlFunc
+    const c = this.children.find(c => c.name === nameOrBasename || c.basename === nameOrBasename);
+    if (errors && !c) {
+      Helpers.warn(`Project doesnt contain child with name or basename: ${nameOrBasename}`)
+    }
+    return c;
+    //#endregion
+  }
+
 
   get parent(): T {
     //#region @websqlFunc
+    if (!_.isString(this.location) || this.location.trim() === '') {
+      return void 0;
+    }
     return this.ins.From(path.join(this.location, '..'));
+    //#endregion
+  }
+
+
+  get grandpa(): T {
+    //#region @websqlFunc
+    if (!_.isString(this.location) || this.location.trim() === '') {
+      return void 0;
+    }
+    const grandpa = this.ins.From(path.join(this.location, '..', '..'));
+    return grandpa;
     //#endregion
   }
 
@@ -189,6 +225,34 @@ export abstract class BaseProject<T extends BaseProject = any>
     //#endregion
   }
 
+  /**
+  * same has project.hasFile();
+  */
+  pathExists(relativePath: string | string[]): boolean {
+    return this.hasFile(relativePath);
+  }
+
+  /**
+   * same as project.pathExists();
+   */
+  hasFile(relativePath: string | string[]): boolean {
+    return Helpers.exists(this.pathFor(relativePath));
+  }
+
+  /**
+   * same as project.pathhasFileExists();
+   * but with path.resolve
+   */
+  containsFile(fileRelativeToProjectPath: string) {
+    const fullPath = path.resolve(path.join(this.location, fileRelativeToProjectPath));
+    return Helpers.exists(fullPath);
+  }
+
+
+  /**
+   * absolute path:
+   * concated project location with relative path
+   */
   pathFor(relativePath: string | string[]) {
     //#region @backendFunc
     if (Array.isArray(relativePath)) {
@@ -231,6 +295,13 @@ export abstract class BaseProject<T extends BaseProject = any>
   ) {
     //#region @backendFunc
     return Helpers.commnadOutputAsString(command, this.location, options);
+    //#endregion
+  }
+
+  removeFile(fileRelativeToProjectPath: string) {
+    //#region @backendFunc
+    const fullPath = path.resolve(path.join(this.location, fileRelativeToProjectPath));
+    return Helpers.removeFileIfExists(fullPath);
     //#endregion
   }
 
@@ -345,6 +416,46 @@ export abstract class BaseProject<T extends BaseProject = any>
     //#endregion
   }
 
+  //#region  methods / get all childrens
+  protected getAllChildren() {
+    //#region @backendFunc
+    const subdirectories = this.getFoldersForPossibleProjectChildren();
+    let res = subdirectories
+      .map(dir => {
+        // console.log('child:', dir)
+        return this.ins.From(dir);
+      })
+      .filter(c => !!c);
+    return res;
+    //#endregion
+  }
+  //#endregion
+
+
+  //#region  methods / get folder for possible project chhildrens
+  protected getFoldersForPossibleProjectChildren(): string[] {
+    //#region @backendFunc
+    const isDirectory = source => fse.lstatSync(source).isDirectory()
+    const getDirectories = source =>
+      fse.readdirSync(source).map(name => path.join(source, name)).filter(isDirectory)
+
+    let subdirectories = getDirectories(this.location)
+      .filter(f => {
+        const folderName = path.basename(f);
+        return Helpers.checkIfNameAllowedForFiredevProj(folderName);
+      })
+
+    // if (this.isTnp' && fse.existsSync(path.join(this.location, '../firedev-projects'))) {
+    //   subdirectories = subdirectories.concat(getDirectories(path.join(this.location, '../firedev-projects'))
+    //     .filter(f => {
+    //       const folderName = path.basename(f);
+    //       return Helpers.checkIfNameAllowedForFiredevProj(folderName);
+    //     }))
+    // }'
+    return subdirectories;
+    //#endregion
+  }
+  //#endregion
 
 }
 
