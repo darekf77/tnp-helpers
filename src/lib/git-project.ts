@@ -80,7 +80,7 @@ export abstract class ProjectGit {
         await Helpers.git.pullCurrentBranch(self.location, askToRetry);
       },
       commit(args?: string) {
-        return Helpers.git.commit(self.location, Object.getPrototypeOf(this), args);
+        return Helpers.git.commit(self.location, Object.getPrototypeOf(self), args);
       },
       pushCurrentBranch(force = false, origin = 'origin') {
         return Helpers.git.pushCurrentBranch(self.location, force, origin);
