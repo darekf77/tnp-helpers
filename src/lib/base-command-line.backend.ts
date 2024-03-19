@@ -1,7 +1,9 @@
+//#region imports
 import { Helpers } from "tnp-helpers/src";
 import { _ } from "tnp-core/src";
 import { BaseProject } from "./base-project";
 import { CLASS } from "typescript-class-helpers/src";
+//#endregion
 
 export abstract class CommandLineFeature<PARAMS = any, PROJECT = BaseProject> {
   protected readonly params: PARAMS;
@@ -11,6 +13,7 @@ export abstract class CommandLineFeature<PARAMS = any, PROJECT = BaseProject> {
     protected readonly methodNameToCall: string,
     protected readonly project: PROJECT = BaseProject.ins.Current as PROJECT,
   ) {
+    //#region resolve params and args
     // console.log({ args, methodNameToCall })
 
     // this.project = Project.Current as Project;
@@ -41,6 +44,7 @@ export abstract class CommandLineFeature<PARAMS = any, PROJECT = BaseProject> {
     } else {
       this._();
     }
+    //#endregion
   }
 
   protected exit() {

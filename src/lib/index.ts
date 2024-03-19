@@ -13,6 +13,7 @@ export * from './base-project';
 export * from './base-project-resolver';
 //#region @backend
 export * from './base-command-line.backend';
+export * from './base-command-line-git.backend';
 //#endregion
 export * from './models';
 

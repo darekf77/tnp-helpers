@@ -12,6 +12,7 @@ import { CLI } from 'tnp-cli';
 //#endregion
 const Helpers = HelpersFiredev.Instance;
 import { RunOptions, ExecuteOptions } from 'tnp-core';
+import { config } from 'tnp-config';
 
 export abstract class ProjectGit {
 
@@ -94,8 +95,25 @@ export abstract class ProjectGit {
       thereAreSomeUncommitedChangeExcept(filesList: string[] = []) {
         return Helpers.git.thereAreSomeUncommitedChangeExcept(filesList, self.location);
       },
-      pullCurrentBranch(askToRetry = false) {
-        return Helpers.git.pullCurrentBranch(self.location, askToRetry);
+      pullCurrentBranch(options?: {
+        askToRetry?: boolean,
+        defaultHardResetCommits?: number
+      }) {
+        const { askToRetry = true, defaultHardResetCommits } = options || {};
+        if (_.isNumber(defaultHardResetCommits)) {
+          self.git.resetHard({ HEAD: defaultHardResetCommits });
+        } else {
+          let i = 1;
+          while (true) {
+            if (self.git.lastCommitMessage() === self.ACTION_MSG_RESET_GIT_HARD_COMMIT) {
+              Helpers.logInfo(`Reseting branch deep ${i++}.. `)
+              self.git.resetHard({ HEAD: 1 });
+            } else {
+              break;
+            }
+          }
+        }
+        Helpers.git.pullCurrentBranch(self.location, askToRetry);
       },
       get currentBranchName() {
         return Helpers.git.currentBranchName(self.location);
@@ -103,8 +121,15 @@ export abstract class ProjectGit {
       getBranchesNamesBy(pattern: string | RegExp) {
         return Helpers.git.getBranchesNames(self.location, pattern);
       },
-      resetHard() {
-        self.run(`git reset --hard`).sync()
+      resetHard(options?: {
+        HEAD?: number
+      }) {
+        const { HEAD } = options || {};
+        try {
+          self.run(`git reset --hard ${_.isNumber(HEAD) ? `HEAD~${HEAD}` : ''}`).sync()
+        } catch (error) {
+          Helpers.error(`[${config.frameworkName}] not able to reset repository in ${self.location}`)
+        }
       },
       countComits() {
         // console.log('COUNT')

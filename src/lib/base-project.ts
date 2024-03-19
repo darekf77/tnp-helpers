@@ -20,8 +20,9 @@ const Helpers = HelpersFiredev.Instance;
 
 const takenPorts = [];
 
+export type BaseProjectType = 'unknow' | 'unknow-npm-project';
 
-export abstract class BaseProject<T extends BaseProject = any>
+export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjectType>
   //#region @backend
   extends ProjectGit
 //#endregion
@@ -75,7 +76,7 @@ export abstract class BaseProject<T extends BaseProject = any>
 
   //#region fields
   public cache: any = {};
-  readonly type: string;
+  readonly type: TYPE | string;
   protected readonly packageJSON: Models.npm.IPackageJSON;
   /**
    * resolve instance
@@ -86,8 +87,8 @@ export abstract class BaseProject<T extends BaseProject = any>
    * only available after executing *this.assignFreePort()*
    */
   readonly port: string;
-  private isUnsingActionsCommit = false;
-  private ACTION_MSG_RESET_GIT_HARD_COMMIT = '$$$ update $$$'
+
+  public readonly ACTION_MSG_RESET_GIT_HARD_COMMIT: string = '$$$ update $$$';
   //#endregion
 
   //#region constructor
@@ -101,6 +102,25 @@ export abstract class BaseProject<T extends BaseProject = any>
   //#endregion
 
   //#region  methods & getters
+
+  //#region  methods & getters / set type
+  public setType(type: TYPE) {
+    // @ts-ignore
+    this.type = type;
+  }
+  //#endregion
+
+  //#region  methods & getters / type is
+  public typeIs(...types: TYPE[]) {
+    return this.type && types.includes(this.type as any);
+  }
+  //#endregion
+
+  //#region  methods & getters / type is not
+  public typeIsNot(...types: TYPE[]) {
+    return !this.typeIs(...types);
+  }
+  //#endregion
 
   //#region  methods & getters / basename
   /**
@@ -521,8 +541,7 @@ export abstract class BaseProject<T extends BaseProject = any>
    */
   filterOnlyCopy(basePathFoldersOnlyToInclude: string[]) {
     //#region @backendFunc
-    const projectOrBasepath: BaseProject = this;
-    return Helpers.filterOnlyCopy(basePathFoldersOnlyToInclude, projectOrBasepath.location);
+    return Helpers.filterOnlyCopy(basePathFoldersOnlyToInclude, this.location);
     //#endregion
   }
   //#endregion
@@ -533,8 +552,7 @@ export abstract class BaseProject<T extends BaseProject = any>
    */
   filterDontCopy(basePathFoldersTosSkip: string[]) {
     //#region @backendFunc
-    const projectOrBasepath: BaseProject = this;
-    return Helpers.filterDontCopy(basePathFoldersTosSkip, projectOrBasepath.location);
+    return Helpers.filterDontCopy(basePathFoldersTosSkip, this.location);
     //#endregion
   }
   //#endregion
@@ -551,12 +569,9 @@ export abstract class BaseProject<T extends BaseProject = any>
   }
   //#endregion
 
-  //#region  methods & getters / is using action commit
-  /**
-   * Default true
-   */
-  useActionCommit() {
-    return this.isUnsingActionsCommit;
+  //#region  methods & getters / is using aciton commit
+  isUnsingActionCommit(): boolean {
+    return false;
   }
   //#endregion
 
@@ -578,38 +593,43 @@ export abstract class BaseProject<T extends BaseProject = any>
     this.run(`git reset --hard`).sync();
 
     this.run(`git checkout ${defaultBranch}`).sync();
-    if (this.isUnsingActionsCommit) {
-      let i = 1;
-      while (true) {
-        if (this.git.currentBranchName === this.ACTION_MSG_RESET_GIT_HARD_COMMIT) {
-          Helpers.logInfo(`Reseting branch deeo ${i++}.. `)
-          this.run(`git reset --hard HEAD~1`).sync();
-        } else {
-          break;
-        }
-      }
+
+    if (this.isUnsingActionCommit()) {
+      this.git.pullCurrentBranch({ askToRetry: true });
     } else {
-      this.run(`git reset --hard HEAD~5`).sync();
+      this.git.pullCurrentBranch({ askToRetry: true, defaultHardResetCommits: 5 });
     }
-    try {
-      this.run(`git pull origin ${defaultBranch}`).sync();
-    } catch (error) { }
+
     try {
       this.run(`git stash apply`).sync();
     } catch (error) { }
-    await this.init();
+    // await this.struct(); // TODO @LAST
     Helpers.info(`RESET DONE for branch: ${chalk.bold(defaultBranch)}`)
     //#endregion
   }
   //#endregion
 
-  /**
-   * TODO
-   * @deprecated
-   */
-  async init() {
-    // TODO
-  }
+  // /**
+  //  * TODO
+  //  */
+  // async init() {
+  //   throw (new Error('TODO IMPLEMENT'))
+  // }
+
+  // /**
+  //  * TODO
+  //  */
+  // async struct() {
+  //   throw (new Error('TODO IMPLEMENT'))
+  // }
+
+  // /**
+  // * TODO
+  // */
+  // async build<Options>(options: Options) {
+  //   throw (new Error('TODO IMPLEMENT'))
+  // }
+
 
   //#endregion
 }

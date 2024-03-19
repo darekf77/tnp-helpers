@@ -5,14 +5,13 @@ import { chalk, _ } from "tnp-core";
 
 
 
-export class Git<PARAMS = any, PROJECT = BaseProject> extends CommandLineFeature {
+export class BaseCommandLineGit<PARAMS = any, PROJECT = BaseProject> extends CommandLineFeature {
   public _() {
     Helpers.error('Please select git command');
   }
 
-  //#region commands
 
-  //#region commands / rebase
+  //#region commands / reset
   async reset() {
     const project = this.project;
     const additonalParams = this.args.join(' ').trim();
@@ -59,30 +58,41 @@ ${childrentMsg}
   }
   //#endregion
 
+  //#region commands / rebase
   rebase() {
 
   }
+  //#endregion
 
+  //#region commands / push (default temp commit)
   push() {
 
   }
+  //#endregion
 
+  //#region commands / push fix
   pushFix() {
 
   }
+  //#endregion
 
+  //#region commands / push feature
   pushFeature() {
 
   }
+  //#endregion
 
+  //#region commands / push chore
   pushChore() {
 
   }
+  //#endregion
 
+  //#region commands / push refactor
   pushRefactor() {
 
   }
-
   //#endregion
+
 
 }
