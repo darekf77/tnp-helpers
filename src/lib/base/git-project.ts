@@ -6,7 +6,7 @@ import {
   //#endregion
 } from 'tnp-core';
 import type { BaseProject } from './index';
-import { HelpersFiredev } from './helpers';
+import { HelpersFiredev } from '../helpers';
 //#region @backend
 import { CLI } from 'tnp-cli';
 //#endregion

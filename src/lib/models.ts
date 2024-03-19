@@ -1,4 +1,4 @@
-import type { BaseProject } from "./base-project";
+import type { BaseProject } from "./base/base-project";
 
 export type EmptyProjectStructure = {
   includeContent?: boolean;

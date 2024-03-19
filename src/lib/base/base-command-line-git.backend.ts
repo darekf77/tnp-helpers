@@ -1,4 +1,4 @@
-import { Helpers } from "./index";
+import { Helpers } from "../index";
 import { CommandLineFeature } from "./base-command-line.backend";
 import { BaseProject } from "./base-project";
 import { chalk, _ } from "tnp-core";

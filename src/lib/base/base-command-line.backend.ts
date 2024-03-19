@@ -1,5 +1,5 @@
 //#region imports
-import { Helpers } from "tnp-helpers/src";
+import { Helpers } from "../index";
 import { _ } from "tnp-core/src";
 import { BaseProject } from "./base-project";
 import { CLASS } from "typescript-class-helpers/src";

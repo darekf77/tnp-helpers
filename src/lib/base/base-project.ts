@@ -9,13 +9,10 @@ import { CLI } from 'tnp-cli';
 import { path, crossPlatformPath } from 'tnp-core';
 import { config } from 'tnp-config';
 import { _ } from 'tnp-core';
-import { HelpersFiredev } from './helpers';
 import { Models } from 'tnp-models';
+import { Helpers } from '../index';
 import { BaseProjectResolver } from './base-project-resolver';
-import { CLASS } from 'typescript-class-helpers';
 
-
-const Helpers = HelpersFiredev.Instance;
 //#endregion
 
 const takenPorts = [];
@@ -501,28 +498,31 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
   //#region  methods & getters / define property
   /**
    * Purpose: not initializing all classes at the beginning
+   * Only for BaseFeatureForProject class
    */
-  defineProperty<T>(variableName: keyof T, classFn: Function) {
+  defineProperty<PROJECT>(variableName: keyof PROJECT, classFn: Function, options?: {
+    customInstanceReturn?: () => object
+  }) {
     //#region @backendFunc
+    const { customInstanceReturn } = options || {};
     const that = this;
-
-    const className = CLASS.getName(classFn);
 
     // @ts-ignore
     const prefixedName = `__${variableName}`
     Object.defineProperty(this, variableName, {
       get: function () {
         if (!that[prefixedName]) {
-          if (className === 'CopyManager') {
-            const CopyMangerClass = CLASS.getBy('CopyManager') as any; // TODO @LAST
-            that[prefixedName] = CopyMangerClass.for(this);
-          } else {
-            if (typeof classFn === 'function') {
-              that[prefixedName] = new (classFn as any)(that);
+          if (typeof classFn === 'function') {
+            if (!!customInstanceReturn) {
+              that[prefixedName] = customInstanceReturn();
             } else {
-              Helpers.warn(`[firedev-helpers] Cannot create dynamic instance of class "${_.kebabCase(prefixedName.replace('__', ''))}".`)
+              that[prefixedName] = new (classFn as any)(that);
             }
+
+          } else {
+            Helpers.warn(`[firedev-helpers] Cannot create dynamic instance of class "${_.kebabCase(prefixedName.replace('__', ''))}".`)
           }
+          // }
 
         }
         return that[prefixedName];
