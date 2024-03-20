@@ -312,6 +312,7 @@ export class HelpersGit {
 
   //#region commit
   commit(cwd: string, ProjectClass: typeof BaseProject, args?: string) {
+
     Helpers.log('[firedev-helpers][commit] ' + cwd, 1)
     if (!_.isString(args)) {
       args = 'update'
@@ -336,8 +337,13 @@ export class HelpersGit {
         (args.endsWith('\'') ||
           args.endsWith('"'))
       );
-      args = `-m ${addBrackets ? `"${args}"` : args}`;
+
+      args = `-m ${addBrackets ? `"${args}"` : args}`.replace(/\"\"/g, '"');
+      if (process.platform !== 'win32') {
+        args = args.replace(/\"/g, `'`);
+      }
     }
+
     try {
       Helpers.info(`[firedev-helpers][git][commit] trying to commit what it with argument:
       "${args}"
