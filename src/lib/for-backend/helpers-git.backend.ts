@@ -349,11 +349,11 @@ export class HelpersGit {
       "${args}"
       location: ${cwd}
       `)
-      var cmdddd = `git commit --no-verify ${args}`;
-      Helpers.run(cmdddd, { cwd }).sync()
+      var commandToExecute = `git commit --no-verify ${args}`;
+      Helpers.run(commandToExecute, { cwd }).sync()
     } catch (error) {
       Helpers.log(error)
-      Helpers.log(`[firedev-helpers][git][commit] not able to commit what is with command: ${cmdddd}`);
+      Helpers.log(`[firedev-helpers][git][commit] not able to commit what is with command: ${commandToExecute}`);
     }
   }
   //#endregion
