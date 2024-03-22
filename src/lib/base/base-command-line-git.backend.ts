@@ -64,6 +64,15 @@ ${childrentMsg}
   }
   //#endregion
 
+  //#region commands / stash
+  /**
+   * stash only staged or all if not staged
+   */
+  stash() {
+
+  }
+  //#endregion
+
   //#region commands / push (default temp commit)
   push() {
 

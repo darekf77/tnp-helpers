@@ -15,7 +15,7 @@ import { RunOptions, ExecuteOptions } from 'tnp-core';
 import { config } from 'tnp-config';
 
 export abstract class ProjectGit {
-
+  public readonly ACTION_MSG_RESET_GIT_HARD_COMMIT: string = '$$$ update $$$';
   //#region @backend
 
 

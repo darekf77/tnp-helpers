@@ -84,8 +84,6 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
    * only available after executing *this.assignFreePort()*
    */
   readonly port: string;
-
-  public readonly ACTION_MSG_RESET_GIT_HARD_COMMIT: string = '$$$ update $$$';
   //#endregion
 
   //#region constructor
@@ -141,12 +139,48 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
 
   //#region  methods & getters / version
   /**
-   * version from package.json
+   * version from package.json -> property version
    */
   get version() {
     return this.packageJSON?.version;
   }
   //#endregion
+
+  //#region  methods & getters / major version
+  /**
+  * Major Version from package.json
+  */
+  // @ts-ignore
+  get majorVersion(): number {
+    //#region @backendFunc
+    return Number(_.first((this.version || '').split('.')));
+    //#endregion
+  }
+  //#endregion
+
+  //#region  methods & getters / minor version
+  /**
+   * Minor Version from package.json
+   */
+  // @ts-ignore
+  get minorVersion(): number {
+    //#region @backendFunc
+    const [__, minor] = ((this.version || '').split('.') || [void 0, void 0])
+    return Number(minor);
+    //#endregion
+  }
+  //#endregion
+
+  //#region  methods & getters / get version path as number
+  get versionPathAsNumber() {
+    //#region @backendFunc
+    const ver = this.version.split('.');
+    const res = Number(_.last(ver));
+    return isNaN(res) ? 0 : res;
+    //#endregion
+  }
+  //#endregion
+
 
   //#region  methods & getters / dependencies
   /**
@@ -424,8 +458,20 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
 
   //#region  methods & getters / remove (fiel or folder)
   remove(relativePath: string, exactPath = true) {
-    //#region @backendFunc
-    return Helpers.remove([this.location, relativePath], exactPath);
+    //#region @backend
+    relativePath = relativePath.replace(/^\//, '')
+    Helpers.remove([this.location, relativePath], exactPath);
+    //#endregion
+  }
+  //#endregion
+
+  //#region  methods & getters / remove folder by relative path
+  removeFolderByRelativePath(relativePathToFolder: string) {
+    //#region @backend
+    relativePathToFolder = relativePathToFolder.replace(/^\//, '')
+    const location = this.location;
+    const p = path.join(location, relativePathToFolder);
+    Helpers.remove(p, true);
     //#endregion
   }
   //#endregion
@@ -608,6 +654,25 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
     //#endregion
   }
   //#endregion
+
+  //#region  methods & getters / link project to
+  linkTo(destPackageLocation: string) {
+    //#region @backend
+    Helpers.createSymLink(this.location, destPackageLocation);
+    //#endregion
+  }
+  //#endregion
+
+  //#region  methods & getters / write file
+
+  writeFile(relativePath: string, content: string) {
+    //#region @backend
+    Helpers.writeFile([this.location, relativePath], content);
+    //#endregion
+  }
+  //#endregion
+
+
 
   // /**
   //  * TODO
