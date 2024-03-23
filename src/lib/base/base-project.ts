@@ -1,10 +1,10 @@
 //#region import
 //#region @backend
-import { fse, RunOptions, portfinder, chalk } from 'tnp-core';
+import { fse, portfinder, chalk } from 'tnp-core';
 export { ChildProcess } from 'child_process';
-import { ProjectGit } from './git-project';
 import { CommandOutputOptions } from 'tnp-core';
 //#endregion
+import { RunOptions, ExecuteOptions } from 'tnp-core';
 import { CLI } from 'tnp-cli';
 import { path, crossPlatformPath } from 'tnp-core';
 import { config } from 'tnp-config';
@@ -19,11 +19,7 @@ const takenPorts = [];
 
 export type BaseProjectType = 'unknow' | 'unknow-npm-project';
 
-export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjectType>
-  //#region @backend
-  extends ProjectGit
-//#endregion
-{
+export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjectType> {
   //#region static
 
   //#region static / instance of resovle
@@ -180,7 +176,6 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
     //#endregion
   }
   //#endregion
-
 
   //#region  methods & getters / dependencies
   /**
@@ -396,19 +391,45 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
 
   //#region  methods & getters / run
   /**
-   * @deprecated
+   * @deprecated us execute instead
    * use output from or more preciese crafted api
    */
-  run(command: string
-    //#region @backend
-    , options?: Omit<RunOptions, 'cwd'>
-    //#endregion
-  ) {
+  run(command: string, options?: Omit<RunOptions, 'cwd'>) {
     //#region @backendFunc
+    Helpers.log(`command: ${command}`)
     let opt = options as RunOptions;
+    if (_.isUndefined(options.showCommand)) {
+      options.showCommand = false;
+    }
     if (!opt) { opt = {} as any; }
     if (!opt.cwd) { opt.cwd = this.location; }
+    if (opt.showCommand) {
+      Helpers.info(`[${CLI.chalk.underline('Executing shell command')}]  "${command}" in [${opt.cwd}]`);
+    } else {
+      Helpers.log(`[${CLI.chalk.underline('Executing shell command')}]  "${command}" in [${opt.cwd}]`);
+    }
     return Helpers.run(command, opt);
+    //#endregion
+  }
+  //#endregion
+
+  //#region  methods & getters / execute
+  /**
+   * same as run but async
+   */
+  public async execute(command: string, options?: ExecuteOptions & { showCommand?: boolean }): Promise<any> {
+    //#region @backendFunc
+    if (_.isUndefined(options.showCommand)) {
+      options.showCommand = false;
+    }
+    if (!options) { options = {}; }
+    const cwd = this.location;
+    if (options.showCommand) {
+      Helpers.logInfo(`[${CLI.chalk.underline('Executing shell command')}]  "${command}" in [${cwd}]`);
+    } else {
+      Helpers.log(`[${CLI.chalk.underline('Executing shell command')}]  "${command}" in [${cwd}]`);
+    }
+    return await Helpers.execute(command, cwd, options as any);
     //#endregion
   }
   //#endregion
@@ -672,6 +693,177 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
   }
   //#endregion
 
+  //#region getters & methods / action mess reset git hard commit
+  public get ACTION_MSG_RESET_GIT_HARD_COMMIT(): string {
+    return '$$$ update $$$'
+  }
+  //#endregion
+
+  //#region getters & methods / ru command and get string
+  public runCommandGetString(this: BaseProject, command: string) {
+    //#region @backendFunc
+    return Helpers.commnadOutputAsString(command, this.location, { biggerBuffer: false });
+    //#endregion
+  }
+  //#endregion
+
+  //#region getters & methods / git
+  public get git() {
+    //#region @backendFunc
+    const self = this;
+    return {
+      clone(url: string, destinationFolderName = '') {
+        return Helpers.git.clone({ cwd: self.location, url, destinationFolderName });
+      },
+      restoreLastVersion(localFilePath: string) {
+        return Helpers.git.restoreLastVersion(self.location, localFilePath);
+      },
+      resetFiles(...relativePathes: string[]) {
+        return Helpers.git.resetFiles(self.location, ...relativePathes);
+      },
+      get isGitRepo() {
+        return Helpers.git.isGitRepo(self.location);
+      },
+      get isGitRoot() {
+        return Helpers.git.isGitRoot(self.location);
+      },
+      get originURL() {
+        return Helpers.git.getOriginURL(self.location);
+      },
+      async updateOrigin(askToRetry = false) {
+        await Helpers.git.pullCurrentBranch(self.location, askToRetry);
+      },
+      commit(args?: string) {
+        return Helpers.git.commit(self.location, Object.getPrototypeOf(self), args);
+      },
+      pushCurrentBranch(force = false, origin = 'origin') {
+        return Helpers.git.pushCurrentBranch(self.location, force, origin);
+      },
+      pushCurrentRepoBranch(force = false, askToRetry = false, origin = 'origin') {
+        return Helpers.git.pushCurrentRepoBranch(self.location, force, askToRetry, origin);
+      },
+      get thereAreSomeUncommitedChange() {
+        return Helpers.git.checkIfthereAreSomeUncommitedChange(self.location);
+      },
+      thereAreSomeUncommitedChangeExcept(filesList: string[] = []) {
+        return Helpers.git.thereAreSomeUncommitedChangeExcept(filesList, self.location);
+      },
+      pullCurrentBranch(options?: {
+        askToRetry?: boolean,
+        defaultHardResetCommits?: number
+      }) {
+        const { askToRetry = true, defaultHardResetCommits } = options || {};
+        if (_.isNumber(defaultHardResetCommits)) {
+          self.git.resetHard({ HEAD: defaultHardResetCommits });
+        } else {
+          let i = 1;
+          while (true) {
+            if (self.git.lastCommitMessage() === self.ACTION_MSG_RESET_GIT_HARD_COMMIT) {
+              Helpers.logInfo(`Reseting branch deep ${i++}.. `)
+              self.git.resetHard({ HEAD: 1 });
+            } else {
+              break;
+            }
+          }
+        }
+        Helpers.git.pullCurrentBranch(self.location, askToRetry);
+      },
+      get currentBranchName() {
+        return Helpers.git.currentBranchName(self.location);
+      },
+      getBranchesNamesBy(pattern: string | RegExp) {
+        return Helpers.git.getBranchesNames(self.location, pattern);
+      },
+      resetHard(options?: {
+        HEAD?: number
+      }) {
+        const { HEAD } = options || {};
+        try {
+          self.run(`git reset --hard ${_.isNumber(HEAD) ? `HEAD~${HEAD}` : ''}`).sync()
+        } catch (error) {
+          Helpers.error(`[${config.frameworkName}] not able to reset repository in ${self.location}`)
+        }
+      },
+      countComits() {
+        // console.log('COUNT')
+        return Helpers.git.countCommits(self.location);
+      },
+      hasAnyCommits() {
+        return Helpers.git.hasAnyCommits(self.location);
+      },
+      get isInMergeProcess() {
+        return Helpers.git.isInMergeProcess(self.location);
+      },
+      lastCommitDate() {
+        // console.log('LATS CMD ADDET')
+        return Helpers.git.lastCommitDate(self.location)
+      },
+      lastCommitHash() {
+        // console.log('LAST HASH')
+        return Helpers.git.lastCommitHash(self.location)
+      },
+      lastCommitMessage() {
+        return Helpers.git.lastCommitMessage(self.location)
+      },
+      penultimageCommitHash() {
+        return Helpers.git.penultimageCommitHash(self.location)
+      },
+      checkTagExists(tag: string) {
+        return Helpers.git.checkTagExists(tag, self.location)
+      },
+      checkout(checkoutFromBranch: string, branch: string, origin = 'origin') {
+        return Helpers.git.checkout(checkoutFromBranch, branch, origin, self.location)
+      },
+      /**
+       *
+       * @param majorVersion example: v1, v2 etc.
+       * @returns tag name
+       */
+      lastTagNameForMajorVersion(majorVersion) {
+        return Helpers.git.lastTagNameForMajorVersion(self.location, majorVersion)
+      },
+      lastTagHash() {
+        return Helpers.git.lastTagHash(self.location)
+      },
+      get remoteOriginUrl() {
+        return Helpers.git.getOriginURL(self.location);
+      },
+      get lastTagVersionName() {
+        return (Helpers.git.lastTagVersionName(self.location) || '')
+      },
+      get stagedFiles(): string[] {
+        return Helpers.git.stagedFiles(self.location);
+      },
+      /**
+       * TODO does this make any sense
+       */
+      renameOrigin(newNameOrUlr: string) {
+        if (!newNameOrUlr.endsWith('.git')) {
+          newNameOrUlr = (newNameOrUlr + '.git')
+        }
+        const oldOrigin = self.git.originURL;
+        if (!newNameOrUlr.startsWith('git@') && !newNameOrUlr.startsWith('https://')) {
+          newNameOrUlr = oldOrigin.replace(path.basename(oldOrigin), newNameOrUlr);
+        }
+
+        try {
+          self.run(`git remote rm origin`).sync();
+        } catch (error) { }
+
+        try {
+          self.run(`git remote add origin ${newNameOrUlr}`).sync();
+          Helpers.info(`Origin changed:
+        from: ${oldOrigin}
+          to: ${newNameOrUlr}\n`);
+        } catch (e) {
+          Helpers.error(`Not able to change origin.. reverting to old`, true, true);
+          self.run(`git remote add origin ${oldOrigin}`).sync();
+        }
+      },
+    }
+    //#endregion
+  }
+  //#endregion
 
 
   // /**
