@@ -709,49 +709,73 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
 
   //#region getters & methods / git
   public get git() {
-    //#region @backendFunc
     const self = this;
     return {
       clone(url: string, destinationFolderName = '') {
+        //#region @backendFunc
         return Helpers.git.clone({ cwd: self.location, url, destinationFolderName });
+        //#endregion
       },
       restoreLastVersion(localFilePath: string) {
+        //#region @backendFunc
         return Helpers.git.restoreLastVersion(self.location, localFilePath);
+        //#endregion
       },
       resetFiles(...relativePathes: string[]) {
+        //#region @backendFunc
         return Helpers.git.resetFiles(self.location, ...relativePathes);
+        //#endregion
       },
       get isGitRepo() {
+        //#region @backendFunc
         return Helpers.git.isGitRepo(self.location);
+        //#endregion
       },
       get isGitRoot() {
+        //#region @backendFunc
         return Helpers.git.isGitRoot(self.location);
+        //#endregion
       },
       get originURL() {
+        //#region @backendFunc
         return Helpers.git.getOriginURL(self.location);
+        //#endregion
       },
       async updateOrigin(askToRetry = false) {
+        //#region @backendFunc
         await Helpers.git.pullCurrentBranch(self.location, askToRetry);
+        //#endregion
       },
       commit(args?: string) {
+        //#region @backendFunc
         return Helpers.git.commit(self.location, Object.getPrototypeOf(self), args);
+        //#endregion
       },
       pushCurrentBranch(force = false, origin = 'origin') {
+        //#region @backendFunc
         return Helpers.git.pushCurrentBranch(self.location, force, origin);
+        //#endregion
       },
       pushCurrentRepoBranch(force = false, askToRetry = false, origin = 'origin') {
+        //#region @backendFunc
         return Helpers.git.pushCurrentRepoBranch(self.location, force, askToRetry, origin);
+        //#endregion
       },
       get thereAreSomeUncommitedChange() {
+        //#region @backendFunc
         return Helpers.git.checkIfthereAreSomeUncommitedChange(self.location);
+        //#endregion
       },
       thereAreSomeUncommitedChangeExcept(filesList: string[] = []) {
+        //#region @backendFunc
         return Helpers.git.thereAreSomeUncommitedChangeExcept(filesList, self.location);
+        //#endregion
       },
       pullCurrentBranch(options?: {
         askToRetry?: boolean,
         defaultHardResetCommits?: number
       }) {
+        //#region @backendFunc
         const { askToRetry = true, defaultHardResetCommits } = options || {};
         if (_.isNumber(defaultHardResetCommits)) {
           self.git.resetHard({ HEAD: defaultHardResetCommits });
@@ -767,52 +791,74 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
           }
         }
         Helpers.git.pullCurrentBranch(self.location, askToRetry);
+        //#endregion
       },
       get currentBranchName() {
+        //#region @backendFunc
         return Helpers.git.currentBranchName(self.location);
+        //#endregion
       },
       getBranchesNamesBy(pattern: string | RegExp) {
+        //#region @backendFunc
         return Helpers.git.getBranchesNames(self.location, pattern);
+        //#endregion
       },
       resetHard(options?: {
         HEAD?: number
       }) {
+        //#region @backendFunc
         const { HEAD } = options || {};
         try {
           self.run(`git reset --hard ${_.isNumber(HEAD) ? `HEAD~${HEAD}` : ''}`).sync()
         } catch (error) {
           Helpers.error(`[${config.frameworkName}] not able to reset repository in ${self.location}`)
         }
+        //#endregion
       },
       countComits() {
-        // console.log('COUNT')
+        //#region @backendFunc
         return Helpers.git.countCommits(self.location);
+        //#endregion
       },
       hasAnyCommits() {
+        //#region @backendFunc
         return Helpers.git.hasAnyCommits(self.location);
+        //#endregion
       },
       get isInMergeProcess() {
+        //#region @backendFunc
         return Helpers.git.isInMergeProcess(self.location);
+        //#endregion
       },
       lastCommitDate() {
-        // console.log('LATS CMD ADDET')
-        return Helpers.git.lastCommitDate(self.location)
+        //#region @backendFunc
+        return Helpers.git.lastCommitDate(self.location);
+        //#endregion
       },
       lastCommitHash() {
-        // console.log('LAST HASH')
-        return Helpers.git.lastCommitHash(self.location)
+        //#region @backendFunc
+        return Helpers.git.lastCommitHash(self.location);
+        //#endregion
       },
       lastCommitMessage() {
-        return Helpers.git.lastCommitMessage(self.location)
+        //#region @backendFunc
+        return Helpers.git.lastCommitMessage(self.location);
+        //#endregion
       },
       penultimageCommitHash() {
-        return Helpers.git.penultimageCommitHash(self.location)
+        //#region @backendFunc
+        return Helpers.git.penultimageCommitHash(self.location);
+        //#endregion
       },
       checkTagExists(tag: string) {
-        return Helpers.git.checkTagExists(tag, self.location)
+        //#region @backendFunc
+        return Helpers.git.checkTagExists(tag, self.location);
+        //#endregion
       },
       checkout(checkoutFromBranch: string, branch: string, origin = 'origin') {
-        return Helpers.git.checkout(checkoutFromBranch, branch, origin, self.location)
+        //#region @backendFunc
+        return Helpers.git.checkout(checkoutFromBranch, branch, origin, self.location);
+        //#endregion
       },
       /**
        *
@@ -820,24 +866,35 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
        * @returns tag name
        */
       lastTagNameForMajorVersion(majorVersion) {
-        return Helpers.git.lastTagNameForMajorVersion(self.location, majorVersion)
+        //#region @backendFunc
+        return Helpers.git.lastTagNameForMajorVersion(self.location, majorVersion);
+        //#endregion
       },
       lastTagHash() {
-        return Helpers.git.lastTagHash(self.location)
+        //#region @backendFunc
+        return Helpers.git.lastTagHash(self.location);
+        //#endregion
       },
       get remoteOriginUrl() {
+        //#region @backendFunc
         return Helpers.git.getOriginURL(self.location);
+        //#endregion
       },
       get lastTagVersionName() {
-        return (Helpers.git.lastTagVersionName(self.location) || '')
+        //#region @backendFunc
+        return (Helpers.git.lastTagVersionName(self.location) || '');
+        //#endregion
       },
       get stagedFiles(): string[] {
+        //#region @backendFunc
         return Helpers.git.stagedFiles(self.location);
+        //#endregion
       },
       /**
        * TODO does this make any sense
        */
       renameOrigin(newNameOrUlr: string) {
+        //#region @backendFunc
         if (!newNameOrUlr.endsWith('.git')) {
           newNameOrUlr = (newNameOrUlr + '.git')
         }
@@ -859,9 +916,9 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
           Helpers.error(`Not able to change origin.. reverting to old`, true, true);
           self.run(`git remote add origin ${oldOrigin}`).sync();
         }
+        //#endregion
       },
     }
-    //#endregion
   }
   //#endregion
 
@@ -888,6 +945,6 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
   // }
 
 
-  //#endregion
+
 }
 
