@@ -88,7 +88,7 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
     /**
      * doesn't need to be real path -> can be link
      */
-    readonly location: string,
+    public readonly location: string,
   ) { }
   //#endregion
 
@@ -396,12 +396,13 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
    */
   run(command: string, options?: Omit<RunOptions, 'cwd'>) {
     //#region @backendFunc
+    options = _.cloneDeep(options) as RunOptions || {};
     Helpers.log(`command: ${command}`)
-    let opt = options as RunOptions;
+
     if (_.isUndefined(options.showCommand)) {
       options.showCommand = false;
     }
-    if (!opt) { opt = {} as any; }
+    let opt = options as RunOptions;
     if (!opt.cwd) { opt.cwd = this.location; }
     if (opt.showCommand) {
       Helpers.info(`[${CLI.chalk.underline('Executing shell command')}]  "${command}" in [${opt.cwd}]`);
@@ -748,7 +749,7 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
       },
       commit(args?: string) {
         //#region @backendFunc
-        return Helpers.git.commit(self.location, Object.getPrototypeOf(self), args);
+        return Helpers.git.commit(self.location, BaseProject, args);
         //#endregion
       },
       pushCurrentBranch(force = false, origin = 'origin') {

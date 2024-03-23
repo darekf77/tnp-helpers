@@ -319,13 +319,15 @@ export class HelpersGit {
     }
 
     const gitRootProject = ProjectClass.ins.nearestTo(cwd, { findGitRoot: true });
+    // console.log({gitRootProject})
     try {
+
       Helpers.info(`[firedev-helpers][git][commit] Adding current git changes in git root:
         ${gitRootProject.location}
         `)
       gitRootProject.run(`git add --all . `).sync()
     } catch (error) {
-      Helpers.log(error)
+      console.log(error)
       Helpers.warn(`[firedev-helpers][commit] Failed to 'git add --all .' in:
         ${gitRootProject.location}`);
     }
@@ -344,13 +346,14 @@ export class HelpersGit {
       }
     }
 
+    debugger
     try {
       Helpers.info(`[firedev-helpers][git][commit] trying to commit what it with argument:
       "${args}"
       location: ${cwd}
       `)
       var commandToExecute = `git commit --no-verify ${args}`;
-      Helpers.run(commandToExecute, { cwd }).sync()
+      Helpers.run(commandToExecute, { cwd }).sync();
     } catch (error) {
       Helpers.log(error)
       Helpers.log(`[firedev-helpers][git][commit] not able to commit what is with command: ${commandToExecute}`);
@@ -724,6 +727,7 @@ export class HelpersGit {
     filesList = filesList.map(f => crossPlatformPath(f))
     try {
       const res = Helpers.run(`git ls-files --deleted --modified --others --exclude-standard`, { output: false, cwd }).sync().toString().trim();
+
       const list = !res ? [] : res
         .split(/\r\n|\n|\r/)
         .filter(f => {
