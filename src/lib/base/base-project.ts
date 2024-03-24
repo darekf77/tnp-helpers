@@ -69,7 +69,7 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
 
   //#region fields
   public cache: any = {};
-  readonly type: TYPE | string;
+  readonly type: TYPE | string = 'unknow';
   protected readonly packageJSON: Models.npm.IPackageJSON;
   /**
    * resolve instance
@@ -923,11 +923,39 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
   }
   //#endregion
 
+  //#region getters & methods / to string
+  toString = () => {
+    return `${this.name}=>${this.location}`;
+  };
+  //#endregion
+
+  //#region getters & methods / check if loggin in to npm
+  protected checkIfLogginInToNpm() {
+    //#region @backendFunc
+    // if (!this.canBePublishToNpmRegistry) {
+    //   return;
+    // }
+    try {
+      this.run('npm whoami').sync();
+    } catch (e) {
+      Helpers.error(`Please login in to npm.`, false, true)
+    }
+    //#endregion
+  }
+  //#endregion
+
 
   // /**
   //  * TODO
   //  */
   // async init() {
+  //   throw (new Error('TODO IMPLEMENT'))
+  // }
+
+  // /**
+  //  * globally link npm as package
+  //  */
+  // async link() {
   //   throw (new Error('TODO IMPLEMENT'))
   // }
 
@@ -939,7 +967,7 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
   // }
 
   // /**
-  // * TODO
+  // * init and build() project
   // */
   // async build<Options>(options: Options) {
   //   throw (new Error('TODO IMPLEMENT'))

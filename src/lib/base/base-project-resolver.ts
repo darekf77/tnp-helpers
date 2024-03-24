@@ -45,7 +45,7 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
    */
   get Current(): T {
     //#region @backendFunc
-    const current = (this.classFn).From(process.cwd())
+    const current = (this.classFn as typeof BaseProject).ins.From(process.cwd())
     if (!current) {
       Helpers.warn(`[firedev-helpers] Current location is not a ${CLI.chalk.bold(config.frameworkName)} type project.
 
@@ -54,7 +54,7 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
      }`);
       return void 0;
     }
-    return current;
+    return current as unknown as T;
     //#endregion
   }
   //#endregion
