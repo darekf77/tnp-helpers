@@ -1,15 +1,15 @@
 //#region import
+import { CoreModels } from 'tnp-core/src';
 //#region @backend
 import { fse, portfinder, chalk } from 'tnp-core';
 export { ChildProcess } from 'child_process';
 import { CommandOutputOptions } from 'tnp-core';
 //#endregion
-import { RunOptions, ExecuteOptions } from 'tnp-core';
+
 import { CLI } from 'tnp-cli';
-import { path, crossPlatformPath } from 'tnp-core';
+import { path, crossPlatformPath } from 'tnp-core/src';
 import { config } from 'tnp-config';
-import { _ } from 'tnp-core';
-import { Models } from 'tnp-models';
+import { _ } from 'tnp-core/src';
 import { Helpers } from '../index';
 import { BaseProjectResolver } from './base-project-resolver';
 
@@ -70,7 +70,7 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
   //#region fields
   public cache: any = {};
   readonly type: TYPE | string = 'unknow';
-  protected readonly packageJSON: Models.npm.IPackageJSON;
+  protected readonly packageJSON: any;
   /**
    * resolve instance
    */
@@ -394,15 +394,15 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
    * @deprecated us execute instead
    * use output from or more preciese crafted api
    */
-  run(command: string, options?: Omit<RunOptions, 'cwd'>) {
+  run(command: string, options?: Omit<CoreModels.RunOptions, 'cwd'>) {
     //#region @backendFunc
-    options = _.cloneDeep(options) as RunOptions || {};
+    options = _.cloneDeep(options) as CoreModels.RunOptions || {};
     Helpers.log(`command: ${command}`)
 
     if (_.isUndefined(options.showCommand)) {
       options.showCommand = false;
     }
-    let opt = options as RunOptions;
+    let opt = options as CoreModels.RunOptions;
     if (!opt.cwd) { opt.cwd = this.location; }
     if (opt.showCommand) {
       Helpers.info(`[${CLI.chalk.underline('Executing shell command')}]  "${command}" in [${opt.cwd}]`);
@@ -418,7 +418,7 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
   /**
    * same as run but async
    */
-  public async execute(command: string, options?: ExecuteOptions & { showCommand?: boolean }): Promise<any> {
+  public async execute(command: string, options?: CoreModels.ExecuteOptions & { showCommand?: boolean }): Promise<any> {
     //#region @backendFunc
     if (_.isUndefined(options.showCommand)) {
       options.showCommand = false;
@@ -444,7 +444,7 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
    */
   tryRunSync(command: string
     //#region @backend
-    , options?: Omit<RunOptions, 'cwd'>
+    , options?: Omit<CoreModels.RunOptions, 'cwd'>
     //#endregion
   ): void {
     //#region @backendFunc
@@ -967,33 +967,33 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
   }
   //#endregion
 
-  // /**
-  //  * TODO
-  //  */
-  // async init() {
-  //   throw (new Error('TODO IMPLEMENT'))
-  // }
+  /**
+   * init project files structure and depedencies
+   */
+  async init() {
+    throw (new Error('TODO IMPLEMENT'))
+  }
 
-  // /**
-  //  * globally link npm as package
-  //  */
-  // async link() {
-  //   throw (new Error('TODO IMPLEMENT'))
-  // }
+  /**
+   * globally link npm as package
+   */
+  async link() {
+    throw (new Error('TODO IMPLEMENT'))
+  }
 
-  // /**
-  //  * TODO
-  //  */
-  // async struct() {
-  //   throw (new Error('TODO IMPLEMENT'))
-  // }
+  /**
+   * init project files structure without depedencies
+   */
+  async struct() {
+    throw (new Error('TODO IMPLEMENT'))
+  }
 
-  // /**
-  // * init and build() project
-  // */
-  // async build<Options>(options: Options) {
-  //   throw (new Error('TODO IMPLEMENT'))
-  // }
+  /**
+  * init and build() project
+  */
+  async build(buildOptions?: any) {
+    throw (new Error('TODO IMPLEMENT'))
+  }
 
 
 

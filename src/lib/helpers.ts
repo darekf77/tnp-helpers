@@ -23,10 +23,10 @@ import { TsCodeExtractor } from './for-backend/ts-code/ts-code-extractor';
 import { CLI } from 'tnp-cli';
 import { HelpersVscode } from './for-backend/helpers-vscode.backend';
 //#endregion
-import { config, ConfigModels } from 'tnp-config';
+import { config } from 'tnp-config';
 import { Helpers, Validators } from './index';
 import { CLASS } from 'typescript-class-helpers';
-import { CoreHelpers } from 'tnp-core';
+import { CoreHelpers, CoreModels } from 'tnp-core/src';
 import { HelpersNumber } from './helpers-numbers';
 //#region @browser
 import { HelpersBrowser } from './for-browser/helpers-browser';
@@ -341,7 +341,7 @@ export class HelpersFiredev extends CoreHelpers {
   //#endregion
 
   //#region @backend
-  checkEnvironment = (deps?: ConfigModels.GlobalDependencies) => CLI.checkEnvironment(deps);
+  checkEnvironment = (deps?: CoreModels.GlobalDependencies) => CLI.checkEnvironment(deps);
   //#endregion
   public applyMixins = applyMixins;
 

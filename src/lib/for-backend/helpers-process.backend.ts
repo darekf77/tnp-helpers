@@ -12,7 +12,6 @@ import * as dateformat from 'dateformat';
 
 import type { BaseProject } from '../index';
 import { Helpers } from '../index';
-import { Models } from 'tnp-models';
 import { CLASS } from 'typescript-class-helpers';
 import { config } from 'tnp-config';
 import { Log, Level } from 'ng2-logger';
@@ -422,37 +421,6 @@ ${Helpers.terminalLine()}\n`;
   prepareWatchCommand(cmd) {
     return os.platform() === 'win32' ? `"${cmd}"` : `'${cmd}'`
   }
-
-  get watcher() {
-    const that = Helpers;
-    return {
-      /**
-       * @deprecated
-       */
-      run(command: string, folderPath: string = 'src', options: Models.system.WatchOptions) {
-        const { cwd = crossPlatformPath(process.cwd()), wait } = options;
-        let cmd = `tnp command ${command}`;
-        const toRun = `watch ${that.prepareWatchCommand(cmd)} ${folderPath} ${wait ? ('--wait=' + wait) : ''}`;
-        Helpers.log(`WATCH COMMAND ${toRun}`)
-        return that.run(toRun, { cwd }).async()
-      },
-      /**
-       * @deprecated
-       */
-      call(fn: Function | string, params: string, folderPath: string = 'src', options: Models.system.WatchOptions) {
-        const { cwd = crossPlatformPath(process.cwd()) } = options;
-        if (!fn) {
-          Helpers.error(`Bad function: ${fn} for watcher on folder: ${folderPath}, with params: ${params}`)
-        }
-        const fnName = typeof fn === 'function' ? CLASS.getName(fn) : fn;
-        // Helpers.log('Function name ', fnName)
-        let cmd = `${config.frameworkName} ${Helpers.cliTool.simplifiedCmd(fnName)} ${params}`;
-        const toRun = `watch ${that.prepareWatchCommand(cmd)} ${folderPath}`;
-        return that.run(toRun, { cwd }).async()
-      }
-    }
-  }
-
 
   getStringFrom(command: string, descriptionOfCommand?: string) {
     try {
