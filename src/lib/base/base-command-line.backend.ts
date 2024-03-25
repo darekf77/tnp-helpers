@@ -47,7 +47,7 @@ export abstract class CommandLineFeature<PARAMS = any, PROJECT = BaseProject> {
     //#endregion
   }
 
-  protected exit() {
+  protected _exit() {
     process.exit(0)
   }
 

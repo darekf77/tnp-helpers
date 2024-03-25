@@ -74,14 +74,17 @@ ${childrentMsg}
   //#endregion
 
   //#region commands / push (default temp commit)
-  push() {
+  // push() {
 
-  }
+  // }
   //#endregion
 
   //#region commands / push fix
   pushFix() {
-
+    console.log('Pushig fix!')
+  }
+  pfix() {
+    this.pushFix();
   }
   //#endregion
 

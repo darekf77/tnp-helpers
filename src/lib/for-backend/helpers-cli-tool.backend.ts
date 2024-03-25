@@ -156,7 +156,6 @@ export class HelpersCliTool {
    * @param restOfArgs arguments from command line
    */
   match(functionOrClassName: string, restOfArgs: string[], classMethodsNames: string[] = []): { isMatch: boolean; restOfArgs: string[], methodNameToCall?: string; } {
-    functionOrClassName = functionOrClassName === 'Global' ? '' : functionOrClassName;
     let isMatch = false;
     let methodNameToCall: string;
     let counter = 0;
@@ -180,10 +179,6 @@ export class HelpersCliTool {
           for (let index = 0; index < classMethodsNames.length; index++) {
             const classMethod = classMethodsNames[index];
             const nameMethodInKC = Helpers.cliTool.simplifiedCmd(nameInKC + classMethod);
-            // console.log({
-            //   nameMethodInKC,
-            //   argInKC
-            // })
             condition = (nameMethodInKC === argInKC);
             if (condition) {
               restOfArgs = _.slice(restOfArgs, i + 1, restOfArgs.length);
