@@ -6,7 +6,7 @@ import { CLASS } from "typescript-class-helpers/src";
 //#endregion
 
 export abstract class CommandLineFeature<PARAMS = any, PROJECT = BaseProject> {
-  protected readonly params: PARAMS;
+  protected params: PARAMS;
   protected readonly args: string[];
   constructor(
     protected readonly argsWithParams: string,

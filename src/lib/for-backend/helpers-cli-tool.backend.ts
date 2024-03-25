@@ -156,6 +156,7 @@ export class HelpersCliTool {
    * @param restOfArgs arguments from command line
    */
   match(functionOrClassName: string, restOfArgs: string[], classMethodsNames: string[] = []): { isMatch: boolean; restOfArgs: string[], methodNameToCall?: string; } {
+    functionOrClassName = functionOrClassName === 'Global' ? '' : functionOrClassName;
     let isMatch = false;
     let methodNameToCall: string;
     let counter = 0;
