@@ -944,6 +944,28 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
   }
   //#endregion
 
+  //#region getters & methods / find partners names
+  get parentsNames() {
+    //#region @backendFunc
+    return this.findParentsNames();
+    //#endregion
+  }
+
+  private findParentsNames(project?: T, parent?: T, result = []): string[] {
+    //#region @backendFunc
+    if (!project && !parent) {
+      project = this as any;
+    }
+    if (!project && parent) {
+      return result.reverse();
+    }
+    if (project && project.parent) {
+      result.push(project.parent.name)
+    }
+    return this.findParentsNames(project.parent, project, result);
+    //#endregion
+  }
+  //#endregion
 
   // /**
   //  * TODO
