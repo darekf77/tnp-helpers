@@ -649,16 +649,15 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
     const defaultBranch = overrideBranch
       ? overrideBranch : this.mainBranch;
 
-    this.run(`git fetch`).sync();
+    this.git.fetch()
 
     try {
       this.run(`git add --all .`).sync();
     } catch (error) { }
     try {
-      this.run(`git stash`).sync();
+      this.run(`git stash`).sync(); // @LAST
     } catch (error) { }
-
-    this.run(`git reset --hard`).sync();
+    this.git.resetHard();
 
     this.run(`git checkout ${defaultBranch}`).sync();
 
@@ -671,7 +670,7 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
     try {
       this.run(`git stash apply`).sync();
     } catch (error) { }
-    // await this.struct(); // TODO @LAST
+    await this.struct();
     Helpers.info(`RESET DONE for branch: ${chalk.bold(defaultBranch)}`)
     //#endregion
   }
@@ -720,6 +719,11 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
       restoreLastVersion(localFilePath: string) {
         //#region @backendFunc
         return Helpers.git.restoreLastVersion(self.location, localFilePath);
+        //#endregion
+      },
+      fetch() {
+        //#region @backendFunc
+        Helpers.git.fetch(self.location);
         //#endregion
       },
       resetFiles(...relativePathes: string[]) {

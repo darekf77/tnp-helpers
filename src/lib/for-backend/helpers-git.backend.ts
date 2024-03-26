@@ -595,6 +595,13 @@ export class HelpersGit {
   }
   //#endregion
 
+  //#region fetch
+  fetch(cwd: string) {
+    try {
+      child_process.execSync(`git fetch`, { cwd });
+    } catch (error) { }
+  }
+  //#endregion
 
   //#region checkout
   checkout(checkoutFromBranch: string, targetBranch: string, origin = 'origin', cwd) {
