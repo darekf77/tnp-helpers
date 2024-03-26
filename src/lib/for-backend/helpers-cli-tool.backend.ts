@@ -1,3 +1,4 @@
+//#region imports
 import { _, path } from 'tnp-core/src';
 import { Helpers } from '../index';
 import { CLASS } from 'typescript-class-helpers';
@@ -8,9 +9,11 @@ import type { BaseProject } from '../index';
 import { fse } from 'tnp-core';
 import { CLI } from 'tnp-cli';
 //#endregion
+//#endregion
 
 export class HelpersCliTool {
 
+  //#region simplified command
   /**
    * return simplified version of command:
    * example: tnp HELLO:WORLD
@@ -18,10 +21,9 @@ export class HelpersCliTool {
    *
    * or: `tnp ${$START}`
    * will be `tnp start`
-   *
-   * @param commandStringOrClass
+   * TODO
    */
-  simplifiedCmd(commandStringOrClass: string | Function, shortVersion = false) {
+  public simplifiedCmd(commandStringOrClass: string | Function, shortVersion = false) {
     if (_.isFunction(commandStringOrClass)) {
       commandStringOrClass = CLASS.getName(commandStringOrClass);
     }
@@ -47,44 +49,88 @@ export class HelpersCliTool {
 
     return commandStringOrClass;
   }
+  //#endregion
 
-  argsFromBegin<T = any>(argumentsCommands: string | string[], argsFunc: (restOfCommandArgs) => T): {
-    resolved: T[],
+  //#region resolve items from begin of args
+  /**
+   * Resolve projects or anything from begin of arguments string
+   */
+  public resolveItemsFromArgsBegin<T = any>(
+    argumentsCommands: string | string[],
+    argsResolveFunc: (currentArg: string, restOfArgs: string) => T,
+    limit = Number.POSITIVE_INFINITY
+  ): {
     /**
-     * arguments string without resolved
+     * arr of resolve things
      */
-    commandString: string;
+    allResolved: T[],
+    /**
+     * command cleared
+     */
+    clearedCommand: string;
   } {
     let tmpArgumentsCommands = argumentsCommands;
-    const resolved = [] as T[];
+    const allResolved = [] as T[];
     if (_.isString(tmpArgumentsCommands)) {
-      tmpArgumentsCommands = tmpArgumentsCommands.split(' ');
+      tmpArgumentsCommands = (tmpArgumentsCommands || '').trim().split(' ');
     }
-    let commandString = (tmpArgumentsCommands || []);
-    if (_.isArray(commandString) && commandString.length > 0) {
+    let clearedCommand = (tmpArgumentsCommands || []);
+
+    if (_.isArray(clearedCommand) && clearedCommand.length > 0) {
       while (true) {
-        if (commandString.length === 0) {
+        if (clearedCommand.length === 0) {
           break;
         }
-        const a = commandString.shift();
-        const v = argsFunc(a);
-        if (!_.isNil(v)) {
-          resolved.push(v);
+        const argToCheckIfIsSomething = clearedCommand.shift();
+        const resolvedSomething = argsResolveFunc
+          (argToCheckIfIsSomething,
+            clearedCommand.join(' ')
+          );
+
+        if (!_.isNil(resolvedSomething)) {
+          allResolved.push(resolvedSomething);
+          if (allResolved.length === limit) {
+            break;
+          }
           continue;
         }
-        commandString.unshift(a);
+        clearedCommand.unshift(argToCheckIfIsSomething);
         break;
       }
     } else {
-      commandString = [];
+      clearedCommand = [];
     }
-    return { resolved, commandString: (commandString).join(' ') };
+    return { allResolved, clearedCommand: (clearedCommand).join(' ') };
   }
+  //#endregion
 
-  cleanCommand<T extends { [k: string]: string | boolean | string[] | boolean[] }>(
+  //#region resolve item from begin of args
+  public resolveItemFromArgsBegin<T>(argumentsCommands: string | string[],
+    argsResolveFunc: (currentArg: string, restOfArgs: string) => T): {
+
+      /**
+       * resolve thing
+       */
+      resolved: T,
+      /**
+       * command cleared
+       */
+      clearedCommand: string;
+    } {
+    const { allResolved, clearedCommand } = Helpers.cliTool.resolveItemsFromArgsBegin(argumentsCommands, argsResolveFunc, 1);
+    return { resolved: _.first(allResolved), clearedCommand };
+  }
+  //#endregion
+
+
+  //#region clean command
+  /**
+   * remove params (as object) from command string
+   */
+  public cleanCommand<T extends { [k: string]: string | boolean | string[] | boolean[] }>(
     command: string | string[],
     minimistOption: T
-  ) {
+  ): string {
     const isArray = _.isArray(command);
     if (isArray) {
       command = (command as string[]).join(' ');
@@ -117,13 +163,18 @@ export class HelpersCliTool {
     });
     return command.trim() as string;
   }
+  //#endregion
 
-  argsFrom<T = any>(args: string | string[]) {
+  //#region get minimist params from args
+  /**
+   * get minimist params from args
+   */
+  public getPramsFromArgs<T = object>(args: string | string[]): T {
     if (_.isArray(args)) {
-      args = Helpers.cliTool.removeStartEndCommandChars(args.join(' ')).split(' ');
+      args = Helpers.cliTool.fixUnexpectedCommandCharacters(args.join(' ')).split(' ');
     }
     if (_.isString(args)) {
-      args = Helpers.cliTool.removeStartEndCommandChars(args).split(' ');
+      args = Helpers.cliTool.fixUnexpectedCommandCharacters(args).split(' ');
     }
 
     const obj = require('minimist')(args || []) as any;
@@ -138,24 +189,33 @@ export class HelpersCliTool {
     })
     return (_.isObject(obj) ? obj : {}) as T;
   }
+  //#endregion
 
-  removeStartEndCommandChars(command: string) {
-    return (command || '')
-      .replace(/^\"/, '')
-      .replace(/^\'/, '')
-      .replace(/\"$/, '')
-      .replace(/\'$/, '')
-      .trim()
+  //#region remove start and end command
+  /**
+   * fix command unexpected characters
+   */
+  protected fixUnexpectedCommandCharacters(command: string): string {
+    command = (command || '').trim();
+    if (/^\"/.test(command) && /\"$/.test(command)) {
+      command = command.replace(/^\"/, '').replace(/\"$/, '')
+    }
+    if (/^\'/.test(command) && /\'$/.test(command)) {
+      command = command.replace(/^\'/, '').replace(/\'$/, '')
+    }
+    return command.trim();
   }
+  //#endregion
 
-
+  //#region match class/function to command
   /**
    * Check if your function name fits into command line param
    *
    * @param functionOrClassName name of function or class
    * @param restOfArgs arguments from command line
+   * TODO REFACTOR
    */
-  match(functionOrClassName: string, restOfArgs: string[], classMethodsNames: string[] = []): { isMatch: boolean; restOfArgs: string[], methodNameToCall?: string; } {
+  public match(functionOrClassName: string, restOfArgs: string[], classMethodsNames: string[] = []): { isMatch: boolean; restOfArgs: string[], methodNameToCall?: string; } {
     let isMatch = false;
     let methodNameToCall: string;
     let counter = 0;
@@ -191,7 +251,9 @@ export class HelpersCliTool {
       });
     return { isMatch, restOfArgs, methodNameToCall };
   }
+  //#endregion
 
+  //#region arguments parse
   //#region @backend
   /**
    * @todo TODO replace with funciton below
@@ -285,11 +347,11 @@ export class HelpersCliTool {
       }
 
     }
-    argsv = Helpers.cliTool.removeArgTnp('findNearestProjectType', argsv);
+    argsv = Helpers.cliTool.removeArg('findNearestProjectType', argsv);
 
     // process.exit(0)
     Object.keys(toCheck).forEach(argName => {
-      argsv = Helpers.cliTool.removeArgTnp(argName, argsv);
+      argsv = Helpers.cliTool.removeArg(argName, argsv);
     });
 
     // Object
@@ -386,12 +448,17 @@ export class HelpersCliTool {
     return argsv;
   }
   //#endregion
+  //#endregion
 
-  //#region remove non interactive mode args
-  // TODO unify remove arg functions
-  removeArg(arg: string, argsv: string[]) {
+  //#region remove argumetn from args array
+  /**
+   * @deprecated
+   * replace with command below
+   */
+  removeArg(argumentToRemove: string, commandWithArgs: string[] | string): string[] {
+    let argsv = Array.isArray(commandWithArgs) ? commandWithArgs : commandWithArgs.split(' ');
     argsv = argsv.filter((f, i) => {
-      const regexString = `^\\-\\-(${arg}$|${arg}\\=)+`;
+      const regexString = `^\\-\\-(${argumentToRemove}$|${argumentToRemove}\\=)+`;
       if ((new RegExp(regexString)).test(f)) {
         const nextParam = argsv[i + 1];
         if (nextParam && !nextParam.startsWith(`--`)) {
@@ -403,30 +470,12 @@ export class HelpersCliTool {
     }).filter(f => !!f);
     return argsv;
   }
-  removeArgTnp(arg: string, argsv: string[]) {
-    argsv = argsv.filter((f, i) => {
-      const regexString = `^\\-\\-(${arg}$|${arg}\\=)+`;
-      // Helpers.log(regexString)
-      if ((new RegExp(regexString)).test(f)) {
-        // Helpers.log(`true: ${f}`)
-        const nextParam = argsv[i + 1];
-        if (nextParam && !nextParam.startsWith(`--`)) {
-          argsv[i + 1] = '';
-        }
-        return false;
-      } else {
-        // Helpers.log(`false: ${f}`)
-      }
-      return true;
-    }).filter(f => !!f);
-    return argsv;
-  }
 
-  removeArgFromString(
-    argsString: string,
+  public removeArgsFromCommand(
+    commadWithArgs: string,
     argsToClear: string[],
   ) {
-    const argsObj = require('minimist')(argsString.split(' '))
+    const argsObj = require('minimist')(commadWithArgs.split(' '))
     for (let index = 0; index < argsToClear.length; index++) {
       const element = argsToClear[index];
 
@@ -436,11 +485,11 @@ export class HelpersCliTool {
           v = '';
         }
         v = `${v}`;
-        argsString = argsString.replace(
+        commadWithArgs = commadWithArgs.replace(
           new RegExp(`\\-+${Helpers.escapeStringForRegEx(element)}\\s*${Helpers.escapeStringForRegEx(v)}`, 'g'),
           '',
         );
-        argsString = argsString.replace(
+        commadWithArgs = commadWithArgs.replace(
           new RegExp(`\\-+${Helpers.escapeStringForRegEx(element)}\\=${Helpers.escapeStringForRegEx(v)}`, 'g'),
           '',
         );
@@ -453,17 +502,16 @@ export class HelpersCliTool {
         replaceForV(value);
       }
 
-      argsString = argsString.replace(`--${element} true`, '');
-      argsString = argsString.replace(`--${element} false`, '');
-      argsString = argsString.replace(`--${element}=true`, '');
-      argsString = argsString.replace(`--${element}=false`, '');
-      argsString = argsString.replace(`--${element}`, '');
-      argsString = argsString.replace(`-${element}`, '');
+      commadWithArgs = commadWithArgs.replace(`--${element} true`, '');
+      commadWithArgs = commadWithArgs.replace(`--${element} false`, '');
+      commadWithArgs = commadWithArgs.replace(`--${element}=true`, '');
+      commadWithArgs = commadWithArgs.replace(`--${element}=false`, '');
+      commadWithArgs = commadWithArgs.replace(`--${element}`, '');
+      commadWithArgs = commadWithArgs.replace(`-${element}`, '');
     }
-    return argsString;
+    return commadWithArgs;
   }
   //#endregion
-
 
 }
 

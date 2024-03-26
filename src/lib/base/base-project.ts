@@ -970,7 +970,7 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
   /**
    * init project files structure and depedencies
    */
-  async init() {
+  async init(initOptions?: any) {
     throw (new Error('TODO IMPLEMENT'))
   }
 
@@ -984,7 +984,7 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
   /**
    * init project files structure without depedencies
    */
-  async struct() {
+  async struct(initOptions?: any) {
     throw (new Error('TODO IMPLEMENT'))
   }
 

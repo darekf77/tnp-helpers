@@ -5,7 +5,7 @@ import { chalk, _ } from "tnp-core";
 
 
 
-export class BaseCommandLineGit<PARAMS = any, PROJECT = BaseProject> extends CommandLineFeature {
+export class BaseCommandLineGit<PARAMS = any, PROJECT extends BaseProject<any, any> = BaseProject> extends CommandLineFeature<PARAMS, PROJECT> {
   public _() {
     Helpers.error('Please select git command');
   }
@@ -105,6 +105,51 @@ ${childrentMsg}
 
   }
   //#endregion
+
+
+  SET_ORIGIN(newOriginNameOrUrl: string) {
+    const proj = this.project;
+    if (proj && proj.git.isGitRepo) {
+      proj.run(`git remote rm origin`).sync();
+      proj.run(`git remote add origin ${newOriginNameOrUrl}`).sync();
+      Helpers.info(`Done`);
+    } else {
+      Helpers.error(`This folder is not a git repo... `, false, true);
+    }
+
+    this._exit()
+  }
+
+  RENAME_ORIGIN(newOriginNameOrUrl: string) {
+    const proj = this.project;
+    if (proj && proj.git.isGitRepo) {
+      proj.git.renameOrigin(newOriginNameOrUrl);
+    } else {
+      Helpers.error(`This folder is not a git repo... `, false, true);
+    }
+    this._exit()
+  }
+
+  LAST_TAG_HASH() {
+    Helpers.info(this.project.git.lastTagHash());
+    this._exit();
+  }
+
+  LAST_TAG() {
+    const proj = this.project;
+    Helpers.info(`
+
+    last tag: ${proj.git.lastTagVersionName}
+    last tag hash: ${proj.git.lastTagHash()}
+
+    `);
+    this._exit();
+  }
+
+  CHECK_TAG_EXISTS(args) {
+    Helpers.info(`tag "${args}"  exits = ${Helpers.git.checkTagExists(args)}    `);
+    this._exit()
+  }
 
 
 }

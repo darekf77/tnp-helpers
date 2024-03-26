@@ -250,35 +250,5 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
   }
   //#endregion
 
-  //#region fields & getters / resolve child project from args
-  /**
-   * Resolve child project when accessing from parent container etc...
-   * @param args string or string[] from cli args
-   * @param CurrentProject project from process.cwd()
-   */
-  resolveChildProject(args: string | string[]): T {
-    //#region @backendFunc
-    const currentProject = this.Current;
-
-    if (!currentProject) {
-      return void 0 as any;
-    }
-    if (_.isString(args)) {
-      args = args.split(' ');
-    }
-    let firstArg = _.first(args);
-    if (firstArg) {
-      firstArg = firstArg.replace(/\/$/, '');
-      const child = currentProject.children.find(c => c.name === firstArg);
-      if (child) { // @ts-ignore
-        currentProject = child;
-      }
-    }
-    return currentProject;
-    //#endregion
-  }
-  //#endregion
-
-
 }
 
