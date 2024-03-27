@@ -625,15 +625,18 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
   }
   //#endregion
 
-  //#region  methods & getters / get main branches
-  getMainBranches(): string[] {
-    return ['master', 'develop']
+  //#region  methods & getters / get default develop Branch
+  getDefaultDevelopmentBranch() {
+    return 'develop';
   }
   //#endregion
 
-  //#region  methods & getters / main branch
-  get mainBranch(): string {
-    return _.first(this.getMainBranches())
+  //#region  methods & getters / get main branches
+  /**
+   * main/default hardcoded branches
+   */
+  getMainBranches(): string[] {
+    return ['master', 'develop', 'stage', 'prod', 'test']
   }
   //#endregion
 
@@ -647,29 +650,21 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
   async resetProcess(overrideBranch?: string) {
     //#region @backend
     const defaultBranch = overrideBranch
-      ? overrideBranch : this.mainBranch;
+      ? overrideBranch : this.getDefaultDevelopmentBranch();
 
     this.git.fetch()
 
-    try {
-      this.run(`git add --all .`).sync();
-    } catch (error) { }
-    try {
-      this.run(`git stash`).sync(); // @LAST
-    } catch (error) { }
+    this.git.add();
+    this.git.stash();
     this.git.resetHard();
-
-    this.run(`git checkout ${defaultBranch}`).sync();
+    this.git.checkout(defaultBranch);
 
     if (this.isUnsingActionCommit()) {
-      this.git.pullCurrentBranch({ askToRetry: true });
+      await this.git.pullCurrentBranch({ askToRetry: true });
     } else {
-      this.git.pullCurrentBranch({ askToRetry: true, defaultHardResetCommits: 5 });
+      await this.git.pullCurrentBranch({ askToRetry: true, defaultHardResetCommits: 5 });
     }
-
-    try {
-      this.run(`git stash apply`).sync();
-    } catch (error) { }
+    this.git.stashApply();
     await this.struct();
     Helpers.info(`RESET DONE for branch: ${chalk.bold(defaultBranch)}`)
     //#endregion
@@ -721,6 +716,29 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
         return Helpers.git.restoreLastVersion(self.location, localFilePath);
         //#endregion
       },
+      add(optinos?: {
+        /**
+         * TODO
+         * @deprecated
+         */
+        onlyStaged?: boolean;
+      }) {
+        //#region @backendFunc
+        Helpers.git.add(self.location, optinos);
+        //#endregion
+      },
+      stash(optinos?: {
+        onlyStaged?: boolean;
+      }) {
+        //#region @backendFunc
+        Helpers.git.stash(self.location, optinos);
+        //#endregion
+      },
+      stashApply() {
+        //#region @backendFunc
+        Helpers.git.stashApply(self.location);
+        //#endregion
+      },
       fetch() {
         //#region @backendFunc
         Helpers.git.fetch(self.location);
@@ -746,24 +764,19 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
         return Helpers.git.getOriginURL(self.location);
         //#endregion
       },
-      async updateOrigin(askToRetry = false) {
+      commit(commitMessage?: string) {
         //#region @backendFunc
-        await Helpers.git.pullCurrentBranch(self.location, askToRetry);
+        return Helpers.git.commit(self.location, commitMessage);
         //#endregion
       },
-      commit(args?: string) {
+      addAndCommit(commitMessage?: string) {
         //#region @backendFunc
-        return Helpers.git.commit(self.location, BaseProject, args);
+        return Helpers.git.addAndCommit(self.location, commitMessage);
         //#endregion
       },
-      pushCurrentBranch(force = false, origin = 'origin') {
+      pushCurrentBranch(options?: { force?: boolean; origin?: string, askToRetry?: boolean; forcePushNoQuestion?: boolean; }) {
         //#region @backendFunc
-        return Helpers.git.pushCurrentBranch(self.location, force, origin);
-        //#endregion
-      },
-      pushCurrentRepoBranch(force = false, askToRetry = false, origin = 'origin') {
-        //#region @backendFunc
-        return Helpers.git.pushCurrentRepoBranch(self.location, force, askToRetry, origin);
+        return Helpers.git.pushCurrentBranch(self.location, options);
         //#endregion
       },
       get thereAreSomeUncommitedChange() {
@@ -776,26 +789,12 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
         return Helpers.git.thereAreSomeUncommitedChangeExcept(filesList, self.location);
         //#endregion
       },
-      pullCurrentBranch(options?: {
+      async pullCurrentBranch(options?: {
         askToRetry?: boolean,
         defaultHardResetCommits?: number
       }) {
         //#region @backendFunc
-        const { askToRetry = true, defaultHardResetCommits } = options || {};
-        if (_.isNumber(defaultHardResetCommits)) {
-          self.git.resetHard({ HEAD: defaultHardResetCommits });
-        } else {
-          let i = 1;
-          while (true) {
-            if (self.git.lastCommitMessage() === self.ACTION_MSG_RESET_GIT_HARD_COMMIT) {
-              Helpers.logInfo(`Reseting branch deep ${i++}.. `)
-              self.git.resetHard({ HEAD: 1 });
-            } else {
-              break;
-            }
-          }
-        }
-        Helpers.git.pullCurrentBranch(self.location, askToRetry);
+        await Helpers.git.pullCurrentBranch(self.location, { ...options, ACTION_MSG_RESET_GIT_HARD_COMMIT: self.ACTION_MSG_RESET_GIT_HARD_COMMIT });
         //#endregion
       },
       get currentBranchName() {
@@ -812,12 +811,7 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
         HEAD?: number
       }) {
         //#region @backendFunc
-        const { HEAD } = options || {};
-        try {
-          self.run(`git reset --hard ${_.isNumber(HEAD) ? `HEAD~${HEAD}` : ''}`).sync()
-        } catch (error) {
-          Helpers.error(`[${config.frameworkName}] not able to reset repository in ${self.location}`)
-        }
+        Helpers.git.resetHard(self.location, options);
         //#endregion
       },
       countComits() {
@@ -860,9 +854,14 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
         return Helpers.git.checkTagExists(tag, self.location);
         //#endregion
       },
-      checkout(checkoutFromBranch: string, branch: string, origin = 'origin') {
+      checkout(branchName: string) {
         //#region @backendFunc
-        return Helpers.git.checkout(checkoutFromBranch, branch, origin, self.location);
+        return Helpers.git.checkout(self.location, branchName);
+        //#endregion
+      },
+      checkoutFromTo(checkoutFromBranch: string, branch: string, origin = 'origin') {
+        //#region @backendFunc
+        return Helpers.git.checkoutFromTo(checkoutFromBranch, branch, origin, self.location);
         //#endregion
       },
       /**
@@ -971,35 +970,68 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
   }
   //#endregion
 
+  //#region getters & methods / init
   /**
    * init project files structure and depedencies
    */
   async init(initOptions?: any) {
     throw (new Error('TODO IMPLEMENT'))
   }
+  //#endregion
 
+  //#region getters & methods / link
   /**
    * globally link npm as package
    */
   async link() {
     throw (new Error('TODO IMPLEMENT'))
   }
+  //#endregion
 
+  //#region getters & methods / struct
   /**
    * init project files structure without depedencies
    */
   async struct(initOptions?: any) {
     throw (new Error('TODO IMPLEMENT'))
   }
+  //#endregion
 
+  //#region getters & methods / build
   /**
   * init and build() project
   */
   async build(buildOptions?: any) {
     throw (new Error('TODO IMPLEMENT'))
   }
+  //#endregion
+
+  //#region getters & methods / lint
+  /**
+   * lint porject
+   */
+  async lint(lintOptions?: any) {
+    throw (new Error('TODO IMPLEMENT'))
+  }
+  //#endregion
+
+  //#region getters & methods / lint
+  /**
+   * get info about porject
+   */
+  async info() {
+    const proj = this;
+    Helpers.info(`
+
+  name: ${proj?.name}
+  type: ${proj?.type}
+  children (${proj?.children.length}): ${(!proj || !proj.children.length) ? '< none >' : ''}
+${proj?.children.map(c => '+' + c.genericName).join('\n')}
 
 
+  `);
+  }
+  //#endregion
 
 }
 

@@ -63,11 +63,15 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
   /**
    * override this
    */
-  typeFrom(location: string): string {
+  typeFrom(location: string, recrusiveCall = false): string {
     //#region @backendFunc
     if (Helpers.exists(crossPlatformPath([location, config.file.package_json]))) {
       return this.NPM_PROJECT_KEY;
     }
+    if (recrusiveCall) {
+      return;
+    }
+
     // throw `Please override this function [typeFrom] in your child class or  ${CLI.chalk.bold(config.frameworkName)}`;
     //#endregion
   }

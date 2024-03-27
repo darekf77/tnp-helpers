@@ -2,8 +2,8 @@
 import { _, path } from 'tnp-core/src';
 import { Helpers } from '../index';
 import { CLASS } from 'typescript-class-helpers';
-import { config } from 'tnp-config';
-import { LibTypeArr } from 'tnp-config';
+import { config } from 'tnp-config/src';
+import { LibTypeArr } from 'tnp-config/src';
 import type { BaseProject } from '../index';
 //#region @backend
 import { fse } from 'tnp-core';
@@ -12,44 +12,6 @@ import { CLI } from 'tnp-cli';
 //#endregion
 
 export class HelpersCliTool {
-
-  //#region simplified command
-  /**
-   * return simplified version of command:
-   * example: tnp HELLO:WORLD
-   * will be: tnp helloworld
-   *
-   * or: `tnp ${$START}`
-   * will be `tnp start`
-   * TODO
-   */
-  public simplifiedCmd(commandStringOrClass: string | Function, shortVersion = false) {
-    if (_.isFunction(commandStringOrClass)) {
-      commandStringOrClass = CLASS.getName(commandStringOrClass);
-    }
-    if (!commandStringOrClass) {
-      commandStringOrClass = ''
-    }
-
-    commandStringOrClass = _
-      .kebabCase(commandStringOrClass as string)
-      .replace(/\$/g, '')
-      .replace(/\-/g, '')
-      .replace(/\:/g, '')
-      .replace(/\_/g, '')
-      .toLowerCase()
-
-    if (shortVersion) {
-      const shortKey = Object.keys(config.argsReplacements).find(key => {
-        const v = Helpers.cliTool.simplifiedCmd(config.argsReplacements[key]);
-        return v.trim() === (commandStringOrClass as string).trim();
-      });
-      return shortKey;
-    }
-
-    return commandStringOrClass;
-  }
-  //#endregion
 
   //#region resolve items from begin of args
   /**
@@ -215,7 +177,38 @@ export class HelpersCliTool {
    * @param restOfArgs arguments from command line
    * TODO REFACTOR
    */
-  public match(functionOrClassName: string, restOfArgs: string[], classMethodsNames: string[] = []): { isMatch: boolean; restOfArgs: string[], methodNameToCall?: string; } {
+  public match({ functionOrClassName, restOfArgs, argsReplacements, classMethodsNames = [] }: {
+    functionOrClassName: string; restOfArgs: string[]; classMethodsNames?: string[];
+    argsReplacements?: object,
+  }): { isMatch: boolean; restOfArgs: string[], methodNameToCall?: string; } {
+
+    const simplifiedCmd = (commandStringOrClass: string | Function, shortVersion = false) => {
+      if (_.isFunction(commandStringOrClass)) {
+        commandStringOrClass = CLASS.getName(commandStringOrClass);
+      }
+      if (!commandStringOrClass) {
+        commandStringOrClass = ''
+      }
+
+      commandStringOrClass = _
+        .kebabCase(commandStringOrClass as string)
+        .replace(/\$/g, '')
+        .replace(/\-/g, '')
+        .replace(/\:/g, '')
+        .replace(/\_/g, '')
+        .toLowerCase()
+
+      if (shortVersion) {
+        const shortKey = Object.keys(argsReplacements).find(key => {
+          const v = simplifiedCmd(argsReplacements[key]);
+          return v.trim() === (commandStringOrClass as string).trim();
+        });
+        return shortKey;
+      }
+
+      return commandStringOrClass;
+    };
+
     let isMatch = false;
     let methodNameToCall: string;
     let counter = 0;
@@ -228,8 +221,8 @@ export class HelpersCliTool {
           return false
         }
         // console.log(`counter ok for ${vv}`)
-        const nameInKC = Helpers.cliTool.simplifiedCmd(functionOrClassName);
-        const argInKC = Helpers.cliTool.simplifiedCmd(vv);
+        const nameInKC = simplifiedCmd(functionOrClassName);
+        const argInKC = simplifiedCmd(vv);
 
         let condition = (nameInKC === argInKC);
 
@@ -238,7 +231,7 @@ export class HelpersCliTool {
         } else {
           for (let index = 0; index < classMethodsNames.length; index++) {
             const classMethod = classMethodsNames[index];
-            const nameMethodInKC = Helpers.cliTool.simplifiedCmd(nameInKC + classMethod);
+            const nameMethodInKC = simplifiedCmd(nameInKC + classMethod);
             condition = (nameMethodInKC === argInKC);
             if (condition) {
               restOfArgs = _.slice(restOfArgs, i + 1, restOfArgs.length);
