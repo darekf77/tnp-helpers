@@ -84,7 +84,7 @@ export class HelpersProcess {
     const currentCwd = crossPlatformPath(process.cwd());
     Helpers.changeCwd(dir);
     Log.disableLogs(logLevel)
-    await Helpers.runSyncOrAsync(functionToExecure);
+    await Helpers.runSyncOrAsync({ functionFn: functionToExecure });
     Log.enableLogs();
     Helpers.changeCwd(currentCwd);
   }
@@ -252,11 +252,11 @@ export class HelpersProcess {
     }
     if (response.value) {
       if (callbackTrue) {
-        await Helpers.runSyncOrAsync(callbackTrue);
+        await Helpers.runSyncOrAsync({ functionFn: callbackTrue });
       }
     } else {
       if (callbackFalse) {
-        await Helpers.runSyncOrAsync(callbackFalse);
+        await Helpers.runSyncOrAsync({ functionFn: callbackFalse });
       }
     }
     return response.value;
@@ -308,7 +308,7 @@ export class HelpersProcess {
     }
     // global.spinner && global.spinner.start()
     Helpers.taskStarted(`${currentDate()} "${taskName}" Started..`)
-    await Helpers.runSyncOrAsync(fn);
+    await Helpers.runSyncOrAsync({ functionFn: fn });
     Helpers.taskDone(`${currentDate()} "${taskName}" Done`)
     // global.spinner && global.spinner.stop()
   }

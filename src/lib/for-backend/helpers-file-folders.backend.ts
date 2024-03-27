@@ -15,7 +15,7 @@ import * as crypto from 'crypto';
 declare const global: any;
 
 import { Helpers } from '../index';
-import { config } from 'tnp-config/src';
+import { config, extAllowedToReplace } from 'tnp-config/src';
 
 
 
@@ -950,7 +950,7 @@ export class HelpersFileFolders {
 
     debugMode && Helpers.log(`path.extname(sourcePath) ${path.extname(sourcePath)}`);
 
-    if (fast || !config.extensions.modificableByReplaceFn.includes(path.extname(sourcePath))) {
+    if (fast || !extAllowedToReplace.includes(path.extname(sourcePath))) {
       fse.copyFileSync(sourcePath, destinationPath);
     } else {
       let sourceData = Helpers.readFile(sourcePath).toString();

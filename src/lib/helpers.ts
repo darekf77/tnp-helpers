@@ -182,7 +182,10 @@ export class HelpersFiredev extends CoreHelpers {
     functionToExecute: Function,
     ...functionArguments: any[]): Promise<number> {
     var start = new Date()
-    await Helpers.runSyncOrAsync(functionToExecute, ...functionArguments);
+    await Helpers.runSyncOrAsync({
+      functionFn: functionToExecute,
+      arrayOfParams: functionArguments
+    });
     //@ts-ignore
     var end = new Date() - start
     if (Helpers.isBrowser) {
@@ -213,7 +216,7 @@ export class HelpersFiredev extends CoreHelpers {
   waitForCondition(conditionFn: (any) => boolean, howOfftenCheckInMs = 1000) {
     return new Promise(async (resolve, reject) => {
 
-      const result = await Helpers.runSyncOrAsync(conditionFn);
+      const result = await Helpers.runSyncOrAsync({ functionFn: conditionFn });
       if (result) {
         resolve(void 0)
       } else {

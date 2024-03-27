@@ -1033,5 +1033,12 @@ ${proj?.children.map(c => '+' + c.genericName).join('\n')}
   }
   //#endregion
 
+  /**
+   * By default no translation of commit
+   */
+  transalteGitCommitFromArgs() {
+    return { from: void 0 as string, to: void 0 as string }
+  }
+
 }
 
