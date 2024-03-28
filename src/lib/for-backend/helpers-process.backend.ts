@@ -9,10 +9,9 @@ import {
 } from 'tnp-core';
 import { CLI } from 'tnp-cli';
 import * as dateformat from 'dateformat';
-
+import { exec } from 'child_process';
 import type { BaseProject } from '../index';
 import { Helpers } from '../index';
-import { Models } from 'tnp-models';
 import { CLASS } from 'typescript-class-helpers';
 import { config } from 'tnp-config';
 import { Log, Level } from 'ng2-logger';
@@ -85,7 +84,7 @@ export class HelpersProcess {
     const currentCwd = crossPlatformPath(process.cwd());
     Helpers.changeCwd(dir);
     Log.disableLogs(logLevel)
-    await Helpers.runSyncOrAsync(functionToExecure);
+    await Helpers.runSyncOrAsync({ functionFn: functionToExecure });
     Log.enableLogs();
     Helpers.changeCwd(currentCwd);
   }
@@ -137,6 +136,9 @@ export class HelpersProcess {
     })
   }
 
+  /**
+   * @deprecated use questions instead
+   */
   pressKeyAndContinue(message = 'Press enter to continue..') {
     console.log(chalk.bold(message));
     if (process.platform === 'win32') {
@@ -253,11 +255,11 @@ export class HelpersProcess {
     }
     if (response.value) {
       if (callbackTrue) {
-        await Helpers.runSyncOrAsync(callbackTrue);
+        await Helpers.runSyncOrAsync({ functionFn: callbackTrue });
       }
     } else {
       if (callbackFalse) {
-        await Helpers.runSyncOrAsync(callbackFalse);
+        await Helpers.runSyncOrAsync({ functionFn: callbackFalse });
       }
     }
     return response.value;
@@ -309,7 +311,7 @@ export class HelpersProcess {
     }
     // global.spinner && global.spinner.start()
     Helpers.taskStarted(`${currentDate()} "${taskName}" Started..`)
-    await Helpers.runSyncOrAsync(fn);
+    await Helpers.runSyncOrAsync({ functionFn: fn });
     Helpers.taskDone(`${currentDate()} "${taskName}" Done`)
     // global.spinner && global.spinner.stop()
   }
@@ -320,6 +322,76 @@ export class HelpersProcess {
     return _.times(process.stdout.columns, () => '-').join('')
   }
 
+  async killAllNodeExceptCurrentProcess() {
+    return new Promise<void>((resolve, reject) => {
+      // Get the current process ID
+      const currentProcessId = process.pid;
+
+      // Command to list all Node.js processes
+      const listProcessesCommand = process.platform === 'win32'
+        ? 'tasklist /fi "imagename eq node.exe" /fo csv' : 'ps -A -o pid,command | grep node';
+
+      // Execute the command to list processes
+      exec(listProcessesCommand, (error, stdout, stderr) => {
+        if (error) {
+          reject(new Error(`Error occurred while listing processes: ${error.message}`));
+          return;
+        }
+        if (stderr) {
+          reject(new Error(`Error occurred while listing processes: ${stderr}`));
+          return;
+        }
+
+        // Split the output into lines and filter out non-node processes
+        const processes = stdout.split('\n')
+          .map(line => line.trim())
+          .filter(line => line.includes('node') && !line.includes('grep') && !line.includes('tasklist'));
+
+        // Extract the process IDs
+        const processIds = processes.map(line => parseInt(line.split(',')[1]));
+
+        // Filter out the current process ID
+        const processesToKill = processIds.filter(id => id !== currentProcessId);
+
+        // If there are no processes to kill, resolve immediately
+        if (processesToKill.length === 0) {
+          resolve();
+          return;
+        }
+
+        // Kill the processes
+        let numProcessesKilled = 0;
+        processesToKill.forEach(id => {
+          const killCommand = process.platform === 'win32' ? `taskkill /pid ${id} /f` : `kill ${id}`;
+          exec(killCommand, (error) => {
+            if (error) {
+              console.error(`Error occurred while killing process ${id}:`, error);
+            } else {
+              console.log(`Successfully killed process ${id}`);
+            }
+            numProcessesKilled++;
+            if (numProcessesKilled === processesToKill.length) {
+              resolve();
+            }
+          });
+        });
+      });
+    });
+  }
+
+  killAllNode() {
+    Helpers.info('Killing all node processes before pull...')
+    try {
+      if (process.platform === 'win32') {
+        Helpers.run(`taskkill /f /im node.exe`, { output: false, silence: true }).sync();
+      } else {
+        Helpers.run(`fkill -f node`, { output: false, silence: true }).sync();
+      }
+    } catch (error) {
+      Helpers.error(`[${config.frameworkName}] not able to kill all node processes`)
+    }
+    Helpers.info('DONE KILL ALL NODE PROCESSES')
+  }
 
   async killProcessByPort(portOrPortsToKill: number | number[], options?: {
     silent?: boolean
@@ -422,37 +494,6 @@ ${Helpers.terminalLine()}\n`;
   prepareWatchCommand(cmd) {
     return os.platform() === 'win32' ? `"${cmd}"` : `'${cmd}'`
   }
-
-  get watcher() {
-    const that = Helpers;
-    return {
-      /**
-       * @deprecated
-       */
-      run(command: string, folderPath: string = 'src', options: Models.system.WatchOptions) {
-        const { cwd = crossPlatformPath(process.cwd()), wait } = options;
-        let cmd = `tnp command ${command}`;
-        const toRun = `watch ${that.prepareWatchCommand(cmd)} ${folderPath} ${wait ? ('--wait=' + wait) : ''}`;
-        Helpers.log(`WATCH COMMAND ${toRun}`)
-        return that.run(toRun, { cwd }).async()
-      },
-      /**
-       * @deprecated
-       */
-      call(fn: Function | string, params: string, folderPath: string = 'src', options: Models.system.WatchOptions) {
-        const { cwd = crossPlatformPath(process.cwd()) } = options;
-        if (!fn) {
-          Helpers.error(`Bad function: ${fn} for watcher on folder: ${folderPath}, with params: ${params}`)
-        }
-        const fnName = typeof fn === 'function' ? CLASS.getName(fn) : fn;
-        // Helpers.log('Function name ', fnName)
-        let cmd = `${config.frameworkName} ${Helpers.cliTool.simplifiedCmd(fnName)} ${params}`;
-        const toRun = `watch ${that.prepareWatchCommand(cmd)} ${folderPath}`;
-        return that.run(toRun, { cwd }).async()
-      }
-    }
-  }
-
 
   getStringFrom(command: string, descriptionOfCommand?: string) {
     try {

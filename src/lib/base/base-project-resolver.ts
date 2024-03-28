@@ -1,4 +1,4 @@
-
+//#region imports
 import {
   //#region @backend
   fse, child_process
@@ -8,16 +8,15 @@ import {
 export { ChildProcess } from 'child_process';
 import { CLI } from 'tnp-cli';
 //#endregion
-import { Helpers } from './index';
+import { Helpers } from '../index';
 import { path, crossPlatformPath } from 'tnp-core';
 import { config } from 'tnp-config';
 import { _ } from 'tnp-core';
 import type { BaseProject } from './base-project';
-
-
+//#endregion
 
 export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
-
+  //#region fields
   protected readonly NPM_PROJECT_KEY = 'npm';
   protected projects: T[] = [];
   /**
@@ -25,17 +24,28 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
    * This may break things that are creating new projects
    */
   protected emptyLocations: string[] = [];
+  //#endregion
+
+  //#region constructor
   constructor(protected classFn: any) { }
+  //#endregion
+
+  //#region fields & getters / allowed types
   get allowedTypes(): string[] {
     //#region @websqlFunc
     return [this.NPM_PROJECT_KEY];
     // throw `Please override this getter [allowedTypes] in your child class or  ${CLI.chalk.bold(config.frameworkName)}`;
     //#endregion
   }
+  //#endregion
 
+  //#region fields & getters / current project
+  /**
+   * project from process.cwd()
+   */
   get Current(): T {
     //#region @backendFunc
-    const current = (this.classFn).From(process.cwd())
+    const current = (this.classFn as typeof BaseProject).ins.From(process.cwd())
     if (!current) {
       Helpers.warn(`[firedev-helpers] Current location is not a ${CLI.chalk.bold(config.frameworkName)} type project.
 
@@ -44,23 +54,30 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
      }`);
       return void 0;
     }
-    return current;
+    return current as unknown as T;
     //#endregion
   }
+  //#endregion
 
+  //#region fields & getters / resolve type from
   /**
    * override this
    */
-  typeFrom(location: string): string {
+  typeFrom(location: string, recrusiveCall = false): string {
     //#region @backendFunc
     if (Helpers.exists(crossPlatformPath([location, config.file.package_json]))) {
       return this.NPM_PROJECT_KEY;
     }
+    if (recrusiveCall) {
+      return;
+    }
+
     // throw `Please override this function [typeFrom] in your child class or  ${CLI.chalk.bold(config.frameworkName)}`;
     //#endregion
   }
+  //#endregion
 
-
+  //#region fields & getters / from
   From(locationOfProject: string | string[], options?: any): T {
     // console.log({
     //   locationOfProj
@@ -114,7 +131,9 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
 
     //#endregion
   }
+  //#endregion
 
+  //#region fields & getters / get project nearest to path
   nearestTo(
     absoluteLocation: string,
     options?: { type?: (string | string[]); findGitRoot?: boolean; onlyOutSideNodeModules?: boolean }): T {
@@ -178,12 +197,15 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
     return project as any;
     //#endregion
   }
+  //#endregion
 
-
+  //#region fields & getters / unload project
   unload(project: T) {
     this.projects = this.projects.filter(f => f !== project);
   }
+  //#endregion
 
+  //#region fields & getters / remove project
   remove(project: T) {
     //#region @backend
     const location = project.location;
@@ -191,13 +213,17 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
     Helpers.tryRemoveDir(location);
     //#endregion
   }
+  //#endregion
 
+  //#region fields & getters / manually add project
   add(project: T) {
     //#region @backend
     this.projects.push(project);
     //#endregion
   }
+  //#endregion
 
+  //#region fields & getters / all projects from location
 
   allProjectFrom(absoluteLocation: string, stopOnCwd: string = '/') {
     //#region @backendFunc
@@ -226,35 +252,7 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
     return projectsList as T[];
     //#endregion
   }
-
-  /**
-   * Resolve child project when accessing from parent container etc...
-   * @param args string or string[] from cli args
-   * @param CurrentProject project from process.cwd()
-   */
-  resolveChildProject(args: string | string[]): T {
-    //#region @backendFunc
-    const currentProject = this.Current;
-
-    if (!currentProject) {
-      return void 0 as any;
-    }
-    if (_.isString(args)) {
-      args = args.split(' ');
-    }
-    let firstArg = _.first(args);
-    if (firstArg) {
-      firstArg = firstArg.replace(/\/$/, '');
-      const child = currentProject.children.find(c => c.name === firstArg);
-      if (child) { // @ts-ignore
-        currentProject = child;
-      }
-    }
-    return currentProject;
-    //#endregion
-  }
-
-
+  //#endregion
 
 }
 

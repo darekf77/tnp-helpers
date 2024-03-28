@@ -6,6 +6,7 @@ import {
   rimraf,
   crossPlatformPath,
   json5,
+  CoreModels
 } from 'tnp-core/src';
 import * as  underscore from 'underscore';
 import * as glob from 'glob';
@@ -14,8 +15,7 @@ import * as crypto from 'crypto';
 declare const global: any;
 
 import { Helpers } from '../index';
-import { config } from 'tnp-config/src';
-import { Models } from 'tnp-models/src';
+import { config, extAllowedToReplace } from 'tnp-config/src';
 
 
 
@@ -298,30 +298,28 @@ export class HelpersFileFolders {
     }
   }
 
-  removeFileIfExists(absoluteFilePath: string, options?: { modifiedFiles?: Models.other.ModifiedFiles; }) {
+  removeFileIfExists(absoluteFilePath: string) {
     if (process.platform === 'win32') {
       rimraf.sync(absoluteFilePath);
       return;
     }
     // console.log(`removeFileIfExists: ${absoluteFilePath}`)
-    const { modifiedFiles } = options || { modifiedFiles: { modifiedFiles: [] } };
+
     if (fse.existsSync(absoluteFilePath)) {
       fse.unlinkSync(absoluteFilePath);
-      modifiedFiles.modifiedFiles.push(absoluteFilePath);
     }
   }
 
-  removeFolderIfExists(absoluteFolderPath: string, options?: { modifiedFiles?: Models.other.ModifiedFiles; }) {
+  removeFolderIfExists(absoluteFolderPath: string) {
     Helpers.log(`[helpers] Remove folder: ${absoluteFolderPath}`)
     if (process.platform === 'win32') {
       // rimraf.sync(absoluteFolderPath);
       this.tryRemoveDir(absoluteFolderPath, false, true)
       return;
     }
-    const { modifiedFiles } = options || { modifiedFiles: { modifiedFiles: [] } };
+
     if (fse.existsSync(absoluteFolderPath)) {
       fse.removeSync(absoluteFolderPath);
-      modifiedFiles.modifiedFiles.push(absoluteFolderPath);
     }
   }
 
@@ -751,9 +749,6 @@ export class HelpersFileFolders {
 
               if (options.asSeparatedFiles) {
                 const copyRecFn = (cwdForFiles) => {
-                  // if (path.basename(cwdForFiles) === 'plugins') {
-                  //   debugger
-                  // }
                   const files = Helpers.getRecrusiveFilesFrom(cwdForFiles, options.omitFolders);
                   for (let index = 0; index < files.length; index++) {
                     const from = files[index];
@@ -885,7 +880,6 @@ export class HelpersFileFolders {
       debugMode?: boolean;
       fast?: boolean;
       dontCopySameContent?: boolean;
-      modifiedFiles?: Models.other.ModifiedFiles;
     }): boolean {
 
     if (_.isUndefined(options)) {
@@ -900,7 +894,7 @@ export class HelpersFileFolders {
     if (_.isUndefined(options.dontCopySameContent)) {
       options.dontCopySameContent = true;
     }
-    const { debugMode, fast, transformTextFn, dontCopySameContent, modifiedFiles } = options;
+    const { debugMode, fast, transformTextFn, dontCopySameContent } = options;
     if (_.isFunction(transformTextFn) && fast) {
       Helpers.error(`[firedev-helpers][copyFile] You cannot use  transformTextFn in fast mode`);
     }
@@ -953,7 +947,7 @@ export class HelpersFileFolders {
 
     debugMode && Helpers.log(`path.extname(sourcePath) ${path.extname(sourcePath)}`);
 
-    if (fast || !config.extensions.modificableByReplaceFn.includes(path.extname(sourcePath))) {
+    if (fast || !extAllowedToReplace.includes(path.extname(sourcePath))) {
       fse.copyFileSync(sourcePath, destinationPath);
     } else {
       let sourceData = Helpers.readFile(sourcePath).toString();
@@ -970,9 +964,7 @@ ${sourceData}
 
       Helpers.writeFile(destinationPath, sourceData);
     }
-    if (modifiedFiles && _.isArray(modifiedFiles.modifiedFiles)) {
-      modifiedFiles.modifiedFiles.push(destinationPath);
-    }
+
     return true;
   }
 

@@ -23,10 +23,10 @@ import { TsCodeExtractor } from './for-backend/ts-code/ts-code-extractor';
 import { CLI } from 'tnp-cli';
 import { HelpersVscode } from './for-backend/helpers-vscode.backend';
 //#endregion
-import { config, ConfigModels } from 'tnp-config';
+import { config } from 'tnp-config';
 import { Helpers, Validators } from './index';
-import { CLASS } from 'typescript-class-helpers';
-import { CoreHelpers } from 'tnp-core';
+import { CLASS } from 'typescript-class-helpers/src';
+import { CoreHelpers, CoreModels } from 'tnp-core/src';
 import { HelpersNumber } from './helpers-numbers';
 //#region @browser
 import { HelpersBrowser } from './for-browser/helpers-browser';
@@ -182,7 +182,10 @@ export class HelpersFiredev extends CoreHelpers {
     functionToExecute: Function,
     ...functionArguments: any[]): Promise<number> {
     var start = new Date()
-    await Helpers.runSyncOrAsync(functionToExecute, ...functionArguments);
+    await Helpers.runSyncOrAsync({
+      functionFn: functionToExecute,
+      arrayOfParams: functionArguments
+    });
     //@ts-ignore
     var end = new Date() - start
     if (Helpers.isBrowser) {
@@ -210,10 +213,12 @@ export class HelpersFiredev extends CoreHelpers {
     return end;
   }
 
+
+
   waitForCondition(conditionFn: (any) => boolean, howOfftenCheckInMs = 1000) {
     return new Promise(async (resolve, reject) => {
 
-      const result = await Helpers.runSyncOrAsync(conditionFn);
+      const result = await Helpers.runSyncOrAsync({ functionFn: conditionFn });
       if (result) {
         resolve(void 0)
       } else {
@@ -341,7 +346,7 @@ export class HelpersFiredev extends CoreHelpers {
   //#endregion
 
   //#region @backend
-  checkEnvironment = (deps?: ConfigModels.GlobalDependencies) => CLI.checkEnvironment(deps);
+  checkEnvironment = (deps?: CoreModels.GlobalDependencies) => CLI.checkEnvironment(deps);
   //#endregion
   public applyMixins = applyMixins;
 

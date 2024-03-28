@@ -9,10 +9,17 @@ import {
 import { CLI } from 'tnp-cli';
 import { Helpers } from '../index';
 import type { BaseProject } from '../index';
+import { config } from 'tnp-config';
 //#endregion
 
 
 export class HelpersGit {
+
+  //#region getters & methods / action mess reset git hard commit
+  public get ACTION_MSG_RESET_GIT_HARD_COMMIT(): string {
+    return '$$$ update $$$'
+  }
+  //#endregion
 
   //#region get last commit hash
   lastCommitHash(cwd): string {
@@ -280,6 +287,25 @@ export class HelpersGit {
   }
   //#endregion
 
+  allOrigins(cwd: string): { origin: string; url: string }[] {
+    let remotes: { origin: string; url: string; }[] = [];
+    try {
+      remotes = (Helpers.run(`git remote -v`, { cwd, output: false }).sync()?.toString() || '')
+        .trim()
+        .replace(new RegExp('\\(push\\)', 'g'), ' ')
+        .replace(new RegExp('\\t', 'g'), ' ')
+        .split('\n')
+        .filter(f => f.search('(fetch)') === -1)
+        .map(s => {
+          const [origin, url] = s.trim().split(' ');
+          return {
+            origin,
+            url
+          }
+        });
+    } catch (error) { }
+    return remotes;
+  }
 
   //#region get current branch name
   currentBranchName(cwd) {
@@ -294,60 +320,57 @@ export class HelpersGit {
   //#endregion
 
   //#region commit "what is"
-  commitWhatIs(cwd: string, customMessage = 'changes') {
-    Helpers.log('[firedev-helpers][commitWhatIs]')
-    try {
-      Helpers.run(`git add --all . `, { cwd }).sync()
-    } catch (error) {
-      Helpers.warn(`Failed to git add --all .`);
-    }
-
-    try {
-      Helpers.run(`git commit -m "${customMessage}"`, { cwd }).sync()
-    } catch (error) {
-      Helpers.warn(`[firedev-helpers][git][commitWhatIs] Failed to git commit -m "${customMessage}"`);
-    }
+  stageAllAndCommit(cwd: string, commitMessage?: string) {
+    this.stageAllFiles(cwd);
+    this.commit(cwd, commitMessage);
   }
   //#endregion
 
   //#region commit
-  commit(cwd: string, ProjectClass: typeof BaseProject, args?: string) {
+  commit(cwd: string, commitMessage?: string) {
+
     Helpers.log('[firedev-helpers][commit] ' + cwd, 1)
-    if (!_.isString(args)) {
-      args = 'update'
+    if (!_.isString(commitMessage)) {
+      commitMessage = 'update'
     }
 
-    const gitRootProject = ProjectClass.ins.nearestTo(cwd, { findGitRoot: true });
-    try {
-      Helpers.info(`[firedev-helpers][git][commit] Adding current git changes in git root:
-        ${gitRootProject.location}
-        `)
-      gitRootProject.run(`git add --all . `).sync()
-    } catch (error) {
-      Helpers.log(error)
-      Helpers.warn(`[firedev-helpers][commit] Failed to 'git add --all .' in:
-        ${gitRootProject.location}`);
-    }
-
-    if (args.search('-m') === -1 && args.search('-msg') === -1) {
+    if (commitMessage.search('-m') === -1 && commitMessage.search('-msg') === -1) {
       const addBrackets = !(
-        (args.startsWith('\'') ||
-          args.startsWith('"')) &&
-        (args.endsWith('\'') ||
-          args.endsWith('"'))
+        (commitMessage.startsWith('\'') ||
+          commitMessage.startsWith('"')) &&
+        (commitMessage.endsWith('\'') ||
+          commitMessage.endsWith('"'))
       );
-      args = `-m ${addBrackets ? `"${args}"` : args}`;
+
+      commitMessage = `${addBrackets ? `"${commitMessage}"` : commitMessage}`.replace(/\"\"/g, '"');
+
     }
+
+    if (process.platform === 'win32') {
+      commitMessage = commitMessage.split('\n').filter(f => !!f.trim()).map(l => ` -m "${l}" `).join(' ');
+    } else {
+      commitMessage = `-m ${commitMessage}`
+    }
+
+    if (process.platform !== 'win32') {
+      commitMessage = commitMessage.replace(/\"/g, `'`);
+    }
+
+    commitMessage = commitMessage.replace(/\"\"/g, `"`);
+    commitMessage = commitMessage.replace(/\'\'/g, `'`);
+
     try {
       Helpers.info(`[firedev-helpers][git][commit] trying to commit what it with argument:
-      "${args}"
+      "${commitMessage}"
       location: ${cwd}
       `)
-      var cmdddd = `git commit --no-verify ${args}`;
-      Helpers.run(cmdddd, { cwd }).sync()
+      var commandToExecute = `git commit --no-verify ${commitMessage}`;
+      // Helpers.info(`COMMITING WITH COMMAND: ${commandToExecute}`);
+      // process.exit(0)
+      Helpers.run(commandToExecute, { cwd }).sync();
     } catch (error) {
       Helpers.log(error)
-      Helpers.log(`[firedev-helpers][git][commit] not able to commit what is with command: ${cmdddd}`);
+      Helpers.log(`[firedev-helpers][git][commit] not able to commit with command: ${commandToExecute}`);
     }
   }
   //#endregion
@@ -427,39 +450,50 @@ export class HelpersGit {
   }
   //#endregion
 
-  private pull(branchName = 'master', cwd = crossPlatformPath(process.cwd())) {
-    Helpers.log('[firedev-helpers][pull] ' + cwd, 1)
-    child_process.execSync(`git pull --tags --rebase origin ${branchName}`, { cwd });
+  resetSoftHEAD(cwd, HEAD = 1) {
+    try {
+      child_process.execSync(`git reset --soft HEAD~${HEAD}`, { cwd });
+    } catch (error) {
+      Helpers.error(`[${config.frameworkName}] not able to soft repository in ${self.location}`)
+    }
   }
 
-  //#region pull current branch
-  async pullBranch(branchName: string, cwd: string, askToRetry = false) {
-    Helpers.log('[firedev-helpers][pullBranch] ' + cwd, 1)
-    if (this.getOriginURL(cwd) === '') {
-      Helpers.warn(`Not pulling branch without `
-        + `remote origin url.... in folder ${path.basename(cwd)}`);
-      return;
-    }
-    Helpers.info(`[firedev-helpers] Pulling git changes in "${cwd}" , origin=${Helpers.git.getOriginURL(cwd)} `)
+  //#region reset hard
+  resetHard(cwd: string, options?: {
+    HEAD?: number
+  }) {
+    //#region @backendFunc
+    const { HEAD } = options || {};
     try {
-      Helpers.git.pull(branchName, cwd);
-      Helpers.info(`[firedev-helpers] Branch "${branchName}" updated successfully in ${path.basename(cwd)}`)
-    } catch (e) {
-      // console.log(e)
-      Helpers.error(`[firedev-helpers] Cannot update current branch in: ${cwd}`, askToRetry, true)
-      if (askToRetry) {
-        await Helpers.questionYesNo(`Do you wanna try again ?`, async () => {
-          await Helpers.git.pullCurrentBranch(cwd, askToRetry)
-        }, () => {
-          process.exit(0)
-        });
-      }
+      child_process.execSync(`git reset --hard ${_.isNumber(HEAD) ? `HEAD~${HEAD}` : ''}`, { cwd });
+    } catch (error) {
+      Helpers.error(`[${config.frameworkName}] not able to reset repository in ${self.location}`)
     }
+    //#endregion
   }
   //#endregion
 
-  //#region pull current branch
-  async pullCurrentBranch(cwd: string, askToRetry = true) {
+  //#region pull
+  private _pull(cwd: string, options?: {
+    askToRetry?: boolean,
+    branchName?: string,
+    defaultHardResetCommits?: number
+  }) {
+    let { branchName, defaultHardResetCommits, askToRetry = true } = options || {};
+    if (_.isNumber(defaultHardResetCommits)) {
+      this.resetHard(cwd, { HEAD: defaultHardResetCommits });
+    } else {
+      this.meltActionCommits(cwd);
+    }
+    child_process.execSync(`git pull --tags --rebase origin ${branchName}`, { cwd });
+  }
+
+  async pullCurrentBranch(cwd: string, options?: {
+    askToRetry?: boolean,
+    defaultHardResetCommits?: number,
+  }) {
+    options = options || {} as any;
+    let { askToRetry } = options || {};
     Helpers.log('[firedev-helpers][pullCurrentBranch] ' + cwd, 1)
     if (global['tnpNonInteractive']) {
       askToRetry = false;
@@ -474,14 +508,14 @@ export class HelpersGit {
     try {
 
       let currentLocalBranch = child_process.execSync(`git branch | sed -n '/\* /s///p'`, { cwd }).toString().trim()
-      Helpers.git.pull(currentLocalBranch, cwd);
+      Helpers.git._pull(cwd, { ...options, branchName: currentLocalBranch });
       Helpers.info(`[firedev-helpers] Branch "${currentLocalBranch}" updated successfully in ${path.basename(cwd)}`)
     } catch (e) {
       // console.log(e)
       Helpers.error(`[firedev-helpers] Cannot update current branch in: ${cwd}`, askToRetry, true)
       if (askToRetry) {
         await Helpers.questionYesNo(`Do you wanna try again ?`, async () => {
-          await Helpers.git.pullCurrentBranch(cwd, askToRetry)
+          await Helpers.git.pullCurrentBranch(cwd, options)
         }, () => {
           process.exit(1)
         });
@@ -491,49 +525,50 @@ export class HelpersGit {
   }
   //#endregion
 
-  //#region push current branch
   /**
-   * @deprecared
-   *
-   * use pushCurrentRepoBranch
+   * Return number of melted action commits
    */
-  pushCurrentBranch(cwd: string, force = false, origin = 'origin') {
-    Helpers.log('[firedev-helpers][pushCurrentBranch] ' + cwd, 1)
-    const currentBranchName = Helpers.git.currentBranchName(cwd);
-    const taskName = `
-    Pushing current branch (remote=${origin}): ${currentBranchName}
-    `
-    Helpers.info(taskName);
+  meltActionCommits(cwd, soft = false) {
+    let i = 0;
     while (true) {
-      try {
-        const command = `git push ${force ? '-f' : ''} ${origin} ${currentBranchName} --tags`;
-        Helpers.info(`[git][push] ${force ? 'force' : ''} pushing current branch ${currentBranchName} ,`
-          + ` origin=${Helpers.git.getOriginURL(cwd, origin)}`);
-
-        Helpers.run(command, { cwd }).sync()
-        Helpers.info(taskName);
-        break;
-      } catch (err) {
-        Helpers.error(`[firedev-helpers] Not able to push branch ${currentBranchName} in (origin=${origin}):
-        ${cwd}`, true, true);
-        Helpers.pressKeyAndContinue(`Press any key to try again: `);
-        // TODO issue 1:  issue with press any key
-        // TODO issue 2: Updates were rejected because the tag already exists in the remote
-        continue;
+      if (this.lastCommitMessage(cwd) === Helpers.git.ACTION_MSG_RESET_GIT_HARD_COMMIT) {
+        Helpers.logInfo(`Reseting branch deep ${++i}.. `);
+        if (soft) {
+          Helpers.git.resetSoftHEAD(cwd, 1);
+        } else {
+          Helpers.git.resetHard(cwd, { HEAD: 1 });
+        }
+      } else {
+        return i;
       }
-    }
+    };
   }
-  //#endregion
 
   //#region push current branch
   /**
+   *  TODO issue 2: Updates were rejected because the tag already exists in the remote
    * @returns info if process succeed
    */
-  async pushCurrentRepoBranch(cwd: string, force = false, askToRetry = false, origin = 'origin'): Promise<boolean> {
+  async pushCurrentBranch(cwd: string, options?: { force?: boolean; origin?: string, askToRetry?: boolean; forcePushNoQuestion?: boolean; }): Promise<boolean> {
+    options = options || {};
+    options.origin = options.origin ? options.origin : 'origin';
+    const { askToRetry, origin, forcePushNoQuestion = false } = options || {};
+    let { force } = options || {};
+    if (force && !forcePushNoQuestion) {
+      Helpers.info(`
+      Pushing force branch ${this.currentBranchName(cwd)} in location
+
+${cwd}
+
+      `)
+      if (!await Helpers.consoleGui.question.yesNo(`Are you sure ? `)) {
+        process.exit(0);
+      }
+    }
     Helpers.log('[firedev-helpers][pushCurrentBranch] ' + cwd, 1)
     const currentBranchName = Helpers.git.currentBranchName(cwd);
     const taskName = `
-    Pushing current branch (remote=${origin}): ${currentBranchName}
+    Pushing ${force ? 'FORCE' : 'NORMALLy'} current branch (remote=${origin}): ${currentBranchName}
     `
     Helpers.info(taskName);
     while (true) {
@@ -551,10 +586,9 @@ export class HelpersGit {
         if (!askToRetry) {
           return;
         }
-        if (Helpers.questionYesNo('Try again to push this branch ?')) {
-          continue;
-        }
-        return false;
+
+        force = await Helpers.consoleGui.question.yesNo('Try again with force push ?');
+        continue;
       }
     }
     return true;
@@ -586,9 +620,77 @@ export class HelpersGit {
   }
   //#endregion
 
+  //#region add
+  /**
+   *
+   * @param cwd
+   * @param optinos
+   */
+  stageAllFiles(cwd: string) {
+    try {
+      child_process.execSync(`git add --all .`, { cwd });
+    } catch (error) { }
+  }
+  //#endregion
+
+  //#region stash
+  /**
+   *
+   * @param cwd
+   * @param optinos
+   */
+  stash(cwd: string, optinos?: {
+    onlyStaged?: boolean;
+  }) {
+    const { onlyStaged } = optinos || {};
+    try {
+      if (onlyStaged) {
+        child_process.execSync(`git stash push --keep-index`, { cwd });
+      } else {
+        child_process.execSync(`git stash.`, { cwd });
+      }
+    } catch (error) { }
+  }
+  //#endregion
+
+  //#region stash apply
+  stashApply(cwd: string) {
+    try {
+      child_process.execSync(`git stash apply`, { cwd });
+    } catch (error) { }
+  }
+  //#endregion
+
+  //#region fetch
+  fetch(cwd: string) {
+    try {
+      child_process.execSync(`git fetch`, { cwd });
+    } catch (error) {
+      Helpers.error('Not able to git fetch.', false, true);
+    }
+  }
+  //#endregion
 
   //#region checkout
-  checkout(checkoutFromBranch: string, targetBranch: string, origin = 'origin', cwd) {
+  checkout(cwd, branchName: string, options: { createBranchIfNotExists?: boolean; fetchBeforeCheckout?: boolean; switchBranchWhenExists?: boolean; }) {
+    let { createBranchIfNotExists, fetchBeforeCheckout, switchBranchWhenExists } = options || {};
+    if (fetchBeforeCheckout) {
+      this.fetch(cwd);
+    };
+
+    if (switchBranchWhenExists && this.getBranchesNames(cwd, branchName).includes(branchName)) {
+      createBranchIfNotExists = false;
+    }
+    try {
+      child_process.execSync(`git checkout ${createBranchIfNotExists ? '-b' : ''} ${branchName}`, { cwd });
+    } catch (error) {
+      Helpers.error(`Not able to checkout branch: ${branchName}`, false, true);
+    }
+  }
+  //#endregion
+
+  //#region checkout from to
+  checkoutFromTo(checkoutFromBranch: string, targetBranch: string, origin = 'origin', cwd) {
     Helpers.log('[checkout] ' + cwd, 1);
     child_process.execSync(`git fetch`, { cwd });
     const currentBranchName = this.currentBranchName(cwd);
@@ -713,11 +815,13 @@ export class HelpersGit {
   }
   //#endregion
 
+  //#region check if there are some uncommited changes except
   thereAreSomeUncommitedChangeExcept(filesList: string[] = [], cwd: string) {
     Helpers.log('[firedev-helpers][thereAreSomeUncommitedChangeExcept] ' + cwd, 1)
     filesList = filesList.map(f => crossPlatformPath(f))
     try {
       const res = Helpers.run(`git ls-files --deleted --modified --others --exclude-standard`, { output: false, cwd }).sync().toString().trim();
+
       const list = !res ? [] : res
         .split(/\r\n|\n|\r/)
         .filter(f => {
@@ -730,6 +834,7 @@ export class HelpersGit {
       return false;
     }
   }
+  //#endregion
 
   //#region restore last version
   restoreLastVersion(cwd: string, localFilePath: string) {
@@ -757,6 +862,7 @@ export class HelpersGit {
   }
   //#endregion
 
+  //#region get list of staged files
   /**
    *
    * @param cwd
@@ -772,7 +878,7 @@ export class HelpersGit {
       return crossPlatformPath([cwd, relative]);
     })
   }
-
+  //#endregion
 
 
 }
