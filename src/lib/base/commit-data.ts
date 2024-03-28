@@ -109,10 +109,25 @@ export class CommitData {
   //#region  from
   public static from(options: Pick<CommitData, 'message' | 'jiraNumbers' | 'typeOfCommit'>): CommitData {
     options = (options ? options : {}) as any;
-    return _.merge(new CommitData(), _.cloneDeep(options))
+    const opt = _.merge(new CommitData(), _.cloneDeep(options));
+    debugger
+    return opt;
   }
   //#endregion
 
+  //#endregion
+
+  //#region fields
+  typeOfCommit: TypeOfCommit;
+  /**
+   * pure message what was done (without jira or prefixes)
+   * => is included in this.commitMessage
+   */
+  message: string;
+  /**
+   * ex. JIRA-2132 or MYJIRAREFIX-234234
+   */
+  jiraNumbers: string[];
   //#endregion
 
   //#region methods & getters
@@ -138,21 +153,31 @@ export class CommitData {
   get commitMessage(): string {
     //#region @backendFunc
     const jiras = this.jiraNumbers || [];
-    return `${this.branchPrefix}${(jiras.length > 0) ? '(' + jiras.join(',') + ')' : ''}: ${(this.message || '').trim()}`;
+    let commitMsg = `${this.branchPrefix}${(jiras.length > 0) ? '(' + jiras.join(',') + ')' : ''}: ${(this.message || '').trim()}`;
+    if (process.platform === 'win32') {
+      commitMsg = commitMsg.split('\n').filter(f => !!f.trim()).map(l => ` -m "${l}" `).join(' ');
+    }
+    return commitMsg;
+
+    //#endregion
+  }
+  //#endregion
+
+  get branchName() {
+    //#region @backendFunc
+    return `${this.typeOfCommit || 'feature'}/${this.jiraNumbers.join('-')}-${_.kebabCase(this.message)}`;
+    //#endregion
+  }
+
+  //#region methods & getters / is action commit
+  get isActionCommit() {
+    //#region @backendFunc
+    return this.message === Helpers.git.ACTION_MSG_RESET_GIT_HARD_COMMIT;
     //#endregion
   }
   //#endregion
 
   //#endregion
 
-  typeOfCommit: TypeOfCommit;
-  /**
-   * pure message what was done (without jira or prefixes)
-   * => is included in this.commitMessage
-   */
-  message: string;
-  /**
-   * ex. JIRA-2132 or MYJIRAREFIX-234234
-   */
-  jiraNumbers: string[];
+
 }

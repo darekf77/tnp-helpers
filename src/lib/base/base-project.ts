@@ -10,8 +10,9 @@ import { CLI } from 'tnp-cli';
 import { path, crossPlatformPath } from 'tnp-core/src';
 import { config } from 'tnp-config';
 import { _ } from 'tnp-core/src';
-import { Helpers } from '../index';
+import { CommitData, Helpers, TypeOfCommit } from '../index';
 import { BaseProjectResolver } from './base-project-resolver';
+import { translate } from './translate';
 
 //#endregion
 
@@ -649,12 +650,13 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
   //#region  methods & getters / reset process
   async resetProcess(overrideBranch?: string) {
     //#region @backend
+    this._beforeAnyActionOnGitRoot();
     const defaultBranch = overrideBranch
       ? overrideBranch : this.getDefaultDevelopmentBranch();
 
     this.git.fetch()
 
-    this.git.add();
+    this.git.stageAllFiles();
     this.git.stash();
     this.git.resetHard();
     this.git.checkout(defaultBranch);
@@ -666,7 +668,169 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
     }
     this.git.stashApply();
     await this.struct();
-    Helpers.info(`RESET DONE for branch: ${chalk.bold(defaultBranch)}`)
+    Helpers.info(`RESET DONE for branch: ${chalk.bold(defaultBranch)}`);
+
+    const childrenRepos = this.children.filter(f => f.git.isGitRepo && f.git.isGitRoot);
+    for (const child of childrenRepos) {
+      await child.resetProcess(overrideBranch);
+    }
+    //#endregion
+  }
+  //#endregion
+
+  //#region  methods & getters / push process
+  async pullProcess() {
+    this._beforeAnyActionOnGitRoot();
+    let uncommitedChanges = this.git.thereAreSomeUncommitedChange;
+    if (uncommitedChanges) {
+      Helpers.warn(`Stashing uncommit changes... in ${this.genericName}`);
+      try {
+        this.git.stageAllFiles();
+      } catch (error) { }
+      try {
+        this.git.stash()
+      } catch (error) { };
+    }
+
+    await this.git.pullCurrentBranch();
+    const location = this.location;
+    this.ins.unload(this as any);
+    this.ins.add(this.ins.From(location) as any);
+
+    const childrenRepos = this.children.filter(f => f.git.isGitRepo && f.git.isGitRoot);
+    for (const child of childrenRepos) {
+      await child.pullProcess();
+    }
+  }
+  //#endregion
+
+  //#region  methods & getters / push process
+  async pushProcess({
+    force = false,
+    typeofCommit,
+    origin = 'origin',
+    exitCallBack,
+    args = [],
+
+  }: { force?: boolean; typeofCommit?: TypeOfCommit; origin?: string; args?: string[]; exitCallBack?: () => void } = {}) {
+    //#region @backendFunc
+    debugger
+    this._beforePushProcessAction();
+    const commitData = await this._getCommitMessage(typeofCommit, args);
+    const commitMessage = commitData?.commitMessage;
+
+    while (true) {
+      try {
+        await this.lint();
+        break;
+      } catch (error) {
+        Helpers.warn('Fix your code...');
+        if (!(await Helpers.consoleGui.question.yesNo('Try again lint ? .. (or just skip it)'))) {
+          break;
+        }
+      }
+    }
+
+    if (!commitData.isActionCommit) {
+      Helpers.info(`Commit message
+      "${commitMessage}"
+      `)
+
+      if (!(await Helpers.questionYesNo('Commit and push this ?'))) {
+        exitCallBack()
+      }
+    }
+
+    if (this.automaticallyAddAllChnagesWhenPushingToGit()) { // my project
+      this.git.stageAllFiles();
+    }
+
+    if (this.useGitBranchesAsMetadataForCommits()) {
+      this.git.checkout(commitData.branchName);
+    }
+
+    try {
+      this.git.commit(commitMessage);
+    } catch (error) {
+      Helpers.warn(`Not commiting anything... `)
+    }
+
+    let oneFail = false;
+    while (true) {
+      try {
+        if (oneFail) {
+          const push = await Helpers.questionYesNo('Do you want to force push ?');
+          await this.git.pushCurrentBranch({ force: push, origin });
+          break;
+        }
+        await this.git.pushCurrentBranch({ force, origin });
+        break;
+      } catch (error) {
+        oneFail = true;
+      }
+    }
+    //#endregion
+  }
+  //#endregion
+
+  //#region  methods & getters / before any action on git root
+  private _beforeAnyActionOnGitRoot() {
+    //#region @backendFunc
+    if (!this.git.isGitRepo) {
+      Helpers.error(`Project ${chalk.bold(this.name)} is not a git repository
+      locaiton: ${this.location}`, false, true);
+    }
+    if (!this.git.isGitRoot) {
+      Helpers.error(`Project ${chalk.bold(this.name)} is not a git root
+      locaiton: ${this.location}`, false, true);
+    }
+    //#endregion
+  }
+  //#endregion
+
+  //#region before push action
+  protected async _beforePushProcessAction() {
+    //#region @backendFunc
+    this._beforeAnyActionOnGitRoot();
+
+    // for first projects
+    if (this.git.isGitRepo && this.git.isGitRoot && !this.git.currentBranchName?.trim()) {
+      if (await Helpers.consoleGui.question.yesNo('Repository is empty...Commit "master" branch and commit all as "first commit" ?')) {
+        this.git.checkout('master');
+        this.git.stageAllFiles();
+        this.git.commit('first commit ');
+      }
+    }
+    //#endregion
+  }
+  //#endregion
+
+  //#region resovle commit message
+  protected async _getCommitMessage(typeofCommit: TypeOfCommit, args: string[]): Promise<CommitData> {
+    //#region @backendFunc
+    let commitData: CommitData;
+    if (this.useGitBranchesWhenCommitingAndPushing()) {
+      let argsCommitData = await CommitData.getFromArgs(args, typeofCommit);
+      if (!argsCommitData.message) {
+        commitData = argsCommitData;
+      } else {
+        commitData = await CommitData.getFromBranch(this.git.currentBranchName);
+      }
+    } else {
+      let argsCommitData = await CommitData.getFromArgs(args, typeofCommit);
+      if (!argsCommitData.message) {
+        argsCommitData.message = Helpers.git.ACTION_MSG_RESET_GIT_HARD_COMMIT;
+      }
+    }
+
+    if (commitData.message !== Helpers.git.ACTION_MSG_RESET_GIT_HARD_COMMIT) {
+      const { from, to } = this.transalteGitCommitFromArgs();
+      if (from && to) {
+        commitData.message = _.kebabCase(await translate(commitData.message, { from, to }));
+      }
+    }
+
+    return commitData;
     //#endregion
   }
   //#endregion
@@ -685,12 +849,6 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
     //#region @backend
     Helpers.writeFile([this.location, relativePath], content);
     //#endregion
-  }
-  //#endregion
-
-  //#region getters & methods / action mess reset git hard commit
-  public get ACTION_MSG_RESET_GIT_HARD_COMMIT(): string {
-    return '$$$ update $$$'
   }
   //#endregion
 
@@ -716,15 +874,9 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
         return Helpers.git.restoreLastVersion(self.location, localFilePath);
         //#endregion
       },
-      add(optinos?: {
-        /**
-         * TODO
-         * @deprecated
-         */
-        onlyStaged?: boolean;
-      }) {
+      stageAllFiles() {
         //#region @backendFunc
-        Helpers.git.add(self.location, optinos);
+        Helpers.git.stageAllFiles(self.location);
         //#endregion
       },
       stash(optinos?: {
@@ -769,14 +921,27 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
         return Helpers.git.commit(self.location, commitMessage);
         //#endregion
       },
-      addAndCommit(commitMessage?: string) {
+      /**
+       * alias to stage all and commit
+       */
+      addAndCommit(commitMessage: string) {
         //#region @backendFunc
-        return Helpers.git.addAndCommit(self.location, commitMessage);
+        return Helpers.git.stageAllAndCommit(self.location, commitMessage);
         //#endregion
       },
-      pushCurrentBranch(options?: { force?: boolean; origin?: string, askToRetry?: boolean; forcePushNoQuestion?: boolean; }) {
+      stageAllAndCommit(commitMessage: string) {
         //#region @backendFunc
-        return Helpers.git.pushCurrentBranch(self.location, options);
+        return Helpers.git.stageAllAndCommit(self.location, commitMessage);
+        //#endregion
+      },
+      async pushCurrentBranch(options?: { force?: boolean; origin?: string, askToRetry?: boolean; forcePushNoQuestion?: boolean; }) {
+        //#region @backendFunc
+        return await Helpers.git.pushCurrentBranch(self.location, options);
+        //#endregion
+      },
+      get allOrigins() {
+        //#region @backendFunc
+        return Helpers.git.allOrigins(self.location);
         //#endregion
       },
       get thereAreSomeUncommitedChange() {
@@ -789,12 +954,17 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
         return Helpers.git.thereAreSomeUncommitedChangeExcept(filesList, self.location);
         //#endregion
       },
+      meltActionCommits() {
+        //#region @backend
+        Helpers.git.meltActionCommits(self.location);
+        //#endregion
+      },
       async pullCurrentBranch(options?: {
         askToRetry?: boolean,
         defaultHardResetCommits?: number
       }) {
         //#region @backendFunc
-        await Helpers.git.pullCurrentBranch(self.location, { ...options, ACTION_MSG_RESET_GIT_HARD_COMMIT: self.ACTION_MSG_RESET_GIT_HARD_COMMIT });
+        await Helpers.git.pullCurrentBranch(self.location, { ...options });
         //#endregion
       },
       get currentBranchName() {
@@ -854,9 +1024,9 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
         return Helpers.git.checkTagExists(tag, self.location);
         //#endregion
       },
-      checkout(branchName: string) {
+      checkout(branchName: string, options?: { createBranchIfNotExists?: boolean; fetchBeforeCheckout?: boolean; switchBranchWhenExists?: boolean; }) {
         //#region @backendFunc
-        return Helpers.git.checkout(self.location, branchName);
+        return Helpers.git.checkout(self.location, branchName, options);
         //#endregion
       },
       checkoutFromTo(checkoutFromBranch: string, branch: string, origin = 'origin') {
@@ -1033,12 +1203,42 @@ ${proj?.children.map(c => '+' + c.genericName).join('\n')}
   }
   //#endregion
 
+  //#region getters & methods / translate git commit from args
   /**
    * By default no translation of commit
    */
   transalteGitCommitFromArgs() {
     return { from: void 0 as string, to: void 0 as string }
   }
+  //#endregion
+
+  //#region getters & methods / us git branches when commiting and pushing
+  /**
+   * By defult true.. when commit branches will not function.
+   * (false is better for simple projects)
+   */
+  useGitBranchesWhenCommitingAndPushing() {
+    return true;
+  }
+  //#endregion
+
+  //#region getters & methods / automatically add all changes when pushing to git
+  /**
+   * usefull when pushing in project with childrens as git repos
+   */
+  automaticallyAddAllChnagesWhenPushingToGit() {
+    return false;
+  }
+  //#endregion
+
+  //#region getters & methods / automatically add all changes when pushing to git
+  /**
+   * usefull when pushing in project with childrens as git repos
+   */
+  useGitBranchesAsMetadataForCommits() {
+    return true;
+  }
+  //#endregion
 
 }
 

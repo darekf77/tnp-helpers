@@ -1,7 +1,7 @@
 import { Helpers } from "../index";
 import { CommandLineFeature } from "./command-line-feature.backend";
 import { BaseProject } from "./base-project";
-import { chalk, _ } from "tnp-core";
+import { chalk, _, path } from "tnp-core/src";
 import { translate } from "./translate";
 import { TypeOfCommit, CommitData } from './commit-data';
 
@@ -10,106 +10,15 @@ export class BaseCommandLine<PARAMS = any, PROJECT extends BaseProject<any, any>
     Helpers.error('Please select git command');
   }
 
-  //#region commands / commit
-  async commit() {
-    const proj = this.project;
-    const commitMessage = this.args.join(' ').trim();
-
-    while (true) {
-      try {
-        await proj.lint();
-        break;
-      } catch (error) {
-        Helpers.pressKeyAndContinue('Fix your code and press any key')
-      }
-    }
-
-
-    Helpers.info(`Commit message
-"${commitMessage}"
-`)
-
-    if (!(await Helpers.questionYesNo('Commit and push this ?'))) {
-      this._exit()
-    }
-
-    proj.tryRunSync(`git commit -m "${commitMessage}" --no-verify`);
-
-    let oneFail = false;
-    while (true) {
-      try {
-        if (oneFail) {
-          const push = await Helpers.questionYesNo('Do you want to force push ?');
-          await proj.git.pushCurrentBranch({ force: push });
-          break;
-        }
-        await proj.git.pushCurrentBranch({ force: true });
-        break;
-      } catch (error) {
-        oneFail = true;
-      }
-    }
-    this._exit()
-  }
-
-  //#endregion
-
-  //#region filter all project branches by pattern
-  private __filterBranchesByPattern(branchPatternOrBranchName: string) {
-    return Helpers.arrays.uniqArray(this.project.git.getBranchesNamesBy(branchPatternOrBranchName).map(a => {
-      return a.replace(`remotes/origin/`, '');
-    }) || this.project.getMainBranches());
-  }
-  //#endregion
-
-  //#region select branch from list of branches
-  private async __selectBrach(branches: string[]) {
-    const childrenMsg = this.project.children.length == 0 ? '(no children in project)' : '(with children)';
-    return await Helpers.autocompleteAsk(`Choose branch to reset in this project ${childrenMsg}:`,
-      branches.map(b => {
-        return { name: b, value: b }
-      }))
-  }
-  //#endregion
-
-  //#region commands / push feature
-  async pushFeature() {
-    let commitMsg: string = CommitData.getFromArgs(this.args, "feature") as any;
-    // console.log({
-    //   issueData
-    // })
-    const containerJiraNum = /[A-Z]+\-[0-9]+/.test(commitMsg);
-    Helpers.info('containerJiraNum: ' + containerJiraNum);
-    let issueNumberParent: string;
-    let issueNumberChild: string;
-    if (containerJiraNum) {
-      const issuesNumbers = commitMsg.match(/[A-Z]+\-[0-9]+/g) || [];
-      for (const issueNum of issuesNumbers) {
-        commitMsg = commitMsg.replace(issueNum, '');
-      }
-      issueNumberParent = _.first(issuesNumbers);
-      issueNumberChild = _.last(issuesNumbers);
-      if (Number(issueNumberParent.replace(/([A-Z]|\-)+/g, '')) > Number(issueNumberChild.replace(/([A-Z]|\-)+/g, ''))) {
-        issueNumberChild = _.first(issuesNumbers);
-        issueNumberParent = _.last(issuesNumbers);
-      }
-
-      // TODO @LAST translate only for cez
-      commitMsg = _.kebabCase(await translate(commitMsg, {
-        from: 'pl',
-        to: 'en'
-      }))
-      // Helpers.info('REPLACED/TRANSLATED: ' + issueData)
-    }
-    // Helpers.info('PUSH done' + args.join(','))
-    this.project.run(`git checkout -b feature/${issueNumberParent}-${issueNumberChild}-${commitMsg}`).sync();
-    // await this.push(); // TODO @UNCOMMENT
+  //#region commands / pull
+  async pull() {
+    await this.project.pullProcess();
+    this._exit();
   }
   //#endregion
 
   //#region commands / reset
   async reset() {
-
     const branchPatternOrBranchName = this.firstArg || this.project.getDefaultDevelopmentBranch();
     let overrideBranchToReset: string;
 
@@ -203,85 +112,64 @@ ${childrentMsg}
   }
   //#endregion
 
-  //#region commands / push (default temp commit)
-  // TODO @UNCOMMENT
-  //   async push() {
-  //     const proj = this.project;
+  //#region commands / push all origins
+  /**
+   * push force to all orgins
+   */
+  async pushAllForce() {
+    await this.pushALl(true);
+  }
 
-  //     const commitMessage = this._getCommitMessageFromBranch(proj);
+  /**
+   * push to all origins
+   */
+  async pushALl(force = false) {
+    const remotes = this.project.git.allOrigins;
+    Helpers.info(`
+    Remotes for repo:
+    ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
 
-  //     while (true) {
-  //       try {
-  //         await proj.lint();
-  //         break;
-  //       } catch (error) {
-  //         Helpers.pressKeyAndContinue('Fix your code and press any key')
-  //       }
-  //     }
+        `)
 
-  //     Helpers.info(`Commit message
-  // "${commitMessage}"
-  // `)
+    for (let index = 0; index < remotes.length; index++) {
+      const { origin, url } = remotes[index];
+      await this.push({ force, origin });
+    }
+    this._exit();
+  }
+  //#endregion
 
-  //     if (!(await Helpers.questionYesNo('Commit and push this ?'))) {
-  //       this._exit()
-  //     }
+  //#region commands / push force
+  async forcePush() {
+    await this.push({ force: true, typeofCommit: 'feature' })
+  }
+  //#endregion
 
-  //     try {
-  //       if (process.platform === 'win32') {
-  //         const lines = commitMessage.split('\n').filter(f => !!f.trim()).map(l => ` -m "${l}" `).join(' ');
-  //         this.project.git.commit(lines);
-  //       } else {
-  //         this.project.git.commit(commitMessage);
-  //       }
-  //     } catch (error) {
-  //       Helpers.warn(`Not commiting anything... `)
-  //     }
+  //#region commands / push
+  async push(options: { force?: boolean; typeofCommit?: TypeOfCommit; origin?: string; } = {}) {
+    await this.project.pushProcess({
+      ...options,
+      args: this.args,
+      exitCallBack: () => {
+        this._exit();
+      }
+    })
+    this._exit()
+  }
+  //#endregion
 
-  //     let oneFail = false;
-  //     while (true) {
-  //       try {
-  //         if (oneFail) {
-  //           const push = await Helpers.questionYesNo('Do you want to force push ?');
-  //           proj.git.pushCurrentBranch({ force: push });
-  //           break;
-  //         }
-  //         proj.git.pushCurrentBranch({ force: true });
-  //         break;
-  //       } catch (error) {
-  //         oneFail = true;
-  //       }
-  //     }
-  //     this._exit()
-  //   }
+  //#region commands / push feature
+  async pf() {
+    await this.pushFeature();
+  }
+  async pushFeature() {
+    await this.push()
+  }
   //#endregion
 
   //#region commands / push fix
   async pushFix() {
-    const proj = this.project;
-    let issueData = this.args.join(' ');
-    // console.log({
-    //   issueData
-    // })
-    const containerJiraNum = /[A-Z]+\-[0-9]+/.test(issueData);
-    Helpers.info('containerJiraNum: ' + containerJiraNum);
-    let issueNumber: string;
-    if (containerJiraNum) {
-      const issuesNumbers = issueData.match(/[A-Z]+\-[0-9]+/g) || [];
-      for (const issueNum of issuesNumbers) {
-        issueData = issueData.replace(issueNum, '');
-      }
-      issueNumber = _.first(issuesNumbers);
-
-      issueData = _.kebabCase(await translate(issueData, {
-        from: 'pl',
-        to: 'en'
-      }))
-      // Helpers.info('REPLACED/TRANSLATED: ' + issueData)
-    }
-    // Helpers.info('PUSH done' + args.join(','))
-    proj.run(`git checkout -b bugfix/${issueNumber}-${issueData}`).sync();
-    // await this.push(); // TODO @UNCOMMENT
+    await this.push({ typeofCommit: 'bugfix' });
   }
   pfix() {
     this.pushFix();
@@ -289,14 +177,14 @@ ${childrentMsg}
   //#endregion
 
   //#region commands / push chore
-  pushChore() {
-
+  async pushChore() {
+    await this.push({ typeofCommit: 'chore' });
   }
   //#endregion
 
   //#region commands / push refactor
-  pushRefactor() {
-
+  async pushRefactor() {
+    await this.push({ typeofCommit: 'refactor' });
   }
   //#endregion
 
@@ -401,68 +289,44 @@ ${childrentMsg}
   }
   //#endregion
 
-  //#region resovle commit message
-  private _getCommitMessageFromBranch(proj: BaseProject): string {
-
-    const currentBranchName = proj.git.currentBranchName || '';
-    let prefix: 'feat' | 'fix' | 'refactor' | 'chore';
-    const typeOfCommit: 'feature' | 'bugfix' | 'refactor' | 'chore' = _.first(currentBranchName.split('/')) as any;
-    const containerJiraNum = /[A-Z]+\-[0-9]+\-/.test(currentBranchName);
-    const hasJiraWithParentIssue = (currentBranchName.match(/[A-Z]+\-[0-9]+\-/g)?.length === 2);
-
-
-    let issueNumberFirst = _.last(currentBranchName.split('/'))?.split('-').slice(0, 2).join('-');
-    let issueNumberSecond = _.last(currentBranchName.split('/'))?.split('-').slice(2, 4).join('-');
-
-    const firstJiraNumValue = Number(issueNumberFirst?.replace(/([A-Z]|\-)+/g, ''));
-    const secondJiraNumValue = Number(issueNumberSecond?.replace(/([A-Z]|\-)+/g, ''));
-
-    if (secondJiraNumValue > firstJiraNumValue) {
-      issueNumberFirst = _.last(currentBranchName.split('/'))?.split('-').slice(2, 4).join('-');
-      issueNumberSecond = _.last(currentBranchName.split('/'))?.split('-').slice(0, 2).join('-');
-    }
-
-    let jiraNumOldest = containerJiraNum ? issueNumberFirst : '';
-
-    if (hasJiraWithParentIssue) { // has jira with parent
-      jiraNumOldest = issueNumberSecond;
-    }
-
-    if (typeOfCommit === 'feature') {
-      if (currentBranchName.match(/EKREW\-[0-9]+/g)?.length !== 2) {
-        Helpers.info(`
-
-      You current feature branch "${currentBranchName}"
-      doesn't have ${chalk.bold('main-issue')} and ${chalk.bold('sub-issue')} inlcueded.
-
-      Proper example: feature/JIRANUM-<number-of-sub-issue>-JIRANUM-<number-of-main-issue>-commit-name
-
-        `)
-        if (!Helpers.questionYesNo('Continue ?')) {
-          this._exit()
-        }
-      }
-    }
-
-
-
-
-    let message = _.last(currentBranchName.split('/'))?.split('-').slice(containerJiraNum ? 2 : 0).join('-').replace(/\-/g, ' ');
-    if (hasJiraWithParentIssue) {
-      message = _.last(currentBranchName.split('/'))?.split('-').slice(4).join('-').replace(/\-/g, ' ');
-    }
-
-    if (typeOfCommit === 'feature') {
-      prefix = 'feat';
-    } else if (typeOfCommit === 'bugfix') {
-      prefix = 'fix';
-    } else if (typeOfCommit === 'refactor') {
-      prefix = 'refactor';
-    } else if (typeOfCommit === 'chore') {
-      prefix = 'chore';
-    }
-    return `${prefix}${jiraNumOldest ? '(' + jiraNumOldest + ')' : ''}: ${message}`;
+  //#region commands / branch name
+  BRANCH_NAME() {
+    console.log(`current branch name: "${Helpers.git.currentBranchName(process.cwd())}"`);
+    this._exit()
   }
   //#endregion
+
+  //#region commands / remotes
+  REMOTES() {
+    const folders = Helpers.foldersFrom(this.project.location);
+
+    folders
+      .filter(c => !path.basename(c).startsWith('.'))
+      .forEach(cwd => {
+        Helpers.run(`git config --get remote.origin.url`, { cwd }).sync()
+      });
+    this._exit();
+  }
+  //#endregion
+
+  //#region filter all project branches by pattern
+  private __filterBranchesByPattern(branchPatternOrBranchName: string) {
+    return Helpers.arrays.uniqArray(this.project.git.getBranchesNamesBy(branchPatternOrBranchName).map(a => {
+      return a.replace(`remotes/origin/`, '');
+    }) || this.project.getMainBranches());
+  }
+  //#endregion
+
+  //#region select branch from list of branches
+  private async __selectBrach(branches: string[]) {
+    const childrenMsg = this.project.children.length == 0 ? '(no children in project)' : '(with children)';
+    return await Helpers.autocompleteAsk(`Choose branch to reset in this project ${childrenMsg}:`,
+      branches.map(b => {
+        return { name: b, value: b }
+      }))
+  }
+  //#endregion
+
+
 
 }

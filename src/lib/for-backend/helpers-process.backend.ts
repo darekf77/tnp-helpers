@@ -136,6 +136,9 @@ export class HelpersProcess {
     })
   }
 
+  /**
+   * @deprecated use questions instead
+   */
   pressKeyAndContinue(message = 'Press enter to continue..') {
     console.log(chalk.bold(message));
     if (process.platform === 'win32') {

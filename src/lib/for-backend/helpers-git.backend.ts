@@ -15,6 +15,12 @@ import { config } from 'tnp-config';
 
 export class HelpersGit {
 
+  //#region getters & methods / action mess reset git hard commit
+  public get ACTION_MSG_RESET_GIT_HARD_COMMIT(): string {
+    return '$$$ update $$$'
+  }
+  //#endregion
+
   //#region get last commit hash
   lastCommitHash(cwd): string {
     Helpers.log('[firedev-helpers][lastcommithash] ' + cwd, 1)
@@ -281,6 +287,25 @@ export class HelpersGit {
   }
   //#endregion
 
+  allOrigins(cwd: string): { origin: string; url: string }[] {
+    let remotes: { origin: string; url: string; }[] = [];
+    try {
+      remotes = (Helpers.run(`git remote -v`, { cwd, output: false }).sync()?.toString() || '')
+        .trim()
+        .replace(new RegExp('\\(push\\)', 'g'), ' ')
+        .replace(new RegExp('\\t', 'g'), ' ')
+        .split('\n')
+        .filter(f => f.search('(fetch)') === -1)
+        .map(s => {
+          const [origin, url] = s.trim().split(' ');
+          return {
+            origin,
+            url
+          }
+        });
+    } catch (error) { }
+    return remotes;
+  }
 
   //#region get current branch name
   currentBranchName(cwd) {
@@ -295,19 +320,8 @@ export class HelpersGit {
   //#endregion
 
   //#region commit "what is"
-  addAndCommit(cwd: string, commitMessage?: string) {
-    Helpers.log('[firedev-helpers][addAndCommit]')
-    try {
-      Helpers.info(`[firedev-helpers][git][commit] Adding current git changes in git root:
-        ${cwd}
-        `)
-      Helpers.run(`git add --all . `, { cwd }).sync()
-    } catch (error) {
-      console.log(error)
-      Helpers.warn(`[firedev-helpers][commit] Failed to 'git add --all .' in:
-        ${cwd}`);
-    }
-
+  stageAllAndCommit(cwd: string, commitMessage?: string) {
+    this.stageAllFiles(cwd);
     this.commit(cwd, commitMessage);
   }
   //#endregion
@@ -440,24 +454,15 @@ export class HelpersGit {
 
   //#region pull
   private _pull(cwd: string, options?: {
-    ACTION_MSG_RESET_GIT_HARD_COMMIT: string,
     askToRetry?: boolean,
     branchName?: string,
     defaultHardResetCommits?: number
   }) {
-    let { branchName, defaultHardResetCommits, askToRetry = true, ACTION_MSG_RESET_GIT_HARD_COMMIT } = options || {};
+    let { branchName, defaultHardResetCommits, askToRetry = true } = options || {};
     if (_.isNumber(defaultHardResetCommits)) {
       this.resetHard(cwd, { HEAD: defaultHardResetCommits });
     } else {
-      let i = 1;
-      while (true) {
-        if (this.lastCommitMessage(cwd) === ACTION_MSG_RESET_GIT_HARD_COMMIT) {
-          Helpers.logInfo(`Reseting branch deep ${i++}.. `)
-          Helpers.git.resetHard(cwd, { HEAD: 1 });
-        } else {
-          break;
-        }
-      }
+      this.meltActionCommits(cwd);
     }
     child_process.execSync(`git pull --tags --rebase origin ${branchName}`, { cwd });
   }
@@ -465,7 +470,6 @@ export class HelpersGit {
   async pullCurrentBranch(cwd: string, options?: {
     askToRetry?: boolean,
     defaultHardResetCommits?: number,
-    ACTION_MSG_RESET_GIT_HARD_COMMIT: string,
   }) {
     options = options || {} as any;
     let { askToRetry } = options || {};
@@ -499,6 +503,18 @@ export class HelpersGit {
     Helpers.info(`DONE PULLING`)
   }
   //#endregion
+
+  meltActionCommits(cwd) {
+    let i = 1;
+    while (true) {
+      if (this.lastCommitMessage(cwd) === Helpers.git.ACTION_MSG_RESET_GIT_HARD_COMMIT) {
+        Helpers.logInfo(`Reseting branch deep ${i++}.. `)
+        Helpers.git.resetHard(cwd, { HEAD: 1 });
+      } else {
+        break;
+      }
+    }
+  }
 
   //#region push current branch
   /**
@@ -582,20 +598,9 @@ ${cwd}
    * @param cwd
    * @param optinos
    */
-  add(cwd: string, optinos?: {
-    /**
-     * TODO
-     * @deprecated
-     */
-    onlyStaged?: boolean;
-  }) {
-    const { onlyStaged } = optinos || {};
+  stageAllFiles(cwd: string) {
     try {
-      if (onlyStaged) {
-
-      } else {
-        child_process.execSync(`git add --all .`, { cwd });
-      }
+      child_process.execSync(`git add --all .`, { cwd });
     } catch (error) { }
   }
   //#endregion
@@ -639,11 +644,19 @@ ${cwd}
   //#endregion
 
   //#region checkout
-  checkout(cwd, branch: string) {
+  checkout(cwd, branchName: string, options: { createBranchIfNotExists?: boolean; fetchBeforeCheckout?: boolean; switchBranchWhenExists?: boolean; }) {
+    let { createBranchIfNotExists, fetchBeforeCheckout, switchBranchWhenExists } = options || {};
+    if (fetchBeforeCheckout) {
+      this.fetch(cwd);
+    };
+
+    if (switchBranchWhenExists && this.getBranchesNames(cwd, branchName).includes(branchName)) {
+      createBranchIfNotExists = false;
+    }
     try {
-      child_process.execSync(`git fetch`, { cwd });
+      child_process.execSync(`git checkout ${createBranchIfNotExists ? '-b' : ''} ${branchName}`, { cwd });
     } catch (error) {
-      Helpers.error(`Not able to checkout branch: ${branch}`, false, true);
+      Helpers.error(`Not able to checkout branch: ${branchName}`, false, true);
     }
   }
   //#endregion
