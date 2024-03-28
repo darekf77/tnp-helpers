@@ -217,6 +217,48 @@ ${childrentMsg}
   }
   //#endregion
 
+  //#region commands / push style
+  async pushStyle() {
+    await this.meltUpdateCommits();
+    await this.push({ typeofCommit: 'style', commitMessageRequired: true });
+  }
+  //#endregion
+
+  //#region commands / push docs
+  async pushDocs() {
+    await this.meltUpdateCommits();
+    await this.push({ typeofCommit: 'docs', commitMessageRequired: true });
+  }
+  //#endregion
+
+  //#region commands / push test
+  async pushTest() {
+    await this.meltUpdateCommits();
+    await this.push({ typeofCommit: 'test', commitMessageRequired: true });
+  }
+  //#endregion
+
+  //#region commands / push perf
+  async pushPerf() {
+    await this.meltUpdateCommits();
+    await this.push({ typeofCommit: 'performance', commitMessageRequired: true });
+  }
+  //#endregion
+
+  //#region commands / push ci
+  async pushCi() {
+    await this.meltUpdateCommits();
+    await this.push({ typeofCommit: 'ci', commitMessageRequired: true });
+  }
+  //#endregion
+
+  //#region commands / push build
+  async pushBuild() {
+    await this.meltUpdateCommits();
+    await this.push({ typeofCommit: 'build', commitMessageRequired: true });
+  }
+  //#endregion
+
   //#region commands / set origin
   SET_ORIGIN() {
     const newOriginNameOrUrl: string = this.firstArg;

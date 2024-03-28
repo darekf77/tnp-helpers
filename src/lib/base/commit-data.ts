@@ -5,7 +5,10 @@ import {
   //#endregion
 } from 'tnp-core';
 import { Helpers } from '../index';
-export type TypeOfCommit = 'feature' | 'bugfix' | 'refactor' | 'chore';
+
+export type CommonCommitMsgBranch = | 'refactor' | 'chore' | 'style' | 'docs' | 'test' | 'ci' | 'build';
+export type TypeOfCommit = 'feature' | 'bugfix' | 'performance' | CommonCommitMsgBranch;
+export type TypeOfMsgPrefix = 'feat' | 'fix' | 'perf' | CommonCommitMsgBranch;
 
 export class CommitData {
 
@@ -132,18 +135,17 @@ export class CommitData {
   //#region methods & getters
 
   //#region methods & getters / branch prefix
-  get branchPrefix(): 'feat' | 'fix' | 'refactor' | 'chore' {
+  get branchPrefix(): TypeOfMsgPrefix {
     //#region @backendFunc
     const typeOfCommit = this.typeOfCommit;
     if (typeOfCommit === 'feature') {
       return 'feat';
     } else if (typeOfCommit === 'bugfix') {
       return 'fix';
-    } else if (typeOfCommit === 'refactor') {
-      return 'refactor';
-    } else if (typeOfCommit === 'chore') {
-      return 'chore';
+    } else if (typeOfCommit === 'performance') {
+      return 'perf';
     }
+    return this.typeOfCommit as any;
     //#endregion
   }
   //#endregion
