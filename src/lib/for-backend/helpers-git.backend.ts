@@ -567,14 +567,15 @@ ${cwd}
     }
     Helpers.log('[firedev-helpers][pushCurrentBranch] ' + cwd, 1)
     const currentBranchName = Helpers.git.currentBranchName(cwd);
-    const taskName = `
-    Pushing ${force ? 'FORCE' : 'NORMALLy'} current branch (remote=${origin}): ${currentBranchName}
-    `
-    Helpers.info(taskName);
+
     while (true) {
       try {
+        const taskName = `
+    Pushing ${force ? 'FORCE' : 'NORMALLY'} current branch (remote=${origin}): ${currentBranchName}
+    `
+        Helpers.info(taskName);
         const command = `git push ${force ? '-f' : ''} ${origin} ${currentBranchName} --tags`;
-        Helpers.info(`[git][push] ${force ? 'force' : ''} pushing current branch ${currentBranchName} ,`
+        Helpers.info(`[git][push] ${force ? 'force' : 'normal'} pushing current branch ${currentBranchName} ,`
           + ` origin=${Helpers.git.getOriginURL(cwd, origin)}`);
 
         Helpers.run(command, { cwd }).sync()
