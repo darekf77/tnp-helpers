@@ -143,12 +143,17 @@ ${childrentMsg}
   async forcePush() {
     await this.push({ force: true, typeofCommit: 'feature' })
   }
+
+  async pushForce() {
+    await this.push({ force: true, typeofCommit: 'feature' })
+  }
   //#endregion
 
   //#region commands / push
   async push(options: { force?: boolean; typeofCommit?: TypeOfCommit; origin?: string; } = {}) {
     await this.project.pushProcess({
       ...options,
+      forcePushNoQuestion: options.force,
       args: this.args,
       exitCallBack: () => {
         this._exit();

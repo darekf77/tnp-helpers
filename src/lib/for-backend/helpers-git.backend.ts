@@ -527,7 +527,7 @@ export class HelpersGit {
     const { askToRetry, origin, force, forcePushNoQuestion = false } = options || {};
     if (force && !forcePushNoQuestion) {
       Helpers.info(`
-      Pushing force branch ${this.currentBranchName} in location
+      Pushing force branch ${this.currentBranchName(cwd)} in location
 
 ${cwd}
 
@@ -539,7 +539,7 @@ ${cwd}
     Helpers.log('[firedev-helpers][pushCurrentBranch] ' + cwd, 1)
     const currentBranchName = Helpers.git.currentBranchName(cwd);
     const taskName = `
-    Pushing current branch (remote=${origin}): ${currentBranchName}
+    Pushing ${force ? 'FORCE' : 'NORMALLy'} current branch (remote=${origin}): ${currentBranchName}
     `
     Helpers.info(taskName);
     while (true) {

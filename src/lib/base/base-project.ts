@@ -708,11 +708,12 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
   async pushProcess({
     force = false,
     typeofCommit,
+    forcePushNoQuestion,
     origin = 'origin',
     exitCallBack,
     args = [],
 
-  }: { force?: boolean; typeofCommit?: TypeOfCommit; origin?: string; args?: string[]; exitCallBack?: () => void } = {}) {
+  }: { force?: boolean; typeofCommit?: TypeOfCommit; origin?: string; args?: string[]; exitCallBack?: () => void; forcePushNoQuestion?: boolean; } = {}) {
     //#region @backendFunc
     debugger
     this._beforePushProcessAction();
@@ -760,10 +761,10 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
       try {
         if (oneFail) {
           const push = await Helpers.questionYesNo('Do you want to force push ?');
-          await this.git.pushCurrentBranch({ force: push, origin });
+          await this.git.pushCurrentBranch({ force: push, origin, forcePushNoQuestion });
           break;
         }
-        await this.git.pushCurrentBranch({ force, origin });
+        await this.git.pushCurrentBranch({ force, origin, forcePushNoQuestion });
         break;
       } catch (error) {
         oneFail = true;
@@ -811,7 +812,7 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
     let commitData: CommitData;
     if (this.useGitBranchesWhenCommitingAndPushing()) {
       let argsCommitData = await CommitData.getFromArgs(args, typeofCommit);
-      if (!argsCommitData.message) {
+      if (argsCommitData.message) {
         commitData = argsCommitData;
       } else {
         commitData = await CommitData.getFromBranch(this.git.currentBranchName);
@@ -821,6 +822,7 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
       if (!argsCommitData.message) {
         argsCommitData.message = Helpers.git.ACTION_MSG_RESET_GIT_HARD_COMMIT;
       }
+      commitData = argsCommitData;
     }
 
     if (commitData.message !== Helpers.git.ACTION_MSG_RESET_GIT_HARD_COMMIT) {

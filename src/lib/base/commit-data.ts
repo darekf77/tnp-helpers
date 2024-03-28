@@ -152,6 +152,9 @@ export class CommitData {
   //#region methods & getters / commit message git commit -m
   get commitMessage(): string {
     //#region @backendFunc
+    if (this.message === Helpers.git.ACTION_MSG_RESET_GIT_HARD_COMMIT) {
+      return this.message;
+    }
     const jiras = this.jiraNumbers || [];
     let commitMsg = `${this.branchPrefix}${(jiras.length > 0) ? '(' + jiras.join(',') + ')' : ''}: ${(this.message || '').trim()}`;
     if (process.platform === 'win32') {
