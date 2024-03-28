@@ -749,9 +749,6 @@ export class HelpersFileFolders {
 
               if (options.asSeparatedFiles) {
                 const copyRecFn = (cwdForFiles) => {
-                  // if (path.basename(cwdForFiles) === 'plugins') {
-                  //   debugger
-                  // }
                   const files = Helpers.getRecrusiveFilesFrom(cwdForFiles, options.omitFolders);
                   for (let index = 0; index < files.length; index++) {
                     const from = files[index];

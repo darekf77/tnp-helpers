@@ -110,7 +110,6 @@ export class CommitData {
   public static from(options: Pick<CommitData, 'message' | 'jiraNumbers' | 'typeOfCommit'>): CommitData {
     options = (options ? options : {}) as any;
     const opt = _.merge(new CommitData(), _.cloneDeep(options));
-    debugger
     return opt;
   }
   //#endregion

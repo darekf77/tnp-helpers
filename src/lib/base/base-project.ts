@@ -697,25 +697,26 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
     this.ins.unload(this as any);
     this.ins.add(this.ins.From(location) as any);
 
-    const childrenRepos = this.children.filter(f => f.git.isGitRepo && f.git.isGitRoot);
-    for (const child of childrenRepos) {
-      await child.pullProcess();
+    if (this.automaticallyAddAllChnagesWhenPushingToGit()) {
+      const childrenRepos = this.children.filter(f => f.git.isGitRepo && f.git.isGitRoot);
+      for (const child of childrenRepos) {
+        await child.pullProcess();
+      }
     }
   }
   //#endregion
 
   //#region  methods & getters / push process
-  async pushProcess({
-    force = false,
-    typeofCommit,
-    forcePushNoQuestion,
-    origin = 'origin',
-    exitCallBack,
-    args = [],
-
-  }: { force?: boolean; typeofCommit?: TypeOfCommit; origin?: string; args?: string[]; exitCallBack?: () => void; forcePushNoQuestion?: boolean; } = {}) {
+  async pushProcess(options: { force?: boolean; typeofCommit?: TypeOfCommit; origin?: string; args?: string[]; exitCallBack?: () => void; forcePushNoQuestion?: boolean; } = {}) {
     //#region @backendFunc
-    debugger
+    const {
+      force = false,
+      typeofCommit,
+      forcePushNoQuestion,
+      origin = 'origin',
+      exitCallBack,
+      args = [],
+    } = options;
     this._beforePushProcessAction();
     const commitData = await this._getCommitMessage(typeofCommit, args);
     const commitMessage = commitData?.commitMessage;
@@ -768,6 +769,13 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
         break;
       } catch (error) {
         oneFail = true;
+      }
+    }
+
+    if (this.automaticallyAddAllChnagesWhenPushingToGit()) {
+      const childrenRepos = this.children.filter(f => f.git.isGitRepo && f.git.isGitRoot);
+      for (const child of childrenRepos) {
+        await child.pushProcess(options);
       }
     }
     //#endregion
@@ -1233,7 +1241,7 @@ ${proj?.children.map(c => '+' + c.genericName).join('\n')}
   }
   //#endregion
 
-  //#region getters & methods / automatically add all changes when pushing to git
+  //#region getters & methods / use git branches as metadata for commits
   /**
    * usefull when pushing in project with childrens as git repos
    */
