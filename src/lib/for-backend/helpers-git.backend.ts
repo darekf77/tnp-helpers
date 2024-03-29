@@ -716,6 +716,12 @@ ${cwd}
   }
   //#endregion
 
+  revertFileChanges(cwd, fileReletivePath: string) {
+    try {
+      Helpers.run(`git checkout ${fileReletivePath}`, { cwd }).sync();
+    } catch (error) { }
+  }
+
   //#region clone
   clone({ cwd, url, destinationFolderName = '', throwErrors, override }: {
     cwd: string;

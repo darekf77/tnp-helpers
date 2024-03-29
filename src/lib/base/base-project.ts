@@ -744,10 +744,9 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
     }
 
     if (!commitData.isActionCommit) {
-      Helpers.info(`Commit date:
-      - message {${commitData.message}}
-      - commit message {${commitData.commitMessage}}
-      - commit branch {${commitData.branchName}}
+      Helpers.info(`Current commit:
+      - message to include {${commitData.commitMessage}}
+      - branch to checkout {${commitData.branchName}}
       `)
 
       if (!(await Helpers.questionYesNo('Commit and push this ?'))) {
@@ -886,6 +885,11 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
   public get git() {
     const self = this;
     return {
+      revertFileChanges(fileReletivePath: string) {
+        //#region @backendFunc
+        Helpers.git.revertFileChanges(self.location, fileReletivePath);
+        //#endregion
+      },
       clone(url: string, destinationFolderName = '') {
         //#region @backendFunc
         return Helpers.git.clone({ cwd: self.location, url, destinationFolderName });

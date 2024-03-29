@@ -212,6 +212,10 @@ ${childrentMsg}
     await this.push({ typeofCommit: 'refactor', commitMessageRequired: true });
   }
 
+  async pushref() {
+    await this.pushRefactor();
+  }
+
   async pref() {
     await this.pushRefactor();
   }
