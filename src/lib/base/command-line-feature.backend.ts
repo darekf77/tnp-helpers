@@ -41,6 +41,7 @@ export abstract class CommandLineFeature<PARAMS = any, PROJECT extends BaseProje
     delete this.params['_']; // TODO quickfix
     ;
     const allArgsToClear = Object.keys(this.params);
+    // console.log(this.params)
     // for (const deleteArgKey of allArgsToClear) {
     //   delete this.params[deleteArgKey];
     // }

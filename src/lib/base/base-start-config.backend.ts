@@ -11,6 +11,18 @@ export type BaseStartConfigOptions = Partial<BaseStartConfig>;
 
 export class BaseStartConfig {
 
+  /**
+   * @deprecated
+   * use standard import / not default
+   */
+  public static prepareArgs(cliClassArr: { [funcionOrClassName: string]: Function; }[]) {
+    return cliClassArr.map(c => Object.values(c) as Function[]).reduce((a, b) => {
+      return a.concat(b.map(funcOrClass => {
+        return { classOrFnName: CLASS.getName(funcOrClass), funcOrClass } as any;
+      }));
+    }, []) as any as { classOrFnName: string; funcOrClass: Function }[];
+  }
+
   public readonly argsv: string[] = process.argv;
   public readonly shortArgsReplaceConfig: { [shortCommand in string]: string; } = {};
   public readonly functionsOrClasses: { classOrFnName?: string; funcOrClass?: Function }[] = [];
