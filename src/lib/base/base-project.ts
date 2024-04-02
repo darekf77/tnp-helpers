@@ -693,7 +693,7 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
       } catch (error) { };
     }
 
-    await this.git.pullCurrentBranch();
+    await this.git.pullCurrentBranch({ askToRetry: true });
     const location = this.location;
     this.ins.unload(this as any);
     this.ins.add(this.ins.From(location) as any);
