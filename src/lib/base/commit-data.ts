@@ -21,12 +21,13 @@ export class CommitData {
    */
   private static extractAndOrderJiraNumbers(commitOrBranchName: string): string[] {
     //#region @backendFunc
-    return (commitOrBranchName.match(/[A-Z]+\-[0-9]+\-/g) || [])
+    return (commitOrBranchName.match(/[A-Z]+\-[0-9]+/g) || [])
       .map(originalName => {
         return { originalName, num: Number(originalName.replace(/[A-Z]+/g, '').replace(/\-+/g, '')) }
       })
       .sort(({ num: a }, { num: b }) => b - a)
       .map(c => c.originalName)
+      .reverse()
       ;
     //#endregion
   }
@@ -48,7 +49,13 @@ export class CommitData {
     //#region @backendFunc
     let message = args.join(' ');
     const jiraNumbers = this.extractAndOrderJiraNumbers(message);
+    // console.log(`
 
+    // msg: '${message}'
+
+    // jiras: ${jiraNumbers.join(',')}
+
+    // `)
     message = this.cleanHttpFromCommitMessage(message);
 
     if (message.search(':') !== -1) {
@@ -61,7 +68,7 @@ export class CommitData {
     }
 
     for (const jira of jiraNumbers) {
-      message = message.replace(Helpers.escapeStringForRegEx(jira), '');
+      message = message.replace(jira, '');
     }
 
     return CommitData.from({
@@ -113,6 +120,7 @@ export class CommitData {
   public static from(options: Pick<CommitData, 'message' | 'jiraNumbers' | 'typeOfCommit'>): CommitData {
     options = (options ? options : {}) as any;
     const opt = _.merge(new CommitData(), _.cloneDeep(options));
+
     return opt;
   }
   //#endregion
@@ -157,7 +165,8 @@ export class CommitData {
       return this.message;
     }
     const jiras = this.jiraNumbers || [];
-    let commitMsg = `${this.branchPrefix}${(jiras.length > 0) ? '(' + jiras.join(',') + ')' : ''}: ${(this.message || '').trim()}`;
+    let commitMsg = `${this.branchPrefix}${(jiras.length > 0) ? '(' + [_.first(jiras)].join(',') + ')' : ''}:`
+      + ` ${(this.message || '').replace(/\-/g, ' ').trim()}`;
     return commitMsg;
 
     //#endregion
@@ -166,7 +175,7 @@ export class CommitData {
 
   get branchName() {
     //#region @backendFunc
-    return `${this.typeOfCommit || 'feature'}/${this.jiraNumbers.join('-')}${this.jiraNumbers.length > 0 ? '-' : ''}${_.kebabCase(this.message)}`;
+    return `${this.typeOfCommit || 'feature'}/${this.jiraNumbers.map(c => c.toUpperCase()).join('-')}${this.jiraNumbers.length > 0 ? '-' : ''}${_.kebabCase(this.message)}`;
     //#endregion
   }
 

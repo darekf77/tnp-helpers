@@ -728,6 +728,7 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
       args = [],
       commitMessageRequired
     } = options;
+
     this._beforePushProcessAction();
     const commitData = await this._getCommitMessage(typeofCommit, args, commitMessageRequired);
 
@@ -759,7 +760,13 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
     }
 
     if (this.useGitBranchesAsMetadataForCommits()) {
-      this.git.checkout(commitData.branchName);
+      if (this.git.currentBranchName?.trim() !== commitData.branchName) {
+        try {
+          this.git.checkout(commitData.branchName, { createBranchIfNotExists: true });
+        } catch (error) {
+          Helpers.error('Please modyfiy you commit message or delete branch,')
+        }
+      }
     }
 
     try {
@@ -826,13 +833,17 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
     let commitData: CommitData;
     if (this.useGitBranchesWhenCommitingAndPushing()) {
       let argsCommitData = await CommitData.getFromArgs(args, typeofCommit);
+      // console.log({ argsCommitData })
       if (argsCommitData.message) {
         commitData = argsCommitData;
       } else {
-        commitData = await CommitData.getFromBranch(this.git.currentBranchName);
+        const commitDataBranch = await CommitData.getFromBranch(this.git.currentBranchName);
+        commitData = commitDataBranch;
+        // console.log({ commitDataBranch })
       }
     } else {
       let argsCommitData = await CommitData.getFromArgs(args, typeofCommit);
+      // console.log({ argsCommitData })
       // console.log(argsCommitData)
       if (!argsCommitData.message && commitMessageRequired) {
         Helpers.error('Please provide message in argument', false, true);

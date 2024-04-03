@@ -1,6 +1,6 @@
 //#region imports
 import { config } from "tnp-config/src";
-import { _ } from 'tnp-core/src'
+import { _, path } from 'tnp-core/src'
 import { Helpers } from "../../index";
 import type { CommandLineFeature } from "../../index";
 import { BaseProject } from './base-project';
@@ -16,17 +16,35 @@ export class BaseStartConfig {
    * use standard import / not default
    */
   public static prepareArgs(cliClassArr: { [funcionOrClassName: string]: Function; }[]) {
-    return cliClassArr.map(c => Object.values(c) as Function[]).reduce((a, b) => {
+    const result = (cliClassArr.map(c => Object.values(c) as Function[]).reduce((a, b) => {
       return a.concat(b.map(funcOrClass => {
         return { classOrFnName: CLASS.getName(funcOrClass), funcOrClass } as any;
       }));
-    }, []) as any as { classOrFnName: string; funcOrClass: Function }[];
+    }, []) as any as { classOrFnName: string; funcOrClass: Function }[]).sort((a, b) => {
+      if (a.classOrFnName < b.classOrFnName) {
+        return -1;
+      }
+      if (a.classOrFnName > b.classOrFnName) {
+        return 1;
+      }
+      return 0;
+    });
+    return result;
+  }
+
+  public static prepareFromFiles(cliClassArr: string[]) {
+    return this.prepareArgs(cliClassArr.map(c => require(path.resolve(c)).default).filter(f => _.isObject(f)));
   }
 
   public readonly argsv: string[] = process.argv;
   public readonly shortArgsReplaceConfig: { [shortCommand in string]: string; } = {};
   public readonly functionsOrClasses: { classOrFnName?: string; funcOrClass?: Function }[] = [];
   public readonly ProjectClass: Partial<typeof BaseProject> = BaseProject;
+  public readonly callbackNotRecognizedCommand: () => any;
+  /**
+   * @deprecated
+   */
+  public readonly useStringArrForArgsFunctions: boolean;
   constructor(options: BaseStartConfigOptions) {
 
     options = options ? options : {};
@@ -82,15 +100,33 @@ export class BaseStartConfig {
     if (recognized) {
       global?.spinner?.stop();
       // console.log('--- recognized command ---', { recognized, methodNameToCall, restOfArgs, methods })
-      const obj: CommandLineFeature = new (recognized as any)(
-        Helpers.cliTool.globalArgumentsParserTnp(restOfArgs),
-        methodNameToCall,
-        this.ProjectClass.ins.nearestTo(process.cwd()),
-        process.cwd(),
-      );
+
+
+      if (Helpers.isClass(recognized)) {
+        // console.log('USING FROM CLASS')
+        const obj: CommandLineFeature = new (recognized as any)(
+          Helpers.cliTool.globalArgumentsParserTnp(restOfArgs),
+          methodNameToCall,
+          this.ProjectClass.ins.nearestTo(process.cwd()),
+          process.cwd(),
+        );
+      } else {
+        // console.log('USING FROM FUNCTION')
+        if (this.useStringArrForArgsFunctions) {
+          recognized.apply({}, [Helpers.cliTool.globalArgumentsParserTnp(restOfArgs, this.ProjectClass as any).split(' ')]);
+        } else {
+          recognized.apply({}, [Helpers.cliTool.globalArgumentsParserTnp(restOfArgs, this.ProjectClass as any)]);
+        }
+      }
+
       process.stdin.resume();
     } else {
-      Helpers.error('Command not recognized', false, true);
+      if (_.isFunction(this.callbackNotRecognizedCommand)) {
+        this.callbackNotRecognizedCommand();
+      } else {
+        Helpers.error('Command not recognized', false, true);
+      }
+
     }
   }
 

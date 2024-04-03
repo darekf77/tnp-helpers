@@ -252,7 +252,7 @@ export class HelpersCliTool {
    * @todo TODO replace with funciton below
    * @deprecated
    */
-  globalArgumentsParserTnp(argsv: string[]) {
+  globalArgumentsParserTnp<Project extends BaseProject = BaseProject>(argsv: string[], ProjectClass?: Project) {
 
     Helpers.log(`[${config.frameworkName}] Fixing global arguments started...`)
     let options = require('minimist')(argsv);
@@ -317,7 +317,6 @@ export class HelpersCliTool {
     if (_.isString(cwdFromArgs)) {
       if (findNearestProject || _.isString(findNearestProjectType)) {
         // Helpers.log('look for nearest')
-        const ProjectClass = CLASS.getBy('Project') as typeof BaseProject;
         var nearest = ProjectClass.ins.nearestTo(cwdFromArgs, {
           type: findNearestProjectType,
           findGitRoot: findProjectWithGitRoot,
@@ -359,87 +358,6 @@ export class HelpersCliTool {
     return argsv.join(' ');
   }
 
-  /**
-   * @todo TODO replace with funciton above
-   */
-  globalArgumentsParser(argsv: string[]) {
-
-    let options = require('minimist')(argsv);
-    const toCheck = {
-      'tnpNonInteractive': void 0,
-      'tnpShowProgress': void 0,
-      'findNearestProject': void 0,
-      'findNearestProjectWithGitRoot': void 0,
-      'findNearestProjectType': void 0,
-      'findNearestProjectTypeWithGitRoot': void 0,
-      'cwd': void 0
-    };
-    Object.keys(toCheck).forEach(key => {
-      toCheck[key] = options[key];
-    });
-    options = _.cloneDeep(toCheck);
-    const {
-      findNearestProjectWithGitRoot,
-      findNearestProjectTypeWithGitRoot,
-      cwd,
-    } = options;
-    let {
-      findNearestProject,
-      findNearestProjectType,
-    } = options;
-
-    Object
-      .keys(options)
-      .filter(key => key.startsWith('tnp'))
-      .forEach(key => {
-        options[key] = !!options[key];
-        global[key] = options[key];
-      });
-
-    let cwdFromArgs = cwd;
-    const findProjectWithGitRoot = !!findNearestProjectWithGitRoot ||
-      !!findNearestProjectTypeWithGitRoot;
-
-    if (!!findNearestProjectWithGitRoot) {
-      findNearestProject = findNearestProjectWithGitRoot;
-    }
-    if (_.isString(findNearestProjectTypeWithGitRoot)) {
-      findNearestProjectType = findNearestProjectTypeWithGitRoot;
-    }
-
-    if (_.isString(cwdFromArgs)) {
-      let nearest: BaseProject;
-      if (findNearestProject || _.isString(findNearestProjectType)) {
-        const classProject = CLASS.getBy('Project');
-        nearest = (classProject as typeof BaseProject).ins.nearestTo(cwdFromArgs, {
-          type: findNearestProjectType,
-          findGitRoot: findProjectWithGitRoot,
-        });
-        if (!nearest) {
-          Helpers.error(`Not able to find neerest project for arguments: [\n ${argsv.join(',\n')}\n]`, false, true);
-        }
-      }
-      if (nearest) {
-        cwdFromArgs = nearest.location;
-      }
-      if (fse.existsSync(cwdFromArgs) && !fse.lstatSync(cwdFromArgs).isDirectory()) {
-        cwdFromArgs = path.dirname(cwdFromArgs);
-      }
-      if (fse.existsSync(cwdFromArgs) && fse.lstatSync(cwdFromArgs).isDirectory()) {
-        process.chdir(cwdFromArgs);
-      } else {
-        Helpers.error(`Incorrect --cwd argument for args: [\n ${argsv.join(',\n')}\n]`, false, true);
-      }
-
-    }
-    argsv = Helpers.cliTool.removeArg('findNearestProjectType', argsv);
-
-    Object.keys(toCheck).forEach(argName => {
-      argsv = Helpers.cliTool.removeArg(argName, argsv);
-    });
-
-    return argsv;
-  }
   //#endregion
   //#endregion
 
