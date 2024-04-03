@@ -178,6 +178,8 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
   }
   //#endregion
 
+
+
   //#region  methods & getters / dependencies
   /**
    * npm dependencies from package.json
