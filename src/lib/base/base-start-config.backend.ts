@@ -82,13 +82,13 @@ export class BaseStartConfig {
 
         const check = Helpers.cliTool.match({
           functionOrClassName: classOrFnName,
-          restOfArgs: this.argsv,
+          restOfArgs: _.cloneDeep(this.argsv),
           argsReplacements: this.shortArgsReplaceConfig,
           classMethodsNames,
         });
         if (check.isMatch || (this.argsv.length === 0 && classOrFnName === '')) {
           recognized = funcOrClass;
-          restOfArgs = check.restOfArgs;
+          restOfArgs = _.cloneDeep(check.restOfArgs);
           methodNameToCall = check.methodNameToCall;
           methods = classMethodsNames;
           // console.log('--- recognized command ---', { classOrFnName, classMethodsNames })

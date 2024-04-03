@@ -212,36 +212,41 @@ export class HelpersCliTool {
     let isMatch = false;
     let methodNameToCall: string;
     let counter = 0;
-    isMatch = !!restOfArgs
+    // console.log({ restOfArgs }) // TODO @LASTS
+    isMatch = !_.isUndefined([_.first(restOfArgs)]
       .filter(a => !a.startsWith('--')) // TODO fix this also for other special paramters
-      .find((vv, i) => {
+      .find((argumentCommand, i) => {
 
-        if (++counter > 3) {
-          // console.log(`counter NOT OK ${vv}`)
-          return false
+        if (++counter > 2) {
+          // console.log(`counter NOT OK ${argumentCommand}`)
+          return void 0;
         }
-        // console.log(`counter ok for ${vv}`)
+        // console.log(`counter ok for ${argumentCommand}`)
         const nameInKC = simplifiedCmd(functionOrClassName);
-        const argInKC = simplifiedCmd(vv);
+        const argInKC = simplifiedCmd(argumentCommand);
 
         let condition = (nameInKC === argInKC);
-
+        // console.log({ condition, nameInKC, argInKC, functionOrClassName })
         if (condition) {
           restOfArgs = _.slice(restOfArgs, i + 1, restOfArgs.length);
         } else {
           for (let index = 0; index < classMethodsNames.length; index++) {
             const classMethod = classMethodsNames[index];
             const nameMethodInKC = simplifiedCmd(nameInKC + classMethod);
-            condition = (nameMethodInKC === argInKC);
-            if (condition) {
+            const conditionFunParam = (nameMethodInKC === argInKC);
+            // if (classMethod === 'pfix') {
+            //   debugger
+            //   console.log({ conditionFunParam: condition, classMethod, argInKC, nameMethodInKC, functionOrClassName })
+            // }
+            if (conditionFunParam) {
               restOfArgs = _.slice(restOfArgs, i + 1, restOfArgs.length);
               methodNameToCall = classMethod;
-              break;
+              return true;
             }
           }
         }
         return condition;
-      });
+      }));
     return { isMatch, restOfArgs, methodNameToCall };
   }
   //#endregion
