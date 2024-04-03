@@ -11,7 +11,7 @@ export type TypeOfCommit = 'feature' | 'bugfix' | 'performance' | CommonCommitMs
 export type TypeOfMsgPrefix = 'feat' | 'fix' | 'perf' | CommonCommitMsgBranch;
 
 export class CommitData {
-
+  private _message: string;
   //#region static
 
   //#region extract jira numbers
@@ -47,8 +47,8 @@ export class CommitData {
   //#region get from args
   static async getFromArgs(args: string[], typeOfCommit: TypeOfCommit) {
     //#region @backendFunc
-    let message = args.join(' ');
-    const jiraNumbers = this.extractAndOrderJiraNumbers(message);
+    let messageFromArgs = args.join(' ');
+    const jiraNumbers = this.extractAndOrderJiraNumbers(messageFromArgs);
     // console.log(`
 
     // msg: '${message}'
@@ -56,23 +56,21 @@ export class CommitData {
     // jiras: ${jiraNumbers.join(',')}
 
     // `)
-    message = this.cleanHttpFromCommitMessage(message);
+    messageFromArgs = this.cleanHttpFromCommitMessage(messageFromArgs);
 
-    if (message.search(':') !== -1) {
-      const split = message.split(':');
-      message = split.join(':\n');
+    if (messageFromArgs.search(':') !== -1) {
+      const split = messageFromArgs.split(':');
+      messageFromArgs = split.join(':\n');
     }
-    if (message.search(' - ') !== -1) {
-      const split = message.split(' - ');
-      message = split.join('\n- ');
+    if (messageFromArgs.search(' - ') !== -1) {
+      const split = messageFromArgs.split(' - ');
+      messageFromArgs = split.join('\n- ');
     }
 
-    for (const jira of jiraNumbers) {
-      message = message.replace(jira, '');
-    }
+    // console.log({ messageFromArgs })
 
     return CommitData.from({
-      message,
+      message: messageFromArgs,
       typeOfCommit,
       jiraNumbers,
     });
@@ -101,14 +99,10 @@ export class CommitData {
       }
     }
 
-    let message = _.last(currentBranchName.split('/')).replace(/\-/g, '');
-    for (const jira of jiraNumbers) {
-      message = message.replace(Helpers.escapeStringForRegEx(jira), '');
-    }
-
-
+    let messageFromBranch = _.last(currentBranchName.split('/')).replace(/\-/g, ' ');
+    // console.log({ messageFromBranch })
     return CommitData.from({
-      message,
+      message: messageFromBranch,
       typeOfCommit,
       jiraNumbers,
     });
@@ -133,7 +127,17 @@ export class CommitData {
    * pure message what was done (without jira or prefixes)
    * => is included in this.commitMessage
    */
-  message: string;
+  get message() {
+    return this._message;
+  }
+  set message(message) {
+    for (const jira of (this.jiraNumbers || [])) {
+      message = message.replace(jira, ' ');
+      message = message.replace(jira.toLowerCase(), ' ');
+      message = message.replace(jira.toLowerCase().replace('-', ''), ' ');
+    }
+    this._message = message;
+  }
   /**
    * ex. JIRA-2132 or MYJIRAREFIX-234234
    */
@@ -166,7 +170,7 @@ export class CommitData {
     }
     const jiras = this.jiraNumbers || [];
     let commitMsg = `${this.branchPrefix}${(jiras.length > 0) ? '(' + [_.first(jiras)].join(',') + ')' : ''}:`
-      + ` ${(this.message || '').replace(/\-/g, ' ').trim()}`;
+      + ` ${(this.message || '').trim()}`;
     return commitMsg;
 
     //#endregion
