@@ -170,7 +170,7 @@ export class CommitData {
     }
     const jiras = this.jiraNumbers || [];
     let commitMsg = `${this.branchPrefix}${(jiras.length > 0) ? '(' + [_.first(jiras)].join(',') + ')' : ''}:`
-      + ` ${(this.message || '').trim()}`;
+      + ` ${(this.message || '').split('\n').map(c => c.replace(/\-/g, ' ')).join('\n-').trim()}`;
     return commitMsg;
 
     //#endregion

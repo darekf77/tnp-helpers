@@ -235,36 +235,6 @@ export class HelpersProcess {
     return res.command;
   }
 
-  async questionYesNo(message: string,
-    callbackTrue?: () => any, callbackFalse?: () => any, defaultValue = true) {
-
-    let response = {
-      value: defaultValue
-    };
-    if (global.tnpNonInteractive) {
-      Helpers.info(`${message} - AUTORESPONSE: ${defaultValue ? 'YES' : 'NO'}`);
-    } else {
-      response = await prompts({
-        type: 'toggle',
-        name: 'value',
-        message,
-        initial: defaultValue,
-        active: 'yes',
-        inactive: 'no'
-      });
-    }
-    if (response.value) {
-      if (callbackTrue) {
-        await Helpers.runSyncOrAsync({ functionFn: callbackTrue });
-      }
-    } else {
-      if (callbackFalse) {
-        await Helpers.runSyncOrAsync({ functionFn: callbackFalse });
-      }
-    }
-    return response.value;
-  }
-
   get isWsl() {
     if (process.platform !== 'linux') {
       return false;
