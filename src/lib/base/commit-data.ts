@@ -123,20 +123,27 @@ export class CommitData {
 
   //#region fields
   typeOfCommit: TypeOfCommit;
+
+  private clearMessage(message:string) {
+    for (const jira of (this.jiraNumbers || [])) {
+      message = message.replace(jira.toLowerCase().replace('-', ' '), ' ');
+      message = message.replace(jira.toUpperCase().replace('-', ' '), ' ');
+      message = message.replace(jira, ' ');
+      message = message.replace(jira.toLowerCase(), ' ');
+
+    }
+    return message;
+  }
+
   /**
    * pure message what was done (without jira or prefixes)
    * => is included in this.commitMessage
    */
   get message() {
-    return this._message;
+    return this.clearMessage(this._message);
   }
   set message(message) {
-    for (const jira of (this.jiraNumbers || [])) {
-      message = message.replace(jira, ' ');
-      message = message.replace(jira.toLowerCase(), ' ');
-      message = message.replace(jira.toLowerCase().replace('-', ''), ' ');
-    }
-    this._message = message;
+    this._message = this.clearMessage(message);
   }
   /**
    * ex. JIRA-2132 or MYJIRAREFIX-234234

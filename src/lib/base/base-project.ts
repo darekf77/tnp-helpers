@@ -762,6 +762,7 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
     }
 
     if (this.useGitBranchesAsMetadataForCommits()) {
+      Helpers.info('Checkingout branches (if needed)...')
       if (this.git.currentBranchName?.trim() !== commitData.branchName) {
         try {
           this.git.checkout(commitData.branchName, { createBranchIfNotExists: true });
@@ -1225,7 +1226,13 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
    * lint porject
    */
   async lint(lintOptions?: any) {
-    throw (new Error('TODO IMPLEMENT'))
+    Helpers.info(`
+
+
+    COMMIT LINT NOT IMPLEMENTED
+
+
+    `)
   }
   //#endregion
 
