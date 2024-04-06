@@ -23,7 +23,8 @@
       "includeNodeModules": false,
       "cliBuildNoDts": false,
       "cliBuildObscure": false,
-      "cliBuildIncludeNodeModules": false
+      "cliBuildIncludeNodeModules": false,
+      "cliBuildUglify": false
     },
     "smartContainerTarget": "",
     "type": "isomorphic-lib",
@@ -331,5 +332,6 @@
     "yup": "1.1.1",
     "zone.js": "~0.13.0"
   },
-  "lastBuildTagHash": "12be1681a3804b0443ebd61e0d54d985539ff2c4"
+  "lastBuildTagHash": "12be1681a3804b0443ebd61e0d54d985539ff2c4",
+  "main": "dist/app.electron.js"
 }

@@ -7,7 +7,7 @@ import { HelpersFiredev as Base } from './helpers';
 
 /**
  * Firedev helpers
- */
+ */  // @ts-ignore
 export const Helpers = Base.Instance;
 export * from './models';
 export * from './base';

@@ -413,9 +413,33 @@ export class HelpersFileFolders {
     //   `)
     // }
 
-    fse.moveSync(from, to, {
-      overwrite: true
-    });
+    while (true) {
+      try {
+        fse.moveSync(from, to, {
+          overwrite: true
+        });
+        break;
+      } catch (error) {
+        if (global['tnpNonInteractive']) {
+          console.log(error)
+          Helpers.error(`[${config.frameworkName}-helpers] Not able to move files
+
+from: ${from}
+to: ${to}
+
+          `);
+        }
+        Helpers.info(`
+ Moving things:
+
+from: ${from}
+to: ${to}
+
+        `)
+        Helpers.pressKeyAndContinue('Press any to try again this action');
+      }
+    }
+
   }
 
 
