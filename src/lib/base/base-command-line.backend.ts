@@ -29,33 +29,23 @@ export class BaseCommandLine<PARAMS = any, PROJECT extends BaseProject<any, any>
       Helpers.error(`No branch found by name "${overrideBranchToReset}"`, false, true);
     }
 
-    const childrentMsg = (_.isArray(this.project.children) && this.project.children.length > 0) ?
-      `- external modules:\n${this.project.children.map(c => `${c.basename} (${chalk.yellow(c.name)})`).join('\n')
-      }` : '';
-
     Helpers.info(`
 
     YOU ARE RESETING EVERYTHING TO BRANCH: ${chalk.bold(overrideBranchToReset ? overrideBranchToReset
       : this.project.getDefaultDevelopmentBranch())}
 
-    `)
-
-    const res = await Helpers.questionYesNo(
-      `Are you sure you wanna reset hard and pull latest changes for:
 - curret project (${this.project.name})
-${childrentMsg}
-`);
+${(_.isArray(this.project.children) && this.project.children.length > 0) ?
+        `- external modules:\n${this.project.children.map(c => `\t${c.basename} (${chalk.yellow(c.name)})`).join('\n')
+        }` : ''}
+      `);
 
-    if (this.project.children?.length > 0) {
 
+    const res = await Helpers.questionYesNo(`Reset hard and pull current project `
+      + `${this.project.children.length > 0 ? '(and children)' : ''} ?`);
 
-      if (res) {
-        await this.project.resetProcess(overrideBranchToReset);
-      }
-    } else {
-      if (res) {
-        await this.project.resetProcess(overrideBranchToReset);
-      }
+    if (res) {
+      await this.project.resetProcess(overrideBranchToReset);
     }
     this._exit();
   }
@@ -83,8 +73,8 @@ ${childrentMsg}
     }
 
     try {
-      this.project.run(`git reset --hard && git checkout ${rebaseBranch} && git reset --hard HEAD~${safeReset} && git pull origin ${rebaseBranch} `
-        + `&& git checkout ${currentBranch} && git reset --soft HEAD~1 && git stash && git reset --hard HEAD~${safeReset} && git rebase ${rebaseBranch} && git stash apply`,
+      this.project.run(`git reset--hard && git checkout ${rebaseBranch} && git reset--hard HEAD~${safeReset} && git pull origin ${rebaseBranch} `
+        + `&& git checkout ${currentBranch} && git reset--soft HEAD~1 && git stash && git reset--hard HEAD~${safeReset} && git rebase ${rebaseBranch} && git stash apply`,
         { output: false, silence: true }).sync();
       await this.project.init()
       Helpers.info('REBASE DONE')
@@ -134,7 +124,7 @@ ${childrentMsg}
     Remotes for repo:
     ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
 
-        `)
+`)
 
     for (let index = 0; index < remotes.length; index++) {
       const { origin, url } = remotes[index];
@@ -273,7 +263,7 @@ ${childrentMsg}
     const proj = this.project;
     if (proj && proj.git.isGitRepo) {
       proj.run(`git remote rm origin`).sync();
-      proj.run(`git remote add origin ${newOriginNameOrUrl}`).sync();
+      proj.run(`git remote add origin ${newOriginNameOrUrl} `).sync();
       Helpers.info(`Done`);
     } else {
       Helpers.error(`This folder is not a git repo... `, false, true);
@@ -311,14 +301,14 @@ ${childrentMsg}
     last tag: ${proj.git.lastTagVersionName}
     last tag hash: ${proj.git.lastTagHash()}
 
-    `);
+`);
     this._exit();
   }
   //#endregion
 
   //#region commands / check tag exists
   CHECK_TAG_EXISTS() {
-    Helpers.info(`tag "${this.firstArg}"  exits = ${Helpers.git.checkTagExists(this.firstArg)}    `);
+    Helpers.info(`tag "${this.firstArg}"  exits = ${Helpers.git.checkTagExists(this.firstArg)} `);
     this._exit()
   }
   //#endregion
@@ -382,7 +372,7 @@ ${childrentMsg}
     folders
       .filter(c => !path.basename(c).startsWith('.'))
       .forEach(cwd => {
-        Helpers.run(`git config --get remote.origin.url`, { cwd }).sync()
+        Helpers.run(`git config--get remote.origin.url`, { cwd }).sync()
       });
     this._exit();
   }
@@ -391,7 +381,7 @@ ${childrentMsg}
   //#region filter all project branches by pattern
   private __filterBranchesByPattern(branchPatternOrBranchName: string) {
     return Helpers.arrays.uniqArray(this.project.git.getBranchesNamesBy(branchPatternOrBranchName).map(a => {
-      return a.replace(`remotes/origin/`, '');
+      return a.replace(`remotes / origin / `, '');
     }) || this.project.getMainBranches());
   }
   //#endregion
@@ -399,7 +389,7 @@ ${childrentMsg}
   //#region select branch from list of branches
   private async __selectBrach(branches: string[]) {
     const childrenMsg = this.project.children.length == 0 ? '(no children in project)' : '(with children)';
-    return await Helpers.autocompleteAsk(`Choose branch to reset in this project ${childrenMsg}:`,
+    return await Helpers.autocompleteAsk(`Choose branch to reset in this project ${childrenMsg}: `,
       branches.map(b => {
         return { name: b, value: b }
       }))
