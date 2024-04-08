@@ -1169,6 +1169,14 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
     //#endregion
   }
 
+  //#region getters & methods / open location
+  openLocation(relativeFolderPath: string) {
+    //#region @backendFunc
+    Helpers.openFolderInFileExploer(this.pathFor(relativeFolderPath));
+    //#endregion
+  }
+  //#endregion
+
   private findParentsNames(project?: T, parent?: T, result = []): string[] {
     //#region @backendFunc
     if (!project && !parent) {
@@ -1184,6 +1192,8 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
     //#endregion
   }
   //#endregion
+
+
 
   //#region getters & methods / init
   /**
