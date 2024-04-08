@@ -124,7 +124,7 @@ export class CommitData {
   //#region fields
   typeOfCommit: TypeOfCommit;
 
-  private clearMessage(message:string) {
+  private clearMessage(message: string) {
     for (const jira of (this.jiraNumbers || [])) {
       message = message.replace(jira.toLowerCase().replace('-', ' '), ' ');
       message = message.replace(jira.toUpperCase().replace('-', ' '), ' ');
@@ -178,7 +178,7 @@ export class CommitData {
     const jiras = this.jiraNumbers || [];
     let commitMsg = `${this.branchPrefix}${(jiras.length > 0) ? '(' + [_.first(jiras)].join(',') + ')' : ''}:`
       + ` ${(this.message || '').split('\n').map(c => c.replace(/\-/g, ' ')).join('\n-').trim()}`;
-    return commitMsg;
+    return commitMsg.replace(': :', ': ');
 
     //#endregion
   }

@@ -332,5 +332,6 @@
     "yup": "1.1.1",
     "zone.js": "~0.13.0"
   },
-  "lastBuildTagHash": "a985a39d5f7e2bc91ae573c24510757743cd933b"
+  "lastBuildTagHash": "a985a39d5f7e2bc91ae573c24510757743cd933b",
+  "main": "dist/app.electron.js"
 }
