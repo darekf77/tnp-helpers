@@ -31,29 +31,33 @@ export class BaseCommandLine<PARAMS = any, PROJECT extends BaseProject<any, any>
 
     const childrentMsg = (_.isArray(this.project.children) && this.project.children.length > 0) ?
       `- external modules:\n${this.project.children.map(c => `${c.basename} (${chalk.yellow(c.name)})`).join('\n')
-      }` : ''
+      }` : '';
 
-    if (this.project.children?.length > 0) {
-      Helpers.info(`
+    Helpers.info(`
 
     YOU ARE RESETING EVERYTHING TO BRANCH: ${chalk.bold(overrideBranchToReset ? overrideBranchToReset
-        : this.project.getDefaultDevelopmentBranch())}
+      : this.project.getDefaultDevelopmentBranch())}
 
     `)
-      const res = await Helpers.questionYesNo(
-        `Are you sure you wanna reset hard and pull latest changes for:
+
+    const res = await Helpers.questionYesNo(
+      `Are you sure you wanna reset hard and pull latest changes for:
 - curret project (${this.project.name})
 ${childrentMsg}
 `);
+
+    if (this.project.children?.length > 0) {
+
+
       if (res) {
         await this.project.resetProcess(overrideBranchToReset);
-        for (const child of this.project.children) {
-          await child.resetProcess(overrideBranchToReset);
-        }
       }
     } else {
-      await this.project.resetProcess(overrideBranchToReset);
+      if (res) {
+        await this.project.resetProcess(overrideBranchToReset);
+      }
     }
+    this._exit();
   }
   //#endregion
 

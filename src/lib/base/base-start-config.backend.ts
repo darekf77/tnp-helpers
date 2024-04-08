@@ -57,6 +57,14 @@ export class BaseStartConfig {
       }
     }
 
+    if (this.argsv?.length >= 3 && (this.argsv[0].endsWith('bin/node')
+      || this.argsv[0].endsWith('bin\\node')
+      || this.argsv[0].endsWith('bin\\\\node')
+      || this.argsv[0].endsWith('\\\\node.exe')
+      || this.argsv[0].endsWith('\\node.exe')
+    )) {
+      this.argsv = this.argsv.slice(2);
+    }
 
     const commandArgIndex = 0;
     const commandArg = this.argsv[commandArgIndex];

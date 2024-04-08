@@ -650,31 +650,21 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
   //#endregion
 
   //#region  methods & getters / reset process
-  async resetProcess(overrideBranch?: string) {
+  async resetProcess(overrideBranch?: string, recrusive = false) {
     //#region @backend
     this._beforeAnyActionOnGitRoot();
     const defaultBranch = overrideBranch
       ? overrideBranch : this.getDefaultDevelopmentBranch();
 
     this.git.fetch()
-
-    this.git.stageAllFiles();
-    this.git.stash();
     this.git.resetHard();
     this.git.checkout(defaultBranch);
-
-    if (this.isUnsingActionCommit()) {
-      await this.git.pullCurrentBranch({ askToRetry: true });
-    } else {
-      await this.git.pullCurrentBranch({ askToRetry: true, defaultHardResetCommits: 5 });
-    }
-    this.git.stashApply();
     await this.struct();
     Helpers.info(`RESET DONE for branch: ${chalk.bold(defaultBranch)}`);
 
     const childrenRepos = this.children.filter(f => f.git.isGitRepo && f.git.isGitRoot);
     for (const child of childrenRepos) {
-      await child.resetProcess(overrideBranch);
+      await child.resetProcess(overrideBranch, true);
     }
     //#endregion
   }
