@@ -58,6 +58,7 @@
   "homepage": "https://github.com/darekf77/tnp-helpers#readme",
   "name": "tnp-helpers",
   "devDependencies": {
+    "@angular-builders/custom-webpack": "~16.0.2-beta.2",
     "@angular-devkit/build-angular": "~16.0.5",
     "@angular-devkit/core": "~16.0.5",
     "@angular-material-extensions/password-strength": "~12.1.0",

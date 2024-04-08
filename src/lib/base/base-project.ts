@@ -652,15 +652,22 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
   //#region  methods & getters / reset process
   async resetProcess(overrideBranch?: string, recrusive = false) {
     //#region @backend
+    Helpers.taskStarted(`Starting reset process for ${this.genericName}`);
     this._beforeAnyActionOnGitRoot();
     const defaultBranch = overrideBranch
       ? overrideBranch : this.getDefaultDevelopmentBranch();
 
+    Helpers.info(`fetch data in ${this.genericName}`);
     this.git.fetch()
+    Helpers.logInfo(`reseting hard  in ${this.genericName}`);
     this.git.resetHard();
+    Helpers.logInfo(`checking out branch "${defaultBranch}" in ${this.genericName}`);
     this.git.checkout(defaultBranch);
+    Helpers.logInfo(`pulling current branch in ${this.genericName}`);
+    await this.git.pullCurrentBranch({ askToRetry: true })
+    Helpers.logInfo(`initing (struct) in ${this.genericName}`);
     await this.struct();
-    Helpers.info(`RESET DONE for branch: ${chalk.bold(defaultBranch)}`);
+    Helpers.taskDone(`RESET DONE BRANCH: ${chalk.bold(defaultBranch)} in ${this.genericName}`);
 
     const childrenRepos = this.children.filter(f => f.git.isGitRepo && f.git.isGitRoot);
     for (const child of childrenRepos) {
