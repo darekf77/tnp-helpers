@@ -19,6 +19,7 @@ export class BaseCommandLine<PARAMS = any, PROJECT extends BaseProject<any, any>
 
   //#region commands / reset
   async reset() {
+    Helpers.clearConsole();
     const branchPatternOrBranchName = this.firstArg || this.project.getDefaultDevelopmentBranch();
     let overrideBranchToReset: string;
 
