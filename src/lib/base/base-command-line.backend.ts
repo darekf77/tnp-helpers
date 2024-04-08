@@ -337,6 +337,7 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
    */
   async init() {
     await this.project.init();
+    this._exit();
   }
   //#endregion
 
@@ -346,6 +347,7 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
    */
   async struct() {
     await this.project.struct();
+    this._exit();
   }
   //#endregion
 
