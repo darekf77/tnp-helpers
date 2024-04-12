@@ -4,6 +4,7 @@ import { BaseProject } from "./base-project";
 import { chalk, _, path } from "tnp-core/src";
 import { translate } from "./translate";
 import { TypeOfCommit, CommitData } from './commit-data';
+import { config } from "tnp-config/src";
 
 export class BaseCommandLine<PARAMS = any, PROJECT extends BaseProject<any, any> = BaseProject> extends CommandLineFeature<PARAMS, PROJECT> {
   public _() {
@@ -358,6 +359,21 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
    */
   async info() {
     await this.project.info();
+  }
+  //#endregion
+
+  //#region commands / info
+  modified() {
+    const proj = this.project;
+    const libs: BaseProject[] = proj.children.filter(child => {
+      process.stdout.write('.')
+      return (child as BaseProject).git.thereAreSomeUncommitedChangeExcept([
+        config.file.package_json,
+      ])
+    });
+    console.log('\n' + Helpers.terminalLine())
+    Helpers.info(libs.length ? libs.map(c => `${chalk.bold(c.name)} (${c.git.uncommitedFiles.map(p => chalk.black(path.basename(p))).join(', ')})`).join('\n') : 'Nothing modifed')
+    this._exit()
   }
   //#endregion
 

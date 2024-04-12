@@ -20,7 +20,7 @@ const takenPorts = [];
 
 export type BaseProjectType = 'unknow' | 'unknow-npm-project';
 
-export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjectType> {
+export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = BaseProjectType> {
   //#region static
 
   //#region static / instance of resovle
@@ -75,7 +75,7 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
   /**
    * resolve instance
    */
-  abstract readonly ins: BaseProjectResolver<T>;
+  abstract readonly ins: BaseProjectResolver<PROJCET>;
   /**
    * Unique free port for project instance
    * only available after executing *this.assignFreePort()*
@@ -274,7 +274,7 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
   /**
    * alias to getAllChildren
    */
-  get children(): T[] {
+  get children(): PROJCET[] {
     //#region @websqlFunc
     return this.getAllChildren();
     //#endregion
@@ -282,7 +282,7 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
   //#endregion
 
   //#region  methods & getters / get child
-  getChildBy(nameOrBasename: string, errors = true): T {
+  getChildBy(nameOrBasename: string, errors = true): PROJCET {
     //#region @websqlFunc
     const c = this.children.find(c => c.name === nameOrBasename || c.basename === nameOrBasename);
     if (errors && !c) {
@@ -294,7 +294,7 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
   //#endregion
 
   //#region  methods & getters / parent
-  get parent(): T {
+  get parent(): PROJCET {
     //#region @websqlFunc
     if (!_.isString(this.location) || this.location.trim() === '') {
       return void 0;
@@ -305,7 +305,7 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
   //#endregion
 
   //#region  methods & getters / grandpa
-  get grandpa(): T {
+  get grandpa(): PROJCET {
     //#region @websqlFunc
     if (!_.isString(this.location) || this.location.trim() === '') {
       return void 0;
@@ -749,6 +749,12 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
       - branch to checkout {${commitData.branchName}}
       `)
 
+      if (this.git.lastCommitMessage() === commitData.commitMessage) {
+        if (await Helpers.questionYesNo('Soft reset last commit with same message ?')) {
+          this.git.resetSoftHEAD(1);
+        }
+      }
+
       if (!(await Helpers.questionYesNo('Commit and push this ?'))) {
         exitCallBack()
       }
@@ -981,6 +987,11 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
         return Helpers.git.allOrigins(self.location);
         //#endregion
       },
+      get uncommitedFiles() {
+        //#region @backendFunc
+        return Helpers.git.uncommitedFiles(self.location);
+        //#endregion
+      },
       get thereAreSomeUncommitedChange() {
         //#region @backendFunc
         return Helpers.git.checkIfthereAreSomeUncommitedChange(self.location);
@@ -1174,7 +1185,7 @@ export abstract class BaseProject<T extends BaseProject = any, TYPE = BaseProjec
   }
   //#endregion
 
-  private findParentsNames(project?: T, parent?: T, result = []): string[] {
+  private findParentsNames(project?: PROJCET, parent?: PROJCET, result = []): string[] {
     //#region @backendFunc
     if (!project && !parent) {
       project = this as any;

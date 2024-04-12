@@ -843,6 +843,26 @@ ${cwd}
   }
   //#endregion
 
+  //#region check if there are some uncommited changes except
+  uncommitedFiles(cwd: string) {
+    Helpers.log('[firedev-helpers][thereAreSomeUncommitedChangeExcept] ' + cwd, 1)
+
+    try {
+      const res = Helpers.run(`git ls-files --deleted --modified --others --exclude-standard`, { output: false, cwd }).sync().toString().trim();
+
+      const list = !res ? [] : res
+        .split(/\r\n|\n|\r/)
+        .filter(f => {
+          f = f?.trim();
+          return !!f;
+        });
+      return list;
+    } catch (error) {
+      return [];
+    }
+  }
+  //#endregion
+
   //#region restore last version
   restoreLastVersion(cwd: string, localFilePath: string) {
     Helpers.log('[firedev-helpers][restoreLastVersion] ' + cwd, 1)
