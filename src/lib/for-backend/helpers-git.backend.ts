@@ -648,7 +648,7 @@ ${cwd}
       if (onlyStaged) {
         child_process.execSync(`git stash push --keep-index`, { cwd });
       } else {
-        child_process.execSync(`git stash.`, { cwd });
+        child_process.execSync(`git stash`, { cwd });
       }
     } catch (error) { }
   }
