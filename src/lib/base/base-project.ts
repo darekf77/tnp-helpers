@@ -1201,7 +1201,22 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
   }
   //#endregion
 
-
+  //#region getters & methods / kill all instance
+  tryKillAllElectronInstances() {
+    //#region @backendFunc
+    Helpers.taskStarted('Killing all app instances')
+    try {
+      if (process.platform === 'win32') {
+        Helpers.run(`taskkill /f /im ${this.name}.exe`).sync();
+      } else {
+        Helpers.run(`fkill -f ${this.name}`).sync();
+      }
+    } catch (error) {
+    }
+    Helpers.taskDone('Done kill all app instances')
+    //#endregion
+  }
+  //#endregion
 
   //#region getters & methods / init
   /**
