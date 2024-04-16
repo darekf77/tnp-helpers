@@ -160,12 +160,19 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
   }
   //#endregion
 
+  public async melt() {
+    await this.meltUpdateCommits(true);
+    this._exit();
+  }
+
   //#region melt updat ecommits
-  private async meltUpdateCommits() {
+  private async meltUpdateCommits(hideInfo = false) {
     if (this.project.git.meltActionCommits(true) > 0) {
-      this.project.git.stageAllFiles();
-      if (!(await Helpers.consoleGui.question.yesNo('Update commits has been reset. Continue with changes ?'))) {
-        this._exit();
+      if (!hideInfo) {
+        this.project.git.stageAllFiles();
+        if (!(await Helpers.consoleGui.question.yesNo('Update commits has been reset. Continue with changes ?'))) {
+          this._exit();
+        }
       }
     }
   }

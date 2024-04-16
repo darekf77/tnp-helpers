@@ -1,3 +1,4 @@
+//#region imports
 import { _ } from 'tnp-core';
 import { HelpersArrayObj } from './helpers-array-obj';
 import { HelpersStringsRegexes } from './helpers-strings-regexes';
@@ -32,7 +33,9 @@ import { HelpersNumber } from './helpers-numbers';
 import { HelpersBrowser } from './for-browser/helpers-browser';
 import { HelpersAngular } from './for-browser/angular.helper';
 //#endregion
+//#endregion
 
+//#region class mixing helper
 /**
  * Mixing for multiclass inheritance
  *
@@ -54,6 +57,7 @@ export function applyMixins(derivedCtor: any, baseCtors: any[]) {
     });
   });
 }
+//#endregion
 
 // @ts-ignore
 export class HelpersFiredev extends CoreHelpers {
@@ -97,7 +101,44 @@ export class HelpersFiredev extends CoreHelpers {
     return f;
   }
 
+  //#region  methods & getters / uniqArray
 
+  async ncc(pathToJsFile: string, outputFile) {
+    //#region @backendFunc
+    Helpers.taskStarted(`Bundling node_modules for file: ${pathToJsFile}`)
+    const data = await require('@vercel/ncc')(pathToJsFile, {
+      // provide a custom cache path or disable caching
+      cache: false,
+      // out:'',
+      // externals to leave as requires of the build
+      externals: ["electron"],
+      // directory outside of which never to emit assets
+      // filterAssetBase: process.cwd(), // default
+      minify: false, // default
+      sourceMap: false, // default
+      // assetBuilds: false, // default
+      // sourceMapBasePrefix: '../', // default treats sources as output-relative
+      // when outputting a sourcemap, automatically include
+      // source-map-support in the output file (increases output by 32kB).
+      // sourceMapRegister: true, // default
+      watch: false, // default
+      license: '', // default does not generate a license file
+      target: 'es2015', // default
+      v8cache: false, // default
+      quiet: true, // default
+      debugLog: false // default
+    });
+    Helpers.writeFile(outputFile, data.code);
+    Helpers.taskDone('Bundling finish');
+    //#endregion
+  }
+
+  uniqArray<T = any>(array: any[], uniqueProperty?: (keyof T)): T[] {
+    //#region @backendFunc
+    return Helpers.arrays.uniqArray<T>(array, uniqueProperty);
+    //#endregion
+  }
+  //#endregion
 
 
   // replaceInvisibleCharacters(s: string) {

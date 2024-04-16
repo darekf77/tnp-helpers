@@ -20,13 +20,13 @@ export class TsCodeExtractor {
     const classes: ClassMeta[] = [];
     content.split('\n').forEach(line => {
       if (this.REGEX.DEFAULT_CLASS.test(line)) {
-        const className = _.first(line.replace(_.first(line.match(this.REGEX.DEFAULT_CLASS)), '').split(' '));
+        const className = _.first(line.replace(_.first(line.match(this.REGEX.DEFAULT_CLASS)), '').split(' ')) as string;
         classes.push({
           className,
           isDefault: true
         });
       } else if (this.REGEX.CLASS.test(line)) {
-        const className = _.first(line.replace(_.first(line.match(this.REGEX.CLASS)), '').split(' '));
+        const className = _.first(line.replace(_.first(line.match(this.REGEX.CLASS)), '').split(' ')) as string;
         classes.push({
           className,
           isDefault: false

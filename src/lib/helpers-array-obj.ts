@@ -92,6 +92,9 @@ export class HelpersArrayObj {
     return newArray;
   }
 
+  /**
+   * @deprecated
+   */
   uniqArray<T = any>(array: any[], uniqueProperty?: (keyof T)) {
     var seen = {};
     return array

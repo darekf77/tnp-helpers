@@ -134,6 +134,7 @@
     "@types/systeminformation": "3.23.0",
     "@types/vinyl": "2.0.2",
     "@types/watch": "1.0.0",
+    "@vercel/ncc": "0.38.1",
     "accepts": "1.3.4",
     "ajv": "8.12.0",
     "angular-material-css-vars": "5.0.2",

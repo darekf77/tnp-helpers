@@ -96,6 +96,10 @@ export class HelpersProcess {
     Helpers.goToDir(dir);
   }
 
+  /**
+   * // TODO refactor this
+   * @deprecated
+   */
   goToDir(dir = '..') {
     const previous = crossPlatformPath(process.cwd())
     try {
@@ -209,7 +213,7 @@ export class HelpersProcess {
     question: string,
     choices: { name: string; value: T; }[],
     pageSize = 10
-  ) {
+  ): Promise<T> {
 
     function source(__, input) {
       input = input || '';
