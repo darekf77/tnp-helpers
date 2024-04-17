@@ -306,7 +306,7 @@ export class HelpersProcess {
         ? 'tasklist /fi "imagename eq node.exe" /fo csv' : 'ps -A -o pid,command | grep node';
 
       // Execute the command to list processes
-      exec(listProcessesCommand, (error, stdout, stderr) => {
+      exec(listProcessesCommand, { shell: process.platform === 'win32' ? 'cmd.exe' : void 0 }, (error, stdout, stderr) => {
         if (error) {
           reject(new Error(`Error occurred while listing processes: ${error.message}`));
           return;
@@ -325,7 +325,7 @@ export class HelpersProcess {
         const processIds = processes.map(line => parseInt(line.split(',')[1]));
 
         // Filter out the current process ID
-        const processesToKill = processIds.filter(id => id !== currentProcessId);
+        const processesToKill = processIds.filter(id => id !== currentProcessId).filter(f => !!f);
 
         // If there are no processes to kill, resolve immediately
         if (processesToKill.length === 0) {
