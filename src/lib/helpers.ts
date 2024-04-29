@@ -131,7 +131,7 @@ export class HelpersFiredev extends CoreHelpers {
       license: '', // default does not generate a license file
       target: 'es2015', // default
       v8cache: false, // default
-      quiet: true, // default
+      quiet: false, // default
       debugLog: false // default
     });
     Helpers.writeFile(outputFile, data.code);

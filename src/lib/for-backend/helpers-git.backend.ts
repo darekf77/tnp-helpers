@@ -5,6 +5,7 @@ import {
   fse,
   child_process,
   crossPlatformPath,
+  dateformat,
 } from 'tnp-core';
 import { CLI } from 'tnp-cli';
 import { Helpers } from '../index';
@@ -504,7 +505,7 @@ export class HelpersGit {
         + `remote origin url.... in folder ${path.basename(cwd)}`);
       return;
     }
-    Helpers.info(`[firedev-helpers] Pulling git changes in "${cwd}", origin=${Helpers.git.getOriginURL(cwd)}  `)
+    Helpers.info(`[firedev-helpers][${dateformat(new Date(), 'dd-mm-yyyy HH:MM:ss')}] Pulling git changes in "${cwd}", origin=${Helpers.git.getOriginURL(cwd)}  `)
     try {
 
       let currentLocalBranch = child_process.execSync(`git branch | sed -n '/\* /s///p'`, { cwd }).toString().trim()
@@ -571,11 +572,12 @@ ${cwd}
     while (true) {
       try {
         const taskName = `
+    [${dateformat(new Date(), 'dd-mm-yyyy HH:MM:ss')}]
     Pushing ${force ? 'FORCE' : 'NORMALLY'} current branch (remote=${origin}): ${currentBranchName}
     `
         Helpers.info(taskName);
         const command = `git push ${force ? '-f' : ''} ${origin} ${currentBranchName} --tags`;
-        Helpers.info(`[git][push] ${force ? 'force' : 'normal'} pushing current branch ${currentBranchName} ,`
+        Helpers.info(`[git][push] [${dateformat(new Date(), 'dd-mm-yyyy HH:MM:ss')}] ${force ? 'force' : 'normal'} pushing current branch ${currentBranchName} ,`
           + ` origin=${Helpers.git.getOriginURL(cwd, origin)}`);
 
         Helpers.run(command, { cwd }).sync()
