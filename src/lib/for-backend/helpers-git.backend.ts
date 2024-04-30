@@ -522,7 +522,7 @@ export class HelpersGit {
         });
       }
     }
-    Helpers.info(`DONE PULLING`)
+    Helpers.info(`[${dateformat(new Date(), 'dd-mm-yyyy HH:MM:ss')}] DONE PULLING`)
   }
   //#endregion
 
