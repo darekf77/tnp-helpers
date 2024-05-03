@@ -367,46 +367,6 @@ export class HelpersProcess {
     Helpers.info('DONE KILL ALL NODE PROCESSES')
   }
 
-  async killProcessByPort(portOrPortsToKill: number | number[], options?: {
-    silent?: boolean
-  }) {
-    const showOutoput = (!options || !options.silent);
-    if (!_.isArray(portOrPortsToKill)) {
-      portOrPortsToKill = [portOrPortsToKill];
-    }
-    for (let index = 0; index < portOrPortsToKill.length; index++) {
-      let port = portOrPortsToKill[index];
-      const org = port;
-      port = Number(port);
-      if (!_.isNumber(port)) {
-        showOutoput && Helpers.warn(`[firedev-helpers] Can't kill on port: "${org}"`);
-        return;
-      }
-      try {
-        await fkill(`:${port}`, { force: true });
-        // run(`fkill -f :${port} &> /dev/null`, { output: false }).sync()
-        showOutoput && Helpers.info(`Processs killed successfully on port: ${port}`);
-      } catch (e) {
-        showOutoput && Helpers.warn(`No process to kill  on port: ${port}... `);
-      }
-
-
-      // console.log(`Killing process on port ${port} in progress`);
-      // try {
-      //   if (os.platform() === 'linux') {
-      //     run(`lsof -i:${port}`, { output: false }).sync()
-      //   } else if (os.platform() === 'darwin') {
-      //     run(`lsof -P | grep ':${port}' | awk '{print $2}' | xargs kill -9 `, { output: false }).sync()
-      //   }
-      //   info(`Process killed on port: ${port}`)
-      // } catch (e) {
-      //   error(`Problem with killing process on port ${port}:
-      //   ${e}
-      //   `, true)
-      // }
-    }
-  }
-
   clearConsole() {
     Helpers.msgCacheClear();
     console.log('\x1Bc');
