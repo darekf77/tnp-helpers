@@ -1538,17 +1538,17 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
 
     if (watch) {
       for (const [index, lib] of libsToWatch.entries()) {
-        Helpers.info(`Building for watch (${index + 1}/${libs.length}) ${lib.basename} (${chalk.bold(lib.name)})`)
-        const update = _.debounce(() => {
-          const sourceDist = this.pathFor([config.folder.dist, lib.basename]);
-          const dest = this.pathFor([config.folder.node_modules, lib.name]);
-          Helpers.copy(sourceDist, dest);
-          console.log(`Sync done for ${lib.basename} to ${lib.name}`);
-        }, 1000);
-        await this.run(lib.getLibraryBuildComamnd({ watch: true }), { output: true })
-          .unitlOutputContains(lib.getLibraryBuildSuccessComamnd, [], 0, () => {
-            update();
-          });
+        Helpers.info(`Building for watch (${index + 1}/${libs.length}) ${lib.basename} (${chalk.bold(lib.name)})`);
+        await (async () => {
+          await this.run(lib.getLibraryBuildComamnd({ watch: true }), { output: true })
+            .unitlOutputContains(lib.getLibraryBuildSuccessComamnd, [], 0, () => {
+              const sourceDist = this.pathFor([config.folder.dist, lib.basename]);
+              const dest = this.pathFor([config.folder.node_modules, lib.name]);
+              Helpers.copy(sourceDist, dest);
+              console.log(`Sync done for ${lib.basename} to ${lib.name}`);
+            });
+        })();
+
       }
       // await this.__indexRebuilder.startAndWatch({ taskName: 'index rebuild watch' });
       Helpers.success('BUILD DONE.. watching..')
