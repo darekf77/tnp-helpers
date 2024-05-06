@@ -13,12 +13,27 @@ import { _ } from 'tnp-core/src';
 import { CommitData, Helpers, TypeOfCommit } from '../index';
 import { BaseProjectResolver } from './base-project-resolver';
 import { translate } from './translate';
-
 //#endregion
 
 const takenPorts = [];
 
 export type BaseProjectType = 'unknow' | 'unknow-npm-project';
+
+/**
+ * Angular project type
+ */
+export type NgProject = {
+  "projectType": "library" | "application",
+  /**
+   * where ng-packagr.json is located, tsconfig etc.
+   */
+  "root": string,
+  /**
+   * Source code project
+   */
+  "sourceRoot": string,
+  "prefix": string;
+}
 
 export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = BaseProjectType> {
   //#region static
@@ -90,7 +105,9 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
      * doesn't need to be real path -> can be link
      */
     public readonly location: string,
-  ) { }
+  ) {
+
+  }
   //#endregion
 
   //#region  methods & getters
@@ -1324,5 +1341,238 @@ ${proj?.children.map(c => '+' + c.genericName).join('\n')}
   }
   //#endregion
 
+  //#region getters & methods / angular libraries
+  /**
+   * angular libraries from angular.json
+   */
+  get libraries(): PROJCET[] {
+    //#region @backendFunc
+    if (!this.pathExists('angular.json')) {
+      return [];
+    }
+    const projects = (Object.values(Helpers.readJson(this.pathFor('angular.json'))?.projects) as NgProject[])
+      .filter(f => f.projectType === 'library');
+
+    const libraries = projects.map(c => this.ins.From(path.join(this.location, c.root)));
+    return libraries;
+    //#endregion
+  }
+  //#endregion
+
+  //#region getters & methods / sorted libraries by deps
+  get sortedLibrariesByDeps(): PROJCET[] {
+    //#region @backendFunc
+    const libs = this.libraries;
+    const sorted = BaseProject.sortGroupOfProject<PROJCET>(libs, proj => {
+      if (!_.isUndefined(proj.cache['deps'])) {
+
+        return proj.cache['deps'];
+      }
+
+      const uiJsonPath = proj.pathFor('ui-module.json');
+      if (Helpers.exists(uiJsonPath)) {
+        const uiModuleJson = Helpers.readJson(uiJsonPath);
+        const allLibs = ((uiModuleJson.dependencies || []) as string[]);
+        proj.cache['deps'] = allLibs.filter(f => !_.isUndefined(libs.find(c => c.basename === f)));
+      } else {
+        const allLibs = Object.keys(proj.allDependencies);
+        proj.cache['deps'] = allLibs.filter(f => !_.isUndefined(libs.find(c => c.name === f)));
+      }
+
+      // console.log(`${proj.name} => all libs`, proj.cache['deps'])
+      return proj.cache['deps'];
+    }, proj => {
+      if (!_.isUndefined(proj.cache['nameToCompare'])) {
+        // console.log(`CACHE ${proj.basename} => name: ` + proj.cache['nameToCompare'])
+        return proj.cache['nameToCompare'];
+      }
+      proj.cache['nameToCompare'] = Helpers.exists(proj.pathFor('ui-module.json')) ? proj.basename : proj.name;
+      return proj.cache['nameToCompare'];
+    });
+
+    return sorted;
+    //#endregion
+  }
+  //#endregion
+
+  //#region getters & methods / get sorted libraries by deps for build
+  async getSortedLibrariesByDepsForBuild() {
+    //#region @backendFunc
+    let libs = this.sortedLibrariesByDeps;
+
+    let buildAll = false;
+    const lastSelectedJsonFile = 'tmp-last-selected.json';
+    const lastSelected = Helpers.readJson(this.pathFor(lastSelectedJsonFile))?.lastSelected || [];
+
+    if (_.isArray(lastSelected) && lastSelected.length > 0) {
+      const selected = lastSelected.map(c => libs.find(l => l.basename == c));
+
+      Helpers.info(`
+Last selected libs
+
+${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('\n')}
+
+            `)
+      if (await Helpers.consoleGui.question.yesNo(`Continue build with last selected ?`)) {
+        libs = selected;
+        return libs;
+      }
+    }
+
+    if (libs.length < 6) {
+      buildAll = await Helpers.consoleGui.question.yesNo('Should all libraries be included in build ?')
+    }
+    if (buildAll) {
+      return libs;
+    }
+    while (true) {
+      const selectedLibs = await Helpers.consoleGui.multiselect(`Select libraries to build `, libs.map(c => {
+        return { name: c.name, value: c.name, selected: true };
+      }), true);
+      const selected = selectedLibs.map(c => libs.find(l => l.name == c));
+      Helpers.info(`
+
+${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('\n')}
+
+      `)
+      if (await Helpers.consoleGui.question.yesNo(`Continue build with ${selected.length} selected ?`)) {
+        libs = selected;
+        break;
+      }
+    }
+
+    Helpers.writeJson(this.pathFor(lastSelectedJsonFile), { lastSelected: libs.map(c => c.basename) })
+    return libs;
+    //#endregion
+  }
+  //#endregion
+
+  //#region getters & methods / get library build success command
+  get getLibraryBuildSuccessComamnd(): string {
+    //#region @backendFunc
+    const isAngularLib = Helpers.exists(this.pathFor('ng-package.json'));
+    if (isAngularLib) {
+      return `Trace: Build complete`
+    } else {
+      return `Found 0 errors. Watching for file change`
+    }
+    //#endregion
+  }
+  //#endregion
+
+  //#region getters & methods / build libraries
+  public async buildLibraries({ rebuild = false, watch = false, strategy }: {
+    rebuild?: boolean; watch?: boolean;
+    strategy?: 'link' | 'copy'
+  } = {}) {
+    //#region @backend
+    if (!strategy) {
+      strategy = 'link';
+    }
+    let libsToWatch: PROJCET[] = [];
+    if (watch) {
+      libsToWatch = (await this.getSortedLibrariesByDepsForBuild());
+    }
+
+    // await this.init();
+    const locationsForNodeModules = [
+      this.location,
+      // this.parent.location,
+      // ...this.parent.children.map(c => c.location),
+    ].map(l => crossPlatformPath([l, config.folder.node_modules]));
+
+    if (!Helpers.exists(this.pathFor(config.folder.node_modules))) {
+      this.run('yarn install', { output: true }).sync();
+    }
+
+    const libs = this.libraries;
+    for (const [index, lib] of this.sortedLibrariesByDeps.entries()) {
+      Helpers.info(`Building (${index + 1}/${libs.length}) ${lib.basename} (${chalk.bold(lib.name)})`);
+
+      if (strategy === 'link') {
+        (() => {
+          const sourceDist = this.pathFor([config.folder.dist, lib.basename]);
+          for (const node_modules of locationsForNodeModules) {
+            const dest = crossPlatformPath([node_modules, lib.name]);
+            if (!Helpers.isSymlinkFileExitedOrUnexisted(dest)) {
+              Helpers.remove(dest);
+            }
+            console.log('linking from ', sourceDist);
+            console.log('linking to ', dest);
+            // Helpers.remove(dest);
+            Helpers.createSymLink(sourceDist, dest, { continueWhenExistedFolderDoesntExists: true });
+          }
+
+          if (rebuild || !Helpers.exists(sourceDist)) {
+            Helpers.info(`Compiling ${lib.name} ...`)
+            this.run(lib.getLibraryBuildComamnd({ watch: false }), { output: true }).sync();
+          }
+
+        })();
+
+        (() => {
+          const sourceDist = this.pathFor([config.folder.dist, lib.basename]);
+          const dest = this.pathFor([config.folder.node_modules, lib.name]);
+          if (!Helpers.isSymlinkFileExitedOrUnexisted(dest)) {
+            Helpers.remove(dest);
+          }
+          Helpers.createSymLink(sourceDist, dest, { continueWhenExistedFolderDoesntExists: true });
+        })();
+
+      } else if (strategy === 'copy') {
+        const sourceDist = this.pathFor([config.folder.dist, lib.basename]);
+        const dest = this.pathFor([config.folder.node_modules, lib.name]);
+
+        if (rebuild || !Helpers.exists(sourceDist)) {
+          Helpers.info(`Compiling ${lib.name} ...`)
+          this.run(lib.getLibraryBuildComamnd({ watch: false }), { output: true }).sync();
+        }
+
+        if (Helpers.isSymlinkFileExitedOrUnexisted(dest)) {
+          Helpers.remove(dest);
+        }
+
+        Helpers.copy(sourceDist, dest);
+      }
+    }
+
+    if (watch) {
+      for (const [index, lib] of libsToWatch.entries()) {
+        Helpers.info(`Building for watch (${index + 1}/${libs.length}) ${lib.basename} (${chalk.bold(lib.name)})`)
+        const update = _.debounce(() => {
+          const sourceDist = this.pathFor([config.folder.dist, lib.basename]);
+          const dest = this.pathFor([config.folder.node_modules, lib.name]);
+          Helpers.copy(sourceDist, dest);
+          console.log(`Sync done for ${lib.basename} to ${lib.name}`);
+        }, 1000);
+        await this.run(lib.getLibraryBuildComamnd({ watch: true }), { output: true })
+          .unitlOutputContains(lib.getLibraryBuildSuccessComamnd, [], 0, () => {
+            update();
+          });
+      }
+      // await this.__indexRebuilder.startAndWatch({ taskName: 'index rebuild watch' });
+      Helpers.success('BUILD DONE.. watching..')
+    } else {
+      // await this.__indexRebuilder.start({ taskName: 'index rebuild watch' });
+      Helpers.success('BUILD DONE');
+    }
+    //#endregion
+  }
+  //#endregion
+
+  //#region getters & methods / get library build success command
+  getLibraryBuildComamnd(options?: { watch: boolean }): string | undefined {
+    //#region @backendFunc
+    const { watch } = options;
+
+    const isAngularLib = Helpers.exists(this.pathFor('ng-package.json')) || Helpers.exists(this.pathFor('tsconfig.app.json'));
+    if (isAngularLib) {
+      return `npm-run ng build ${this.basename} ${watch ? '--watch' : ''}`
+    } else {
+      return `npm-run tsc -p libraries/${this.basename}/tsconfig.lib.json  ${watch ? '--watch' : ''} --preserveWatchOutput`
+    }
+    //#endregion
+  }
+  //#endregion
 }
 
