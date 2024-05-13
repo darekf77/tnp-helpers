@@ -49,16 +49,6 @@ export class CommitData {
   }
   //#endregion
 
-  //#region clean http(s) from commit message
-  private static getModuleNameFrom(commitMsg: string) {
-    let commitModuleName = _.first(commitMsg.match(regexCommitModuleInArgs));
-    if (commitModuleName) {
-      commitMsg = commitMsg.replace(commitModuleName, '');
-    }
-    return {
-      commitMsg, commitModuleName: commitModuleName?.replace(/\[/g, '').replace(/\]/g, '')
-    };
-  }
 
   private static getTeamsIdFrom(commitMsg: string) {
     let teamID = _.first(commitMsg.match(regexTeamsID));
@@ -70,12 +60,27 @@ export class CommitData {
     };
   }
 
+  //#region clean http(s) from commit message
+  private static getModuleNameFrom(commitMsg: string) {
+    let commitModuleName = _.first(commitMsg.match(regexCommitModuleInArgs));
+    if (commitModuleName) {
+      commitMsg = commitMsg.replace(commitModuleName, '');
+    }
+    return {
+      commitMsg, commitModuleName: commitModuleName?.replace(/\[/g, '').replace(/\]/g, '')
+    };
+  }
+
   private static getModuleNameFromBranch(branchName: string) {
     let commitModuleName = _.first(branchName.match(regexCommitModuleInBranch));
     if (commitModuleName) {
-      branchName = branchName.replace(commitModuleName, '-');
+      branchName = branchName.replace(commitModuleName, '');
+      commitModuleName = commitModuleName?.replace(/^\-\-/, '')?.replace(/\-\-$/, '');
+      if (commitModuleName.startsWith('-')) {
+        commitModuleName = commitModuleName.replace(/^\-/, '');
+      }
     }
-    return { commitMsg: branchName, commitModuleName: commitModuleName?.replace(/\-/g, '') };
+    return { commitModuleName: commitModuleName?.replace(/^\-\-/, '')?.replace(/\-\-$/, '') };
   }
   //#endregion
 
@@ -148,15 +153,13 @@ export class CommitData {
 
     let messageFromBranch = _.last(currentBranchName.split('/')).replace(/\-/g, ' ');
 
-    const data = this.getModuleNameFromBranch(messageFromBranch)
-    messageFromBranch = data.commitMsg;
+    const moduleNameData = this.getModuleNameFromBranch(currentBranchName);
 
-    // console.log({ messageFromBranch })
     return CommitData.from({
       message: messageFromBranch,
       typeOfCommit,
       jiraNumbers,
-      commitModuleName: data.commitModuleName,
+      commitModuleName: moduleNameData.commitModuleName,
       teamID: teamIdData.teamID
     });
     //#endregion
@@ -196,6 +199,9 @@ export class CommitData {
 
     if (this.teamID && _.isString(this.teamID)) {
       message = message.replace(/\_/g, ' ');
+    }
+    if (this.commitModuleName) {
+      message = message.replace(this.commitModuleName.replace(/\-/g, ' '), ' ');
     }
     return message;
   }
@@ -269,12 +275,15 @@ export class CommitData {
     //#region @backendFunc
     const teamId = this.teamID ? `${this.teamID}` : '';
     if (teamId) {
-      return `${this.typeOfCommit || 'feature'}/${teamId}${this.jiraNumbers.map(c => c.toUpperCase()).join('-')}${this.jiraNumbers.length > 0 ? '-' : ''}${_.snakeCase(this.message)}`;
+      return `${this.typeOfCommit || 'feature'}/${teamId}${this.jiraNumbers.map(c => c.toUpperCase()).join('-')}`
+        + `${this.jiraNumbers.length > 0 ? '-' : ''}${_.snakeCase(this.message)}`;
     }
     if (this.commitModuleName) {
-      return `${this.typeOfCommit || 'feature'}/${this.jiraNumbers.map(c => c.toUpperCase()).join('-')}${this.jiraNumbers.length > 0 ? '-' : ''}--${this.commitModuleName}--${_.kebabCase(this.message)}`;
+      return `${this.typeOfCommit || 'feature'}/${this.jiraNumbers.map(c => c.toUpperCase()).join('-')}`
+        + `${this.jiraNumbers.length > 0 ? '-' : ''}--${this.commitModuleName}--${_.kebabCase(this.message)}`;
     }
-    return `${this.typeOfCommit || 'feature'}/${this.jiraNumbers.map(c => c.toUpperCase()).join('-')}${this.jiraNumbers.length > 0 ? '-' : ''}${_.kebabCase(this.message)}`;
+    return `${this.typeOfCommit || 'feature'}/${this.jiraNumbers.map(c => c.toUpperCase()).join('-')}`
+      + `${this.jiraNumbers.length > 0 ? '-' : ''}${_.kebabCase(this.message)}`;
     //#endregion
   }
 
