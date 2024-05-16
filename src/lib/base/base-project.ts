@@ -220,7 +220,7 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
 
 
   //#region getters & methods / get unexisted projects
-  protected async cloneUnexistedLinkedProjects(actionType: 'pull' | 'push') {
+  protected async cloneUnexistedLinkedProjects(actionType: 'pull' | 'push', cloneChildren = false) {
     //#region @backendFunc
     if (actionType === 'push' && this.automaticallyAddAllChnagesWhenPushingToGit()) {
       return
@@ -249,14 +249,16 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
     if (projectsThatShouldBeLinked.length > 0) {
       Helpers.info(`
 
-${projectsThatShouldBeLinked.map((p, index) => `- ${index + 1}. ${chalk.bold(p.relativeClonePath)} ${p.remoteUrl()}`).join('\n')}
+${projectsThatShouldBeLinked.map((p, index) =>
+        `- ${index + 1}. ${chalk.bold(p.relativeClonePath)} ${p.remoteUrl()} {${p.purpose ? ` purpose: ${p.purpose} }` : ''}`
+
+      ).join('\n')}
 
       `);
-      if (await Helpers.questionYesNo(`Do you want to clone above (missing) linked projects ?`)) {
+      if (cloneChildren || (await Helpers.questionYesNo(`Do you want to clone above (missing) linked projects ?`))) {
         for (const linkedProj of projectsThatShouldBeLinked) {
-          await Helpers.actionWrapper(() => {
-            this.git.clone(linkedProj.remoteUrl(), linkedProj.relativeClonePath);
-          }, `Cloning unexisted project from url ${chalk.bold(linkedProj.remoteUrl())} to ${linkedProj.relativeClonePath}`);
+          Helpers.info(`Cloning unexisted project from url ${chalk.bold(linkedProj.remoteUrl())} to ${linkedProj.relativeClonePath}`);
+          await this.git.clone(linkedProj.remoteUrl(), linkedProj.relativeClonePath, linkedProj.deafultBranch);
         }
       }
 
@@ -846,9 +848,9 @@ ${projectsThatShouldBeLinked.map((p, index) => `- ${index + 1}. ${chalk.bold(p.r
   //#endregion
 
   //#region  methods & getters / push process
-  async pullProcess() {
+  async pullProcess(cloneChildren = false) {
     //#region @backendFunc
-    await this._beforePullProcessAction();
+    await this._beforePullProcessAction(cloneChildren);
     let uncommitedChanges = this.git.thereAreSomeUncommitedChange;
     if (uncommitedChanges) {
       Helpers.warn(`Stashing uncommit changes... in ${this.genericName}`);
@@ -865,7 +867,7 @@ ${projectsThatShouldBeLinked.map((p, index) => `- ${index + 1}. ${chalk.bold(p.r
     this.ins.unload(this as any);
     this.ins.add(this.ins.From(location) as any);
 
-    if (this.automaticallyAddAllChnagesWhenPushingToGit()) {
+    if (this.automaticallyAddAllChnagesWhenPushingToGit() || cloneChildren) {
       const childrenRepos = this.children.filter(f => f.git.isGitRepo && f.git.isGitRoot);
       for (const child of childrenRepos) {
         await child.pullProcess();
@@ -995,10 +997,10 @@ ${projectsThatShouldBeLinked.map((p, index) => `- ${index + 1}. ${chalk.bold(p.r
   //#endregion
 
   //#region before push action
-  protected async _beforePullProcessAction() {
+  protected async _beforePullProcessAction(cloneChildren = false) {
     //#region @backendFunc
     this._beforeAnyActionOnGitRoot();
-    await this.cloneUnexistedLinkedProjects('pull');
+    await this.cloneUnexistedLinkedProjects('pull', cloneChildren);
     //#endregion
   }
   //#endregion
@@ -1077,9 +1079,15 @@ ${projectsThatShouldBeLinked.map((p, index) => `- ${index + 1}. ${chalk.bold(p.r
         Helpers.git.revertFileChanges(self.location, fileReletivePath);
         //#endregion
       },
-      clone(url: string, destinationFolderName = '') {
+      async clone(url: string, destinationFolderName = '', branchName?: string) {
         //#region @backendFunc
-        return Helpers.git.clone({ cwd: self.location, url, destinationFolderName });
+        const clondeFolderpath = Helpers.git.clone({ cwd: self.location, url, destinationFolderName, });
+        if (branchName) {
+          try {
+            Helpers.git.checkout(clondeFolderpath, branchName);
+            await Helpers.git.pullCurrentBranch(clondeFolderpath, { askToRetry: true });
+          } catch (error) { }
+        }
         //#endregion
       },
       restoreLastVersion(localFilePath: string) {

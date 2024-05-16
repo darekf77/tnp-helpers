@@ -675,7 +675,7 @@ ${cwd}
   //#endregion
 
   //#region checkout
-  checkout(cwd, branchName: string, options: { createBranchIfNotExists?: boolean; fetchBeforeCheckout?: boolean; switchBranchWhenExists?: boolean; }) {
+  checkout(cwd, branchName: string, options?: { createBranchIfNotExists?: boolean; fetchBeforeCheckout?: boolean; switchBranchWhenExists?: boolean; }) {
     let { createBranchIfNotExists, fetchBeforeCheckout, switchBranchWhenExists } = options || {};
     if (fetchBeforeCheckout) {
       this.fetch(cwd);
@@ -725,13 +725,16 @@ ${cwd}
   }
 
   //#region clone
+  /**
+   * @returns absolute path to cloned folder
+   */
   clone({ cwd, url, destinationFolderName = '', throwErrors, override }: {
     cwd: string;
     url: string;
     destinationFolderName?: string;
     throwErrors?: boolean;
     override?: boolean;
-  }) {
+  }): string {
     cwd = crossPlatformPath(cwd);
     if (!Helpers.exists(cwd)) {
       try {
@@ -768,16 +771,13 @@ ${cwd}
       url = (url + '.git')
     }
 
-    const cloneFolderPath = path.join(
-      cwd,
-      (!!destinationFolderName && destinationFolderName.trim() !== '')
-        ? destinationFolderName
-        : path.basename(url)
-    ).trim().replace('.git', '');
+    const cloneFolderPath = crossPlatformPath(path.join(
+      cwd, (!!destinationFolderName && destinationFolderName.trim() !== '') ? destinationFolderName : path.basename(url)
+    ).trim().replace('.git', ''));
     // console.log({ cloneFolderPath })
 
     if (override) {
-      Helpers.remove(cloneFolderPath)
+      Helpers.tryRemoveDir(cloneFolderPath)
     } else if (Helpers.exists(cloneFolderPath) && Helpers.exists(path.join(cloneFolderPath, '.git'))) {
       Helpers.warn(`[firedev-helpers] Already cloned ${path.basename(cloneFolderPath)}...`);
       return;
@@ -805,6 +805,7 @@ ${cwd}
         }
       }
     }
+    return cloneFolderPath;
     // const packageJson = path.join(cloneFolderPath, config.file.package_json);
     // Helpers.info(packageJson)
     // if (!Helpers.exists(packageJson) && Helpers.exists(cloneFolderPath)) {
