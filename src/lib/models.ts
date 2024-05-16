@@ -40,6 +40,9 @@ export class LinkedProject {
           repoUrl: Helpers.git.getOriginURL(folderAbsPath),
           relativeClonePath: projectName,
         });
+      })
+      .sort((a, b) => {
+        return (a.relativeClonePath || '').localeCompare((b.relativeClonePath || ''));
       });
     return detectedLinkedProjects;
     //#endregion
@@ -77,12 +80,16 @@ export class LinkedProject {
 export class LinkedPorjectsConfig {
   static from(options: Partial<LinkedPorjectsConfig>) {
     options = options || {};
-    options.projects = (options.projects || []).map(linkedProjOrname => {
-      if (_.isString(linkedProjOrname)) {
-        return LinkedProject.fromName(linkedProjOrname);
-      }
-      return LinkedProject.from(linkedProjOrname);
-    });
+    options.projects = (options.projects || [])
+      .map(linkedProjOrname => {
+        if (_.isString(linkedProjOrname)) {
+          return LinkedProject.fromName(linkedProjOrname);
+        }
+        return LinkedProject.from(linkedProjOrname);
+      })
+      .sort((a, b) => {
+        return (a.relativeClonePath || '').localeCompare((b.relativeClonePath || ''));
+      });
     return _.merge(new (LinkedPorjectsConfig as any)(), _.cloneDeep(options));
   }
 

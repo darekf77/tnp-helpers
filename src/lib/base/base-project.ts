@@ -208,10 +208,6 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
   get linkedProjectsExisted(): PROJCET[] {
     //#region @backendFunc
     return this.linkedProjects
-      .filter(f => !Helpers.isValidGitRepuUrl(f.remoteUrl()))
-      .sort((a, b) => {
-        return a.relativeClonePath.localeCompare(b.relativeClonePath);
-      })
       .map(f => {
         const proj = this.ins.From(this.pathFor(f.relativeClonePath));
         return proj;
@@ -224,8 +220,11 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
 
 
   //#region getters & methods / get unexisted projects
-  protected async cloneUnexistedLinkedProjects() {
+  protected async cloneUnexistedLinkedProjects(actionType: 'pull' | 'push') {
     //#region @backendFunc
+    if (actionType === 'push' && this.automaticallyAddAllChnagesWhenPushingToGit()) {
+      return
+    }
     Helpers.taskStarted(`Checking linked projects in ${this.genericName}`);
     const detectedLinkedProjects = this.detectedLinkedProjects;
 
@@ -990,7 +989,7 @@ ${projectsThatShouldBeLinked.map((p, index) => `- ${index + 1}. ${chalk.bold(p.r
         this.git.commit('first commit ');
       }
     }
-    await this.cloneUnexistedLinkedProjects();
+    await this.cloneUnexistedLinkedProjects('push');
     //#endregion
   }
   //#endregion
@@ -999,7 +998,7 @@ ${projectsThatShouldBeLinked.map((p, index) => `- ${index + 1}. ${chalk.bold(p.r
   protected async _beforePullProcessAction() {
     //#region @backendFunc
     this._beforeAnyActionOnGitRoot();
-    await this.cloneUnexistedLinkedProjects();
+    await this.cloneUnexistedLinkedProjects('pull');
     //#endregion
   }
   //#endregion
