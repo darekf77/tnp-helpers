@@ -114,13 +114,14 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
    * push force to all orgins
    */
   async pushAllForce() {
-    await this.pushALl(true);
+    await this.pushAll(true);
   }
 
   /**
    * push to all origins
    */
-  async pushALl(force = false) {
+  async pushAll(force = false) {
+    Helpers.clearConsole();
     const remotes = this.project.git.allOrigins;
     Helpers.info(`
     Remotes for repo:
@@ -130,7 +131,9 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
 
     for (let index = 0; index < remotes.length; index++) {
       const { origin, url } = remotes[index];
-      await this.push({ force, origin });
+      Helpers.taskStarted(`Pushing to ${chalk.bold(origin)} (${url})...`);
+      await this.push({ force, origin, noExit: true });
+      Helpers.taskDone(`Pushed to ${origin}`);
     }
     this._exit();
   }
@@ -147,7 +150,7 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
   //#endregion
 
   //#region commands / push
-  async push(options: { force?: boolean; typeofCommit?: TypeOfCommit; origin?: string; commitMessageRequired?: boolean; } = {}) {
+  async push(options: { force?: boolean; typeofCommit?: TypeOfCommit; origin?: string; commitMessageRequired?: boolean; noExit?: boolean; } = {}) {
     await this.project.pushProcess({
       ...options,
       forcePushNoQuestion: options.force,
@@ -156,6 +159,9 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
         this._exit();
       },
     })
+    if (options.noExit) {
+      return;
+    }
     this._exit()
   }
   //#endregion
