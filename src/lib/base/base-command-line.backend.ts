@@ -1,4 +1,4 @@
-import { Helpers } from "../index";
+import { Helpers, LinkedProject } from "../index";
 import { CommandLineFeature } from "./command-line-feature.backend";
 import { BaseProject } from "./base-project";
 import { chalk, _, path } from "tnp-core/src";
@@ -365,7 +365,9 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
    * TODO move somewhere
    */
   async info() {
+    Helpers.clearConsole();
     await this.project.info();
+    this._exit();
   }
   //#endregion
 
@@ -381,6 +383,26 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
     console.log('\n' + Helpers.terminalLine())
     Helpers.info(libs.length ? libs.map(c => `${chalk.bold(c.name)} (${c.git.uncommitedFiles.map(p => chalk.black(path.basename(p))).join(', ')})`).join('\n') : 'Nothing modifed')
     this._exit()
+  }
+  //#endregion
+
+  //#region update
+  async UPDATE() {
+    const linkedProjects = LinkedProject.detect(this.project.location)
+      .filter(linkedProj => this.project.ins.From([this.project.location, linkedProj.relativeClonePath]));
+
+    if (await Helpers.questionYesNo(`
+
+    Deteced project:
+${linkedProjects.map(l => `- ${l.relativeClonePath}`).join('\n')}
+
+
+Would you like to update current project configuration?`)) {
+      this.project.addLinkedProjects(linkedProjects);
+    }
+    await this.project.init();
+    Helpers.info(`Linked projects updated`);
+    this._exit(0)
   }
   //#endregion
 

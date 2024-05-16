@@ -1,16 +1,17 @@
 //#region import
 import { CoreModels } from 'tnp-core/src';
 //#region @backend
-import { fse, portfinder, chalk } from 'tnp-core';
+import * as json5Write from 'json10-writer/src';
+import { fse, portfinder, chalk } from 'tnp-core/src';
 export { ChildProcess } from 'child_process';
-import { CommandOutputOptions } from 'tnp-core';
+import { CommandOutputOptions } from 'tnp-core/src';
 //#endregion
 
 import { CLI } from 'tnp-cli';
 import { path, crossPlatformPath } from 'tnp-core/src';
-import { config } from 'tnp-config';
+import { config } from 'tnp-config/src';
 import { _ } from 'tnp-core/src';
-import { CommitData, Helpers, TypeOfCommit } from '../index';
+import { CommitData, Helpers, LinkedPorjectsConfig, LinkedProject, TypeOfCommit } from '../index';
 import { BaseProjectResolver } from './base-project-resolver';
 import { translate } from './translate';
 //#endregion
@@ -112,6 +113,159 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
 
   //#region  methods & getters
 
+  addLinkedProject(linkedProj: LinkedProject | string) {
+    const linkedProject: LinkedProject = _.isString(linkedProj) ? LinkedProject.fromName(linkedProj) : linkedProj;
+    //#region @backendFunc
+    const linkedProjectsConfig = this.getLinkedProjectsConfig();
+    linkedProjectsConfig.projects.push(LinkedProject.from(linkedProject));
+    this.setLinkedProjectsConfig(linkedProjectsConfig);
+    //#endregion
+  }
+
+  addLinkedProjects(linkedProjs: (LinkedProject)[]) {
+    //#region @backendFunc
+    for (const linkedProj of linkedProjs) {
+      this.addLinkedProject(linkedProj);
+    }
+    //#endregion
+  }
+
+  setLinkedProjectsConfig(linkedPorjectsConfig: Partial<LinkedPorjectsConfig>) {
+    //#region @backendFunc
+    linkedPorjectsConfig = LinkedPorjectsConfig.from(linkedPorjectsConfig);
+    const writer = json5Write.load(Helpers.readFile(this.linkedProjectsConfigPath));
+    writer.write(linkedPorjectsConfig);
+    const removeEmptyLineFromString = (str: string) => {
+      return (str || '').split('\n').filter(f => !!f.trim()).join('\n');
+    };
+    Helpers.writeFile(this.linkedProjectsConfigPath, removeEmptyLineFromString(writer.toSource({ quote: 'double', trailingComma: false })));
+    // Helpers.writeJson(this.pathFor(config.file.linked_projects_json), linkedPorjectsConfig);
+    //#endregion
+  }
+
+  private get linkedProjectsConfigPath() {
+    return this.pathFor(config.file.linked_projects_json);
+  }
+
+  private recreateLinkedProjectsConfig() {
+    //#region @backendFunc
+    if (!Helpers.exists(this.linkedProjectsConfigPath)) {
+      Helpers.writeJson(this.linkedProjectsConfigPath, LinkedPorjectsConfig.from({ projects: [] }));
+    }
+    //#endregion
+  }
+
+  getLinkedProjectsConfig(): LinkedPorjectsConfig {
+    //#region @backendFunc
+    this.recreateLinkedProjectsConfig();
+    const existedConfig = Helpers.readJson(this.pathFor(config.file.linked_projects_json), {}, true);
+    const orgExistedConfig = _.cloneDeep(existedConfig);
+    // console.log({ existedConfig });
+    let linkedPorjectsConfig = LinkedPorjectsConfig.from(existedConfig);
+    const currentRemoteUrl = this.git.originURL;
+    const currentBranch = this.git.currentBranchName;
+
+    linkedPorjectsConfig.projects = (linkedPorjectsConfig.projects || []).map((projOrProjName: LinkedProject) => {
+      if (_.isString(projOrProjName)) {
+        return LinkedProject.fromName(projOrProjName, currentRemoteUrl, currentBranch);
+      }
+      if (!projOrProjName.relativeClonePath) {
+        projOrProjName.relativeClonePath = path.basename(projOrProjName.remoteUrl()).replace('.git', '');
+      }
+      projOrProjName = LinkedProject.from(projOrProjName);
+      if (!projOrProjName.remoteUrl()) {
+        projOrProjName.repoUrl = currentRemoteUrl.replace(path.basename(currentRemoteUrl), `${projOrProjName.relativeClonePath}.git`);
+      }
+      return projOrProjName;
+    });
+    // console.log({ linkedPorjectsConfig })
+    linkedPorjectsConfig.projects = Helpers.uniqArray<LinkedProject>(linkedPorjectsConfig.projects, 'relativeClonePath');
+    if (!_.isEqual(orgExistedConfig, linkedPorjectsConfig)) {
+      this.setLinkedProjectsConfig(linkedPorjectsConfig);
+    }
+    return linkedPorjectsConfig;
+    //#endregion
+  }
+
+
+  //#region  methods & getters / linked projects
+  get linkedProjects(): LinkedProject[] {
+    return this.getLinkedProjectsConfig().projects || [];
+  }
+  //#endregion
+
+  get detectedLinkedProjects(): LinkedProject[] {
+    const detectedLinkedProjects = LinkedProject.detect(this.location)
+      .filter(linkedProj => !!this.ins.From([this.location, linkedProj.relativeClonePath]));
+    return detectedLinkedProjects;
+  }
+
+  get linkedProjectsPrefix() {
+    return this.getLinkedProjectsConfig().prefix;
+  }
+
+  //#region getters & methods / link project exited
+  get linkedProjectsExisted(): PROJCET[] {
+    //#region @backendFunc
+    return this.linkedProjects
+      .filter(f => !Helpers.isValidGitRepuUrl(f.remoteUrl()))
+      .sort((a, b) => {
+        return a.relativeClonePath.localeCompare(b.relativeClonePath);
+      })
+      .map(f => {
+        const proj = this.ins.From(this.pathFor(f.relativeClonePath));
+        return proj;
+      })
+      .filter(f => !!f);
+    //#endregion
+  }
+  //#endregion
+
+
+
+  //#region getters & methods / get unexisted projects
+  protected async cloneUnexistedLinkedProjects() {
+    //#region @backendFunc
+    Helpers.taskStarted(`Checking linked projects in ${this.genericName}`);
+    const detectedLinkedProjects = this.detectedLinkedProjects;
+
+    // console.log({ detectedLinkedProjects })
+    for (const detectedLinkedProject of detectedLinkedProjects) {
+      if (this.linkedProjects.find(f => f.relativeClonePath === detectedLinkedProject.relativeClonePath)) {
+        continue;
+      }
+      if (await Helpers.questionYesNo(`Do you want to remove unexisted linked project  ${detectedLinkedProject.relativeClonePath} ?`)) {
+        Helpers.taskStarted(`Removing unexisted project ${detectedLinkedProject.relativeClonePath}`);
+        Helpers.removeFolderIfExists(this.pathFor(detectedLinkedProject.relativeClonePath));
+        Helpers.taskDone(`Removed unexisted project ${detectedLinkedProject.relativeClonePath}`);
+      }
+    }
+    Helpers.taskDone(`Checking linked projects done in ${this.genericName}`);
+
+    const projectsThatShouldBeLinked = this.linkedProjects
+      .map(linkedProj => {
+        return detectedLinkedProjects.find(f => f.relativeClonePath === linkedProj.relativeClonePath) ? void 0 : linkedProj;
+      }).filter(f => !!f) as LinkedProject[];
+
+    if (projectsThatShouldBeLinked.length > 0) {
+      Helpers.info(`
+
+${projectsThatShouldBeLinked.map((p, index) => `- ${index + 1}. ${chalk.bold(p.relativeClonePath)} ${p.remoteUrl()}`).join('\n')}
+
+      `);
+      if (await Helpers.questionYesNo(`Do you want to clone above (missing) linked projects ?`)) {
+        for (const linkedProj of projectsThatShouldBeLinked) {
+          await Helpers.actionWrapper(() => {
+            this.git.clone(linkedProj.remoteUrl(), linkedProj.relativeClonePath);
+          }, `Cloning unexisted project from url ${chalk.bold(linkedProj.remoteUrl())} to ${linkedProj.relativeClonePath}`);
+        }
+      }
+
+    }
+    //#endregion
+  }
+  //#endregion
+
   //#region  methods & getters / set type
   public setType(type: TYPE) {
     // @ts-ignore
@@ -194,8 +348,6 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
     //#endregion
   }
   //#endregion
-
-
 
   //#region  methods & getters / dependencies
   /**
@@ -745,7 +897,7 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
       commitMessageRequired
     } = options;
 
-    this._beforePushProcessAction();
+    await this._beforePushProcessAction();
     const commitData = await this._getCommitMessage(typeofCommit, args, commitMessageRequired);
 
     while (true) {
@@ -838,6 +990,7 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
         this.git.commit('first commit ');
       }
     }
+    await this.cloneUnexistedLinkedProjects();
     //#endregion
   }
   //#endregion
@@ -846,6 +999,7 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
   protected async _beforePullProcessAction() {
     //#region @backendFunc
     this._beforeAnyActionOnGitRoot();
+    await this.cloneUnexistedLinkedProjects();
     //#endregion
   }
   //#endregion
@@ -1299,6 +1453,13 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
   children (${proj?.children.length}): ${(!proj || !proj.children.length) ? '< none >' : ''}
 ${proj?.children.map(c => '+' + c.genericName).join('\n')}
 
+linked porject prefix: "${this.linkedProjectsPrefix}"
+
+linked projects from json (${this.linkedProjects?.length || 0}):
+${(this.linkedProjects || []).map(c => '- ' + c.relativeClonePath).join('\n')}
+
+linked projects detected (${this.detectedLinkedProjects?.length || 0}):
+${(this.detectedLinkedProjects || []).map(c => '- ' + c.relativeClonePath).join('\n')}
 
   `);
   }
