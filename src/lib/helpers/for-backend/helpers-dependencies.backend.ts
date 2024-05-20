@@ -1,6 +1,6 @@
 import { _, crossPlatformPath } from 'tnp-core';
 import { CLI } from 'tnp-cli';
-import { Helpers } from '../index';
+import { Helpers } from '../../index';
 
 
 export class HelpersDependencies {

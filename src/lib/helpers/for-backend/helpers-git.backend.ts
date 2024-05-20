@@ -8,8 +8,8 @@ import {
   dateformat,
 } from 'tnp-core';
 import { CLI } from 'tnp-cli';
-import { Helpers } from '../index';
-import type { BaseProject } from '../index';
+import { Helpers } from '../../index';
+import type { BaseProject } from '../../index';
 import { config } from 'tnp-config';
 //#endregion
 
@@ -26,7 +26,7 @@ export class HelpersGit {
   lastCommitHash(cwd): string {
     Helpers.log('[firedev-helpers][lastcommithash] ' + cwd, 1)
     try {
-      let hash = this.isGitRepo(cwd) && child_process.execSync(`git log -1 --format="%H"`, { cwd }).toString().trim()
+      let hash = this.isInsideGitRepo(cwd) && child_process.execSync(`git log -1 --format="%H"`, { cwd }).toString().trim()
       return hash;
     } catch (e) {
       Helpers.log(e, 1);
@@ -41,7 +41,7 @@ export class HelpersGit {
   penultimageCommitHash(cwd): string {
     Helpers.log('[penultimageCommitHash] ' + cwd, 1)
     try {
-      let hash = this.isGitRepo(cwd) && child_process.execSync(`git log -2 --format="%H"`, { cwd }).toString().trim()
+      let hash = this.isInsideGitRepo(cwd) && child_process.execSync(`git log -2 --format="%H"`, { cwd }).toString().trim()
       return hash;
     } catch (e) {
       Helpers.log(e, 1);
@@ -64,6 +64,7 @@ export class HelpersGit {
   }
   //#endregion
 
+  //#region get last tag version name
   lastTagVersionName(cwd: string) {
     Helpers.log('[lastTagVersionName] ' + cwd, 1)
     if (!Helpers.git.hasAnyCommits(cwd)) {
@@ -84,8 +85,7 @@ export class HelpersGit {
       return void 0;
     }
   }
-
-
+  //#endregion
 
   //#region get last tag hash
   /**
@@ -141,6 +141,54 @@ export class HelpersGit {
   }
   //#endregion
 
+  //#region get list of current git changes
+  getListOfCurrentGitChanges(cwd: string): { modified: string[], deleted: string[], created: string[] } {
+    //#region @backendFunc
+    try {
+      // Execute git status command to get the list of changes
+      const output = Helpers.commnadOutputAsString('git status --porcelain', cwd, {
+        biggerBuffer: true,
+        showWholeCommandNotOnlyLastLine: true,
+      });
+
+      // Split the output into lines
+      const lines = output.trim().split('\n');
+
+      // Initialize arrays to hold modified, deleted, and untracked files
+      let modifiedFiles = [] as string[];
+      let deletedFiles = [] as string[];
+      let createdFiles = [] as string[];
+
+      // Process each line to determine the type of change
+      lines.forEach(line => {
+        const [changeType, filePath] = line.trim().split(/\s+/);
+        switch (changeType) {
+          case 'M': // Modified
+            modifiedFiles.push(filePath);
+            break;
+          case 'D': // Deleted
+            deletedFiles.push(filePath);
+            break;
+          case '??': // Untracked (newly created)
+            createdFiles.push(filePath);
+            break;
+          default:
+            // Ignore other types of changes
+            break;
+        }
+      });
+
+      return {
+        modified: modifiedFiles,
+        deleted: deletedFiles,
+        created: createdFiles
+      };
+    } catch (error) {
+      Helpers.error('[firedev-helpers][git] Error:' + error.message, false, true);
+    }
+    //#endregion
+  };
+  //#endregion
 
   //#region get last tag hash
   lastTagHash(cwd): string {
@@ -166,7 +214,7 @@ export class HelpersGit {
   lastCommitDate(cwd: string): Date {
     Helpers.log('[firedev-helpers][lastCommitDate] ' + cwd, 1)
     try {
-      let unixTimestamp = this.isGitRepo(cwd)
+      let unixTimestamp = this.isInsideGitRepo(cwd)
         && child_process
           .execSync(`git log -1 --pretty=format:%ct`, { cwd })
           .toString()
@@ -206,7 +254,7 @@ export class HelpersGit {
       Helpers.log('[firedev-helpers] RUNNING COUNT COMMITS')
       // git rev-parse HEAD &> /dev/null check if any commits
       let currentLocalBranch = this.currentBranchName(cwd);
-      let value = Number(this.isGitRepo(cwd) && Helpers
+      let value = Number(this.isInsideGitRepo(cwd) && Helpers
         .commnadOutputAsString(`git rev-list --count ${currentLocalBranch}`, cwd).trim())
 
       return !isNaN(value) ? value : 0;
@@ -288,6 +336,7 @@ export class HelpersGit {
   }
   //#endregion
 
+  //#region get all originas
   allOrigins(cwd: string): { origin: string; url: string }[] {
     let remotes: { origin: string; url: string; }[] = [];
     try {
@@ -307,6 +356,7 @@ export class HelpersGit {
     } catch (error) { }
     return remotes;
   }
+  //#endregion
 
   //#region get current branch name
   currentBranchName(cwd) {
@@ -385,7 +435,7 @@ export class HelpersGit {
    */
   getOriginURL(cwd: string, differentOriginName = '') {
     Helpers.log('[firedev-helpers][getOriginURL] ' + cwd, 1)
-    if (!this.isGitRepo(cwd)) {
+    if (!this.isInsideGitRepo(cwd)) {
       return;
     }
     let url = '';
@@ -431,7 +481,7 @@ export class HelpersGit {
   //#endregion
 
   //#region is git repo
-  isGitRepo(cwd: string) {
+  isInsideGitRepo(cwd: string) {
     Helpers.log('[firedev-helpers][isGitRepo] ' + cwd, 1)
     if (!Helpers.git.hasAnyCommits(cwd)) {
       return false;
@@ -451,6 +501,7 @@ export class HelpersGit {
   }
   //#endregion
 
+  //#region reset soft HEAD
   resetSoftHEAD(cwd, HEAD = 1) {
     try {
       child_process.execSync(`git reset --soft HEAD~${HEAD}`, { cwd });
@@ -458,6 +509,7 @@ export class HelpersGit {
       Helpers.error(`[${config.frameworkName}] not able to soft repository in ${self.location}`)
     }
   }
+  //#endregion
 
   //#region reset hard
   resetHard(cwd: string, options?: {
@@ -526,6 +578,7 @@ export class HelpersGit {
   }
   //#endregion
 
+  //#region melts action commits
   /**
    * Return number of melted action commits
    */
@@ -544,6 +597,7 @@ export class HelpersGit {
       }
     };
   }
+  //#endregion
 
   //#region push current branch
   /**
@@ -718,11 +772,13 @@ ${cwd}
   }
   //#endregion
 
+  //#region revert file changes
   revertFileChanges(cwd, fileReletivePath: string) {
     try {
       Helpers.run(`git checkout ${fileReletivePath}`, { cwd }).sync();
     } catch (error) { }
   }
+  //#endregion
 
   //#region clone
   /**
@@ -910,5 +966,10 @@ ${cwd}
   }
   //#endregion
 
+  unstageAllFiles(cwd: string) {
+    try {
+      Helpers.run(`git reset HEAD -- .`, { cwd }).sync();
+    } catch (error) { }
+  }
 
 }

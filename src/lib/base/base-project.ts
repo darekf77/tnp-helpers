@@ -195,8 +195,7 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
   //#endregion
 
   get detectedLinkedProjects(): LinkedProject[] {
-    const detectedLinkedProjects = LinkedProject.detect(this.location)
-      .filter(linkedProj => !!this.ins.From([this.location, linkedProj.relativeClonePath]));
+    const detectedLinkedProjects = LinkedProject.detect(this.location, true);
     return detectedLinkedProjects;
   }
 
@@ -839,7 +838,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
     await this.struct();
     Helpers.taskDone(`RESET DONE BRANCH: ${chalk.bold(defaultBranch)} in ${this.genericName}`);
 
-    const childrenRepos = this.children.filter(f => f.git.isGitRepo && f.git.isGitRoot);
+    const childrenRepos = this.children.filter(f => f.git.isInsideGitRepo && f.git.isGitRoot);
     for (const child of childrenRepos) {
       await child.resetProcess(overrideBranch, true);
     }
@@ -868,7 +867,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
     this.ins.add(this.ins.From(location) as any);
 
     if (this.automaticallyAddAllChnagesWhenPushingToGit() || cloneChildren) {
-      const childrenRepos = this.children.filter(f => f.git.isGitRepo && f.git.isGitRoot);
+      const childrenRepos = this.children.filter(f => f.git.isInsideGitRepo && f.git.isGitRoot);
       for (const child of childrenRepos) {
         await child.pullProcess();
       }
@@ -954,7 +953,11 @@ ${projectsThatShouldBeLinked.map((p, index) =>
     await this.git.pushCurrentBranch({ force, origin, forcePushNoQuestion, askToRetry: true });
 
     if (this.automaticallyAddAllChnagesWhenPushingToGit()) {
-      const childrenRepos = this.children.filter(f => f.git.isGitRepo && f.git.isGitRoot);
+      if (this.getLinkedProjectsConfig().skipRecrusivePush) {
+        Helpers.warn(`Skipping recrusive (children) push for ${this.genericName}`);
+        return;
+      }
+      const childrenRepos = this.children.filter(f => f.git.isInsideGitRepo && f.git.isGitRoot);
       for (const child of childrenRepos) {
         await child.pushProcess(options);
       }
@@ -966,7 +969,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   //#region  methods & getters / before any action on git root
   private _beforeAnyActionOnGitRoot() {
     //#region @backendFunc
-    if (!this.git.isGitRepo) {
+    if (!this.git.isInsideGitRepo) {
       Helpers.error(`Project ${chalk.bold(this.name)} is not a git repository
       locaiton: ${this.location}`, false, true);
     }
@@ -984,7 +987,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
     this._beforeAnyActionOnGitRoot();
 
     // for first projects
-    if (this.git.isGitRepo && this.git.isGitRoot && !this.git.currentBranchName?.trim()) {
+    if (this.git.isInsideGitRepo && this.git.isGitRoot && !this.git.currentBranchName?.trim()) {
       if (await Helpers.consoleGui.question.yesNo('Repository is empty...Commit "master" branch and commit all as "first commit" ?')) {
         this.git.checkout('master');
         this.git.stageAllFiles();
@@ -1074,6 +1077,11 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   public get git() {
     const self = this;
     return {
+      unstageAllFiles() {
+        //#region @backendFunc
+        Helpers.git.unstageAllFiles(self.location);
+        //#endregion
+      },
       revertFileChanges(fileReletivePath: string) {
         //#region @backendFunc
         Helpers.git.revertFileChanges(self.location, fileReletivePath);
@@ -1122,9 +1130,9 @@ ${projectsThatShouldBeLinked.map((p, index) =>
         return Helpers.git.resetFiles(self.location, ...relativePathes);
         //#endregion
       },
-      get isGitRepo() {
+      get isInsideGitRepo() {
         //#region @backendFunc
-        return Helpers.git.isGitRepo(self.location);
+        return Helpers.git.isInsideGitRepo(self.location);
         //#endregion
       },
       get isGitRoot() {
@@ -1196,6 +1204,11 @@ ${projectsThatShouldBeLinked.map((p, index) =>
       get currentBranchName() {
         //#region @backendFunc
         return Helpers.git.currentBranchName(self.location);
+        //#endregion
+      },
+      get listOfCurrentGitChanges() {
+        //#region @backendFunc
+        return Helpers.git.getListOfCurrentGitChanges(self.location);
         //#endregion
       },
       getBranchesNamesBy(pattern: string | RegExp) {

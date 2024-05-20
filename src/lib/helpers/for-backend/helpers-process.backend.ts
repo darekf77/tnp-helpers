@@ -10,8 +10,8 @@ import {
 import { CLI } from 'tnp-cli';
 import * as dateformat from 'dateformat';
 import { exec } from 'child_process';
-import type { BaseProject } from '../index';
-import { Helpers } from '../index';
+import type { BaseProject } from '../../index';
+import { Helpers } from '../../index';
 import { CLASS } from 'typescript-class-helpers';
 import { config } from 'tnp-config';
 import { Log, Level } from 'ng2-logger';
@@ -275,9 +275,6 @@ export class HelpersProcess {
     }
   }
 
-  sleep(seconds = 1) {
-    return Helpers.run(`sleep ${seconds}`).sync();
-  }
 
   async actionWrapper(fn: () => void, taskName: string = 'Task') {
     function currentDate() {

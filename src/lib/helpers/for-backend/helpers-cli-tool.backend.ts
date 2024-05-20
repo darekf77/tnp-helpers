@@ -1,10 +1,10 @@
 //#region imports
 import { _, path } from 'tnp-core/src';
-import { Helpers } from '../index';
+import { Helpers } from '../../index';
 import { CLASS } from 'typescript-class-helpers';
 import { config } from 'tnp-config/src';
 import { LibTypeArr } from 'tnp-config/src';
-import type { BaseProject } from '../index';
+import type { BaseProject } from '../../index';
 //#region @backend
 import { fse } from 'tnp-core';
 import { CLI } from 'tnp-cli';

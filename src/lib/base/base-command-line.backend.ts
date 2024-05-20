@@ -166,10 +166,12 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
   }
   //#endregion
 
+  //#region  commands / melt
   public async melt() {
     await this.meltUpdateCommits(true);
     this._exit();
   }
+  //#endregion
 
   //#region melt updat ecommits
   private async meltUpdateCommits(hideInfo = false) {
@@ -276,7 +278,7 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
   SET_ORIGIN() {
     const newOriginNameOrUrl: string = this.firstArg;
     const proj = this.project;
-    if (proj && proj.git.isGitRepo) {
+    if (proj && proj.git.isInsideGitRepo) {
       proj.run(`git remote rm origin`).sync();
       proj.run(`git remote add origin ${newOriginNameOrUrl} `).sync();
       Helpers.info(`Done`);
@@ -292,7 +294,7 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
   RENAME_ORIGIN() {
     const newOriginNameOrUrl: string = this.firstArg;
     const proj = this.project;
-    if (proj && proj.git.isGitRepo) {
+    if (proj && proj.git.isInsideGitRepo) {
       proj.git.renameOrigin(newOriginNameOrUrl);
     } else {
       Helpers.error(`This folder is not a git repo... `, false, true);
@@ -392,7 +394,7 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
   }
   //#endregion
 
-  //#region update
+  //#region commands / update
   async UPDATE() {
     const linkedProjects = LinkedProject.detect(this.project.location)
       .filter(linkedProj => this.project.ins.From([this.project.location, linkedProj.relativeClonePath]));

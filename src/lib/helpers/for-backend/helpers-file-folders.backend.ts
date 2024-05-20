@@ -14,7 +14,7 @@ import { JSON10 } from 'json10';
 import * as crypto from 'crypto';
 declare const global: any;
 
-import { Helpers } from '../index';
+import { Helpers } from '../../index';
 import { config, extAllowedToReplace } from 'tnp-config/src';
 
 
@@ -281,47 +281,6 @@ export class HelpersFileFolders {
     }
   }
 
-  removeIfExists(absoluteFileOrFolderPath: string) {
-    if (process.platform === 'win32') {
-      rimraf.sync(absoluteFileOrFolderPath);
-      return;
-    }
-    try {
-      fse.unlinkSync(absoluteFileOrFolderPath);
-    } catch (error) { }
-    if (fse.existsSync(absoluteFileOrFolderPath)) {
-      if (fse.lstatSync(absoluteFileOrFolderPath).isDirectory()) {
-        fse.removeSync(absoluteFileOrFolderPath);
-      } else {
-        fse.unlinkSync(absoluteFileOrFolderPath);
-      }
-    }
-  }
-
-  removeFileIfExists(absoluteFilePath: string) {
-    if (process.platform === 'win32') {
-      rimraf.sync(absoluteFilePath);
-      return;
-    }
-    // console.log(`removeFileIfExists: ${absoluteFilePath}`)
-
-    if (fse.existsSync(absoluteFilePath)) {
-      fse.unlinkSync(absoluteFilePath);
-    }
-  }
-
-  removeFolderIfExists(absoluteFolderPath: string) {
-    Helpers.log(`[helpers] Remove folder: ${absoluteFolderPath}`)
-    if (process.platform === 'win32') {
-      // rimraf.sync(absoluteFolderPath);
-      this.tryRemoveDir(absoluteFolderPath, false, true)
-      return;
-    }
-
-    if (fse.existsSync(absoluteFolderPath)) {
-      fse.removeSync(absoluteFolderPath);
-    }
-  }
 
   // private deleteFolderRecursive = (pathToFolder) => {
   //   if (fs.existsSync(pathToFolder)) {
@@ -336,44 +295,6 @@ export class HelpersFileFolders {
   //     fs.rmdirSync(pathToFolder);
   //   }
   // };
-
-  /**
-   * @deprecated
-   */
-  tryRemoveDir(dirpath: string, contentOnly = false, omitWarningNotExisted = false) {
-    if (!fse.existsSync(dirpath)) {
-      if (!omitWarningNotExisted) {
-        Helpers.warn(`[firedev-helper][tryRemoveDir] Folder ${path.basename(dirpath)} doesn't exist.`)
-      }
-      return;
-    }
-    Helpers.log(`[firedev-helpers][tryRemoveDir]: ${dirpath}`);
-
-    try {
-      if (contentOnly) {
-        rimraf.sync(`${dirpath}/*`)
-      } else {
-        rimraf.sync(dirpath)
-      }
-      Helpers.log(`Remove done: ${dirpath}`)
-      return;
-    } catch (e) {
-      Helpers.warn(`
-
-      Trying to remove directory: ${dirpath}
-
-
-      (USER ACTION REQUIRED!!!)
-      Please check if you did't open
-      ${dirpath}
-      in windows explorer
-
-
-      `)
-      Helpers.sleep(1);
-      Helpers.tryRemoveDir(dirpath, contentOnly);
-    }
-  }
 
   move(from: string, to: string) {
     if (!fse.existsSync(from)) {

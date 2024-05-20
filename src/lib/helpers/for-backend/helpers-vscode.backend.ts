@@ -1,9 +1,9 @@
 import { path } from 'tnp-core';
 
-import { Helpers } from '../index';
+import { Helpers } from '../../index';
 import * as JSON5 from 'json5';
 import { CoreModels } from 'tnp-core/src';
-import type { BaseProject } from '../index';
+import type { BaseProject } from '../../index';
 export class HelpersVscode {
 
 

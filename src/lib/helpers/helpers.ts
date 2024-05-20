@@ -25,7 +25,7 @@ import { CLI } from 'tnp-cli';
 import { HelpersVscode } from './for-backend/helpers-vscode.backend';
 //#endregion
 import { config } from 'tnp-config';
-import { Helpers, Validators } from './index';
+import { Helpers, Validators } from '../index';
 import { CLASS } from 'typescript-class-helpers/src';
 import { CoreHelpers, CoreModels } from 'tnp-core/src';
 import { HelpersNumber } from './helpers-numbers';
