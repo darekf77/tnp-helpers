@@ -26,30 +26,52 @@ const defaultDb = {
 }
 
 export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
-
+  /**
+   * general name for project company
+   */
+  protected orgName: string = 'firedev';
+  private get selectedCodeEditorPath() {
+    return crossPlatformPath([os.homedir(), '.firedev', 'selected-code-editor']);
+  }
+  public get selectedCodeEditor() {
+    return Helpers.readFile(this.selectedCodeEditorPath) || 'code';
+  }
   private lowDB: Low<typeof defaultDb>;
   public get isUnsingDB(): boolean {
     return !!this.lowDB;
   }
-  async useDB(appName: string): Promise<Low<typeof defaultDb>> {
+
+  get projectsDbLocation() {
     //#region @backendFunc
-    const userFolder = crossPlatformPath([os.homedir(), `.firedev/apps/${appName}`]);
+    const userFolder = crossPlatformPath([os.homedir(), `.firedev/apps/${this.orgName}`]);
     try {
       Helpers.mkdirp(userFolder);
     } catch (error) { }
-    const dbLocation = crossPlatformPath([userFolder, 'db.json']);
-    console.log({ dbLocation })
+    return crossPlatformPath([userFolder, 'db.json']);
+    //#endregion
+  }
 
-    this.lowDB = await JSONFilePreset(dbLocation, defaultDb);
-    // @LAST this for base-project
+  async useDB(): Promise<Low<typeof defaultDb>> {
+    //#region @backendFunc
+    const dbLocation = this.projectsDbLocation;
+    // console.log({ dbLocation })
+
+    try {
+      this.lowDB = await JSONFilePreset(dbLocation, defaultDb);
+    } catch (error) {
+      Helpers.error(`[firedev-helpers] Cannot use db.json file for projects in location, restoring default db.`, true, true)
+      Helpers.writeJson(dbLocation, defaultDb);
+      this.lowDB = await JSONFilePreset(dbLocation, defaultDb);
+    }
+
     return this.lowDB;
     //#endregion
     // @ts-ignore
     return void 0;
   }
 
-  async getAllProjectsFromDB(appName: string) {
-    const db = await this.useDB(appName);
+  async getAllProjectsFromDB() {
+    const db = await this.useDB();
     return db.data.projects;
   }
 

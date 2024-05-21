@@ -1,5 +1,6 @@
 //#region imports
 import { Helpers } from "../index";
+import type { BaseProjectResolver } from "./base-project-resolver";
 import { _ } from "tnp-core/src";
 import { BaseProject } from "./base-project";
 import { CLASS } from "typescript-class-helpers/src";
@@ -23,6 +24,7 @@ export abstract class CommandLineFeature<PARAMS = any, PROJECT extends BaseProje
      * process.cwd()
      */
     protected cwd: string,
+    protected ins: BaseProjectResolver<PROJECT>
   ) {
     this.project = project;
     //#region resolve params and args

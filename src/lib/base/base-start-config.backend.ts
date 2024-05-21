@@ -117,6 +117,7 @@ export class BaseStartConfig {
           methodNameToCall,
           this.ProjectClass.ins.nearestTo(process.cwd()),
           process.cwd(),
+          this.ProjectClass.ins,
         );
       } else {
         // console.log('USING FROM FUNCTION')

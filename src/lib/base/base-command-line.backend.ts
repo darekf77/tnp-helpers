@@ -11,6 +11,51 @@ export class BaseCommandLine<PARAMS = any, PROJECT extends BaseProject<any, any>
     Helpers.error('Please select git command');
   }
 
+  //#region commands / develop
+  async develop() {
+    // Helpers.clearConsole();
+    const founded: BaseProject[] = (await this.ins.getAllProjectsFromDB() || [])
+      .filter(p => Helpers.exists(p.location))
+      .map(p => this.ins.From(p.location))
+      .filter(p => !!p)
+
+
+    const results = Helpers.uniqArray<BaseProject>([
+      ...Helpers.arrays.fuzzy(this.args.join(' '), founded, p => p.name).results,
+      ...Helpers.arrays.fuzzy(this.args.join(' '), founded, p => p.basename).results,
+    ], 'location').reverse();
+
+    const openInEditor = async (proj: BaseProject) => {
+      Helpers.run(`${this.ins.selectedCodeEditor} ${_.isString(proj) ? proj : proj?.location}`).sync();
+      try {
+        await proj.struct()
+      } catch (error) {
+
+      }
+
+    };
+
+    if (results.length === 1) {
+      openInEditor(_.first(results));
+    } else if (results.length === 0) {
+      Helpers.warn(`No project found by name: "${this.args.join(' ')}"`, false);
+    } else {
+      const res = await Helpers.consoleGui.select('Select project to open', results.map(p => {
+        return {
+          name: p.genericName,
+          value: p.location
+        }
+      }));
+      openInEditor(this.ins.From(res));
+    };
+    this._exit();
+  }
+
+  async dev() {
+    return await this.develop();
+  }
+  //#endregion
+
   //#region commands / pull
   async pull() {
     await this.project.pullProcess();
@@ -20,35 +65,39 @@ export class BaseCommandLine<PARAMS = any, PROJECT extends BaseProject<any, any>
 
   //#region commands / reset
   async reset() {
-    Helpers.clearConsole();
+    // Helpers.clearConsole();
     const branchPatternOrBranchName = this.firstArg || this.project.getDefaultDevelopmentBranch();
     let overrideBranchToReset: string;
 
-    const branches = this.__filterBranchesByPattern(branchPatternOrBranchName);
-    if (branches.length > 0) {
-      overrideBranchToReset = await this.__selectBrach(branches);
+    if (this.project.resetLinkedProjectsOnlyToCoreBranches()) {
+      overrideBranchToReset = this.project.core?.branch || this.project.git.currentBranchName || this.project.getDefaultDevelopmentBranch();
     } else {
-      Helpers.error(`No branch found by name "${overrideBranchToReset}"`, false, true);
-    }
+      const branches = this.__filterBranchesByPattern(branchPatternOrBranchName);
+      if (branches.length > 0) {
+        overrideBranchToReset = await this.__selectBrach(branches);
+      } else {
+        Helpers.error(`No branch found by name "${overrideBranchToReset}"`, false, true);
+      }
 
-    Helpers.info(`
+      Helpers.info(`
 
     YOU ARE RESETING EVERYTHING TO BRANCH: ${chalk.bold(overrideBranchToReset ? overrideBranchToReset
-      : this.project.getDefaultDevelopmentBranch())}
+        : this.project.getDefaultDevelopmentBranch())}
 
 - curret project (${this.project.name})
 ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
-        `- external modules:\n${this.project.children.map(c => `\t${c.basename} (${chalk.yellow(c.name)})`).join('\n')
-        }` : ''}
+          `- external modules:\n${this.project.children.map(c => `\t${c.basename} (${chalk.yellow(c.name)})`).join('\n')
+          }` : ''}
       `);
-
+    }
 
     const res = await Helpers.questionYesNo(`Reset hard and pull current project `
-      + `${this.project.children.length > 0 ? '(and children)' : ''} ?`);
-
+      + `${this.project.linkedProjects.length > 0 ? '(and children)' : ''} ?`);
     if (res) {
       await this.project.resetProcess(overrideBranchToReset);
     }
+
+
     this._exit();
   }
   //#endregion
@@ -375,6 +424,7 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
   async info() {
     Helpers.clearConsole();
     await this.project.info();
+    await this.project.saveAllLinkedProjectsToDB();
     this._exit();
   }
   //#endregion
@@ -433,6 +483,17 @@ Would you like to update current project configuration?`)) {
     this._exit();
   }
   //#endregion
+
+  projdb() {
+    Helpers.info(`Projects db location:
+    ${this.project.projectsDbLocation}
+
+    opening in vscode...
+
+    `)
+    Helpers.run(`code ${this.project.projectsDbLocation}`).sync();
+    this._exit();
+  }
 
   //#region filter all project branches by pattern
   private __filterBranchesByPattern(branchPatternOrBranchName: string) {

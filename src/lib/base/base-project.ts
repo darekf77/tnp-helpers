@@ -65,22 +65,30 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
   }
   //#endregion
 
+  get projectsDbLocation() {
+    //#region @backendFunc
+    return this.ins.projectsDbLocation;
+    //#endregion
+  }
+
   //#region static / save location to db
   async saveLocationToDB() {
     //#region @backendFunc
-    const db = await this.ins.useDB(_.kebabCase(this.orgName));
-    debugger
+    const db = await this.ins.useDB();
+
     const existed = db.data.projects.find(f => f.location === this.location);
+    // Helpers.info(`Saving location to db for ${this.genericName}, exised: ${!!existed}`);
     if (!existed) {
       try {
         await db.update((data) => {
           if (data.projects.length > 50) {
             data.projects.shift();
           }
-          return data.projects.push({
+          data.projects.push({
             location: this.location,
-          })
+          });
         });
+        // Helpers.info(`Location saved to db for ${this.genericName}, db: ${this.ins.projectsDbLocation(_.kebabCase(this.orgName))}`);
       } catch (error) {
         Helpers.warn(`Cannot save location to db`);
       }
@@ -95,10 +103,7 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
   public cache: any = {};
   readonly type: TYPE | string = 'unknow';
   protected readonly packageJSON: any;
-  /**
-   * general name for project company
-   */
-  protected orgName: string = 'firedev';
+
   /**
    * resolve instance
    */
@@ -124,6 +129,20 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
 
   //#region  methods & getters
 
+  async saveAllLinkedProjectsToDB() {
+    const proj = this;
+    await proj.saveLocationToDB();
+    for (const link of proj.linkedProjects) {
+      const linkedPorj = this.ins.From([proj.location, link.relativeClonePath, link.internalRealtiveProjectPath || '']);
+      // console.log({ linkedPorj })
+      if (linkedPorj) {
+        await linkedPorj.saveLocationToDB();
+      } else {
+        Helpers.warn(`Folder ${link.relativeClonePath} is missing projects...`);
+      }
+    }
+  }
+
   //#region  methods & getters / is monorepo
   get isMonorepo(): boolean {
     return false;
@@ -135,9 +154,9 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
     if (this.cache['core']) {
       return this.cache['core'];
     }
-    const proj = CoreProject.coreProjects.find(p => p.recognizedFn(this as any));
-    this.cache['core'] = proj;
-    return proj;
+    const coreProject = CoreProject.coreProjects.find(p => p.recognizedFn(this as any));
+    this.cache['core'] = coreProject;
+    return coreProject;
   }
   //#endregion
 
@@ -259,6 +278,12 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
   }
   //#endregion
 
+  //#region getters & methods / reset linked projects only to core branches
+  resetLinkedProjectsOnlyToCoreBranches() {
+    return false;
+  }
+  //#endregion
+
   //#region getters & methods / get unexisted projects
   protected async cloneUnexistedLinkedProjects(actionType: 'pull' | 'push', cloneChildren = false) {
     //#region @backendFunc
@@ -305,6 +330,11 @@ ${projectsThatShouldBeLinked.map((p, index) =>
             // console.log({linkedProj})
             Helpers.info(`Cloning unexisted project from url ${chalk.bold(linkedProj.remoteUrl())} to ${linkedProj.relativeClonePath}`);
             await this.git.clone(linkedProj.remoteUrl(), linkedProj.relativeClonePath, linkedProj.deafultBranch);
+            const childProjLocaiton = this.pathFor([linkedProj.relativeClonePath, linkedProj.internalRealtiveProjectPath]);
+            const childProj = this.ins.From(childProjLocaiton);
+            if (childProj) {
+              await childProj.saveLocationToDB();
+            }
           }
         }
       }
@@ -879,26 +909,34 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   //#region  methods & getters / reset process
   async resetProcess(overrideBranch?: string, recrusive = false) {
     //#region @backend
+    // console.log(`CORE PROJECT BRANCH ${this.name}: ${this.core?.branch}, overrideBranch: ${overrideBranch}`)
+
     Helpers.taskStarted(`Starting reset process for ${this.genericName}`);
     this._beforeAnyActionOnGitRoot();
-    const defaultBranch = overrideBranch
+    let branchToReset = overrideBranch
       ? overrideBranch : this.getDefaultDevelopmentBranch();
+
+    if (this.resetLinkedProjectsOnlyToCoreBranches() && this.core?.branch) {
+      branchToReset = this.core.branch;
+    }
 
     Helpers.info(`fetch data in ${this.genericName}`);
     this.git.fetch()
     Helpers.logInfo(`reseting hard  in ${this.genericName}`);
     this.git.resetHard();
-    Helpers.logInfo(`checking out branch "${defaultBranch}" in ${this.genericName}`);
-    this.git.checkout(defaultBranch);
+    Helpers.logInfo(`checking out branch "${branchToReset}" in ${this.genericName}`);
+    this.git.checkout(branchToReset);
     Helpers.logInfo(`pulling current branch in ${this.genericName}`);
     await this.git.pullCurrentBranch({ askToRetry: true })
     Helpers.logInfo(`initing (struct) in ${this.genericName}`);
     await this.struct();
-    Helpers.taskDone(`RESET DONE BRANCH: ${chalk.bold(defaultBranch)} in ${this.genericName}`);
+    Helpers.taskDone(`RESET DONE BRANCH: ${chalk.bold(branchToReset)} in ${this.genericName}`);
 
-    const childrenRepos = this.children.filter(f => f.git.isInsideGitRepo && f.git.isGitRoot);
-    for (const child of childrenRepos) {
-      await child.resetProcess(overrideBranch, true);
+    for (const linked of this.linkedProjects) {
+      const child = this.ins.From(this.pathFor([linked.relativeClonePath]));
+      if (child) {
+        await child.resetProcess(child.resetLinkedProjectsOnlyToCoreBranches() ? void 0 : branchToReset, true);
+      }
     }
     //#endregion
   }
@@ -923,6 +961,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
     const location = this.location;
     this.ins.unload(this as any);
     this.ins.add(this.ins.From(location) as any);
+    await this.saveLocationToDB()
 
     if (this.automaticallyAddAllChnagesWhenPushingToGit() || cloneChildren) {
       const childrenRepos = this.children.filter(f => f.git.isInsideGitRepo && f.git.isGitRoot);
@@ -930,6 +969,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
         await child.pullProcess();
       }
     }
+    await this.saveAllLinkedProjectsToDB();
     //#endregion
   }
   //#endregion
@@ -956,6 +996,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
     } = options;
 
     await this._beforePushProcessAction();
+    await this.saveLocationToDB();
     const commitData = await this._getCommitMessage(typeofCommit, args, commitMessageRequired);
 
     while (true) {
@@ -1020,6 +1061,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
         await child.pushProcess(options);
       }
     }
+    await this.saveAllLinkedProjectsToDB();
     //#endregion
   }
   //#endregion
@@ -1154,6 +1196,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
             await Helpers.git.pullCurrentBranch(clondeFolderpath, { askToRetry: true });
           } catch (error) { }
         }
+        return crossPlatformPath([clondeFolderpath, destinationFolderName || '']).replace(/\/$/g, '');
         //#endregion
       },
       restoreLastVersion(localFilePath: string) {
@@ -1821,5 +1864,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     //#endregion
   }
   //#endregion
+
+
 }
 

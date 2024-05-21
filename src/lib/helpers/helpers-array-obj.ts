@@ -119,6 +119,7 @@ export class HelpersArrayObj {
    * Fuzzy search
    */
   fuzzy<T = any>(query: string, list: T[], valueFn?: (modelFromList: T) => string) {
+    // console.log('fuzzy search', query, list, valueFn)
     const resultsFuzzy = fuzzy.filter(
       query,
       list.map(k => valueFn ? valueFn(k) : k),
