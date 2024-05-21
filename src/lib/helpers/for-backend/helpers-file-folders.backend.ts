@@ -46,8 +46,20 @@ export class HelpersFileFolders {
     return _.get(json, lodashGetPath, defaultValue);
   }
 
+  getValueFromJSONC(filepath: string, lodashGetPath: string, defaultValue = void 0) {
+    if (!fse.existsSync(filepath)) {
+      return defaultValue;
+    }
+    const json = Helpers.readJson5(filepath);
+    return _.get(json, lodashGetPath, defaultValue);
+  }
+
   readValueFromJson(filepath: string, lodashGetPath: string, defaultValue = void 0) {
     return Helpers.getValueFromJSON(filepath, lodashGetPath, defaultValue);
+  }
+
+  readValueFromJsonC(filepath: string, lodashGetPath: string, defaultValue = void 0) {
+    return Helpers.getValueFromJSONC(filepath, lodashGetPath, defaultValue);
   }
 
   setValueToJSON(filepath: string, lodashGetPath: string, value: any) {

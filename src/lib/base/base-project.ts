@@ -1755,5 +1755,13 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     //#endregion
   }
   //#endregion
+
+  //#region getters & methods / start npm task
+  startNpmTask(taskName: string) {
+    //#region @backend
+    return this.run(`npm run ${taskName}`);
+    //#endregion
+  }
+  //#endregion
 }
 

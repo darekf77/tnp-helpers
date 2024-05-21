@@ -37,6 +37,7 @@ export class CoreProject {
     // // @LAST this for base-project
     // return this.db;
     //#endregion
+    return void 0;
   }
 
   db() {
