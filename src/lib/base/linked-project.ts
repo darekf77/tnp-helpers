@@ -39,6 +39,7 @@ export class LinkedProject {
       .filter(folderAbsPath => {
         // console.log('folderAbsPath', folderAbsPath);
         // Helpers.checkIfNameAllowedForFiredevProj(path.basename(folderAbsPath)) &&
+
         return Helpers.git.isGitRoot(folderAbsPath);
       })
       .map(folderAbsPath => {

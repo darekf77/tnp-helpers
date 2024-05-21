@@ -124,6 +124,12 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
 
   //#region  methods & getters
 
+  //#region  methods & getters / is monorepo
+  get isMonorepo(): boolean {
+    return false;
+  }
+  //#endregion
+
   //#region getters & methods / core
   get core(): CoreProject {
     if (this.cache['core']) {
@@ -259,26 +265,29 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
     if (actionType === 'push' && this.automaticallyAddAllChnagesWhenPushingToGit()) {
       return
     }
-    Helpers.taskStarted(`Checking linked projects in ${this.genericName}`);
+
+
+    // Helpers.taskStarted(`Checking linked projects in ${this.genericName}`);
     const detectedLinkedProjects = this.detectedLinkedProjects;
 
     // console.log({ detectedLinkedProjects })
-    for (const detectedLinkedProject of detectedLinkedProjects) {
-      if (this.linkedProjects.find(f => f.relativeClonePath === detectedLinkedProject.relativeClonePath)) {
-        continue;
-      }
-      if (await Helpers.questionYesNo(`Do you want to remove unexisted linked project  ${detectedLinkedProject.relativeClonePath} ?`)) {
-        Helpers.taskStarted(`Removing unexisted project ${detectedLinkedProject.relativeClonePath}`);
-        Helpers.removeFolderIfExists(this.pathFor(detectedLinkedProject.relativeClonePath));
-        Helpers.taskDone(`Removed unexisted project ${detectedLinkedProject.relativeClonePath}`);
-      }
-    }
-    Helpers.taskDone(`Checking linked projects done in ${this.genericName}`);
+    // for (const detectedLinkedProject of detectedLinkedProjects) {
+    //   if (this.linkedProjects.find(f => f.relativeClonePath === detectedLinkedProject.relativeClonePath)) {
+    //     continue;
+    //   }
+    //   if (await Helpers.questionYesNo(`Do you want to remove unexisted linked project  ${detectedLinkedProject.relativeClonePath} ?`)) {
+    //     Helpers.taskStarted(`Removing unexisted project ${detectedLinkedProject.relativeClonePath}`);
+    //     Helpers.removeFolderIfExists(this.pathFor(detectedLinkedProject.relativeClonePath));
+    //     Helpers.taskDone(`Removed unexisted project ${detectedLinkedProject.relativeClonePath}`);
+    //   }
+    // }
+    // Helpers.taskDone(`Checking linked projects done in ${this.genericName}`);
 
     const projectsThatShouldBeLinked = this.linkedProjects
       .map(linkedProj => {
         return detectedLinkedProjects.find(f => f.relativeClonePath === linkedProj.relativeClonePath) ? void 0 : linkedProj;
-      }).filter(f => !!f) as LinkedProject[];
+      })
+      .filter(f => !!f) as LinkedProject[];
 
     if (projectsThatShouldBeLinked.length > 0) {
       Helpers.info(`
@@ -289,12 +298,17 @@ ${projectsThatShouldBeLinked.map((p, index) =>
       ).join('\n')}
 
       `);
-      if (cloneChildren || (await Helpers.questionYesNo(`Do you want to clone above (missing) linked projects ?`))) {
-        for (const linkedProj of projectsThatShouldBeLinked) {
-          Helpers.info(`Cloning unexisted project from url ${chalk.bold(linkedProj.remoteUrl())} to ${linkedProj.relativeClonePath}`);
-          await this.git.clone(linkedProj.remoteUrl(), linkedProj.relativeClonePath, linkedProj.deafultBranch);
+
+      if (!this.isMonorepo) {
+        if (cloneChildren || (await Helpers.questionYesNo(`Do you want to clone above (missing) linked projects ?`))) {
+          for (const linkedProj of projectsThatShouldBeLinked) {
+            // console.log({linkedProj})
+            Helpers.info(`Cloning unexisted project from url ${chalk.bold(linkedProj.remoteUrl())} to ${linkedProj.relativeClonePath}`);
+            await this.git.clone(linkedProj.remoteUrl(), linkedProj.relativeClonePath, linkedProj.deafultBranch);
+          }
         }
       }
+
 
     }
     //#endregion

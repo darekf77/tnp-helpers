@@ -836,7 +836,7 @@ ${cwd}
       Helpers.tryRemoveDir(cloneFolderPath)
     } else if (Helpers.exists(cloneFolderPath) && Helpers.exists(path.join(cloneFolderPath, '.git'))) {
       Helpers.warn(`[firedev-helpers] Already cloned ${path.basename(cloneFolderPath)}...`);
-      return;
+      return cloneFolderPath;
     }
 
     const commnad = url.startsWith(`https://`)
