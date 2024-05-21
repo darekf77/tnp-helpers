@@ -4,18 +4,55 @@ import {
   fse, child_process
   //#endregion
 } from 'tnp-core';
-//#region @backend
-export { ChildProcess } from 'child_process';
-import { CLI } from 'tnp-cli';
-//#endregion
 import { Helpers } from '../index';
 import { path, crossPlatformPath } from 'tnp-core';
 import { config } from 'tnp-config';
 import { _ } from 'tnp-core';
 import type { BaseProject } from './base-project';
+import { Low } from "lowdb"
+//#region @backend
+import { os } from 'tnp-core/src';
+import { JSONFilePreset } from "../lowdb/node";
+export { ChildProcess } from 'child_process';
+import { CLI } from 'tnp-cli';
 //#endregion
 
+//#endregion
+
+const defaultDb = {
+  projects: [] as {
+    location: string;
+  }[],
+}
+
 export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
+
+  private lowDB: Low<typeof defaultDb>;
+  public get isUnsingDB(): boolean {
+    return !!this.lowDB;
+  }
+  async useDB(appName: string): Promise<Low<typeof defaultDb>> {
+    //#region @backendFunc
+    const userFolder = crossPlatformPath([os.homedir(), `.firedev/apps/${appName}`]);
+    try {
+      Helpers.mkdirp(userFolder);
+    } catch (error) { }
+    const dbLocation = crossPlatformPath([userFolder, 'db.json']);
+    console.log({ dbLocation })
+
+    this.lowDB = await JSONFilePreset(dbLocation, defaultDb);
+    // @LAST this for base-project
+    return this.lowDB;
+    //#endregion
+    // @ts-ignore
+    return void 0;
+  }
+
+  async getAllProjectsFromDB(appName: string) {
+    const db = await this.useDB(appName);
+    return db.data.projects;
+  }
+
   //#region fields
   protected readonly NPM_PROJECT_KEY = 'npm';
   protected projects: T[] = [];

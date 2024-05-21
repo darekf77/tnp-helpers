@@ -8,7 +8,8 @@
     "includeOnly": [
       "tnp-models",
       "task.js",
-      "json10-writer"
+      "json10-writer",
+      "lowdb",
       // "enquirer",
       // "inquirer-autocomplete-prompt",
       // "cross-spawn",

@@ -1,40 +1,23 @@
 //#region import
 import { CoreModels } from 'tnp-core/src';
+import { CLI } from 'tnp-cli';
+import { path, crossPlatformPath } from 'tnp-core/src';
+import { config } from 'tnp-config/src';
+import { _ } from 'tnp-core/src';
+import { CommitData, CoreProject, Helpers, LinkedPorjectsConfig, LinkedProject, TypeOfCommit } from '../index';
+import { BaseProjectResolver } from './base-project-resolver';
+import { translate } from './translate';
+import { BaseProjectType, NgProject } from '../models';
 //#region @backend
 import * as json5Write from 'json10-writer/src';
 import { fse, portfinder, chalk } from 'tnp-core/src';
 export { ChildProcess } from 'child_process';
 import { CommandOutputOptions } from 'tnp-core/src';
 //#endregion
-
-import { CLI } from 'tnp-cli';
-import { path, crossPlatformPath } from 'tnp-core/src';
-import { config } from 'tnp-config/src';
-import { _ } from 'tnp-core/src';
-import { CommitData, Helpers, LinkedPorjectsConfig, LinkedProject, TypeOfCommit } from '../index';
-import { BaseProjectResolver } from './base-project-resolver';
-import { translate } from './translate';
 //#endregion
 
 const takenPorts = [];
 
-export type BaseProjectType = 'unknow' | 'unknow-npm-project';
-
-/**
- * Angular project type
- */
-export type NgProject = {
-  "projectType": "library" | "application",
-  /**
-   * where ng-packagr.json is located, tsconfig etc.
-   */
-  "root": string,
-  /**
-   * Source code project
-   */
-  "sourceRoot": string,
-  "prefix": string;
-}
 
 export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = BaseProjectType> {
   //#region static
@@ -82,12 +65,40 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
   }
   //#endregion
 
+  //#region static / save location to db
+  async saveLocationToDB() {
+    //#region @backendFunc
+    const db = await this.ins.useDB(_.kebabCase(this.orgName));
+    debugger
+    const existed = db.data.projects.find(f => f.location === this.location);
+    if (!existed) {
+      try {
+        await db.update((data) => {
+          if (data.projects.length > 50) {
+            data.projects.shift();
+          }
+          return data.projects.push({
+            location: this.location,
+          })
+        });
+      } catch (error) {
+        Helpers.warn(`Cannot save location to db`);
+      }
+    }
+    //#endregion
+  }
+  //#endregion
+
   //#endregion
 
   //#region fields
   public cache: any = {};
   readonly type: TYPE | string = 'unknow';
   protected readonly packageJSON: any;
+  /**
+   * general name for project company
+   */
+  protected orgName: string = 'firedev';
   /**
    * resolve instance
    */
@@ -113,6 +124,18 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
 
   //#region  methods & getters
 
+  //#region getters & methods / core
+  get core(): CoreProject {
+    if (this.cache['core']) {
+      return this.cache['core'];
+    }
+    const proj = CoreProject.coreProjects.find(p => p.recognizedFn(this as any));
+    this.cache['core'] = proj;
+    return proj;
+  }
+  //#endregion
+
+  //#region  methods & getters / add linked project
   addLinkedProject(linkedProj: LinkedProject | string) {
     const linkedProject: LinkedProject = _.isString(linkedProj) ? LinkedProject.fromName(linkedProj) : linkedProj;
     //#region @backendFunc
@@ -121,7 +144,9 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
     this.setLinkedProjectsConfig(linkedProjectsConfig);
     //#endregion
   }
+  //#endregion
 
+  //#region  methods & getters / add linked projects
   addLinkedProjects(linkedProjs: (LinkedProject)[]) {
     //#region @backendFunc
     for (const linkedProj of linkedProjs) {
@@ -129,7 +154,9 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
     }
     //#endregion
   }
+  //#endregion
 
+  //#region  methods & getters / set linked projects config
   setLinkedProjectsConfig(linkedPorjectsConfig: Partial<LinkedPorjectsConfig>) {
     //#region @backendFunc
     linkedPorjectsConfig = LinkedPorjectsConfig.from(linkedPorjectsConfig);
@@ -142,11 +169,15 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
     // Helpers.writeJson(this.pathFor(config.file.linked_projects_json), linkedPorjectsConfig);
     //#endregion
   }
+  //#endregion
 
+  //#region  methods & getters / get linked projects config path
   private get linkedProjectsConfigPath() {
     return this.pathFor(config.file.linked_projects_json);
   }
+  //#endregion
 
+  //#region  methods & getters / recreate linked projects config
   private recreateLinkedProjectsConfig() {
     //#region @backendFunc
     if (!Helpers.exists(this.linkedProjectsConfigPath)) {
@@ -154,7 +185,9 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
     }
     //#endregion
   }
+  //#endregion
 
+  //#region  methods & getters / get linked projects config
   getLinkedProjectsConfig(): LinkedPorjectsConfig {
     //#region @backendFunc
     this.recreateLinkedProjectsConfig();
@@ -186,7 +219,7 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
     return linkedPorjectsConfig;
     //#endregion
   }
-
+  //#endregion
 
   //#region  methods & getters / linked projects
   get linkedProjects(): LinkedProject[] {
@@ -194,14 +227,18 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
   }
   //#endregion
 
+  //#region  methods & getters / detected linked projects
   get detectedLinkedProjects(): LinkedProject[] {
     const detectedLinkedProjects = LinkedProject.detect(this.location, true);
     return detectedLinkedProjects;
   }
+  //#endregion
 
+  //#region  methods & getters / linked projects prefix
   get linkedProjectsPrefix() {
     return this.getLinkedProjectsConfig().prefix;
   }
+  //#endregion
 
   //#region getters & methods / link project exited
   get linkedProjectsExisted(): PROJCET[] {
@@ -215,8 +252,6 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
     //#endregion
   }
   //#endregion
-
-
 
   //#region getters & methods / get unexisted projects
   protected async cloneUnexistedLinkedProjects(actionType: 'pull' | 'push', cloneChildren = false) {
@@ -646,6 +681,15 @@ ${projectsThatShouldBeLinked.map((p, index) =>
     //#region @backendFunc
     const fullPath = path.resolve(path.join(this.location, fileRelativeToProjectPath));
     return Helpers.removeFileIfExists(fullPath);
+    //#endregion
+  }
+  //#endregion
+
+  //#region  methods & getters / read file
+  readFile(fileRelativeToProjectPath: string) {
+    //#region @backendFunc
+    const fullPath = path.resolve(path.join(this.location, fileRelativeToProjectPath));
+    return Helpers.readFile(fullPath);
     //#endregion
   }
   //#endregion

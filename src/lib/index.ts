@@ -10,3 +10,4 @@ import { HelpersFiredev as Base } from './helpers/helpers';
  */  // @ts-ignore
 export const Helpers = Base.Instance;
 export * from './base';
+export * from './models';
