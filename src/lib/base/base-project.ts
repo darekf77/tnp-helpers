@@ -65,16 +65,29 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
   }
   //#endregion
 
+  get embeddedProject(): PROJCET {
+    const nearsetProj = this.ins.nearestTo(crossPlatformPath([this.location, '..']));
+    const linkedPorj = nearsetProj.linkedProjects.find(l => {
+      return this.location === crossPlatformPath([nearsetProj.location, l.relativeClonePath]);
+    });
+    if (!linkedPorj) {
+      return;
+    }
+    const pathToEmbededProj = crossPlatformPath([nearsetProj.location, linkedPorj.relativeClonePath, linkedPorj.internalRealtiveProjectPath || '']);
+    const embdedresult = this.ins.From(pathToEmbededProj);
+    return embdedresult
+  }
+
   get projectsDbLocation() {
     //#region @backendFunc
-    return this.ins.projectsDbLocation;
+    return this.ins.projectsDb.projectsDbLocation;
     //#endregion
   }
 
   //#region static / save location to db
   async saveLocationToDB() {
     //#region @backendFunc
-    const db = await this.ins.useDB();
+    const db = await this.ins.projectsDb.useDB();
 
     const existed = db.data.projects.find(f => f.location === this.location);
     // Helpers.info(`Saving location to db for ${this.genericName}, exised: ${!!existed}`);
@@ -573,7 +586,8 @@ ${projectsThatShouldBeLinked.map((p, index) =>
       parent ? parent.basename : path.basename(this.location),
       this.basename,
       //#region @backend
-      `(${CLI.chalk.bold(this.name)})`,
+      `(${CLI.chalk.bold.underline(this.name)})`,
+      `(type=${CLI.chalk.italic.bold(this.type as string)})`,
       //#endregion
     ]
       .filter(f => !!f)
@@ -1573,16 +1587,17 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   type: ${proj?.type}
   children (${proj?.children.length}): ${(!proj || !proj.children.length) ? '< none >' : ''}
 ${proj?.children.map(c => '+' + c.genericName).join('\n')}
-
+`+
+      `
 linked porject prefix: "${this.linkedProjectsPrefix}"
 
 linked projects from json (${this.linkedProjects?.length || 0}):
 ${(this.linkedProjects || []).map(c => '- ' + c.relativeClonePath).join('\n')}
 
-linked projects detected (${this.detectedLinkedProjects?.length || 0}):
-${(this.detectedLinkedProjects || []).map(c => '- ' + c.relativeClonePath).join('\n')}
-
   `);
+
+    // linked projects detected (${this.detectedLinkedProjects?.length || 0}):
+    // ${(this.detectedLinkedProjects || []).map(c => '- ' + c.relativeClonePath).join('\n')}
   }
   //#endregion
 
@@ -1629,10 +1644,10 @@ ${(this.detectedLinkedProjects || []).map(c => '- ' + c.relativeClonePath).join(
    */
   get libraries(): PROJCET[] {
     //#region @backendFunc
-    if (!this.pathExists('angular.json')) {
+    if (!this.pathExists(config.file.angular_json)) {
       return [];
     }
-    const projects = (Object.values(Helpers.readJson(this.pathFor('angular.json'))?.projects) as NgProject[])
+    const projects = (Object.values(Helpers.readJson(this.pathFor(config.file.angular_json))?.projects) as NgProject[])
       .filter(f => f.projectType === 'library');
 
     const libraries = projects.map(c => this.ins.From(path.join(this.location, c.root)));
@@ -1748,6 +1763,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     strategy?: 'link' | 'copy'
   } = {}) {
     //#region @backend
+    await this.saveAllLinkedProjectsToDB();
     if (!strategy) {
       strategy = 'link';
     }

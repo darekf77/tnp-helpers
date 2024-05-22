@@ -11,10 +11,15 @@ export class BaseCommandLine<PARAMS = any, PROJECT extends BaseProject<any, any>
     Helpers.error('Please select git command');
   }
 
+  async setEditor() {
+    await this.ins.configDb.selectCodeEditor();
+    this._exit();
+  }
+
   //#region commands / develop
   async develop() {
-    // Helpers.clearConsole();
-    const founded: BaseProject[] = (await this.ins.getAllProjectsFromDB() || [])
+    Helpers.clearConsole();
+    const founded: BaseProject[] = (await this.ins.projectsDb.getAllProjectsFromDB() || [])
       .filter(p => Helpers.exists(p.location))
       .map(p => this.ins.From(p.location))
       .filter(p => !!p)
@@ -26,19 +31,22 @@ export class BaseCommandLine<PARAMS = any, PROJECT extends BaseProject<any, any>
     ], 'location').reverse();
 
     const openInEditor = async (proj: BaseProject) => {
-      Helpers.run(`${this.ins.selectedCodeEditor} ${_.isString(proj) ? proj : proj?.location}`).sync();
+      const editor = await this.ins.configDb.getCodeEditor();
+      const embededProject = proj.embeddedProject as BaseProject;
+      const porjToOpen = embededProject || proj;
+      const locaitonFolderToOpen = porjToOpen.location;
+      Helpers.info('Initing and opending project...')
       try {
-        await proj.struct()
-      } catch (error) {
-
-      }
+        await porjToOpen?.struct()
+      } catch (error) { }
+      Helpers.run(`${editor} ${locaitonFolderToOpen}`).sync();
 
     };
 
     if (results.length === 1) {
-      openInEditor(_.first(results));
+      await openInEditor(_.first(results));
     } else if (results.length === 0) {
-      Helpers.warn(`No project found by name: "${this.args.join(' ')}"`, false);
+      Helpers.error(`No project found by name: "${this.args.join(' ')}"`, false, true);
     } else {
       const res = await Helpers.consoleGui.select('Select project to open', results.map(p => {
         return {
@@ -46,7 +54,7 @@ export class BaseCommandLine<PARAMS = any, PROJECT extends BaseProject<any, any>
           value: p.location
         }
       }));
-      openInEditor(this.ins.From(res));
+      await openInEditor(this.ins.From(res));
     };
     this._exit();
   }

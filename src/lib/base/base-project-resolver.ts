@@ -10,70 +10,25 @@ import { config } from 'tnp-config';
 import { _ } from 'tnp-core';
 import type { BaseProject } from './base-project';
 import { Low } from "lowdb"
+import { ConfigDatabase } from './config-database';
+import { ProjectDatabase } from './project-database';
 //#region @backend
 import { os } from 'tnp-core/src';
 import { JSONFilePreset } from "../lowdb/node";
 export { ChildProcess } from 'child_process';
 import { CLI } from 'tnp-cli';
 //#endregion
-
 //#endregion
 
-const defaultDb = {
-  projects: [] as {
-    location: string;
-  }[],
-}
+
 
 export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
   /**
    * general name for project company
    */
-  protected orgName: string = 'firedev';
-  private get selectedCodeEditorPath() {
-    return crossPlatformPath([os.homedir(), '.firedev', 'selected-code-editor']);
-  }
-  public get selectedCodeEditor() {
-    return Helpers.readFile(this.selectedCodeEditorPath) || 'code';
-  }
-  private lowDB: Low<typeof defaultDb>;
-  public get isUnsingDB(): boolean {
-    return !!this.lowDB;
-  }
-
-  get projectsDbLocation() {
-    //#region @backendFunc
-    const userFolder = crossPlatformPath([os.homedir(), `.firedev/apps/${this.orgName}`]);
-    try {
-      Helpers.mkdirp(userFolder);
-    } catch (error) { }
-    return crossPlatformPath([userFolder, 'db.json']);
-    //#endregion
-  }
-
-  async useDB(): Promise<Low<typeof defaultDb>> {
-    //#region @backendFunc
-    const dbLocation = this.projectsDbLocation;
-    // console.log({ dbLocation })
-
-    try {
-      this.lowDB = await JSONFilePreset(dbLocation, defaultDb);
-    } catch (error) {
-      Helpers.error(`[firedev-helpers] Cannot use db.json file for projects in location, restoring default db.`, true, true)
-      Helpers.writeJson(dbLocation, defaultDb);
-      this.lowDB = await JSONFilePreset(dbLocation, defaultDb);
-    }
-
-    return this.lowDB;
-    //#endregion
-    // @ts-ignore
-    return void 0;
-  }
-
-  async getAllProjectsFromDB() {
-    const db = await this.useDB();
-    return db.data.projects;
-  }
+  public orgName: string = 'firedev';
+  configDb: ConfigDatabase = new ConfigDatabase(this);
+  projectsDb: ProjectDatabase = new ProjectDatabase(this);
 
   //#region fields
   protected readonly NPM_PROJECT_KEY = 'npm';

@@ -1,0 +1,61 @@
+//#region imports
+import { Helpers, crossPlatformPath } from "tnp-core/src";
+
+import type { BaseProjectResolver } from "./base-project-resolver";
+import { Low } from "../lowdb";
+//#region @backend
+
+import { os } from "tnp-core/src";
+import { JSONFilePreset } from "../lowdb/node";
+//#endregion
+//#endregion
+
+export class BaseDb<DB extends object> {
+
+  constructor(
+    private ins: BaseProjectResolver,
+    private dbName: string,
+    private defaultDb: DB,
+  ) {
+
+  }
+  //#region @backend
+  private lowDB: Low<DB>;
+  //#endregion
+
+  public get isUnsingDB(): boolean {
+    //#region @backendFunc
+    return !!this.lowDB;
+    //#endregion
+  }
+
+  get projectsDbLocation() {
+    //#region @backendFunc
+    const userFolder = crossPlatformPath([os.homedir(), `.firedev/apps/${this.dbName}-db/${this.ins.orgName}`]);
+    try {
+      Helpers.mkdirp(userFolder);
+    } catch (error) { }
+    return crossPlatformPath([userFolder, 'db.json']);
+    //#endregion
+  }
+
+  async useDB(): Promise<Low<DB>> {
+    //#region @backendFunc
+    const dbLocation = this.projectsDbLocation;
+    // console.log({ dbLocation })
+
+    try {
+      this.lowDB = await JSONFilePreset(dbLocation, this.defaultDb);
+    } catch (error) {
+      Helpers.error(`[firedev-helpers] Cannot use db.json file for projects in location, restoring default db.`, true, true)
+      Helpers.writeJson(dbLocation, this.defaultDb);
+      this.lowDB = await JSONFilePreset(dbLocation, this.defaultDb);
+    }
+
+    return this.lowDB;
+    //#endregion
+    // @ts-ignore
+    return void 0;
+  }
+
+}
