@@ -168,7 +168,7 @@ export class HelpersProcess {
       message: question,
       choices,
       pageSize: 10,
-      loop: false,
+      loop: true,
     } as any) as any;
     return res.value as T;
   }
@@ -207,6 +207,32 @@ export class HelpersProcess {
       } as any) as any;
       return res.value;
     }
+  }
+
+  /**
+   * TODO wierd problem when pressing key like "i"
+   */
+  async selectChoicesAsk<T = string>(
+    question: string,
+    choices: { name: string; value: T; }[],
+  ): Promise<string[]> {
+    // console.log({ choices })
+    // Helpers.pressKeyAndContinue()
+    const prompt = new AutoComplete({
+      name: 'value',
+      message: question,
+      limit: 10,
+      multiple: false,
+      autocomplete: false,
+      choices,
+      hint: '- Space to select. Return to submit',
+      footer() {
+        return CLI.chalk.green('(Scroll up and down to reveal more choices)');
+      },
+    });
+
+    const res = await prompt.run();
+    return res;
   }
 
   async autocompleteAsk<T = string>(

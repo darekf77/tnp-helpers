@@ -34,8 +34,8 @@ export class ConfigDatabase extends BaseDb<typeof defaultDb> {
           value: name
         }
       })));
-    await db.update((data) => data.config[this.selectedCodeEditorKey] = editor);
-    return editor;
+    await db.update((data) => data.config[this.selectedCodeEditorKey] = editor as any);
+    return editor as any;
     //#endregion
   }
 

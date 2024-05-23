@@ -392,7 +392,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   /**
    * name from package.json
    */
-  get name() {
+  get name(): string {
     return this.packageJSON?.name;
   }
   //#endregion
@@ -401,7 +401,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   /**
    * version from package.json -> property version
    */
-  get version() {
+  get version(): string {
     return this.packageJSON?.version;
   }
   //#endregion
@@ -432,7 +432,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   //#endregion
 
   //#region  methods & getters / get version path as number
-  get versionPathAsNumber() {
+  get versionPathAsNumber(): number {
     //#region @backendFunc
     const ver = this.version.split('.');
     const res = Number(_.last(ver));
