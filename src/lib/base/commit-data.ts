@@ -11,8 +11,8 @@ export type TypeOfCommit = 'feature' | 'bugfix' | 'performance' | CommonCommitMs
 export type TypeOfMsgPrefix = 'feat' | 'fix' | 'perf' | CommonCommitMsgBranch;
 const regexTeamsID: RegExp = /[A-Z0-9]+\#/;
 
-const regexCommitModuleInArgs: RegExp = /\[[a-z|\-]+\]/;
-const regexCommitModuleInBranch: RegExp = /\-\-[a-z|\-]+\-\-/;
+const regexCommitModuleInArgs: RegExp = /\[[a-z|\-|\,]+\]/;
+const regexCommitModuleInBranch: RegExp = /\-\-[a-z|\-|\_]+\-\-/;
 
 export class CommitData {
 
@@ -66,8 +66,9 @@ export class CommitData {
     if (commitModuleName) {
       commitMsg = commitMsg.replace(commitModuleName, '');
     }
+    commitModuleName = commitModuleName?.replace(/\[/g, '').replace(/\]/g, '')
     return {
-      commitMsg, commitModuleName: commitModuleName?.replace(/\[/g, '').replace(/\]/g, '')
+      commitMsg, commitModuleName,
     };
   }
 
@@ -80,7 +81,9 @@ export class CommitData {
         commitModuleName = commitModuleName.replace(/^\-/, '');
       }
     }
-    return { commitModuleName: commitModuleName?.replace(/^\-\-/, '')?.replace(/\-\-$/, '') };
+    commitModuleName = commitModuleName?.replace(/^\-\-/, '')?.replace(/\-\-$/, '').replace(/\_/, ',')
+
+    return { commitModuleName };
   }
   //#endregion
 
@@ -136,6 +139,28 @@ export class CommitData {
 
     const jiraNumbers = this.extractAndOrderJiraNumbers(currentBranchName);
 
+    let messageFromBranch = _.last(currentBranchName.split('/')).replace(/\-/g, ' ');
+
+    const moduleNameData = this.getModuleNameFromBranch(currentBranchName);
+    if (moduleNameData.commitModuleName) {
+      messageFromBranch = messageFromBranch.replace(moduleNameData.commitModuleName.replace(/\,/g, '_'), '');
+    }
+
+    for (const jira of jiraNumbers) {
+      messageFromBranch = messageFromBranch.replace(jira.replace(/\-/g, ' '), '');
+    }
+
+    messageFromBranch = messageFromBranch.trim();
+
+    const result = CommitData.from({
+      message: messageFromBranch,
+      typeOfCommit,
+      jiraNumbers,
+      commitModuleName: moduleNameData.commitModuleName,
+      teamID: teamIdData.teamID
+    });
+
+
     if (typeOfCommit === 'feature' && jiraNumbers.length === 1) {
 
       Helpers.info(`
@@ -143,25 +168,16 @@ export class CommitData {
         You current feature branch "${currentBranchName}"
         doesn't have ${chalk.bold('main-issue')} and ${chalk.bold('sub-issue')} inlcueded.
 
-        Proper example: feature/EKREW-<number-of-sub-issue>-EKREW-<number-of-main-issue>-commit-name
+        Proper example: feature/JIRANUM-<number-of-sub-issue>-JIRANUM-<number-of-main-issue>-commit-name
 
           `)
-      if (await Helpers.questionYesNo('Continue without sub-issue?')) {
+      if (!(await Helpers.questionYesNo('Continue without sub-issue?'))) {
         process.exit(0)
       }
     }
 
-    let messageFromBranch = _.last(currentBranchName.split('/')).replace(/\-/g, ' ');
 
-    const moduleNameData = this.getModuleNameFromBranch(currentBranchName);
-
-    return CommitData.from({
-      message: messageFromBranch,
-      typeOfCommit,
-      jiraNumbers,
-      commitModuleName: moduleNameData.commitModuleName,
-      teamID: teamIdData.teamID
-    });
+    return result;
     //#endregion
   }
   //#endregion
@@ -202,6 +218,8 @@ export class CommitData {
     }
     if (this.commitModuleName) {
       message = message.replace(this.commitModuleName.replace(/\-/g, ' '), ' ');
+      message = message.replace(this.commitModuleName.replace(/\,/g, ' '), ' ');
+      message = message.replace(this.commitModuleName.replace(/\,/g, '_'), ' ');
     }
     return message;
   }
@@ -280,7 +298,7 @@ export class CommitData {
     }
     if (this.commitModuleName) {
       return `${this.typeOfCommit || 'feature'}/${this.jiraNumbers.map(c => c.toUpperCase()).join('-')}`
-        + `${this.jiraNumbers.length > 0 ? '-' : ''}--${this.commitModuleName}--${_.kebabCase(this.message)}`;
+        + `${this.jiraNumbers.length > 0 ? '-' : ''}--${this.commitModuleName.replace(/\,/g, '_')}--${_.kebabCase(this.message)}`;
     }
     return `${this.typeOfCommit || 'feature'}/${this.jiraNumbers.map(c => c.toUpperCase()).join('-')}`
       + `${this.jiraNumbers.length > 0 ? '-' : ''}${_.kebabCase(this.message)}`;
