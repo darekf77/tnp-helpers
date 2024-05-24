@@ -267,7 +267,9 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
 
   //#region  methods & getters / detected linked projects
   get detectedLinkedProjects(): LinkedProject[] {
-    const detectedLinkedProjects = LinkedProject.detect(this.location, true);
+    const detectedLinkedProjects = LinkedProject.detect(this.location,
+      true // TOOD fix recrusive
+    );
     return detectedLinkedProjects;
   }
   //#endregion
