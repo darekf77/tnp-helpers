@@ -999,6 +999,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
     exitCallBack?: () => void;
     forcePushNoQuestion?: boolean;
     commitMessageRequired?: boolean;
+    skipChildren?: boolean;
   } = {}) {
     //#region @backendFunc
     const {
@@ -1008,7 +1009,8 @@ ${projectsThatShouldBeLinked.map((p, index) =>
       origin = 'origin',
       exitCallBack,
       args = [],
-      commitMessageRequired
+      commitMessageRequired,
+      skipChildren
     } = options;
 
     await this._beforePushProcessAction();
@@ -1067,7 +1069,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
 
     await this.git.pushCurrentBranch({ force, origin, forcePushNoQuestion, askToRetry: true });
 
-    if (this.automaticallyAddAllChnagesWhenPushingToGit()) {
+    if (this.automaticallyAddAllChnagesWhenPushingToGit() && !skipChildren) {
       if (this.getLinkedProjectsConfig().skipRecrusivePush) {
         Helpers.warn(`Skipping recrusive (children) push for ${this.genericName}`);
         return;

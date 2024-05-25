@@ -255,7 +255,7 @@ export class CommitData {
     } else if (typeOfCommit === 'performance') {
       return 'perf';
     }
-    return this.typeOfCommit as any;
+    return this.typeOfCommit as any || 'feat';
     //#endregion
   }
   //#endregion

@@ -11,10 +11,12 @@ export class BaseCommandLine<PARAMS = any, PROJECT extends BaseProject<any, any>
     Helpers.error('Please select git command');
   }
 
+  //#region commands / set editor
   async setEditor() {
     await this.ins.configDb.selectCodeEditor();
     this._exit();
   }
+  //#endregion
 
   //#region commands / develop
   async develop() {
@@ -205,6 +207,25 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
     await this.push({ force: true, typeofCommit: 'feature' })
   }
   //#endregion
+
+
+  //#region commands / commit
+  async commit(options: { force?: boolean; typeofCommit?: TypeOfCommit; origin?: string; commitMessageRequired?: boolean; noExit?: boolean; } = {}) {
+    await this.project.git.meltActionCommits(true);
+    await this.project.pushProcess({
+      ...options,
+      forcePushNoQuestion: options.force,
+      args: this.args,
+      exitCallBack: () => {
+        this._exit();
+      },
+      skipChildren: true
+    })
+    if (options.noExit) {
+      return;
+    }
+    this._exit()
+  }
 
   //#region commands / push
   async push(options: { force?: boolean; typeofCommit?: TypeOfCommit; origin?: string; commitMessageRequired?: boolean; noExit?: boolean; } = {}) {
