@@ -65,7 +65,6 @@ export class BaseStartConfig {
     )) {
       this.argsv = this.argsv.slice(2);
     }
-
     const commandArgIndex = 0;
     const commandArg = this.argsv[commandArgIndex];
     if (commandArg && !commandArg.startsWith('-')) {
@@ -108,7 +107,7 @@ export class BaseStartConfig {
 
     if (recognizedClassFnOrFunction) {
       global?.spinner?.stop();
-      // console.log('--- recognized command ---', { recognized, methodNameToCall, restOfArgs, methods })
+      // console.log('--- recognized command ---', { recognizedClassFnOrFunction, methodNameToCall, restOfArgs, methodsOfRecognizedClass })
 
 
       if (Helpers.isClass(recognizedClassFnOrFunction)) {

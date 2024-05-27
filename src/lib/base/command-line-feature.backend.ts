@@ -8,8 +8,18 @@ import { CLASS } from "typescript-class-helpers/src";
 
 
 export abstract class CommandLineFeature<PARAMS = any, PROJECT extends BaseProject<any, any> = BaseProject> {
+  /**
+   * params from command line
+   */
   protected params: PARAMS;
+
+  /**
+   * clean args without params from command line
+   */
   protected args: string[];
+  /**
+   * first arg from args
+   */
   get firstArg() {
     return _.first(this.args);
   }
@@ -31,10 +41,12 @@ export abstract class CommandLineFeature<PARAMS = any, PROJECT extends BaseProje
     // console.log({ args, methodNameToCall })
 
     // this.project = Project.Current as Project;
+    const className = CLASS.getNameFromObject(this as any);
     const methods = CLASS.getMethodsNames(this).filter(f => !f.startsWith('_'));
     const firstArg = _.first(argsWithParams.split(' '));
     const method = methods.find(m => m === firstArg);
-    if (method) {
+    // console.log('className',className)
+    if (method && (!!className)) { // this prevents firedev reset develop => to run: firedev develop
       methodNameToCall = method;
       argsWithParams = argsWithParams.split(' ').slice(1).join(' ');
       this.argsWithParams = argsWithParams;

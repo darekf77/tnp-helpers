@@ -97,37 +97,68 @@ export class BaseCommandLine<PARAMS = any, PROJECT extends BaseProject<any, any>
   //#endregion
 
   //#region commands / reset
-  async reset() {
-    // Helpers.clearConsole();
-    const branchPatternOrBranchName = this.firstArg || this.project.getDefaultDevelopmentBranch();
-    let overrideBranchToReset: string;
+  private __resetInfo(branchToReset: string) {
+    Helpers.info(`
 
-    if (this.project.resetLinkedProjectsOnlyToCoreBranches()) {
-      overrideBranchToReset = this.project.core?.branch || this.project.git.currentBranchName || this.project.getDefaultDevelopmentBranch();
-    } else {
-      const branches = this.__filterBranchesByPattern(branchPatternOrBranchName);
-      if (branches.length > 0) {
-        overrideBranchToReset = await this.__selectBrach(branches);
-      } else {
-        Helpers.error(`No branch found by name "${overrideBranchToReset}"`, false, true);
-      }
-
-      Helpers.info(`
-
-    YOU ARE RESETING EVERYTHING TO BRANCH: ${chalk.bold(overrideBranchToReset ? overrideBranchToReset
-        : this.project.getDefaultDevelopmentBranch())}
+    YOU ARE RESETING EVERYTHING TO BRANCH: ${chalk.bold(branchToReset)}
 
 - curret project (${this.project.name})
 ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
-          `- external modules:\n${this.project.children.map(c => `\t${c.basename} (${chalk.yellow(c.name)})`).join('\n')
-          }` : ''}
+        `- modules:\n${this.project.children.map(c => `\t${c.basename} (${chalk.yellow(c.name)})`).join('\n')
+        }` : ''}
       `);
+  }
+
+  async reset() {
+    // Helpers.clearConsole();
+    const parent = (this.project.parent as BaseProject);
+    const branchFromLinkedProjectConfig = parent?.linkedProjects?.find(l => {
+      return crossPlatformPath([parent.location, l.relativeClonePath]) === this.project.location;
+    })?.deafultBranch;
+
+    let overrideBranchToReset = this.firstArg ||
+      branchFromLinkedProjectConfig ||
+      this.project.core?.branch ||
+      this.project.getDefaultDevelopmentBranch() ||
+      this.project.git.currentBranchName
+
+    if (this.project.core?.branch) {
+      Helpers.info(`
+
+        Core branch for project: ${this.project.core?.branch}
+
+        `)
+
+    }
+
+    const branches = Helpers.uniqArray([
+      ...this.__filterBranchesByPattern(overrideBranchToReset),
+      ...this.__filterBranchesByPattern(''),
+    ]);
+    if (branches.length > 0) {
+      overrideBranchToReset = await this.__selectBrach(branches);
+    } else {
+      Helpers.error(`No branch found by name "${overrideBranchToReset || this.firstArg}"`, false, true);
+    }
+    overrideBranchToReset = (overrideBranchToReset || '').split('/').pop() || '';
+    this.__resetInfo(overrideBranchToReset ? overrideBranchToReset : this.project.getDefaultDevelopmentBranch());
+
+    let resetProject = this.project;
+    if (this.project.git.isInsideGitRepo && !this.project.git.isGitRoot) {
+      Helpers.warn(`You are not in root of git repo...`, false);
+      resetProject = this.ins.nearestTo(crossPlatformPath([this.project.location, '..']), {
+        findGitRoot: true
+      });
+      if (!(await Helpers.questionYesNo(`Would you like to reset root repo instead (project=${chalk.bold.red(resetProject.genericName)}) ?`))) {
+        Helpers.error(`Aborted`, false, true);
+      }
     }
 
     const res = await Helpers.questionYesNo(`Reset hard and pull current project `
-      + `${this.project.linkedProjects.length > 0 ? '(and children)' : ''} ?`);
+      + `${resetProject.linkedProjects.length > 0 ? '(and children)' : ''} ?`);
     if (res) {
-      await this.project.resetProcess(overrideBranchToReset);
+
+      await resetProject.resetProcess(overrideBranchToReset);
     }
 
 
@@ -569,7 +600,7 @@ Would you like to update current project configuration?`)) {
   //#region filter all project branches by pattern
   private __filterBranchesByPattern(branchPatternOrBranchName: string) {
     return Helpers.arrays.uniqArray(this.project.git.getBranchesNamesBy(branchPatternOrBranchName).map(a => {
-      return a.replace(`remotes / origin / `, '');
+      return a.split('/').pop() || '';
     }) || this.project.getMainBranches());
   }
   //#endregion

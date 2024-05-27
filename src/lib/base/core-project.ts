@@ -20,7 +20,11 @@ export type CoreCommandArgOptions<PROJECT extends BaseProject> = {
    */
   watch?: boolean,
   prod?: boolean,
-  argumentString?: string,
+  debug?: boolean,
+  /**
+   * first arg from command line
+   */
+  firstArg?: string,
 };
 
 export class CoreProject<PROJECT extends BaseProject = BaseProject> {
@@ -75,7 +79,11 @@ export class CoreProject<PROJECT extends BaseProject = BaseProject> {
   environments?: CoreProjectEnvironment[] = [];
 
   startCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
+  relaseCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
+  deployCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
+  testCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
   buildCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
+  docsCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
 
   /**
    * function to recognize project

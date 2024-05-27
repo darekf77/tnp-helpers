@@ -280,7 +280,7 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
   //#region methods & getters  / recreate linked projects config
   protected recreateLinkedProjectsConfig() {
     //#region @backendFunc
-    if (!Helpers.exists(this.linkedProjectsConfigPath)) {
+    if (!Helpers.exists(this.linkedProjectsConfigPath) && Helpers.exists(this.pathFor(config.file.firedev_jsonc))) {
       Helpers.writeJson(this.linkedProjectsConfigPath, LinkedPorjectsConfig.from({ projects: [] }));
     }
     //#endregion
@@ -457,7 +457,16 @@ ${projectsThatShouldBeLinked.map((p, index) =>
    * name from package.json
    */
   get name(): string {
-    return this.packageJSON?.name;
+    return this.packageJSON?.name || this.nameFromPomXML;
+  }
+
+  get nameFromPomXML(): string {
+    const artifactIdPattern = /<artifactId>([^<]+)<\/artifactId>/;
+    const match = (this.readFile('pom.xml') || '').match(artifactIdPattern);
+    if (match && match[1]) {
+      return match[1];
+    }
+    return '';
   }
   //#endregion
 
@@ -656,11 +665,11 @@ ${projectsThatShouldBeLinked.map((p, index) =>
       this.basename,
       //#region @backend
       `(${CLI.chalk.bold.underline(this.name)})`,
-      `(type=${CLI.chalk.italic.bold(this.type as string)})`,
+      ` (type=${CLI.chalk.italic.bold(this.type as string)})`,
       //#endregion
     ]
       .filter(f => !!f)
-      .join('/')
+      .join('/').replace(/\(\)/, '')
     //#endregion
   }
   //#endregion
@@ -680,6 +689,10 @@ ${projectsThatShouldBeLinked.map((p, index) =>
     if (this.nodeModulesEmpty()) {
       this.reinstalNodeModules(options);
     }
+  }
+
+  preferYarnOverNpm(): boolean {
+    return false;
   }
 
   nodeModulesEmpty() {
@@ -1000,6 +1013,9 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   //#endregion
 
   //#region methods & getters  / get default develop Branch
+  /**
+   * general default development branch for all kinds of projects
+   */
   getDefaultDevelopmentBranch() {
     return 'develop';
   }
@@ -1027,12 +1043,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
 
     Helpers.taskStarted(`Starting reset process for ${this.genericName}`);
     this._beforeAnyActionOnGitRoot();
-    let branchToReset = overrideBranch
-      ? overrideBranch : this.getDefaultDevelopmentBranch();
-
-    if (this.resetLinkedProjectsOnlyToCoreBranches() && this.core?.branch) {
-      branchToReset = this.core.branch;
-    }
+    let branchToReset = overrideBranch || this.core?.branch || this.getDefaultDevelopmentBranch();
 
     Helpers.info(`fetch data in ${this.genericName}`);
     this.git.fetch()
@@ -1797,9 +1808,8 @@ ${(this.linkedProjects || []).map(c => '- ' + c.relativeClonePath).join('\n')}
   //#endregion
 
   //#region getters & methods / get sorted libraries by deps for build
-  async getSortedLibrariesByDepsForBuild() {
+  async getSortedLibrariesByDepsForBuild(libs: PROJCET[], dontSugestBuildAll = false): Promise<PROJCET[]> {
     //#region @backendFunc
-    let libs = this.sortedLibrariesByDeps;
 
     let buildAll = false;
     const lastSelectedJsonFile = 'tmp-last-selected.json';
@@ -1820,7 +1830,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
       }
     }
 
-    if (libs.length < 6) {
+    if (libs.length < 6 && !dontSugestBuildAll) {
       buildAll = await Helpers.consoleGui.question.yesNo('Should all libraries be included in build ?')
     }
     if (buildAll) {
@@ -1862,19 +1872,36 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
   //#endregion
 
   //#region getters & methods / build libraries
-  public async buildLibraries({ rebuild = false, watch = false, strategy }: {
+  public async buildLibraries({
+    rebuild = false,
+    watch = false,
+    strategy,
+    onlySelectedLibs
+  }: {
     rebuild?: boolean; watch?: boolean;
-    strategy?: 'link' | 'copy'
-  } = {}) {
+    strategy?: 'link' | 'copy',
+    onlySelectedLibs?: string[]
+  } = {}
+  ) {
     //#region @backend
     await this.saveAllLinkedProjectsToDB();
     if (!strategy) {
       strategy = 'link';
     }
-    let libsToWatch: PROJCET[] = [];
-    if (watch) {
-      libsToWatch = (await this.getSortedLibrariesByDepsForBuild());
-    }
+    const allLibs = this.libraries;
+    const allLibsToBuild = this.sortedLibrariesByDeps.filter(f => {
+      if (!onlySelectedLibs) {
+        return true;
+      }
+      const nameMatchesPattern = onlySelectedLibs.find(c => f.name.includes(c));
+      const basenameMatchesPattern = onlySelectedLibs.find(c => f.basename.includes(c));
+      return nameMatchesPattern || basenameMatchesPattern;
+    })
+
+    let libsToWatch: PROJCET[] = allLibsToBuild.length == 1
+      ? [_.first(allLibsToBuild)]
+      : (await this.getSortedLibrariesByDepsForBuild(allLibsToBuild, allLibs.length != allLibsToBuild.length));
+
 
     // await this.init();
     const locationsForNodeModules = [
@@ -1883,13 +1910,11 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
       // ...this.parent.children.map(c => c.location),
     ].map(l => crossPlatformPath([l, config.folder.node_modules]));
 
-    if (!Helpers.exists(this.pathFor(config.folder.node_modules))) {
-      this.run('yarn install', { output: true }).sync();
-    }
+    this.makeSureNodeModulesInstalled();
 
-    const libs = this.libraries;
+
     for (const [index, lib] of this.sortedLibrariesByDeps.entries()) {
-      Helpers.info(`Building (${index + 1}/${libs.length}) ${lib.basename} (${chalk.bold(lib.name)})`);
+      Helpers.info(`Building (${index + 1}/${allLibs.length}) ${lib.basename} (${chalk.bold(lib.name)})`);
 
       if (strategy === 'link') {
         (() => {
@@ -1940,7 +1965,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
 
     if (watch) {
       for (const [index, lib] of libsToWatch.entries()) {
-        Helpers.info(`Building for watch (${index + 1}/${libs.length}) ${lib.basename} (${chalk.bold(lib.name)})`);
+        Helpers.info(`Building for watch (${index + 1}/${libsToWatch.length}) ${lib.basename} (${chalk.bold(lib.name)})`);
         await (async () => {
           await this.run(lib.getLibraryBuildComamnd({ watch: true }), { output: true })
             .unitlOutputContains(lib.getLibraryBuildSuccessComamnd, [], 0, () => {
