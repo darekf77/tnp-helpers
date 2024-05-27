@@ -160,7 +160,7 @@ export class HelpersProcess {
 
   async list<T = string>(
     question: string,
-    choices: { name: string; value: T; }[]
+    choices: { name: string; value: T; }[],
   ) {
     const res = await inquirer.prompt({
       type: 'list',
@@ -215,7 +215,7 @@ export class HelpersProcess {
   async selectChoicesAsk<T = string>(
     question: string,
     choices: { name: string; value: T; }[],
-  ): Promise<string[]> {
+  ): Promise<string> {
     // console.log({ choices })
     // Helpers.pressKeyAndContinue()
     const prompt = new AutoComplete({

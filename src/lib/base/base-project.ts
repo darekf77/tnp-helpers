@@ -27,7 +27,7 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
   //#endregion
 
   //#region static / sort group of projects
-  public static sortGroupOfProject<T extends BaseProject<any> = BaseProject<any>>(projects: T[], resoveDepsArray: (proj: T) => string[], projNameToCompare: (proj: T) => string): T[] {
+  public static sortGroupOfProject<T extends BaseProject = BaseProject>(projects: T[], resoveDepsArray: (proj: T) => string[], projNameToCompare: (proj: T) => string): T[] {
 
     const visited: { [key: string]: boolean } = {};
     const stack: { [key: string]: boolean } = {};
@@ -66,16 +66,23 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
   //#endregion
 
   get embeddedProject(): PROJCET {
+    const cacheKey = 'embeddedProject' + _.kebabCase(this.location);
+    if (!_.isUndefined(this.globalCache[cacheKey])) {
+      return this.globalCache[cacheKey];
+    }
+    // Helpers.taskStarted(`Detecting embedded project for ${this.location}`); // TODO it is slow
     const nearsetProj = this.ins.nearestTo(crossPlatformPath([this.location, '..']));
     const linkedPorj = nearsetProj.linkedProjects.find(l => {
       return this.location === crossPlatformPath([nearsetProj.location, l.relativeClonePath]);
     });
-    if (!linkedPorj) {
+    if (!linkedPorj || !linkedPorj.internalRealtiveProjectPath) {
       return;
     }
     const pathToEmbededProj = crossPlatformPath([nearsetProj.location, linkedPorj.relativeClonePath, linkedPorj.internalRealtiveProjectPath || '']);
     const embdedresult = this.ins.From(pathToEmbededProj);
-    return embdedresult
+    // Helpers.taskDone(`Embedded project detected for ${this.location}`);
+    this.globalCache[cacheKey] = embdedresult;
+    return this.globalCache[cacheKey];
   }
 
   get projectsDbLocation() {
@@ -114,6 +121,10 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
 
   //#region fields
   public cache: any = {};
+  public static cache: any = {};
+  public get globalCache() {
+    return BaseProject.cache;
+  }
   readonly type: TYPE | string = 'unknow';
   protected readonly packageJSON: any;
 
@@ -140,8 +151,7 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
   }
   //#endregion
 
-  //#region  methods & getters
-
+  //#region methods & getters / save all linked projects to db
   async saveAllLinkedProjectsToDB() {
     const proj = this;
     await proj.saveLocationToDB();
@@ -155,25 +165,74 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
       }
     }
   }
+  //#endregion
 
-  //#region  methods & getters / is monorepo
+  //#region methods & getters / is monorepo
   get isMonorepo(): boolean {
     return false;
   }
   //#endregion
 
-  //#region getters & methods / core
-  get core(): CoreProject {
-    if (this.cache['core']) {
-      return this.cache['core'];
+  //#region getters & methods / order core projects
+  protected orderCoreProjects(coreProjects: CoreProject[]): CoreProject[] {
+    const projectMap = new Map<CoreProject, CoreProject[]>();
+
+    // Initialize the project map
+    for (const project of coreProjects) {
+      projectMap.set(project, []);
     }
-    const coreProject = CoreProject.coreProjects.find(p => p.recognizedFn(this as any));
-    this.cache['core'] = coreProject;
-    return coreProject;
+
+    // Populate the project map with dependencies
+    for (const project of coreProjects) {
+      if (!projectMap.has(project.extends)) {
+        projectMap.set(project.extends, []);
+      }
+      projectMap.get(project.extends)!.push(project);
+    }
+
+    const orderedProjects: CoreProject[] = [];
+    const visited = new Set<CoreProject>();
+
+    const visit = (project: CoreProject) => {
+      if (!visited.has(project)) {
+        visited.add(project);
+        const dependencies = projectMap.get(project);
+        if (dependencies) {
+          for (const dep of dependencies) {
+            visit(dep);
+          }
+        }
+        orderedProjects.push(project);
+      }
+    };
+
+    // Visit each project
+    for (const project of coreProjects) {
+      visit(project);
+    }
+
+    return orderedProjects.reverse();
   }
   //#endregion
 
-  //#region  methods & getters / add linked project
+  //#region methods & getters / core
+
+
+  get core(): CoreProject {
+    if (!_.isUndefined(this.cache['core'])) {
+      return this.cache['core'];
+    }
+    // Helpers.taskStarted(`Detecting core project for ${this.genericName}`);
+    let coreProjects = CoreProject.coreProjects.filter(p => p.recognizedFn(this as any));
+    coreProjects = this.orderCoreProjects(coreProjects);
+    // Helpers.taskDone(`Core project detected for ${this.genericName}`);
+    // console.log('CoreProject.coreProjects', CoreProject.coreProjects.map(c => c.name));
+    this.cache['core'] = _.first(coreProjects);
+    return this.cache['core'];
+  }
+  //#endregion
+
+  //#region methods & getters  / add linked project
   addLinkedProject(linkedProj: LinkedProject | string) {
     const linkedProject: LinkedProject = _.isString(linkedProj) ? LinkedProject.fromName(linkedProj) : linkedProj;
     //#region @backendFunc
@@ -184,7 +243,7 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
   }
   //#endregion
 
-  //#region  methods & getters / add linked projects
+  //#region methods & getters  / add linked projects
   addLinkedProjects(linkedProjs: (LinkedProject)[]) {
     //#region @backendFunc
     for (const linkedProj of linkedProjs) {
@@ -194,9 +253,12 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
   }
   //#endregion
 
-  //#region  methods & getters / set linked projects config
+  //#region methods & getters  / set linked projects config
   setLinkedProjectsConfig(linkedPorjectsConfig: Partial<LinkedPorjectsConfig>) {
     //#region @backendFunc
+    if (!Helpers.exists(this.linkedProjectsConfigPath)) {
+      return;
+    }
     linkedPorjectsConfig = LinkedPorjectsConfig.from(linkedPorjectsConfig);
     const writer = json5Write.load(Helpers.readFile(this.linkedProjectsConfigPath));
     writer.write(linkedPorjectsConfig);
@@ -209,14 +271,14 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
   }
   //#endregion
 
-  //#region  methods & getters / get linked projects config path
+  //#region methods & getters  / get linked projects config path
   private get linkedProjectsConfigPath() {
     return this.pathFor(config.file.linked_projects_json);
   }
   //#endregion
 
-  //#region  methods & getters / recreate linked projects config
-  private recreateLinkedProjectsConfig() {
+  //#region methods & getters  / recreate linked projects config
+  protected recreateLinkedProjectsConfig() {
     //#region @backendFunc
     if (!Helpers.exists(this.linkedProjectsConfigPath)) {
       Helpers.writeJson(this.linkedProjectsConfigPath, LinkedPorjectsConfig.from({ projects: [] }));
@@ -225,7 +287,7 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
   }
   //#endregion
 
-  //#region  methods & getters / get linked projects config
+  //#region methods & getters  / get linked projects config
   getLinkedProjectsConfig(): LinkedPorjectsConfig {
     //#region @backendFunc
     this.recreateLinkedProjectsConfig();
@@ -259,13 +321,13 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
   }
   //#endregion
 
-  //#region  methods & getters / linked projects
+  //#region methods & getters  / linked projects
   get linkedProjects(): LinkedProject[] {
     return this.getLinkedProjectsConfig().projects || [];
   }
   //#endregion
 
-  //#region  methods & getters / detected linked projects
+  //#region methods & getters  / detected linked projects
   get detectedLinkedProjects(): LinkedProject[] {
     const detectedLinkedProjects = LinkedProject.detect(this.location,
       true // TOOD fix recrusive
@@ -274,7 +336,7 @@ export abstract class BaseProject<PROJCET extends BaseProject = any, TYPE = Base
   }
   //#endregion
 
-  //#region  methods & getters / linked projects prefix
+  //#region methods & getters  / linked projects prefix
   get linkedProjectsPrefix() {
     return this.getLinkedProjectsConfig().prefix;
   }
@@ -360,26 +422,26 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / set type
+  //#region methods & getters  / set type
   public setType(type: TYPE) {
     // @ts-ignore
     this.type = type;
   }
   //#endregion
 
-  //#region  methods & getters / type is
+  //#region methods & getters  / type is
   public typeIs(...types: TYPE[]) {
     return this.type && types.includes(this.type as any);
   }
   //#endregion
 
-  //#region  methods & getters / type is not
+  //#region methods & getters  / type is not
   public typeIsNot(...types: TYPE[]) {
     return !this.typeIs(...types);
   }
   //#endregion
 
-  //#region  methods & getters / basename
+  //#region methods & getters  / basename
   /**
    * project folder basename
    */
@@ -390,7 +452,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / name
+  //#region methods & getters  / name
   /**
    * name from package.json
    */
@@ -399,7 +461,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / version
+  //#region methods & getters  / version
   /**
    * version from package.json -> property version
    */
@@ -408,7 +470,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / major version
+  //#region methods & getters  / major version
   /**
   * Major Version from package.json
   */
@@ -420,7 +482,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / minor version
+  //#region methods & getters  / minor version
   /**
    * Minor Version from package.json
    */
@@ -433,7 +495,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / get version path as number
+  //#region methods & getters  / get version path as number
   get versionPathAsNumber(): number {
     //#region @backendFunc
     const ver = this.version.split('.');
@@ -443,7 +505,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / dependencies
+  //#region methods & getters  / dependencies
   /**
    * npm dependencies from package.json
    */
@@ -452,7 +514,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / peer dependencies
+  //#region methods & getters  / peer dependencies
   /**
    * peerDependencies dependencies
    */
@@ -461,7 +523,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / dev dependencies
+  //#region methods & getters  / dev dependencies
   /**
    * devDependencies dependencies
    */
@@ -470,7 +532,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / resolutions dependencies
+  //#region methods & getters  / resolutions dependencies
   /**
    * resolutions dependencies
    */
@@ -479,7 +541,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / all dependencies
+  //#region methods & getters  / all dependencies
   /**
    *  object with all deps from package json
    */
@@ -493,7 +555,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / get folder for possible project chhildrens
+  //#region methods & getters  / get folder for possible project chhildrens
   protected getFoldersForPossibleProjectChildren(): string[] {
     //#region @backendFunc
     const isDirectory = source => fse.lstatSync(source).isDirectory()
@@ -518,7 +580,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods * getters / get all childrens
+  //#region methods & getters / get all childrens
   protected getAllChildren() {
     //#region @backendFunc
     const subdirectories = this.getFoldersForPossibleProjectChildren();
@@ -533,7 +595,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / children
+  //#region methods & getters  / children
   /**
    * alias to getAllChildren
    */
@@ -544,7 +606,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / get child
+  //#region methods & getters  / get child
   getChildBy(nameOrBasename: string, errors = true): PROJCET {
     //#region @websqlFunc
     const c = this.children.find(c => c.name === nameOrBasename || c.basename === nameOrBasename);
@@ -556,7 +618,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / parent
+  //#region methods & getters  / parent
   get parent(): PROJCET {
     //#region @websqlFunc
     if (!_.isString(this.location) || this.location.trim() === '') {
@@ -567,7 +629,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / grandpa
+  //#region methods & getters  / grandpa
   get grandpa(): PROJCET {
     //#region @websqlFunc
     if (!_.isString(this.location) || this.location.trim() === '') {
@@ -579,11 +641,16 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / generic name
+  //#region methods & getters  / generic name
   get genericName() {
     //#region @websqlFunc
     let parent = this.parent as any as BaseProject;
+    // const nearest = this.ins.nearestTo(crossPlatformPath([this.location, '..']));
+    // const nerestProj = (nearest && nearest !== parent) ? (nearest.name || nearest.basename) : void 0;
+    // let secondNearest = nearest && this.ins.nearestTo(crossPlatformPath([nearest.location, '..']));
     return [
+      // (secondNearest && secondNearest !== nearest) ? (secondNearest.name || secondNearest.basename) : void 0,
+      // nerestProj,
       parent ? path.basename(path.dirname(parent.location)) : void 0,
       parent ? parent.basename : path.basename(this.location),
       this.basename,
@@ -598,7 +665,30 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / path exits
+  deleteNodeModules() {
+    this.remove(config.folder.node_modules);
+  }
+
+  reinstalNodeModules(options?: { useYarn?: boolean; force?: boolean; }) {
+    //#region @backendFunc
+    this.deleteNodeModules();
+    Helpers.run(`${options?.useYarn ? 'yarn' : 'npm'}  install ${options?.force ? '--force' : ''}`, { cwd: this.location }).sync();
+    //#endregion
+  }
+
+  makeSureNodeModulesInstalled(options?: { checkPackages?: boolean; useYarn?: boolean; force?: boolean; }) {
+    if (this.nodeModulesEmpty()) {
+      this.reinstalNodeModules(options);
+    }
+  }
+
+  nodeModulesEmpty() {
+    //#region @backendFunc
+    return !this.hasFolder(config.folder.node_modules) || fse.readdirSync(this.pathFor(config.folder.node_modules)).length === 0;
+    //#endregion
+  }
+
+  //#region methods & getters  / path exits
   /**
   * same has project.hasFile();
   */
@@ -607,16 +697,23 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / has file
+  //#region methods & getters  / has file
   /**
    * same as project.pathExists();
    */
   hasFile(relativePath: string | string[]): boolean {
+    //#region @backendFunc
     return Helpers.exists(this.pathFor(relativePath));
+    //#endregion
+  }
+  hasFolder(relativePath: string | string[]): boolean {
+    //#region @backendFunc
+    return Helpers.exists(this.pathFor(relativePath)) && fse.lstatSync(this.pathFor(relativePath)).isDirectory();
+    //#endregion
   }
   //#endregion
 
-  //#region  methods & getters / contains file
+  //#region methods & getters  / contains file
   /**
    * same as project.pathhasFileExists();
    * but with path.resolve
@@ -627,7 +724,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / path for
+  //#region methods & getters  / path for
   /**
    * absolute path:
    * concated project location with relative path
@@ -645,7 +742,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / write json
+  //#region methods & getters  / write json
   writeJson(relativePath: string, json: object) {
     //#region @backendFunc
     if (path.isAbsolute(relativePath)) {
@@ -656,32 +753,33 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / run
+  //#region methods & getters  / run
   /**
    * @deprecated us execute instead
    * use output from or more preciese crafted api
    */
   run(command: string, options?: Omit<CoreModels.RunOptions, 'cwd'>) {
-    //#region @backendFunc
+    let opt: CoreModels.RunOptions;
+    //#region @backend
     options = _.cloneDeep(options) as CoreModels.RunOptions || {};
     Helpers.log(`command: ${command}`)
 
     if (_.isUndefined(options.showCommand)) {
       options.showCommand = false;
     }
-    let opt = options as CoreModels.RunOptions;
+    opt = options as CoreModels.RunOptions;
     if (!opt.cwd) { opt.cwd = this.location; }
     if (opt.showCommand) {
       Helpers.info(`[${CLI.chalk.underline('Executing shell command')}]  "${command}" in [${opt.cwd}]`);
     } else {
       Helpers.log(`[${CLI.chalk.underline('Executing shell command')}]  "${command}" in [${opt.cwd}]`);
     }
-    return Helpers.run(command, opt);
     //#endregion
+    return Helpers.run(command, opt);
   }
   //#endregion
 
-  //#region  methods & getters / execute
+  //#region methods & getters  / execute
   /**
    * same as run but async
    */
@@ -702,7 +800,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / try run sync command
+  //#region methods & getters  / try run sync command
   /**
    * try run but continue when it fails
    * @param command
@@ -724,7 +822,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / output from command
+  //#region methods & getters  / output from command
   outputFrom(command: string
     //#region @backend
     , options?: CommandOutputOptions
@@ -736,7 +834,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / remove file
+  //#region methods & getters  / remove file
   removeFile(fileRelativeToProjectPath: string) {
     //#region @backendFunc
     const fullPath = path.resolve(path.join(this.location, fileRelativeToProjectPath));
@@ -745,7 +843,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / read file
+  //#region methods & getters  / read file
   readFile(fileRelativeToProjectPath: string) {
     //#region @backendFunc
     const fullPath = path.resolve(path.join(this.location, fileRelativeToProjectPath));
@@ -754,7 +852,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / remove (fiel or folder)
+  //#region methods & getters  / remove (fiel or folder)
   remove(relativePath: string, exactPath = true) {
     //#region @backend
     relativePath = relativePath.replace(/^\//, '')
@@ -763,7 +861,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / remove folder by relative path
+  //#region methods & getters  / remove folder by relative path
   removeFolderByRelativePath(relativePathToFolder: string) {
     //#region @backend
     relativePathToFolder = relativePathToFolder.replace(/^\//, '')
@@ -774,7 +872,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / link node_modules to other project
+  //#region methods & getters  / link node_modules to other project
   linkNodeModulesTo(proj: Partial<BaseProject>) {
     //#region @backendFunc
     const source = this.pathFor(config.folder.node_modules);
@@ -785,7 +883,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / reinstall node_modules
+  //#region methods & getters  / reinstall node_modules
   reinstallNodeModules(forcerRemoveNodeModules = false) {
     //#region @backendFunc
     Helpers.taskStarted(`Reinstalling node_modules in ${this.genericName}`);
@@ -799,7 +897,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / assign free port to project instance
+  //#region methods & getters  / assign free port to project instance
   async assignFreePort(startFrom: number = 4200, howManyFreePortsAfterThatPort: number = 0): Promise<number> {
     //#region @backendFunc
     if (_.isNumber(this.port) && this.port >= startFrom) {
@@ -831,7 +929,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / remove project from disk/memory
+  //#region methods & getters  / remove project from disk/memory
   removeItself() {
     //#region @backend
     this.ins.remove(this as any);
@@ -839,7 +937,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / define property
+  //#region methods & getters  / define property
   /**
    * Purpose: not initializing all classes at the beginning
    * Only for BaseFeatureForProject class
@@ -879,7 +977,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / filter only copy
+  //#region methods & getters  / filter only copy
   /**
    * fs.copy option filter function for copying only selected folders from project
    */
@@ -890,7 +988,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / filter don't copy
+  //#region methods & getters  / filter don't copy
   /**
    * fs.copy option filter function for copying only not selected folders from project
    */
@@ -901,13 +999,13 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / get default develop Branch
+  //#region methods & getters  / get default develop Branch
   getDefaultDevelopmentBranch() {
     return 'develop';
   }
   //#endregion
 
-  //#region  methods & getters / get main branches
+  //#region methods & getters  / get main branches
   /**
    * main/default hardcoded branches
    */
@@ -916,13 +1014,13 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / is using aciton commit
+  //#region methods & getters  / is using aciton commit
   isUnsingActionCommit(): boolean {
     return false;
   }
   //#endregion
 
-  //#region  methods & getters / reset process
+  //#region methods & getters  / reset process
   async resetProcess(overrideBranch?: string, recrusive = false) {
     //#region @backend
     // console.log(`CORE PROJECT BRANCH ${this.name}: ${this.core?.branch}, overrideBranch: ${overrideBranch}`)
@@ -958,7 +1056,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / push process
+  //#region methods & getters  / push process
   async pullProcess(cloneChildren = false) {
     //#region @backendFunc
     await this._beforePullProcessAction(cloneChildren);
@@ -990,7 +1088,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / push process
+  //#region methods & getters  / push process
   async pushProcess(options: {
     force?: boolean;
     typeofCommit?: TypeOfCommit;
@@ -1084,7 +1182,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / before any action on git root
+  //#region methods & getters  / before any action on git root
   private _beforeAnyActionOnGitRoot() {
     //#region @backendFunc
     if (!this.git.isInsideGitRepo) {
@@ -1166,7 +1264,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / link project to
+  //#region methods & getters  / link project to
   linkTo(destPackageLocation: string) {
     //#region @backend
     Helpers.createSymLink(this.location, destPackageLocation);
@@ -1174,7 +1272,7 @@ ${projectsThatShouldBeLinked.map((p, index) =>
   }
   //#endregion
 
-  //#region  methods & getters / write file
+  //#region methods & getters  / write file
 
   writeFile(relativePath: string, content: string) {
     //#region @backend
@@ -1589,6 +1687,8 @@ ${projectsThatShouldBeLinked.map((p, index) =>
 
   name: ${proj?.name}
   type: ${proj?.type}
+  core project name: '${proj?.core?.name}'
+  embedded project: ${proj?.embeddedProject?.genericName || '< none >'}
   children (${proj?.children.length}): ${(!proj || !proj.children.length) ? '< none >' : ''}
 ${proj?.children.map(c => '+' + c.genericName).join('\n')}
 `+
@@ -1878,10 +1978,11 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
   //#endregion
 
   //#region getters & methods / start npm task
-  startNpmTask(taskName: string) {
-    //#region @backend
-    return this.run(`npm run ${taskName}`);
-    //#endregion
+  startNpmTask(taskName: string, additionalArguments?: string | object) {
+    if (_.isObject(additionalArguments)) {
+      additionalArguments = Object.keys(additionalArguments).map(k => `--${k} ${additionalArguments[k]}`).join(' ');
+    }
+    return this.run(`npm run ${taskName} ${additionalArguments ? (' -- ' + additionalArguments) : ''}`, { output: true });
   }
   //#endregion
 

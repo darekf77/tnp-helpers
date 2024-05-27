@@ -1,6 +1,8 @@
+import * as core from 'tnp-core/src';
 
-export type BaseProjectType = 'unknow' | 'unknow-npm-project';
-
+export type BaseProjectType = core.CoreModels.BaseProjectType;
+export const BaseProjectTypeArr = core.CoreModels.BaseProjectTypeArr;
+// , BaseProjectTypeArr
 /**
  * Angular project type
  */

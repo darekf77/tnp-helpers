@@ -23,8 +23,12 @@ export class HelpersConsoleGui {
   //#region @backend
   select = async <T = string>(
     questionMessage: string,
-    choices: { name: string; value: T; }[]
+    choices: { name: string; value: T; }[],
+    autocomplete?: boolean
   ) => {
+    if (autocomplete) {
+      return await Helpers.selectChoicesAsk(questionMessage, choices);
+    }
     return await Helpers.list(questionMessage, choices);
   }
   //#endregion

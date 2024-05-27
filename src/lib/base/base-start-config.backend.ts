@@ -40,7 +40,7 @@ export class BaseStartConfig {
   public readonly shortArgsReplaceConfig: { [shortCommand in string]: string; } = {};
   public readonly functionsOrClasses: { classOrFnName?: string; funcOrClass?: Function }[] = [];
   public readonly ProjectClass: Partial<typeof BaseProject> = BaseProject;
-  public readonly callbackNotRecognizedCommand: () => any;
+  public readonly callbackNotRecognizedCommand: (options?: { runGlobalCommandByName?: (commandName: string) => void, firstArg?: string }) => any;
   /**
    * @deprecated
    */
@@ -76,17 +76,18 @@ export class BaseStartConfig {
 
     }
 
-    let recognized = null;
+    let recognizedClassFnOrFunction = null;
     let restOfArgs = [];
     let methodNameToCall = undefined;
-    let methods = [];
+    let methodsOfRecognizedClass = [];
+    let globalClassForGlobalCommands = null;
 
     for (const { classOrFnName, funcOrClass } of this.functionsOrClasses) {
       if (_.isFunction(funcOrClass)) {
         const classMethodsNames = CLASS.getMethodsNames(funcOrClass).filter(f => !f.startsWith('_'));
-        // if (vFnName === '') {
-        // console.log({ classMethodsNames, vFnName })
-        // }
+        if (classOrFnName === '') {
+          globalClassForGlobalCommands = funcOrClass;
+        }
 
         const check = Helpers.cliTool.match({
           functionOrClassName: classOrFnName,
@@ -95,24 +96,24 @@ export class BaseStartConfig {
           classMethodsNames,
         });
         if (check.isMatch || (this.argsv.length === 0 && classOrFnName === '')) {
-          recognized = funcOrClass;
+          recognizedClassFnOrFunction = funcOrClass;
           restOfArgs = _.cloneDeep(check.restOfArgs);
           methodNameToCall = check.methodNameToCall;
-          methods = classMethodsNames;
+          methodsOfRecognizedClass = classMethodsNames;
           // console.log('--- recognized command ---', { classOrFnName, classMethodsNames })
         }
       }
     }
 
 
-    if (recognized) {
+    if (recognizedClassFnOrFunction) {
       global?.spinner?.stop();
       // console.log('--- recognized command ---', { recognized, methodNameToCall, restOfArgs, methods })
 
 
-      if (Helpers.isClass(recognized)) {
+      if (Helpers.isClass(recognizedClassFnOrFunction)) {
         // console.log('USING FROM CLASS')
-        const obj: CommandLineFeature = new (recognized as any)(
+        const obj: CommandLineFeature = new (recognizedClassFnOrFunction as any)(
           Helpers.cliTool.globalArgumentsParserTnp(restOfArgs),
           methodNameToCall,
           this.ProjectClass.ins.nearestTo(process.cwd()),
@@ -122,16 +123,32 @@ export class BaseStartConfig {
       } else {
         // console.log('USING FROM FUNCTION')
         if (this.useStringArrForArgsFunctions) {
-          recognized.apply({}, [Helpers.cliTool.globalArgumentsParserTnp(restOfArgs, this.ProjectClass as any).split(' ')]);
+          recognizedClassFnOrFunction.apply({}, [Helpers.cliTool.globalArgumentsParserTnp(restOfArgs, this.ProjectClass as any).split(' ')]);
         } else {
-          recognized.apply({}, [Helpers.cliTool.globalArgumentsParserTnp(restOfArgs, this.ProjectClass as any)]);
+          recognizedClassFnOrFunction.apply({}, [Helpers.cliTool.globalArgumentsParserTnp(restOfArgs, this.ProjectClass as any)]);
         }
       }
 
       process.stdin.resume();
     } else {
       if (_.isFunction(this.callbackNotRecognizedCommand)) {
-        this.callbackNotRecognizedCommand();
+        // console.log(`this.argsv `, this.argsv)
+        this.callbackNotRecognizedCommand({
+          firstArg: _.first(this.argsv),
+          runGlobalCommandByName: (commandName: string) => {
+            if (globalClassForGlobalCommands) {
+              const obj: CommandLineFeature = new (globalClassForGlobalCommands as any)(
+                Helpers.cliTool.globalArgumentsParserTnp(this.argsv),
+                commandName,
+                this.ProjectClass.ins.nearestTo(process.cwd()),
+                process.cwd(),
+                this.ProjectClass.ins,
+              );
+            } else {
+              Helpers.error(`Global class for global commands not found`, false, true);
+            }
+          }
+        });
       } else {
         Helpers.error('Command not recognized', false, true);
       }

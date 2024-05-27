@@ -5,6 +5,7 @@ import { chalk, _, path } from "tnp-core/src";
 import { translate } from "./translate";
 import { TypeOfCommit, CommitData } from './commit-data';
 import { config } from "tnp-config/src";
+import { crossPlatformPath } from "tnp-core";
 
 export class BaseCommandLine<PARAMS = any, PROJECT extends BaseProject<any, any> = BaseProject> extends CommandLineFeature<PARAMS, PROJECT> {
   public _() {
@@ -20,24 +21,45 @@ export class BaseCommandLine<PARAMS = any, PROJECT extends BaseProject<any, any>
 
   //#region commands / develop
   async develop() {
-    Helpers.clearConsole();
+    // Helpers.clearConsole();
+    Helpers.taskStarted(`getting all projects...`)
     const founded: BaseProject[] = (await this.ins.projectsDb.getAllProjectsFromDB() || [])
       .filter(p => Helpers.exists(p.location))
-      .map(p => this.ins.From(p.location))
+      .map(p => {
+        const proj = this.ins.From(p.location);
+        // console.log(`Proj for ${p.location} `, !!proj)
+        if (proj) {
+          return proj;
+          // return proj.embeddedProject ? proj.embeddedProject : proj;
+        }
+        // const nereset = this.ins.nearestTo(p.location);
+        // if (nereset) {
+
+        //   const embeded = nereset.linkedProjects.find(l => crossPlatformPath([nereset.location, l.relativeClonePath]) === p.location);
+        //   if (embeded) {
+        //     return this.ins.From([nereset.location, embeded.relativeClonePath]);
+        //   }
+        // }
+      })
       .filter(p => !!p)
+    Helpers.taskDone(`found ${founded.length} projects...`)
 
-
+    Helpers.taskStarted(`searching for project...`)
     const results = Helpers.uniqArray<BaseProject>([
       ...Helpers.arrays.fuzzy(this.args.join(' '), founded, p => p.name).results,
       ...Helpers.arrays.fuzzy(this.args.join(' '), founded, p => p.basename).results,
+      ...Helpers.arrays.fuzzy(this.args.join(' '), founded, p => p.location).results,
     ], 'location').reverse();
+    Helpers.taskDone(`found ${results.length} projects...`)
 
     const openInEditor = async (proj: BaseProject) => {
+      Helpers.taskStarted(`Getting code editor info...`)
       const editor = await this.ins.configDb.getCodeEditor();
+      Helpers.taskDone(`Got code editor info...`);
       const embededProject = proj.embeddedProject as BaseProject;
       const porjToOpen = embededProject || proj;
       const locaitonFolderToOpen = porjToOpen.location;
-      Helpers.info('Initing and opending project...')
+      Helpers.info('Initing and opening project...')
       try {
         await porjToOpen?.struct()
       } catch (error) { }
@@ -50,12 +72,13 @@ export class BaseCommandLine<PARAMS = any, PROJECT extends BaseProject<any, any>
     } else if (results.length === 0) {
       Helpers.error(`No project found by name: "${this.args.join(' ')}"`, false, true);
     } else {
+      Helpers.info(`Opening console gui to select project...`)
       const res = await Helpers.consoleGui.select('Select project to open', results.map(p => {
         return {
           name: p.genericName,
           value: p.location
         }
-      }));
+      }), true);
       await openInEditor(this.ins.From(res));
     };
     this._exit();
@@ -208,8 +231,10 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
   }
   //#endregion
 
-
   //#region commands / commit
+  /**
+   * Commit and push this for single repo
+   */
   async commit(options: { force?: boolean; typeofCommit?: TypeOfCommit; origin?: string; commitMessageRequired?: boolean; noExit?: boolean; } = {}) {
     await this.project.git.meltActionCommits(true);
     await this.project.pushProcess({
@@ -226,6 +251,7 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
     }
     this._exit()
   }
+  //#endregion
 
   //#region commands / push
   async push(options: { force?: boolean; typeofCommit?: TypeOfCommit; origin?: string; commitMessageRequired?: boolean; noExit?: boolean; } = {}) {
@@ -512,6 +538,22 @@ Would you like to update current project configuration?`)) {
     this._exit();
   }
   //#endregion
+
+  PROJ_EXT() {
+    const p = this.project.pathFor('.vscode/extensions.json');
+    const extensions: { recommendations: string[] } = Helpers.readJson(p, { recommendations: [] }, true);
+    for (let index = 0; index < extensions.recommendations.length; index++) {
+      const extname = extensions.recommendations[index];
+      try {
+        Helpers.taskStarted(`Installing: ${extname}`);
+        Helpers.run(`code --install-extension ${extname}`).sync();
+        Helpers.taskDone(`Installed: ${extname}`)
+      } catch (error) {
+        Helpers.warn(`Not able to install ${extname}`);
+      }
+    }
+    this._exit();
+  }
 
   projdb() {
     Helpers.info(`Projects db location:
