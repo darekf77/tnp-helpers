@@ -748,8 +748,8 @@ to: ${to}
               Helpers.log(error)
               if (!options!.dontAskOnError) {
                 Helpers.error(`[firedev-helper] Not able to copy folder:
-                from: ${sourceDir}
-                to: ${destinationDir}
+                from: ${crossPlatformPath(sourceDir)}
+                to: ${crossPlatformPath(destinationDir)}
                 options: ${json5.stringify(options)}
                 error: ${error?.message}
                 `, !exitOnError);
