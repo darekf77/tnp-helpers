@@ -88,10 +88,37 @@ export class HelpersFileFolders {
     return fse.readlinkSync(filePath);
   }
 
-  renameFolder(from: string, to: string, cwd?: string) {
-    // const command = `mv  ${from}  ${to}`;
-    const command = `renamer --find  ${from}  --replace  ${to} *`;
-    Helpers.run(command, { cwd }).sync()
+  // renameFolder(from: string, to: string, cwd?: string) {
+  //   // const command = `mv  ${from}  ${to}`;
+  //   const command = `renamer --find  ${from}  --replace  ${to} *`;
+  //   Helpers.run(command, { cwd }).sync()
+  // }
+
+  /**
+   * @deprecated
+   */
+  renameFiles(from: string, to: string, cwd?: string) {
+    try {
+      const directoryPath = cwd || '.';
+
+      // Read all files in the directory
+      const files = fse.readdirSync(directoryPath);
+
+      files.forEach(file => {
+        // Check if the file name includes the 'from' pattern
+        if (file.includes(from)) {
+          const newFileName = file.replace(from, to);
+          const currentPath = path.join(directoryPath, file);
+          const newPath = path.join(directoryPath, newFileName);
+
+          // Rename the file
+          fse.renameSync(currentPath, newPath);
+          console.log(`Renamed file from ${currentPath} to ${newPath}`);
+        }
+      });
+    } catch (error) {
+      console.error(`Error renaming files from ${from} to ${to}:`, error);
+    }
   }
 
   getTempFolder() {
