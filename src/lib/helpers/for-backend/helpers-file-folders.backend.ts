@@ -95,6 +95,13 @@ export class HelpersFileFolders {
   // }
 
   /**
+  * @deprecated
+  */
+  renameFolder(from: string, to: string, cwd?: string) {
+    Helpers.renameFiles(from, to, cwd);
+  }
+
+  /**
    * @deprecated
    */
   renameFiles(from: string, to: string, cwd?: string) {
