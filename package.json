@@ -8,7 +8,8 @@
         "tnp-models",
         "task.js",
         "json10-writer",
-        "lowdb"
+        "lowdb",
+        "typescript"
       ],
       "dependencies": {},
       "linkedFolders": [],

@@ -2,39 +2,58 @@ import { _ } from 'tnp-core';
 import { Helpers } from '../../../index';
 
 export type ClassMeta = {
-  className: string,
-  isDefault: boolean,
+  className: string;
+  isDefault: boolean;
 };
 
+/**
+ * @deprecated
+ */
 export class TsCodeExtractor {
-  get REGEX() {
+  get REGEX () {
     return {
-      DEFAULT_CLASS: new RegExp('export\\ +default\\ +(abstract\\ +)?class\\ +'),
+      /**
+       * @deprecated
+       */
+      DEFAULT_CLASS: new RegExp(
+        'export\\ +default\\ +(abstract\\ +)?class\\ +',
+      ),
+      /**
+       * @deprecated
+       */
       CLASS: new RegExp('export\\ +(abstract\\ +)?class\\ +'),
     };
   }
 
-  getClassesFrom(absoluteFilePath: string) {
+  /**
+   * TODO
+   */
+  getClassesFrom (absoluteFilePath: string) {
     //#region @backend
     const content = Helpers.readFile(absoluteFilePath);
     const classes: ClassMeta[] = [];
     content.split('\n').forEach(line => {
       if (this.REGEX.DEFAULT_CLASS.test(line)) {
-        const className = _.first(line.replace(_.first(line.match(this.REGEX.DEFAULT_CLASS)), '').split(' ')) as string;
+        const className = _.first(
+          line
+            .replace(_.first(line.match(this.REGEX.DEFAULT_CLASS)), '')
+            .split(' '),
+        ) as string;
         classes.push({
           className,
-          isDefault: true
+          isDefault: true,
         });
       } else if (this.REGEX.CLASS.test(line)) {
-        const className = _.first(line.replace(_.first(line.match(this.REGEX.CLASS)), '').split(' ')) as string;
+        const className = _.first(
+          line.replace(_.first(line.match(this.REGEX.CLASS)), '').split(' '),
+        ) as string;
         classes.push({
           className,
-          isDefault: false
+          isDefault: false,
         });
       }
     });
     return { classes, firstClass: _.first(classes) };
     //#endregion
   }
-
 }

@@ -1,37 +1,50 @@
 import { _ } from 'tnp-core';
 // import * as tsfmt from 'typescript-formatter'; // TODO
 import { Helpers } from '../../../index';
+
+/**
+ * @deprecated
+ */
 export class TsCodeModifer {
-
-
-  public replace(input: string, regex: RegExp, replacement: string) {
-
-    return input.split('\n').map(line => {
-
-      const lineTrim = line.trim()
-      if (lineTrim.startsWith('//')) {
+  /**
+   * @deprecated
+   */
+  public replace (input: string, regex: RegExp, replacement: string) {
+    return input
+      .split('\n')
+      .map(line => {
+        const lineTrim = line.trim();
+        if (lineTrim.startsWith('//')) {
+          return line;
+        }
+        // console.log(line)
+        if (
+          lineTrim.startsWith('import ') ||
+          lineTrim.startsWith('export ') ||
+          /^\}\s+from\s+(\"|\')/.test(lineTrim) ||
+          /require\((\"|\')/.test(lineTrim)
+        ) {
+          return line.replace(regex, replacement);
+        }
         return line;
-      }
-      // console.log(line)
-      if (
-        lineTrim.startsWith('import ') ||
-        lineTrim.startsWith('export ') ||
-        /^\}\s+from\s+(\"|\')/.test(lineTrim) ||
-        /require\((\"|\')/.test(lineTrim)
-      ) {
-        return line.replace(regex, replacement);
-      }
-      return line;
-    }).join('\n');
+      })
+      .join('\n');
   }
-
-  fixRegexes(input: string) {
+  /**
+   * @deprecated
+   */
+  fixRegexes (input: string) {
     const regex = new RegExp(`\/.+\/g`, 'g');
     const matches = input.match(regex);
     if (_.isArray(matches)) {
       matches.forEach(m => {
         if (m.search('`') === -1 && !m.trim().startsWith('//')) {
-          input = input.replace(m, `(new RegExp(\`${Helpers.escapeStringForRegEx(m.replace(new RegExp('/g$', ''), ''))}\`,'g'))`);
+          input = input.replace(
+            m,
+            `(new RegExp(\`${Helpers.escapeStringForRegEx(
+              m.replace(new RegExp('/g$', ''), ''),
+            )}\`,'g'))`,
+          );
         }
       });
     }
@@ -41,8 +54,11 @@ export class TsCodeModifer {
   /**
    * fix double apostrophes in imports,export, requires
    */
-  fixApostrphes(input: string) {
-    const regex = new RegExp(`(import|export|require\\(|\\}\\sfrom\\s(\\"|\\')).+(\\"|\\')`, 'g');
+  fixApostrphes (input: string) {
+    const regex = new RegExp(
+      `(import|export|require\\(|\\}\\sfrom\\s(\\"|\\')).+(\\"|\\')`,
+      'g',
+    );
 
     const matches = input.match(regex);
     if (_.isArray(matches)) {
@@ -57,8 +73,9 @@ export class TsCodeModifer {
 
   /**
    * Format JS, TS file
+   * @deprecated
    */
-  public formatFile(filePath: string) {
+  public formatFile (filePath: string) {
     // tsfmt.processFiles([filePath], {
     //   verbose: true,
     //   replace: true,
@@ -69,5 +86,4 @@ export class TsCodeModifer {
     //   tsfmt: true,
     // } as any)
   }
-
 }

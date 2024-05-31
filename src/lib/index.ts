@@ -11,3 +11,6 @@ import { HelpersFiredev as Base } from './helpers/helpers';
 export const Helpers = Base.Instance;
 export * from './base';
 export * from './models';
+//#region @backend
+export * from './helpers/for-backend/ts-code/index';
+//#endregion

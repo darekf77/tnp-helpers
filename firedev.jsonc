@@ -10,6 +10,7 @@
       "task.js",
       "json10-writer",
       "lowdb",
+      "typescript",
       // "enquirer",
       // "inquirer-autocomplete-prompt",
       // "cross-spawn",
