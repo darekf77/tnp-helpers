@@ -2,22 +2,50 @@ import * as ts from 'typescript';
 
 export class TsImportExport {
   type: 'export' | 'import' | 'async-import' | 'require';
-  embeddedNameToFile: string;
+  /**
+   * ORIGNAL
+   * Name of the file that is being imported/exported
+   * with parenthesis included
+   */
+  embeddedPathToFile: string;
+  /**
+   * same as cleanEmbeddedPathToFile but without quotes (parenthesis)
+   */
+  cleanEmbeddedPathToFile: string;
+  removeStartEndQuotes(str: string) {
+    return str.replace(/^['"`]/, '').replace(/['"`]$/, '');
+  }
+  /**
+   * RESULT OF PROCESSING
+   */
+  embeddedPathToFileResult: string;
+  packageName: string;
+  isIsomorphic?: boolean;
   startRow: number;
   startCol: number;
   endRow: number;
   endCol: number;
   parenthesisType: 'single' | 'double' | 'tics';
+  wrapInParenthesis(str: string) {
+    return this.parenthesisType === 'single'
+      ? `'${str}'`
+      : this.parenthesisType === 'double'
+      ? `"${str}"`
+      : `\`${str}\``;
+  }
 
   constructor(
     type: 'export' | 'import' | 'async-import' | 'require',
-    embeddedNameToFile: string,
+    embeddedPathToFile: string,
     start: ts.LineAndCharacter,
     end: ts.LineAndCharacter,
     parenthesisType: 'single' | 'double' | 'tics',
   ) {
     this.type = type;
-    this.embeddedNameToFile = embeddedNameToFile;
+    this.isIsomorphic = false;
+    this.embeddedPathToFile = embeddedPathToFile;
+    this.cleanEmbeddedPathToFile = this.removeStartEndQuotes(embeddedPathToFile);
+    this.embeddedPathToFileResult = embeddedPathToFile;
     this.startRow = start.line + 1; // TypeScript lines are zero-based
     this.startCol = start.character + 1;
     this.endRow = end.line + 1;
@@ -33,7 +61,7 @@ const getQuoteType = (text: string): 'single' | 'double' | 'tics' => {
   return 'double';
 }
 
-export const recognizeImportsFromFile =(fileContent: string): TsImportExport[] => {
+export const recognizeImportsFromFile =(fileContent: string): TsImportExport [] => {
   const sourceFile = ts.createSourceFile(
     'file.ts', // a name for the file
     fileContent,
