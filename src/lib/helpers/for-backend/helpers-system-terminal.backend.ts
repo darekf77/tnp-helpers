@@ -1,4 +1,4 @@
-import { crossPlatformPath } from 'tnp-core';
+import { crossPlatformPath } from 'tnp-core/src';
 import * as ncp from 'copy-paste';
 import { Helpers } from '../../index';
 

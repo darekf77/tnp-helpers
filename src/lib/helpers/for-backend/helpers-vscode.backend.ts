@@ -1,4 +1,4 @@
-import { path } from 'tnp-core';
+import { path } from 'tnp-core/src';
 
 import { Helpers } from '../../index';
 import * as JSON5 from 'json5';

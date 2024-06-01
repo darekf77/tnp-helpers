@@ -1,13 +1,13 @@
 //#region imports
-import { _ } from 'tnp-core';
+import { _ } from 'tnp-core/src';
 import { HelpersArrayObj } from './helpers-array-obj';
 import { HelpersStringsRegexes } from './helpers-strings-regexes';
 import { HelpersStrings } from './helpers-strings';
 //#region @backend
 import { HelpersConsoleGui } from './for-backend/helpers-console-gui';
-import { os, crossPlatformPath } from 'tnp-core';
+import { os, crossPlatformPath } from 'tnp-core/src';
 import * as Task from 'task.js';
-import { isElevated } from 'tnp-core';
+import { isElevated } from 'tnp-core/src';
 import { URL } from 'url';
 import { HelpersGit } from './for-backend/helpers-git.backend';
 import { HelpersCliTool } from './for-backend/helpers-cli-tool.backend';
@@ -21,10 +21,10 @@ import { HelpersPath } from './for-backend/helpers-path.backend';
 import { HelpersNetwork } from './for-backend/helpers-network.backend';
 import { HelpersJSON5 } from './helpers-json5.backend';
 import { TsCodeExtractor } from './for-backend/ts-code/ts-code-extractor';
-import { CLI } from 'tnp-cli';
+import { CLI } from 'tnp-cli/src';
 import { HelpersVscode } from './for-backend/helpers-vscode.backend';
 //#endregion
-import { config } from 'tnp-config';
+import { config } from 'tnp-config/src';
 import { Helpers, Validators } from '../index';
 import { CLASS } from 'typescript-class-helpers/src';
 import { CoreHelpers, CoreModels } from 'tnp-core/src';

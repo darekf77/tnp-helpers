@@ -1,4 +1,4 @@
-import { _ } from 'tnp-core';
+import { _ } from 'tnp-core/src';
 import { Helpers } from '../index';
 
 export class HelpersStrings {

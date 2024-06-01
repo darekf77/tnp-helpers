@@ -1,4 +1,4 @@
-import { _ } from 'tnp-core';
+import { _ } from 'tnp-core/src';
 
 export namespace ValidatorsNetwork {
   export function isValidIp(ip: string) {

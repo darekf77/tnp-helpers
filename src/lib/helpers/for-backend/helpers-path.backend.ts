@@ -1,6 +1,6 @@
-import { _, path } from 'tnp-core';
-import { config } from 'tnp-config';
-import { BaselineSiteJoinprefix } from 'tnp-config';
+import { _, path } from 'tnp-core/src';
+import { config } from 'tnp-config/src';
+import { BaselineSiteJoinprefix } from 'tnp-config/src';
 import { Helpers } from '../../index';
 
 export class HelpersPath {

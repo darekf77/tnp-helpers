@@ -43,12 +43,13 @@
       "firedev-helpers"
     ]
   },
-  "version": "16.100.17",
+  "version": "16.100.18",
   "dependencies": {
-    "json10-writer": "16.100.9",
+    "json10-writer": "16.100.10",
     "lowdb": "7.0.1",
     "task.js": "0.1.5",
-    "tnp-models": "16.100.9"
+    "tnp-models": "16.100.10",
+    "typescript": "~5.0.2"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -261,7 +262,7 @@
     "ng-lock": "16.0.1",
     "ng-packagr": "16.0.1",
     "ng-talkback": "16.100.5",
-    "ng2-logger": "16.100.9",
+    "ng2-logger": "16.100.10",
     "ng2-pdfjs-viewer": "16.0.4",
     "ng2-rest": "16.100.6",
     "ngx-ace-wrapper": "14.0.0",
@@ -324,10 +325,10 @@
     "systeminformation": "3.45.7",
     "threads": "1.7.0",
     "tnp-cli": "16.100.5",
-    "tnp-config": "16.100.9",
-    "tnp-core": "16.100.20",
+    "tnp-config": "16.100.10",
+    "tnp-core": "16.100.22",
     "tnp-db": "16.100.8",
-    "tnp-helpers": "16.100.17",
+    "tnp-helpers": "16.100.18",
     "ts-debug": "1.3.0",
     "ts-json-schema-generator": "2.1.1",
     "ts-loader": "2.3.1",
@@ -335,8 +336,7 @@
     "tslib": "~2.3.0",
     "tslint": "5.9.1",
     "turndown": "7.1.2",
-    "typescript": "~5.0.2",
-    "typescript-class-helpers": "~16.100.9",
+    "typescript-class-helpers": "~16.100.10",
     "typescript-formatter": "~7.2.2",
     "underscore": "1.9.1",
     "uuid": "8.3.2",
@@ -350,6 +350,6 @@
     "yup": "1.1.1",
     "zone.js": "~0.13.0"
   },
-  "lastBuildTagHash": "d4c3bd5bb600a859435b86411ae267aeefb64fb1",
+  "lastBuildTagHash": "1f0535e2dee6350cd94f9f4c347c7fec651f9602",
   "main": "dist/app.electron.js"
 }

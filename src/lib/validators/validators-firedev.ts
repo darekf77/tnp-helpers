@@ -1,8 +1,8 @@
 //#region @backend
-import { fse, path } from "tnp-core";
+import { fse, path } from "tnp-core/src";
 //#endregion
 import { Helpers } from "../..";
-import { config } from "tnp-config";
+import { config } from "tnp-config/src";
 
 
 export namespace ValidatorsFiredev {

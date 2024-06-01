@@ -7,14 +7,14 @@ import {
   crossPlatformPath,
   chalk,
 } from 'tnp-core';
-import { CLI } from 'tnp-cli';
+import { CLI } from 'tnp-cli/src';
 import * as dateformat from 'dateformat';
 import { exec } from 'child_process';
 import type { BaseProject } from '../../index';
 import { Helpers } from '../../index';
-import { CLASS } from 'typescript-class-helpers';
-import { config } from 'tnp-config';
-import { Log, Level } from 'ng2-logger';
+import { CLASS } from 'typescript-class-helpers/src';
+import { config } from 'tnp-config/src';
+import { Log, Level } from 'ng2-logger/src';
 declare const global: any;
 const prompts = require('prompts');
 import * as fuzzy from 'fuzzy';

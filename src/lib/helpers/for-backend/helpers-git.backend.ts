@@ -7,10 +7,10 @@ import {
   crossPlatformPath,
   dateformat,
 } from 'tnp-core';
-import { CLI } from 'tnp-cli';
+import { CLI } from 'tnp-cli/src';
 import { Helpers } from '../../index';
 import type { BaseProject } from '../../index';
-import { config } from 'tnp-config';
+import { config } from 'tnp-config/src';
 //#endregion
 
 

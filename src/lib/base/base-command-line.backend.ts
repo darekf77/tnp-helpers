@@ -5,7 +5,7 @@ import { chalk, _, path } from "tnp-core/src";
 import { translate } from "./translate";
 import { TypeOfCommit, CommitData } from './commit-data';
 import { config } from "tnp-config/src";
-import { crossPlatformPath } from "tnp-core";
+import { crossPlatformPath } from "tnp-core/src";
 
 export class BaseCommandLine<PARAMS = any, PROJECT extends BaseProject<any, any> = BaseProject> extends CommandLineFeature<PARAMS, PROJECT> {
   public _() {

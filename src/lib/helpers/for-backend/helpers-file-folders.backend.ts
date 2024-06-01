@@ -10,7 +10,7 @@ import {
 } from 'tnp-core/src';
 import * as  underscore from 'underscore';
 import * as glob from 'glob';
-import { JSON10 } from 'json10';
+import { JSON10 } from 'json10/src';
 import * as crypto from 'crypto';
 declare const global: any;
 

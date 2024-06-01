@@ -1,6 +1,6 @@
 //#region import
 import { CoreModels } from 'tnp-core/src';
-import { CLI } from 'tnp-cli';
+import { CLI } from 'tnp-cli/src';
 import { path, crossPlatformPath } from 'tnp-core/src';
 import { config } from 'tnp-config/src';
 import { _ } from 'tnp-core/src';

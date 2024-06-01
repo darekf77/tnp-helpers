@@ -1,6 +1,6 @@
 import { _, path, crossPlatformPath } from 'tnp-core/src';
 import type { BaseProject } from './base-project';
-import { CLASS } from 'typescript-class-helpers';
+import { CLASS } from 'typescript-class-helpers/src';
 import { Helpers } from '../index';
 
 export type CoreProjectEnvironment = {

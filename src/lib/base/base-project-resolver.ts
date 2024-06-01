@@ -5,9 +5,9 @@ import {
   //#endregion
 } from 'tnp-core';
 import { Helpers } from '../index';
-import { path, crossPlatformPath } from 'tnp-core';
-import { config } from 'tnp-config';
-import { _ } from 'tnp-core';
+import { path, crossPlatformPath } from 'tnp-core/src';
+import { config } from 'tnp-config/src';
+import { _ } from 'tnp-core/src';
 import type { BaseProject } from './base-project';
 import { Low } from "lowdb"
 import { ConfigDatabase } from './config-database';
@@ -16,7 +16,7 @@ import { ProjectDatabase } from './project-database';
 import { os } from 'tnp-core/src';
 import { JSONFilePreset } from "../lowdb/node";
 export { ChildProcess } from 'child_process';
-import { CLI } from 'tnp-cli';
+import { CLI } from 'tnp-cli/src';
 //#endregion
 //#endregion
 
