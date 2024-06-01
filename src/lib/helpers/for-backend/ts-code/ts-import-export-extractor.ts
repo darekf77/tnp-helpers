@@ -1,4 +1,15 @@
-import * as ts from 'typescript';
+import {
+  isExportDeclaration,
+  isImportDeclaration,
+  LineAndCharacter,
+  createSourceFile,
+  ScriptTarget,
+  Node,
+  Expression,
+  SyntaxKind,
+  isCallExpression,
+  forEachChild,
+} from 'typescript';
 
 export class TsImportExport {
   type: 'export' | 'import' | 'async-import' | 'require';
@@ -30,21 +41,22 @@ export class TsImportExport {
     return this.parenthesisType === 'single'
       ? `'${str}'`
       : this.parenthesisType === 'double'
-      ? `"${str}"`
-      : `\`${str}\``;
+        ? `"${str}"`
+        : `\`${str}\``;
   }
 
   constructor(
     type: 'export' | 'import' | 'async-import' | 'require',
     embeddedPathToFile: string,
-    start: ts.LineAndCharacter,
-    end: ts.LineAndCharacter,
+    start: LineAndCharacter,
+    end: LineAndCharacter,
     parenthesisType: 'single' | 'double' | 'tics',
   ) {
     this.type = type;
     this.isIsomorphic = false;
     this.embeddedPathToFile = embeddedPathToFile;
-    this.cleanEmbeddedPathToFile = this.removeStartEndQuotes(embeddedPathToFile);
+    this.cleanEmbeddedPathToFile =
+      this.removeStartEndQuotes(embeddedPathToFile);
     this.embeddedPathToFileResult = embeddedPathToFile;
     this.startRow = start.line + 1; // TypeScript lines are zero-based
     this.startCol = start.character + 1;
@@ -54,28 +66,29 @@ export class TsImportExport {
   }
 }
 
-
 const getQuoteType = (text: string): 'single' | 'double' | 'tics' => {
   if (text.startsWith('`')) return 'tics';
   if (text.startsWith("'")) return 'single';
   return 'double';
-}
+};
 
-export const recognizeImportsFromFile =(fileContent: string): TsImportExport [] => {
-  const sourceFile = ts.createSourceFile(
+export const recognizeImportsFromFile = (
+  fileContent: string,
+): TsImportExport[] => {
+  const sourceFile = createSourceFile(
     'file.ts', // a name for the file
     fileContent,
-    ts.ScriptTarget.Latest,
+    ScriptTarget.Latest,
     true,
   );
 
   const results: TsImportExport[] = [];
 
-  function visit(node: ts.Node) {
+  function visit(node: Node) {
     // Check for dynamic import expressions specifically
     if (
-      ts.isCallExpression(node) &&
-      node.expression.kind === ts.SyntaxKind.ImportKeyword
+      isCallExpression(node) &&
+      node.expression.kind === SyntaxKind.ImportKeyword
     ) {
       const args = node.arguments;
       if (args.length) {
@@ -94,13 +107,13 @@ export const recognizeImportsFromFile =(fileContent: string): TsImportExport [] 
       }
     }
 
-    if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
+    if (isImportDeclaration(node) || isExportDeclaration(node)) {
       const specifier = node.moduleSpecifier
-        ? (node.moduleSpecifier as ts.Expression).getText(sourceFile)
+        ? (node.moduleSpecifier as Expression).getText(sourceFile)
         : '';
       const parenthesisType = getQuoteType(specifier);
       const type =
-        node.kind === ts.SyntaxKind.ImportDeclaration ? 'import' : 'export';
+        node.kind === SyntaxKind.ImportDeclaration ? 'import' : 'export';
       results.push(
         new TsImportExport(
           type,
@@ -113,7 +126,7 @@ export const recognizeImportsFromFile =(fileContent: string): TsImportExport [] 
     }
 
     if (
-      ts.isCallExpression(node) &&
+      isCallExpression(node) &&
       node.expression.getText(sourceFile) === 'require'
     ) {
       const args = node.arguments;
@@ -133,10 +146,10 @@ export const recognizeImportsFromFile =(fileContent: string): TsImportExport [] 
       }
     }
 
-    ts.forEachChild(node, visit);
+    forEachChild(node, visit);
   }
 
-  ts.forEachChild(sourceFile, visit);
+  forEachChild(sourceFile, visit);
 
   return results;
-}
+};
