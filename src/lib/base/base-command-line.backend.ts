@@ -372,6 +372,13 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
     await this.meltUpdateCommits();
     await this.push({ typeofCommit: 'style', commitMessageRequired: true });
   }
+  async pstyl() {
+    await this.pushStyle();
+  }
+
+  async pstyle() {
+    await this.pushStyle();
+  }
   //#endregion
 
   //#region commands / push docs
