@@ -287,10 +287,10 @@ export class HelpersFiredev extends CoreHelpers {
     //@ts-ignore
     var end = new Date() - start
     if (Helpers.isBrowser) {
-      Helpers.log(`Execution time: ${end.toString()}ms for "${description}"`);
+      Helpers.info(`Execution time: ${end.toString()}ms for "${description}"`);
     }
     //#region @backend
-    Helpers.log(`Execution time: ${CLI.chalk.bold(end.toString())}ms for "${CLI.chalk.bold(description)}"`);
+    Helpers.info(`Execution time: ${CLI.chalk.bold(end.toString())}ms for "${CLI.chalk.bold(description)}"`);
     //#endregion
     return end;
   }
