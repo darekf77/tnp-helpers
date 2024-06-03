@@ -1,3 +1,4 @@
+//#region @backend
 import { LocalStorage } from '../adapters/browser/LocalStorage'
 import { SessionStorage } from '../adapters/browser/SessionStorage'
 import { LowSync } from '../index'
@@ -21,3 +22,4 @@ export function SessionStoragePreset<Data>(
   db.read()
   return db
 }
+//#endregion

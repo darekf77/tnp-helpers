@@ -1,7 +1,9 @@
-import { WebStorage } from './WebStorage'
+//#region @backend
+import { WebStorage } from './WebStorage';
 
 export class LocalStorage<T> extends WebStorage<T> {
   constructor(key: string) {
-    super(key, localStorage)
+    super(key, localStorage);
   }
 }
+//#endregion

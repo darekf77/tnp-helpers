@@ -2,9 +2,9 @@
 import { Helpers, crossPlatformPath } from "tnp-core/src";
 
 import type { BaseProjectResolver } from "./base-project-resolver";
-import { Low } from "../lowdb";
-//#region @backend
 
+//#region @backend
+import { Low } from "../lowdb";
 import { os } from "tnp-core/src";
 import { JSONFilePreset } from "../lowdb/node";
 //#endregion
@@ -39,6 +39,7 @@ export class BaseDb<DB extends object> {
     //#endregion
   }
 
+  //#region @backend
   async useDB(): Promise<Low<DB>> {
     //#region @backendFunc
     const dbLocation = this.projectsDbLocation;
@@ -57,5 +58,6 @@ export class BaseDb<DB extends object> {
     // @ts-ignore
     return void 0;
   }
+  //#endregion
 
 }

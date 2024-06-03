@@ -1,4 +1,5 @@
-import { PathLike } from 'fs'
+//#region @backend
+import { PathLike } from 'fs';
 
 import { Adapter, SyncAdapter } from '../../core/Low'
 import { TextFile, TextFileSync } from './TextFile'
@@ -70,3 +71,4 @@ export class DataFileSync<T> implements SyncAdapter<T> {
     this.__adapter.write(this.__stringify(obj))
   }
 }
+//#endregion

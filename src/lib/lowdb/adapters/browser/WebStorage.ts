@@ -1,3 +1,4 @@
+//#region @backend
 import { SyncAdapter } from '../../core/Low'
 
 export class WebStorage<T> implements SyncAdapter<T> {
@@ -23,3 +24,4 @@ export class WebStorage<T> implements SyncAdapter<T> {
     this.__storage.setItem(this.__key, JSON.stringify(obj))
   }
 }
+//#endregion

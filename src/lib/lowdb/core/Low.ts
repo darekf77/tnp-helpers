@@ -1,3 +1,4 @@
+//#region @backend
 export interface Adapter<T> {
   read: () => Promise<T | null>
   write: (data: T) => Promise<void>
@@ -62,3 +63,4 @@ export class LowSync<T = unknown> {
     this.write()
   }
 }
+//#endregion

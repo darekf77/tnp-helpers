@@ -1,3 +1,4 @@
+//#region @backend
 import { PathLike } from 'node:fs'
 
 import { Memory, MemorySync } from '../adapters/Memory'
@@ -29,3 +30,4 @@ export function JSONFileSyncPreset<Data>(
   db.read()
   return db
 }
+//#endregion

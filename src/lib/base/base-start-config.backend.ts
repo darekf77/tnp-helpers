@@ -67,6 +67,15 @@ export class BaseStartConfig {
    */
   public readonly useStringArrForArgsFunctions: boolean;
   constructor(options: BaseStartConfigOptions) {
+
+    if(!Helpers.isSupportedFiredevTerminal) {
+      Helpers.error(`This terminal is not supported. Please use:
+
+      - git bash (on windows)
+
+      `,false,true)
+    }
+
     options = options ? options : {};
     for (const key in options) {
       if (Object.prototype.hasOwnProperty.call(options, key)) {

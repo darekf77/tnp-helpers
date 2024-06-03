@@ -1,3 +1,4 @@
+//#region   @backend
 import { WebStorage } from './WebStorage'
 
 export class SessionStorage<T> extends WebStorage<T> {
@@ -5,3 +6,4 @@ export class SessionStorage<T> extends WebStorage<T> {
     super(key, sessionStorage)
   }
 }
+//#endregion

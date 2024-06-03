@@ -1,3 +1,4 @@
+//#region @backend
 import {
   isExportDeclaration,
   isImportDeclaration,
@@ -153,3 +154,4 @@ export const recognizeImportsFromFile = (
 
   return results;
 };
+//#endregion

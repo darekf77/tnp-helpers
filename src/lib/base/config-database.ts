@@ -1,10 +1,11 @@
 //#region imports
 import { crossPlatformPath } from "tnp-core/src";
-import { Low } from "../lowdb";
+
 import type { BaseProjectResolver } from "./base-project-resolver";
 import { BaseDb } from "./base-db";
 import { Helpers } from "../index";
 //#region @backend
+import { Low } from "../lowdb";
 import { os } from "tnp-core/src";
 //#endregion
 //#endregion

@@ -1,3 +1,4 @@
+//#region @backend
 import { rename, writeFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -84,3 +85,4 @@ export class Writer {
         return this.__locked ? this.__add(data) : this.__write(data);
     }
 }
+//#endregion

@@ -2,7 +2,6 @@ import { Helpers, LinkedProject } from "../index";
 import { CommandLineFeature } from "./command-line-feature.backend";
 import { BaseProject } from "./base-project";
 import { chalk, _, path } from "tnp-core/src";
-import { translate } from "./translate";
 import { TypeOfCommit, CommitData } from './commit-data';
 import { config } from "tnp-config/src";
 import { crossPlatformPath } from "tnp-core/src";
@@ -576,6 +575,11 @@ Would you like to update current project configuration?`)) {
     this._exit();
   }
   //#endregion
+
+  isTerminalSupported() {
+    console.log(`Terminal is supported: ${Helpers.isSupportedFiredevTerminal}`);
+    this._exit();
+  }
 
   PROJ_EXT() {
     const p = this.project.pathFor('.vscode/extensions.json');

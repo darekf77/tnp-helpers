@@ -6,9 +6,9 @@ import { config } from 'tnp-config/src';
 import { _ } from 'tnp-core/src';
 import { CommitData, CoreProject, Helpers, LinkedPorjectsConfig, LinkedProject, TypeOfCommit } from '../index';
 import { BaseProjectResolver } from './base-project-resolver';
-import { translate } from './translate';
 import { BaseProjectType, NgProject } from '../models';
 //#region @backend
+import { translate } from './translate';
 import * as json5Write from 'json10-writer/src';
 import { fse, portfinder, chalk } from 'tnp-core/src';
 export { ChildProcess } from 'child_process';

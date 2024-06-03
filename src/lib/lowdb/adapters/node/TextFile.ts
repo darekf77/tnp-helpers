@@ -1,4 +1,5 @@
-import { PathLike, readFileSync, renameSync, writeFileSync } from 'node:fs'
+//#region @backend
+import { PathLike, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises'
 import { path } from 'tnp-core/src';
 
@@ -65,3 +66,4 @@ export class TextFileSync implements SyncAdapter<string> {
     renameSync(this.__tempFilename, this.__filename)
   }
 }
+//#endregion

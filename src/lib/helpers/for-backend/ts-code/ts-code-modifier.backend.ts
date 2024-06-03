@@ -1,10 +1,7 @@
+//#region @backend
 import { _ } from 'tnp-core/src';
-// import * as tsfmt from 'typescript-formatter'; // TODO
 import { Helpers } from '../../../index';
 
-/**
- * @deprecated
- */
 export class TsCodeModifer {
   /**
    * @deprecated
@@ -87,3 +84,4 @@ export class TsCodeModifer {
     // } as any)
   }
 }
+//#endregion

@@ -1,12 +1,12 @@
-import { JSONFileSyncPreset } from '../presets/node'
+// import { JSONFileSyncPreset } from '../presets/node'
 
-type Data = {
-  messages: string[]
-}
+// type Data = {
+//   messages: string[]
+// }
 
-const message = process.argv[2] || ''
+// const message = process.argv[2] || ''
 
-const defaultData: Data = { messages: [] }
-const db = JSONFileSyncPreset<Data>('file.json', defaultData)
+// const defaultData: Data = { messages: [] }
+// const db = JSONFileSyncPreset<Data>('file.json', defaultData)
 
-db.update(({ messages }) => messages.push(message))
+// db.update(({ messages }) => messages.push(message))

@@ -1,3 +1,4 @@
+//#region @backend
 import { Adapter, SyncAdapter } from '../core/Low'
 
 export class Memory<T> implements Adapter<T> {
@@ -24,3 +25,4 @@ export class MemorySync<T> implements SyncAdapter<T> {
     this.__data = obj
   }
 }
+//#endregion
