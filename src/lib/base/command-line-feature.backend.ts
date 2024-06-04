@@ -1,7 +1,7 @@
 //#region imports
 import { Helpers } from '../index';
 import type { BaseProjectResolver } from './base-project-resolver';
-import { _ } from 'tnp-core/src';
+import { _, crossPlatformPath } from 'tnp-core/src';
 import { BaseProject } from './base-project';
 import { CLASS } from 'typescript-class-helpers/src';
 //#endregion
@@ -39,6 +39,7 @@ export abstract class CommandLineFeature<
     protected ins: BaseProjectResolver<PROJECT>,
   ) {
     this.project = project;
+    this.cwd = crossPlatformPath(cwd);
     //#region resolve params and args
 
     // this.project = Project.Current as Project;

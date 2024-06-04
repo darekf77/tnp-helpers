@@ -1302,7 +1302,11 @@ ${projectsThatShouldBeLinked
     }
 
     if (!commitData.isActionCommit) {
-      Helpers.info(`Current commit:
+      Helpers.info(`
+
+      PROJECT: ${this.genericName}
+
+      Current commit:
       - message to include {${commitData.commitMessage}}
       - branch to checkout {${commitData.branchName}}
       `);
@@ -2020,7 +2024,8 @@ ${(this.linkedProjects || []).map(c => '- ' + c.relativeClonePath).join('\n')}
     }
     const projects = (
       Object.values(
-        Helpers.readJson(this.pathFor(config.file.angular_json))?.projects,
+        Helpers.readJson(this.pathFor(config.file.angular_json))?.projects ||
+          {},
       ) as NgProject[]
     ).filter(f => f.projectType === 'library');
 

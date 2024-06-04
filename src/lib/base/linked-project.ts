@@ -118,5 +118,6 @@ export class LinkedPorjectsConfig {
 
   prefix?: string;
   skipRecrusivePush?: boolean;
+  resetOnlyChildren?: boolean;
   projects: LinkedProject[];
 }

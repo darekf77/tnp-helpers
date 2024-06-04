@@ -14,6 +14,12 @@ export class BaseCommandLine<
     Helpers.error('Please select git command');
   }
 
+  prevennCwdIsNotProject() {
+    if (!this.project) {
+      Helpers.error('This is not a project folder', false, true);
+    }
+  }
+
   //#region commands / set editor
   async setEditor() {
     await this.ins.configDb.selectCodeEditor();
@@ -21,10 +27,12 @@ export class BaseCommandLine<
   }
   //#endregion
 
+  //#region commands / quick git update
   /**
    * quick git update push
    */
   async update() {
+    this.prevennCwdIsNotProject();
     Helpers.info('Updating & push project...');
     try {
       this.project.git.addAndCommit('chore: update');
@@ -40,7 +48,7 @@ export class BaseCommandLine<
   async up() {
     await this.update();
   }
-
+  //#endregion
 
   //#region commands / develop
   async develop() {
@@ -130,6 +138,7 @@ export class BaseCommandLine<
 
   //#region commands / pull
   async pull() {
+    this.prevennCwdIsNotProject();
     await this.project.pullProcess();
     this._exit();
   }
@@ -154,6 +163,7 @@ ${
 
   async reset() {
     // Helpers.clearConsole();
+    this.prevennCwdIsNotProject();
     const parent = this.project.parent as BaseProject;
     const branchFromLinkedProjectConfig = parent?.linkedProjects?.find(l => {
       return (
@@ -177,19 +187,28 @@ ${
         `);
     }
 
+    const resetOnlyChildren =
+      !!this.project.getLinkedProjectsConfig().resetOnlyChildren;
+
     const branches = Helpers.uniqArray([
       ...this.__filterBranchesByPattern(overrideBranchToReset),
       ...this.__filterBranchesByPattern(''),
     ]);
-    if (branches.length > 0) {
-      overrideBranchToReset = await this.__selectBrach(branches);
+
+    if (resetOnlyChildren) {
+      Helpers.info(`Reseting only children...for defualt branches.`);
     } else {
-      Helpers.error(
-        `No branch found by name "${overrideBranchToReset || this.firstArg}"`,
-        false,
-        true,
-      );
+      if (branches.length > 0) {
+        overrideBranchToReset = await this.__selectBrach(branches);
+      } else {
+        Helpers.error(
+          `No branch found by name "${overrideBranchToReset || this.firstArg}"`,
+          false,
+          true,
+        );
+      }
     }
+
     overrideBranchToReset =
       (overrideBranchToReset || '').split('/').pop() || '';
     this.__resetInfo(
@@ -231,6 +250,7 @@ ${
   //#region commands / soft
   soft() {
     // TODO when aciton commit
+    this.prevennCwdIsNotProject();
     this.project.git.resetSoftHEAD(1);
     this._exit();
   }
@@ -238,6 +258,7 @@ ${
 
   //#region commands / rebase
   async rebase() {
+    this.prevennCwdIsNotProject();
     const currentBranch = this.project.git.currentBranchName;
     let safeReset = 10;
     let rebaseBranch =
@@ -273,6 +294,7 @@ ${
    * stash only staged files
    */
   stash() {
+    this.prevennCwdIsNotProject();
     this.project.git.stash({ onlyStaged: true });
     this._exit();
   }
@@ -283,6 +305,7 @@ ${
    * stash all files
    */
   stashAll() {
+    this.prevennCwdIsNotProject();
     this.project.git.stageAllFiles();
     this.project.git.stash({ onlyStaged: false });
     this._exit();
@@ -294,6 +317,7 @@ ${
    * push force to all orgins
    */
   async pushAllForce() {
+    this.prevennCwdIsNotProject();
     await this.pushAll(true);
   }
 
@@ -301,7 +325,7 @@ ${
    * push to all origins
    */
   async pushAll(force = false) {
-    Helpers.clearConsole();
+    this.prevennCwdIsNotProject();
     const remotes = this.project.git.allOrigins;
     Helpers.info(`
     Remotes for repo:
@@ -342,6 +366,7 @@ ${
       noExit?: boolean;
     } = {},
   ) {
+    this.prevennCwdIsNotProject();
     await this.project.git.meltActionCommits(true);
     await this.project.pushProcess({
       ...options,
@@ -369,6 +394,7 @@ ${
       noExit?: boolean;
     } = {},
   ) {
+    this.prevennCwdIsNotProject();
     await this.project.pushProcess({
       ...options,
       forcePushNoQuestion: options.force,
@@ -386,6 +412,7 @@ ${
 
   //#region  commands / melt
   public async melt() {
+    this.prevennCwdIsNotProject();
     await this.meltUpdateCommits(true);
     this._exit();
   }
@@ -508,6 +535,7 @@ ${
 
   //#region commands / set origin
   SET_ORIGIN() {
+    this.prevennCwdIsNotProject();
     const newOriginNameOrUrl: string = this.firstArg;
     const proj = this.project;
     if (proj && proj.git.isInsideGitRepo) {
@@ -524,6 +552,7 @@ ${
 
   //#region commands / rename origin
   RENAME_ORIGIN() {
+    this.prevennCwdIsNotProject();
     const newOriginNameOrUrl: string = this.firstArg;
     const proj = this.project;
     if (proj && proj.git.isInsideGitRepo) {
@@ -537,6 +566,7 @@ ${
 
   //#region commands / last hash tag
   LAST_TAG_HASH() {
+    this.prevennCwdIsNotProject();
     Helpers.info(this.project.git.lastTagHash());
     this._exit();
   }
@@ -544,6 +574,7 @@ ${
 
   //#region commands / last tag
   LAST_TAG() {
+    this.prevennCwdIsNotProject();
     const proj = this.project;
     Helpers.info(`
 
@@ -569,6 +600,7 @@ ${
    * TODO move somewhere
    */
   async lint() {
+    this.prevennCwdIsNotProject();
     await this.project.lint();
   }
   //#endregion
@@ -578,7 +610,8 @@ ${
    * TODO move somewhere
    */
   async version() {
-    console.log(this.project.version);
+    this.prevennCwdIsNotProject();
+    console.log('Current project verison: ' + this.project.version);
     this._exit();
   }
   //#endregion
@@ -588,6 +621,7 @@ ${
    * TODO move somewhere
    */
   async init() {
+    this.prevennCwdIsNotProject();
     await this.project.init();
     this._exit();
   }
@@ -598,6 +632,7 @@ ${
    * TODO move somewhere
    */
   async struct() {
+    this.prevennCwdIsNotProject();
     await this.project.struct();
     this._exit();
   }
@@ -608,6 +643,7 @@ ${
    * TODO move somewhere
    */
   async info() {
+    this.prevennCwdIsNotProject();
     Helpers.clearConsole();
     await this.project.info();
     await this.project.saveAllLinkedProjectsToDB();
@@ -617,6 +653,7 @@ ${
 
   //#region commands / info
   modified() {
+    this.prevennCwdIsNotProject();
     const proj = this.project;
     const libs: BaseProject[] = proj.children.filter(child => {
       process.stdout.write('.');
@@ -677,6 +714,7 @@ Would you like to update current project configuration?`)
 
   //#region commands / remotes
   REMOTES() {
+    this.prevennCwdIsNotProject();
     const folders = Helpers.foldersFrom(this.project.location);
 
     folders
@@ -694,6 +732,7 @@ Would you like to update current project configuration?`)
   }
 
   PROJ_EXT() {
+    this.prevennCwdIsNotProject();
     const p = this.project.pathFor('.vscode/extensions.json');
     const extensions: { recommendations: string[] } = Helpers.readJson(
       p,
@@ -714,6 +753,7 @@ Would you like to update current project configuration?`)
   }
 
   projdb() {
+    this.prevennCwdIsNotProject();
     Helpers.info(`Projects db location:
     ${this.project.projectsDbLocation}
 
