@@ -40,26 +40,29 @@ export abstract class CommandLineFeature<
   ) {
     this.project = project;
     //#region resolve params and args
-    // console.log({ args, methodNameToCall })
+
 
     // this.project = Project.Current as Project;
     const className = CLASS.getNameFromObject(this as any);
     const methods = CLASS.getMethodsNames(this).filter(f => !f.startsWith('_'));
+    // console.log({ className, methods })
 
-    const classFn = Object.getPrototypeOf(this).constructor;
+    //#region methods names from prototype hack
+    // const classFn = Object.getPrototypeOf(this).constructor;
     // console.log({ className, methods });
     // Object.defineProperty($Global.prototype.version, 'name', { value: 'version', writable: true });
     // HACK: to set name of global methods
     // TODO this will not survive minification
-    for (const classMethodsName of methods) {
-      Object.defineProperty(classFn.prototype[classMethodsName], 'name', {
-        value:
-          classFn === '$Global' // TODO register alywas $Global as ''
-            ? classMethodsName
-            : `${className}.${classMethodsName}`,
-        writable: false,
-      });
-    }
+    // for (const classMethodsName of methods) {
+    //   Object.defineProperty(classFn.prototype[classMethodsName], 'name', {
+    //     value:
+    //       classFn === '$Global' // TODO register alywas $Global as ''
+    //         ? classMethodsName
+    //         : `${className}.${classMethodsName}`,
+    //     writable: false,
+    //   });
+    // }
+    //#endregion
 
     const firstArg = _.first(argsWithParams.split(' '));
     const method = methods.find(m => m === firstArg);
