@@ -53,17 +53,20 @@ import { HelpersAngular } from './for-browser/angular.helper';
 export function applyMixins(derivedCtor: any, baseCtors: any[]) {
   baseCtors.forEach(baseCtor => {
     Object.getOwnPropertyNames(baseCtor.prototype).forEach(name => {
-      Object.defineProperty(derivedCtor.prototype, name, Object.getOwnPropertyDescriptor(baseCtor.prototype, name));
+      Object.defineProperty(
+        derivedCtor.prototype,
+        name,
+        Object.getOwnPropertyDescriptor(baseCtor.prototype, name),
+      );
     });
   });
 }
 //#endregion
 
 export class HelpersFiredev extends CoreHelpers {
-
   //#region staic
   private static _instance: HelpersFiredev & CoreHelpers;
-  public static get Instance() {
+  public static get Instance(): HelpersFiredev {
     if (!HelpersFiredev._instance) {
       HelpersFiredev._instance = new HelpersFiredev();
     }
@@ -92,7 +95,7 @@ export class HelpersFiredev extends CoreHelpers {
     public numbers = new HelpersNumber(),
     //#region @browser
     public browser = HelpersBrowser.instance,
-    public ng = HelpersAngular
+    public ng = HelpersAngular,
     //#endregion
   ) {
     super();
@@ -110,13 +113,13 @@ export class HelpersFiredev extends CoreHelpers {
 
   async ncc(pathToJsFile: string, outputFile) {
     //#region @backendFunc
-    Helpers.taskStarted(`Bundling node_modules for file: ${pathToJsFile}`)
+    Helpers.taskStarted(`Bundling node_modules for file: ${pathToJsFile}`);
     const data = await require('@vercel/ncc')(pathToJsFile, {
       // provide a custom cache path or disable caching
       cache: false,
       // out:'',
       // externals to leave as requires of the build
-      externals: ["electron"],
+      externals: ['electron'],
       // directory outside of which never to emit assets
       // filterAssetBase: process.cwd(), // default
       minify: false, // default
@@ -131,14 +134,14 @@ export class HelpersFiredev extends CoreHelpers {
       target: 'es2015', // default
       v8cache: false, // default
       quiet: false, // default
-      debugLog: false // default
+      debugLog: false, // default
     });
     Helpers.writeFile(outputFile, data.code);
     Helpers.taskDone('Bundling finish');
     //#endregion
   }
 
-  uniqArray<T = any>(array: any[], uniqueProperty?: (keyof T)): T[] {
+  uniqArray<T = any>(array: any[], uniqueProperty?: keyof T): T[] {
     //#region @backendFunc
     // @ts-ignore
     return Helpers.arrays.uniqArray<T>(array, uniqueProperty);
@@ -154,7 +157,7 @@ export class HelpersFiredev extends CoreHelpers {
   //#endregion
 
   //#region methods & getters / parse url
-  urlParse(portOrHost: (number | string | URL), forceDomain = false) {
+  urlParse(portOrHost: number | string | URL, forceDomain = false) {
     let url: URL;
     if (portOrHost instanceof URL) {
       url = portOrHost;
@@ -165,17 +168,19 @@ export class HelpersFiredev extends CoreHelpers {
     } else if (_.isString(portOrHost)) {
       try {
         url = new URL(portOrHost);
-      } catch (error) { }
+      } catch (error) {}
       if (Validators.network.isValidIp(portOrHost)) {
         try {
           url = new URL(`http://${portOrHost}`);
         } catch (error) {
-          Helpers.warn(`Not able to get port from ${portOrHost}`)
+          Helpers.warn(`Not able to get port from ${portOrHost}`);
         }
       }
       if (forceDomain) {
-        const domain = (portOrHost as string)
-        url = new URL(domain.startsWith('http') ? domain : `http://${portOrHost}`);
+        const domain = portOrHost as string;
+        url = new URL(
+          domain.startsWith('http') ? domain : `http://${portOrHost}`,
+        );
       }
     }
     return url;
@@ -194,7 +199,11 @@ export class HelpersFiredev extends CoreHelpers {
   async isElevated() {
     //#region @backend
     if (!(await isElevated())) {
-      Helpers.error(`[firedev-helpers] Please run this program as sudo (or admin on windows)`, false, true)
+      Helpers.error(
+        `[firedev-helpers] Please run this program as sudo (or admin on windows)`,
+        false,
+        true,
+      );
     }
     //#endregion
   }
@@ -226,7 +235,10 @@ export class HelpersFiredev extends CoreHelpers {
       //   }
       // });
     }
-    return Helpers.getStringFrom('ipconfig getifaddr en0', `ip v4 address of first ethernet interface`);
+    return Helpers.getStringFrom(
+      'ipconfig getifaddr en0',
+      `ip v4 address of first ethernet interface`,
+    );
     //#endregion
   }
   //#endregion
@@ -246,7 +258,7 @@ export class HelpersFiredev extends CoreHelpers {
           if (!results[name]) {
             results[name] = [];
           }
-          ips.push(net.address)
+          ips.push(net.address);
           results[name].push(net.address);
         }
       }
@@ -260,19 +272,22 @@ export class HelpersFiredev extends CoreHelpers {
   async mesureExectionInMs(
     description: string,
     functionToExecute: Function,
-    ...functionArguments: any[]): Promise<number> {
-    var start = new Date()
+    ...functionArguments: any[]
+  ): Promise<number> {
+    var start = new Date();
     await Helpers.runSyncOrAsync({
       functionFn: functionToExecute,
-      arrayOfParams: functionArguments
+      arrayOfParams: functionArguments,
     });
     //@ts-ignore
-    var end = new Date() - start
+    var end = new Date() - start;
     if (Helpers.isBrowser) {
       Helpers.info(`Execution time: ${end.toString()}ms for "${description}"`);
     }
     //#region @backend
-    Helpers.info(`Execution time: ${CLI.chalk.bold(end.toString())}ms for "${CLI.chalk.bold(description)}"`);
+    Helpers.info(
+      `Execution time: ${CLI.chalk.bold(end.toString())}ms for "${CLI.chalk.bold(description)}"`,
+    );
     //#endregion
     return end;
   }
@@ -281,16 +296,19 @@ export class HelpersFiredev extends CoreHelpers {
   //#region methods & getters / mesure execution in ms (sync)
   mesureExectionInMsSync(
     description: string,
-    functionToExecute: () => void): number {
-    var start = new Date()
+    functionToExecute: () => void,
+  ): number {
+    var start = new Date();
     functionToExecute();
     //@ts-ignore
-    var end = new Date() - start
+    var end = new Date() - start;
     if (Helpers.isBrowser) {
       Helpers.info(`Execution time: ${end.toString()}ms for "${description}"`);
     }
     //#region @backend
-    Helpers.info(`Execution time: ${CLI.chalk.bold(end.toString())}ms for "${CLI.chalk.bold(description)}"`);
+    Helpers.info(
+      `Execution time: ${CLI.chalk.bold(end.toString())}ms for "${CLI.chalk.bold(description)}"`,
+    );
     //#endregion
     return end;
   }
@@ -299,18 +317,17 @@ export class HelpersFiredev extends CoreHelpers {
   //#region methods & getters / wait for condition
   waitForCondition(conditionFn: (any) => boolean, howOfftenCheckInMs = 1000) {
     return new Promise(async (resolve, reject) => {
-
       const result = await Helpers.runSyncOrAsync({ functionFn: conditionFn });
       if (result) {
-        resolve(void 0)
+        resolve(void 0);
       } else {
         setTimeout(() => {
           Helpers.waitForCondition(conditionFn, howOfftenCheckInMs).then(() => {
             resolve(void 0);
-          })
+          });
         }, howOfftenCheckInMs);
       }
-    })
+    });
   }
   //#endregion
 
@@ -358,7 +375,7 @@ export class HelpersFiredev extends CoreHelpers {
       const value: string = v as any;
       if (value === 'true') env[k] = true;
       if (value === 'false') env[k] = false;
-    })
+    });
   }
   //#endregion
 
@@ -368,12 +385,15 @@ export class HelpersFiredev extends CoreHelpers {
    */
   async workerCalculateArray(
     dataToSplit: any[],
-    operation: (dataChunk: any[], workerNumber?: number | undefined) => Promise<void>,
+    operation: (
+      dataChunk: any[],
+      workerNumber?: number | undefined,
+    ) => Promise<void>,
     options?: {
-      maxesForWorkes?: { [workerMaxes: number]: number; };
+      maxesForWorkes?: { [workerMaxes: number]: number };
       workerLimit?: number;
       globals?: any;
-    }
+    },
   ) {
     //#region @backend
     let { maxesForWorkes, workerLimit, globals } = options || {};
@@ -387,36 +407,48 @@ export class HelpersFiredev extends CoreHelpers {
         2: 15, // 2 workers up to 15 chunks,
         3: 25, // 2 workers up to 15 chunks,
         // above 15 chunks => {workerLimit}
-      }
+      };
     }
     if (_.isUndefined(workerLimit) || workerLimit === Infinity) {
-      workerLimit = (os.cpus().length - 1);
+      workerLimit = os.cpus().length - 1;
     }
     if (workerLimit <= 0) {
       workerLimit = 0;
     }
 
-    if ((_.isNumber(maxesForWorkes[0]) && maxesForWorkes[0] > 0 && dataToSplit.length <= maxesForWorkes[0]) ||
-      workerLimit === 0) {
+    if (
+      (_.isNumber(maxesForWorkes[0]) &&
+        maxesForWorkes[0] > 0 &&
+        dataToSplit.length <= maxesForWorkes[0]) ||
+      workerLimit === 0
+    ) {
       return await operation(dataToSplit, void 0);
     }
-    const workersNumber = Number(Object
-      .keys(maxesForWorkes)
-      .filter(key => key != '0')
-      .sort()
-      .reverse()
-      .find(key => maxesForWorkes[key] <= dataToSplit.length));
+    const workersNumber = Number(
+      Object.keys(maxesForWorkes)
+        .filter(key => key != '0')
+        .sort()
+        .reverse()
+        .find(key => maxesForWorkes[key] <= dataToSplit.length),
+    );
     // Helpers.log('workersNumber', workersNumber)
     // Helpers.log('_.isNumber(workersNumber)', _.isNumber(workersNumber))
 
-    let chunks: (any[])[] = [];
+    let chunks: any[][] = [];
     if (_.isNumber(workersNumber)) {
       const splitEven = Math.floor(dataToSplit.length / workersNumber);
       for (let workerIndex = 0; workerIndex <= workersNumber; workerIndex++) {
         if (workerIndex === workersNumber) {
-          chunks[chunks.length - 1] = chunks[chunks.length - 1].concat(dataToSplit.slice(workerIndex * splitEven, dataToSplit.length))
+          chunks[chunks.length - 1] = chunks[chunks.length - 1].concat(
+            dataToSplit.slice(workerIndex * splitEven, dataToSplit.length),
+          );
         } else {
-          chunks.push(dataToSplit.slice(workerIndex * splitEven, workerIndex * splitEven + splitEven));
+          chunks.push(
+            dataToSplit.slice(
+              workerIndex * splitEven,
+              workerIndex * splitEven + splitEven,
+            ),
+          );
         }
       }
     }
@@ -425,18 +457,18 @@ export class HelpersFiredev extends CoreHelpers {
     for (let n = 0; n < chunks.length; n++) {
       ((chunks, n) => {
         const dataChunk = chunks[n];
-        Helpers.log(`worker ${n} ` + dataChunk.join(',\t'))
+        Helpers.log(`worker ${n} ` + dataChunk.join(',\t'));
         // Helpers.log('pass to worker', Helpers)
         let task = new Task({
           globals: _.merge(globals, {
             n,
-            dataChunk
+            dataChunk,
           }),
           requires: {
             request: 'request-promise',
-          }
+          },
         });
-        promises.push(task.run(operation))
+        promises.push(task.run(operation));
       })(chunks, n);
     }
     return await Promise.all(promises);
@@ -447,7 +479,7 @@ export class HelpersFiredev extends CoreHelpers {
   //#region methods & getters / check environment
   checkEnvironment(deps?: CoreModels.GlobalDependencies) {
     //#region @backendFunc
-    return CLI.checkEnvironment(deps)
+    return CLI.checkEnvironment(deps);
     //#endregion
   }
   //#endregion
@@ -465,6 +497,8 @@ export class HelpersFiredev extends CoreHelpers {
   //#endregion
 }
 
+// prettier-ignore-start
+/* eslint-disable prettier/prettier */
 //#region class mixins
 // @ts-ignore
 export interface HelpersFiredev extends
@@ -476,6 +510,7 @@ export interface HelpersFiredev extends
 //#endregion
 { }
 
+
 applyMixins(HelpersFiredev, [
   HelpersStringsRegexes,
   //#region @backend
@@ -484,3 +519,5 @@ applyMixins(HelpersFiredev, [
   //#endregion
 ]);
 //#endregion
+// prettier-ignore-end
+/* eslint-enable prettier/prettier */

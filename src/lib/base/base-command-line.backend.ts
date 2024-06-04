@@ -1,12 +1,15 @@
-import { Helpers, LinkedProject } from "../index";
-import { CommandLineFeature } from "./command-line-feature.backend";
-import { BaseProject } from "./base-project";
-import { chalk, _, path } from "tnp-core/src";
+import { Helpers, LinkedProject } from '../index';
+import { CommandLineFeature } from './command-line-feature.backend';
+import { BaseProject } from './base-project';
+import { chalk, _, path } from 'tnp-core/src';
 import { TypeOfCommit, CommitData } from './commit-data';
-import { config } from "tnp-config/src";
-import { crossPlatformPath } from "tnp-core/src";
+import { config } from 'tnp-config/src';
+import { crossPlatformPath } from 'tnp-core/src';
 
-export class BaseCommandLine<PARAMS = any, PROJECT extends BaseProject<any, any> = BaseProject> extends CommandLineFeature<PARAMS, PROJECT> {
+export class BaseCommandLine<
+  PARAMS = any,
+  PROJECT extends BaseProject<any, any> = BaseProject,
+> extends CommandLineFeature<PARAMS, PROJECT> {
   public _() {
     Helpers.error('Please select git command');
   }
@@ -18,11 +21,34 @@ export class BaseCommandLine<PARAMS = any, PROJECT extends BaseProject<any, any>
   }
   //#endregion
 
+  /**
+   * quick git update push
+   */
+  async update() {
+    Helpers.info('Updating & push project...');
+    try {
+      this.project.git.addAndCommit('chore: update');
+    } catch (error) {}
+    await this.project.git.pushCurrentBranch({
+      askToRetry: true,
+      forcePushNoQuestion: true,
+    });
+    Helpers.info('Done');
+    this._exit();
+  }
+
+  async up() {
+    await this.update();
+  }
+
+
   //#region commands / develop
   async develop() {
     // Helpers.clearConsole();
-    Helpers.taskStarted(`getting all projects...`)
-    const founded: BaseProject[] = (await this.ins.projectsDb.getAllProjectsFromDB() || [])
+    Helpers.taskStarted(`getting all projects...`);
+    const founded: BaseProject[] = (
+      (await this.ins.projectsDb.getAllProjectsFromDB()) || []
+    )
       .filter(p => Helpers.exists(p.location))
       .map(p => {
         const proj = this.ins.From(p.location);
@@ -40,47 +66,60 @@ export class BaseCommandLine<PARAMS = any, PROJECT extends BaseProject<any, any>
         //   }
         // }
       })
-      .filter(p => !!p)
-    Helpers.taskDone(`found ${founded.length} projects...`)
+      .filter(p => !!p);
+    Helpers.taskDone(`found ${founded.length} projects...`);
 
     Helpers.taskStarted(`searching for project...`);
     // @ts-ignore
-    const results = Helpers.uniqArray<BaseProject>([
-      ...Helpers.arrays.fuzzy(this.args.join(' '), founded, p => p.name).results,
-      ...Helpers.arrays.fuzzy(this.args.join(' '), founded, p => p.basename).results,
-      ...Helpers.arrays.fuzzy(this.args.join(' '), founded, p => p.location).results,
-    ], 'location').reverse();
-    Helpers.taskDone(`found ${results.length} projects...`)
+    const results = Helpers.uniqArray<BaseProject>(
+      [
+        ...Helpers.arrays.fuzzy(this.args.join(' '), founded, p => p.name)
+          .results,
+        ...Helpers.arrays.fuzzy(this.args.join(' '), founded, p => p.basename)
+          .results,
+        ...Helpers.arrays.fuzzy(this.args.join(' '), founded, p => p.location)
+          .results,
+      ],
+      'location',
+    ).reverse();
+    Helpers.taskDone(`found ${results.length} projects...`);
 
     const openInEditor = async (proj: BaseProject) => {
-      Helpers.taskStarted(`Getting code editor info...`)
+      Helpers.taskStarted(`Getting code editor info...`);
       const editor = await this.ins.configDb.getCodeEditor();
       Helpers.taskDone(`Got code editor info...`);
       const embededProject = proj.embeddedProject as BaseProject;
       const porjToOpen = embededProject || proj;
       const locaitonFolderToOpen = porjToOpen.location;
-      Helpers.info('Initing and opening project...')
+      Helpers.info('Initing and opening project...');
       try {
-        await porjToOpen?.struct()
-      } catch (error) { }
+        await porjToOpen?.struct();
+      } catch (error) {}
       Helpers.run(`${editor} ${locaitonFolderToOpen}`).sync();
-
     };
 
     if (results.length === 1) {
       await openInEditor(_.first(results));
     } else if (results.length === 0) {
-      Helpers.error(`No project found by name: "${this.args.join(' ')}"`, false, true);
+      Helpers.error(
+        `No project found by name: "${this.args.join(' ')}"`,
+        false,
+        true,
+      );
     } else {
-      Helpers.info(`Opening console gui to select project...`)
-      const res = await Helpers.consoleGui.select('Select project to open', results.map(p => {
-        return {
-          name: p.genericName,
-          value: p.location
-        }
-      }), true);
+      Helpers.info(`Opening console gui to select project...`);
+      const res = await Helpers.consoleGui.select(
+        'Select project to open',
+        results.map(p => {
+          return {
+            name: p.genericName,
+            value: p.location,
+          };
+        }),
+        true,
+      );
       await openInEditor(this.ins.From(res));
-    };
+    }
     this._exit();
   }
 
@@ -103,32 +142,39 @@ export class BaseCommandLine<PARAMS = any, PROJECT extends BaseProject<any, any>
     YOU ARE RESETING EVERYTHING TO BRANCH: ${chalk.bold(branchToReset)}
 
 - curret project (${this.project.name})
-${(_.isArray(this.project.children) && this.project.children.length > 0) ?
-        `- modules:\n${this.project.children.map(c => `\t${c.basename} (${chalk.yellow(c.name)})`).join('\n')
-        }` : ''}
+${
+  _.isArray(this.project.children) && this.project.children.length > 0
+    ? `- modules:\n${this.project.children
+        .map(c => `\t${c.basename} (${chalk.yellow(c.name)})`)
+        .join('\n')}`
+    : ''
+}
       `);
   }
 
   async reset() {
     // Helpers.clearConsole();
-    const parent = (this.project.parent as BaseProject);
+    const parent = this.project.parent as BaseProject;
     const branchFromLinkedProjectConfig = parent?.linkedProjects?.find(l => {
-      return crossPlatformPath([parent.location, l.relativeClonePath]) === this.project.location;
+      return (
+        crossPlatformPath([parent.location, l.relativeClonePath]) ===
+        this.project.location
+      );
     })?.deafultBranch;
 
-    let overrideBranchToReset = this.firstArg ||
+    let overrideBranchToReset =
+      this.firstArg ||
       branchFromLinkedProjectConfig ||
       this.project.core?.branch ||
       this.project.getDefaultDevelopmentBranch() ||
-      this.project.git.currentBranchName
+      this.project.git.currentBranchName;
 
     if (this.project.core?.branch) {
       Helpers.info(`
 
         Core branch for project: ${this.project.core?.branch}
 
-        `)
-
+        `);
     }
 
     const branches = Helpers.uniqArray([
@@ -138,29 +184,45 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
     if (branches.length > 0) {
       overrideBranchToReset = await this.__selectBrach(branches);
     } else {
-      Helpers.error(`No branch found by name "${overrideBranchToReset || this.firstArg}"`, false, true);
+      Helpers.error(
+        `No branch found by name "${overrideBranchToReset || this.firstArg}"`,
+        false,
+        true,
+      );
     }
-    overrideBranchToReset = (overrideBranchToReset || '').split('/').pop() || '';
-    this.__resetInfo(overrideBranchToReset ? overrideBranchToReset : this.project.getDefaultDevelopmentBranch());
+    overrideBranchToReset =
+      (overrideBranchToReset || '').split('/').pop() || '';
+    this.__resetInfo(
+      overrideBranchToReset
+        ? overrideBranchToReset
+        : this.project.getDefaultDevelopmentBranch(),
+    );
 
     let resetProject = this.project;
     if (this.project.git.isInsideGitRepo && !this.project.git.isGitRoot) {
       Helpers.warn(`You are not in root of git repo...`, false);
-      resetProject = this.ins.nearestTo(crossPlatformPath([this.project.location, '..']), {
-        findGitRoot: true
-      });
-      if (!(await Helpers.questionYesNo(`Would you like to reset root repo instead (project=${chalk.bold.red(resetProject.genericName)}) ?`))) {
+      resetProject = this.ins.nearestTo(
+        crossPlatformPath([this.project.location, '..']),
+        {
+          findGitRoot: true,
+        },
+      );
+      if (
+        !(await Helpers.questionYesNo(
+          `Would you like to reset root repo instead (project=${chalk.bold.red(resetProject.genericName)}) ?`,
+        ))
+      ) {
         Helpers.error(`Aborted`, false, true);
       }
     }
 
-    const res = await Helpers.questionYesNo(`Reset hard and pull current project `
-      + `${resetProject.linkedProjects.length > 0 ? '(and children)' : ''} ?`);
+    const res = await Helpers.questionYesNo(
+      `Reset hard and pull current project ` +
+        `${resetProject.linkedProjects.length > 0 ? '(and children)' : ''} ?`,
+    );
     if (res) {
-
       await resetProject.resetProcess(overrideBranchToReset);
     }
-
 
     this._exit();
   }
@@ -170,7 +232,7 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
   soft() {
     // TODO when aciton commit
     this.project.git.resetSoftHEAD(1);
-    this._exit()
+    this._exit();
   }
   //#endregion
 
@@ -178,7 +240,8 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
   async rebase() {
     const currentBranch = this.project.git.currentBranchName;
     let safeReset = 10;
-    let rebaseBranch = this.firstArg || this.project.getDefaultDevelopmentBranch();
+    let rebaseBranch =
+      this.firstArg || this.project.getDefaultDevelopmentBranch();
 
     const branches = this.__filterBranchesByPattern(rebaseBranch);
     if (branches.length > 0) {
@@ -188,14 +251,18 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
     }
 
     try {
-      this.project.run(`git reset--hard && git checkout ${rebaseBranch} && git reset--hard HEAD~${safeReset} && git pull origin ${rebaseBranch} `
-        + `&& git checkout ${currentBranch} && git reset--soft HEAD~1 && git stash && git reset--hard HEAD~${safeReset} && git rebase ${rebaseBranch} && git stash apply`,
-        { output: false, silence: true }).sync();
-      await this.project.init()
-      Helpers.info('REBASE DONE')
+      this.project
+        .run(
+          `git reset--hard && git checkout ${rebaseBranch} && git reset--hard HEAD~${safeReset} && git pull origin ${rebaseBranch} ` +
+            `&& git checkout ${currentBranch} && git reset--soft HEAD~1 && git stash && git reset--hard HEAD~${safeReset} && git rebase ${rebaseBranch} && git stash apply`,
+          { output: false, silence: true },
+        )
+        .sync();
+      await this.project.init();
+      Helpers.info('REBASE DONE');
     } catch (error) {
-      await this.project.init()
-      Helpers.warn('PLEASE MERGE YOUR CHANGES')
+      await this.project.init();
+      Helpers.warn('PLEASE MERGE YOUR CHANGES');
     }
     this._exit();
   }
@@ -240,7 +307,7 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
     Remotes for repo:
     ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
 
-`)
+`);
 
     for (let index = 0; index < remotes.length; index++) {
       const { origin, url } = remotes[index];
@@ -254,11 +321,11 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
 
   //#region commands / push force
   async forcePush() {
-    await this.push({ force: true, typeofCommit: 'feature' })
+    await this.push({ force: true, typeofCommit: 'feature' });
   }
 
   async pushForce() {
-    await this.push({ force: true, typeofCommit: 'feature' })
+    await this.push({ force: true, typeofCommit: 'feature' });
   }
   //#endregion
 
@@ -266,7 +333,15 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
   /**
    * Commit and push this for single repo
    */
-  async commit(options: { force?: boolean; typeofCommit?: TypeOfCommit; origin?: string; commitMessageRequired?: boolean; noExit?: boolean; } = {}) {
+  async commit(
+    options: {
+      force?: boolean;
+      typeofCommit?: TypeOfCommit;
+      origin?: string;
+      commitMessageRequired?: boolean;
+      noExit?: boolean;
+    } = {},
+  ) {
     await this.project.git.meltActionCommits(true);
     await this.project.pushProcess({
       ...options,
@@ -275,17 +350,25 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
       exitCallBack: () => {
         this._exit();
       },
-      skipChildren: true
-    })
+      skipChildren: true,
+    });
     if (options.noExit) {
       return;
     }
-    this._exit()
+    this._exit();
   }
   //#endregion
 
   //#region commands / push
-  async push(options: { force?: boolean; typeofCommit?: TypeOfCommit; origin?: string; commitMessageRequired?: boolean; noExit?: boolean; } = {}) {
+  async push(
+    options: {
+      force?: boolean;
+      typeofCommit?: TypeOfCommit;
+      origin?: string;
+      commitMessageRequired?: boolean;
+      noExit?: boolean;
+    } = {},
+  ) {
     await this.project.pushProcess({
       ...options,
       forcePushNoQuestion: options.force,
@@ -293,11 +376,11 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
       exitCallBack: () => {
         this._exit();
       },
-    })
+    });
     if (options.noExit) {
       return;
     }
-    this._exit()
+    this._exit();
   }
   //#endregion
 
@@ -313,7 +396,11 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
     if (this.project.git.meltActionCommits(true) > 0) {
       if (!hideInfo) {
         this.project.git.stageAllFiles();
-        if (!(await Helpers.consoleGui.question.yesNo('Update commits has been reset. Continue with changes ?'))) {
+        if (
+          !(await Helpers.consoleGui.question.yesNo(
+            'Update commits has been reset. Continue with changes ?',
+          ))
+        ) {
           this._exit();
         }
       }
@@ -327,7 +414,7 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
   }
   async pushFeature() {
     await this.meltUpdateCommits();
-    await this.push({ typeofCommit: 'feature', commitMessageRequired: true })
+    await this.push({ typeofCommit: 'feature', commitMessageRequired: true });
   }
   //#endregion
 
@@ -398,7 +485,10 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
   //#region commands / push perf
   async pushPerf() {
     await this.meltUpdateCommits();
-    await this.push({ typeofCommit: 'performance', commitMessageRequired: true });
+    await this.push({
+      typeofCommit: 'performance',
+      commitMessageRequired: true,
+    });
   }
   //#endregion
 
@@ -428,7 +518,7 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
       Helpers.error(`This folder is not a git repo... `, false, true);
     }
 
-    this._exit()
+    this._exit();
   }
   //#endregion
 
@@ -441,7 +531,7 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
     } else {
       Helpers.error(`This folder is not a git repo... `, false, true);
     }
-    this._exit()
+    this._exit();
   }
   //#endregion
 
@@ -467,8 +557,10 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
 
   //#region commands / check tag exists
   CHECK_TAG_EXISTS() {
-    Helpers.info(`tag "${this.firstArg}"  exits = ${Helpers.git.checkTagExists(this.firstArg)} `);
-    this._exit()
+    Helpers.info(
+      `tag "${this.firstArg}"  exits = ${Helpers.git.checkTagExists(this.firstArg)} `,
+    );
+    this._exit();
   }
   //#endregion
 
@@ -527,41 +619,59 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
   modified() {
     const proj = this.project;
     const libs: BaseProject[] = proj.children.filter(child => {
-      process.stdout.write('.')
+      process.stdout.write('.');
       return (child as BaseProject).git.thereAreSomeUncommitedChangeExcept([
         config.file.package_json,
-      ])
+      ]);
     });
-    console.log('\n' + Helpers.terminalLine())
-    Helpers.info(libs.length ? libs.map(c => `${chalk.bold(c.name)} (${c.git.uncommitedFiles.map(p => chalk.black(path.basename(p))).join(', ')})`).join('\n') : 'Nothing modifed')
-    this._exit()
+    console.log('\n' + Helpers.terminalLine());
+    Helpers.info(
+      libs.length
+        ? libs
+            .map(
+              c =>
+                `${chalk.bold(c.name)} (${c.git.uncommitedFiles.map(p => chalk.black(path.basename(p))).join(', ')})`,
+            )
+            .join('\n')
+        : 'Nothing modifed',
+    );
+    this._exit();
   }
   //#endregion
 
   //#region commands / update
   async UPDATE() {
-    const linkedProjects = LinkedProject.detect(this.project.location)
-      .filter(linkedProj => this.project.ins.From([this.project.location, linkedProj.relativeClonePath]));
+    const linkedProjects = LinkedProject.detect(this.project.location).filter(
+      linkedProj =>
+        this.project.ins.From([
+          this.project.location,
+          linkedProj.relativeClonePath,
+        ]),
+    );
 
-    if (await Helpers.questionYesNo(`
+    if (
+      await Helpers.questionYesNo(`
 
     Deteced project:
 ${linkedProjects.map(l => `- ${l.relativeClonePath}`).join('\n')}
 
 
-Would you like to update current project configuration?`)) {
+Would you like to update current project configuration?`)
+    ) {
       this.project.addLinkedProjects(linkedProjects);
     }
     await this.project.init();
     Helpers.info(`Linked projects updated`);
-    this._exit(0)
+    this._exit(0);
   }
   //#endregion
 
   //#region commands / branch name
   BRANCH_NAME() {
-    console.log(`current branch name: "${Helpers.git.currentBranchName(process.cwd())}"`);
-    this._exit()
+    console.log(
+      `current branch name: "${Helpers.git.currentBranchName(process.cwd())}"`,
+    );
+    this._exit();
   }
   //#endregion
 
@@ -572,7 +682,7 @@ Would you like to update current project configuration?`)) {
     folders
       .filter(c => !path.basename(c).startsWith('.'))
       .forEach(cwd => {
-        Helpers.run(`git config--get remote.origin.url`, { cwd }).sync()
+        Helpers.run(`git config--get remote.origin.url`, { cwd }).sync();
       });
     this._exit();
   }
@@ -585,13 +695,17 @@ Would you like to update current project configuration?`)) {
 
   PROJ_EXT() {
     const p = this.project.pathFor('.vscode/extensions.json');
-    const extensions: { recommendations: string[] } = Helpers.readJson(p, { recommendations: [] }, true);
+    const extensions: { recommendations: string[] } = Helpers.readJson(
+      p,
+      { recommendations: [] },
+      true,
+    );
     for (let index = 0; index < extensions.recommendations.length; index++) {
       const extname = extensions.recommendations[index];
       try {
         Helpers.taskStarted(`Installing: ${extname}`);
         Helpers.run(`code --install-extension ${extname}`).sync();
-        Helpers.taskDone(`Installed: ${extname}`)
+        Helpers.taskDone(`Installed: ${extname}`);
       } catch (error) {
         Helpers.warn(`Not able to install ${extname}`);
       }
@@ -605,26 +719,33 @@ Would you like to update current project configuration?`)) {
 
     opening in vscode...
 
-    `)
+    `);
     Helpers.run(`code ${this.project.projectsDbLocation}`).sync();
     this._exit();
   }
 
   //#region filter all project branches by pattern
   private __filterBranchesByPattern(branchPatternOrBranchName: string) {
-    return Helpers.arrays.uniqArray(this.project.git.getBranchesNamesBy(branchPatternOrBranchName).map(a => {
-      return a.split('/').pop() || '';
-    }) || this.project.getMainBranches());
+    return Helpers.arrays.uniqArray(
+      this.project.git.getBranchesNamesBy(branchPatternOrBranchName).map(a => {
+        return a.split('/').pop() || '';
+      }) || this.project.getMainBranches(),
+    );
   }
   //#endregion
 
   //#region select branch from list of branches
   private async __selectBrach(branches: string[]) {
-    const childrenMsg = this.project.children.length == 0 ? '(no children in project)' : '(with children)';
-    return await Helpers.autocompleteAsk(`Choose branch to reset in this project ${childrenMsg}: `,
+    const childrenMsg =
+      this.project.children.length == 0
+        ? '(no children in project)'
+        : '(with children)';
+    return await Helpers.autocompleteAsk(
+      `Choose branch to reset in this project ${childrenMsg}: `,
       branches.map(b => {
-        return { name: b, value: b }
-      }))
+        return { name: b, value: b };
+      }),
+    );
   }
   //#endregion
 }

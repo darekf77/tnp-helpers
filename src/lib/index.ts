@@ -4,11 +4,10 @@ export { HelpersAngular } from './helpers/for-browser/angular.helper';
 //#endregion
 
 import { HelpersFiredev as Base } from './helpers/helpers';
-import type { Helpers as CoreHelpers } from 'tnp-core/src';
 /**
  * Firedev helpers
  */ // @ts-ignore
-export const Helpers = Base.Instance as (HelpersFiredev & CoreHelpers);
+export const Helpers: Base = Base.Instance as Base;
 export * from './base';
 export * from './models';
 //#region @backend
