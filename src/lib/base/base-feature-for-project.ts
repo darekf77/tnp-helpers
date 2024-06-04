@@ -1,4 +1,4 @@
-import { BaseProject } from '.';
+import { BaseProject } from './base-project';
 
 export abstract class BaseFeatureForProject<PROJECT = BaseProject> {
 

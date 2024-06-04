@@ -59,7 +59,6 @@ export function applyMixins(derivedCtor: any, baseCtors: any[]) {
 }
 //#endregion
 
-// @ts-ignore
 export class HelpersFiredev extends CoreHelpers {
 
   //#region staic
