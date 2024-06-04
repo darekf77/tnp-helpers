@@ -140,6 +140,7 @@ export class HelpersFiredev extends CoreHelpers {
 
   uniqArray<T = any>(array: any[], uniqueProperty?: (keyof T)): T[] {
     //#region @backendFunc
+    // @ts-ignore
     return Helpers.arrays.uniqArray<T>(array, uniqueProperty);
     //#endregion
   }

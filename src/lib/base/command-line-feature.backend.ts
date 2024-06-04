@@ -41,7 +41,6 @@ export abstract class CommandLineFeature<
     this.project = project;
     //#region resolve params and args
 
-
     // this.project = Project.Current as Project;
     const className = CLASS.getNameFromObject(this as any);
     const methods = CLASS.getMethodsNames(this).filter(f => !f.startsWith('_'));
@@ -115,7 +114,10 @@ export abstract class CommandLineFeature<
   protected __initialize__() {}
 
   _tryResolveChildIfInsideArg() {
-    const { resolved, clearedCommand } =
+    const {
+      resolved,
+      clearedCommand,
+    } = // @ts-ignore
       Helpers.cliTool.resolveItemFromArgsBegin<PROJECT>(this.args, arg =>
         this.project.getChildBy(arg.replace(/\/$/, '')),
       );

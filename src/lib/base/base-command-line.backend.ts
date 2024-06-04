@@ -43,7 +43,8 @@ export class BaseCommandLine<PARAMS = any, PROJECT extends BaseProject<any, any>
       .filter(p => !!p)
     Helpers.taskDone(`found ${founded.length} projects...`)
 
-    Helpers.taskStarted(`searching for project...`)
+    Helpers.taskStarted(`searching for project...`);
+    // @ts-ignore
     const results = Helpers.uniqArray<BaseProject>([
       ...Helpers.arrays.fuzzy(this.args.join(' '), founded, p => p.name).results,
       ...Helpers.arrays.fuzzy(this.args.join(' '), founded, p => p.basename).results,
@@ -486,6 +487,7 @@ ${(_.isArray(this.project.children) && this.project.children.length > 0) ?
    */
   async version() {
     console.log(this.project.version);
+    this._exit();
   }
   //#endregion
 
