@@ -302,7 +302,7 @@ export abstract class BaseProject<
 
     try {
       tsfmt.processFiles([this.linkedProjectsConfigPath], {
-        verbose: true,
+        verbose: false,
         replace: true,
         verify: false,
         // tsconfig: true,
