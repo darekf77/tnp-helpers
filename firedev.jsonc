@@ -43,7 +43,7 @@
 
   "smartContainerTarget": "",
   "type": "isomorphic-lib",
-  "version": "v4",
+  "version": "v16",
 
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

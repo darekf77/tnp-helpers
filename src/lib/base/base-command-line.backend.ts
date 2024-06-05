@@ -500,6 +500,10 @@ ${
     await this.meltUpdateCommits();
     await this.push({ typeofCommit: 'docs', commitMessageRequired: true });
   }
+
+  async pd() {
+    await this.pushDocs();
+  }
   //#endregion
 
   //#region commands / push test

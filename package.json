@@ -29,7 +29,7 @@
     },
     "smartContainerTarget": "",
     "type": "isomorphic-lib",
-    "version": "v4",
+    "version": "v16",
     "scripts": {
       "test": "echo \"Error: no test specified\" && exit 1"
     },
@@ -43,7 +43,7 @@
       "firedev-helpers"
     ]
   },
-  "version": "16.100.32",
+  "version": "16.444.0",
   "dependencies": {
     "json10-writer": "16.100.10",
     "lowdb": "7.0.1",
@@ -175,6 +175,7 @@
     "copy-paste": "1.5.3",
     "cors": "2.8.4",
     "cpr": "3.0.1",
+    "cross-env": "7.0.2",
     "cross-spawn": "7.0.3",
     "dateformat": "3.0.3",
     "detect-mocha": "0.1.0",
@@ -343,6 +344,8 @@
     "validator": "9.2.0",
     "video.js": "8.3.0",
     "vpn-split": "16.100.5",
+    "vscode": "1.1.37",
+    "wait-on": "7.0.1",
     "watch": "1.0.2",
     "webpack": "~5.80",
     "webpack-dev-middleware": "~6.0.2",

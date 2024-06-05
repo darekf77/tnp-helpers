@@ -1003,6 +1003,17 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
+  //#region methods & getters  / read file
+  readJson<T = {}>(fileRelativeToProjectPath: string): T {
+    //#region @backendFunc
+    const fullPath = path.resolve(
+      path.join(this.location, fileRelativeToProjectPath),
+    );
+    return Helpers.readJson5(fullPath);
+    //#endregion
+  }
+  //#endregion
+
   //#region methods & getters  / remove (fiel or folder)
   remove(relativePath: string, exactPath = true) {
     //#region @backend
