@@ -43,7 +43,7 @@
       "firedev-helpers"
     ]
   },
-  "version": "16.100.31",
+  "version": "16.100.32",
   "dependencies": {
     "json10-writer": "16.100.10",
     "lowdb": "7.0.1",
@@ -328,7 +328,7 @@
     "tnp-config": "16.100.10",
     "tnp-core": "16.100.23",
     "tnp-db": "16.100.9",
-    "tnp-helpers": "16.100.31",
+    "tnp-helpers": "16.100.32",
     "ts-debug": "1.3.0",
     "ts-json-schema-generator": "2.1.1",
     "ts-loader": "2.3.1",
@@ -350,6 +350,6 @@
     "yup": "1.1.1",
     "zone.js": "~0.13.0"
   },
-  "lastBuildTagHash": "040c6bc105a00098096b46b0b435e9e4d8d820de",
+  "lastBuildTagHash": "56c55611365616aa56d685f4d12f07fe1db1ae55",
   "main": "dist/app.electron.js"
 }

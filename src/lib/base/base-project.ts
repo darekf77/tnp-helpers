@@ -1307,7 +1307,7 @@ ${projectsThatShouldBeLinked
         Helpers.warn('Fix your code...');
         if (
           !(await Helpers.consoleGui.question.yesNo(
-            'Try again lint ? .. (or just skip it)',
+            'Try again lint before commit ?',
           ))
         ) {
           break;
