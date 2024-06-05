@@ -43,7 +43,7 @@
       "firedev-helpers"
     ]
   },
-  "version": "16.100.27",
+  "version": "16.100.28",
   "dependencies": {
     "json10-writer": "16.100.10",
     "lowdb": "7.0.1",

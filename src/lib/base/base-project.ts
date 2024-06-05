@@ -20,6 +20,7 @@ import * as json5Write from 'json10-writer/src';
 import { fse, portfinder, chalk } from 'tnp-core/src';
 export { ChildProcess } from 'child_process';
 import { CommandOutputOptions } from 'tnp-core/src';
+import * as tsfmt from 'typescript-formatter';
 //#endregion
 //#endregion
 
@@ -287,24 +288,31 @@ export abstract class BaseProject<
     if (!Helpers.exists(this.linkedProjectsConfigPath)) {
       return;
     }
+    const orgContent = Helpers.readFile(this.linkedProjectsConfigPath);
     linkedPorjectsConfig = LinkedPorjectsConfig.from(linkedPorjectsConfig);
-    const writer = json5Write.load(
-      Helpers.readFile(this.linkedProjectsConfigPath),
-    );
+    const writer = json5Write.load(orgContent);
     writer.write(linkedPorjectsConfig);
-    const removeEmptyLineFromString = (str: string) => {
-      return (str || '')
-        .split('\n')
-        .filter(f => !!f.trim())
-        .join('\n');
-    };
-    Helpers.writeFile(
-      this.linkedProjectsConfigPath,
-      removeEmptyLineFromString(
-        writer.toSource({ quote: 'double', trailingComma: false }),
-      ),
-    );
-    // Helpers.writeJson(this.pathFor(config.file.linked_projects_json), linkedPorjectsConfig);
+
+    const newContent = writer.toSource({
+      quote: 'double',
+      trailingComma: true,
+      quotaKey: true,
+    });
+    Helpers.writeFile(this.linkedProjectsConfigPath, newContent);
+
+    try {
+      tsfmt.processFiles([this.linkedProjectsConfigPath], {
+        verbose: true,
+        replace: true,
+        verify: false,
+        // tsconfig: true,
+        // tslint: true,
+        editorconfig: true,
+        tsfmt: true,
+      } as any);
+    } catch (error) {
+      // console.log('ts formatting error',error)
+    }
     //#endregion
   }
   //#endregion
@@ -1182,26 +1190,32 @@ ${projectsThatShouldBeLinked
     //#region @backend
     // console.log(`CORE PROJECT BRANCH ${this.name}: ${this.core?.branch}, overrideBranch: ${overrideBranch}`)
 
-    Helpers.taskStarted(`Starting reset process for ${this.genericName}`);
+    Helpers.taskStarted(`
+
+    Starting reset process for ${this.name || this.basename}
+
+    `);
     this._beforeAnyActionOnGitRoot();
     let branchToReset =
       overrideBranch || this.core?.branch || this.getDefaultDevelopmentBranch();
 
     Helpers.info(`fetch data in ${this.genericName}`);
     this.git.fetch();
-    Helpers.logInfo(`reseting hard  in ${this.genericName}`);
-    this.git.resetHard();
-    Helpers.logInfo(
-      `checking out branch "${branchToReset}" in ${this.genericName}`,
-    );
-    this.git.checkout(branchToReset);
-    Helpers.logInfo(`pulling current branch in ${this.genericName}`);
-    await this.git.pullCurrentBranch({ askToRetry: true });
-    Helpers.logInfo(`initing (struct) in ${this.genericName}`);
-    await this.struct();
-    Helpers.taskDone(
-      `RESET DONE BRANCH: ${chalk.bold(branchToReset)} in ${this.genericName}`,
-    );
+    if (!this.getLinkedProjectsConfig().resetOnlyChildren) {
+      Helpers.logInfo(`reseting hard  in ${this.genericName}`);
+      this.git.resetHard();
+      Helpers.logInfo(
+        `checking out branch "${branchToReset}" in ${this.genericName}`,
+      );
+      this.git.checkout(branchToReset);
+      Helpers.logInfo(`pulling current branch in ${this.genericName}`);
+      await this.git.pullCurrentBranch({ askToRetry: true });
+      Helpers.logInfo(`initing (struct) in ${this.genericName}`);
+      await this.struct();
+      Helpers.taskDone(
+        `RESET DONE BRANCH: ${chalk.bold(branchToReset)} in ${this.genericName}`,
+      );
+    }
 
     for (const linked of this.linkedProjects) {
       const child = this.ins.From(this.pathFor([linked.relativeClonePath]));
