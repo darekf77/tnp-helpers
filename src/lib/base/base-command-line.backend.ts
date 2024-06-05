@@ -35,12 +35,42 @@ export class BaseCommandLine<
     this.prevennCwdIsNotProject();
     Helpers.info('Updating & push project...');
     try {
-      this.project.git.addAndCommit('chore: update');
+      this.project.git.addAndCommit(
+        `chore: ${!!this.firstArg ? this.firstArg : 'update'}`,
+      );
     } catch (error) {}
     await this.project.git.pushCurrentBranch({
       askToRetry: true,
       forcePushNoQuestion: true,
     });
+    Helpers.info('Done');
+    this._exit();
+  }
+
+  async deepUpdate(noExit = false) {
+    this.prevennCwdIsNotProject();
+    Helpers.info('Deep updating & pushing project with children...');
+    const updateChildren = async (project: PROJECT): Promise<void> => {
+      if (!project.isMonorepo) {
+        for (const child of project.children) {
+          if (child.git.isGitRoot) {
+            try {
+              child.git.addAndCommit(
+                `chore: ${!!this.firstArg ? this.firstArg : 'update'}`,
+              );
+            } catch (error) {}
+            await child.git.pushCurrentBranch({
+              askToRetry: true,
+              forcePushNoQuestion: true,
+            });
+            await updateChildren(child);
+          }
+        }
+      }
+    };
+
+    await updateChildren(this.project);
+
     Helpers.info('Done');
     this._exit();
   }
@@ -328,8 +358,10 @@ ${
     this.prevennCwdIsNotProject();
     const remotes = this.project.git.allOrigins;
     Helpers.info(`
+
     Remotes for repo:
-    ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
+
+${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
 
 `);
 
