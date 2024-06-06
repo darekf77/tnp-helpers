@@ -351,6 +351,14 @@ ${
     await this.pushAll(true);
   }
 
+  async pAllf() {
+    await this.pushAllForce();
+  }
+
+  async pAll() {
+    await this.pushAll();
+  }
+
   /**
    * push to all origins
    */
@@ -750,15 +758,12 @@ Would you like to update current project configuration?`)
 
   //#region commands / remotes
   REMOTES() {
-    this.preventCwdIsNotProject();
-    const folders = Helpers.foldersFrom(this.project.location);
-
-    folders
-      .filter(c => !path.basename(c).startsWith('.'))
-      .forEach(cwd => {
-        Helpers.run(`git config--get remote.origin.url`, { cwd }).sync();
-      });
+    console.log(Helpers.git.allOrigins(this.cwd));
     this._exit();
+  }
+
+  origins() {
+    this.REMOTES();
   }
   //#endregion
 

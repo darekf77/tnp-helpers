@@ -11,6 +11,7 @@ import { CLI } from 'tnp-cli/src';
 import { Helpers } from '../../index';
 import type { BaseProject } from '../../index';
 import { config } from 'tnp-config/src';
+import * as ini from 'ini';
 //#endregion
 
 export class HelpersGit {
@@ -404,29 +405,31 @@ export class HelpersGit {
   }
   //#endregion
 
-  //#region get all originas
+  //#region get all origins
+
   allOrigins(cwd: string): { origin: string; url: string }[] {
-    let remotes: { origin: string; url: string }[] = [];
+    // Determine the path to the .git/config file
+
+    const gitConfigPath = crossPlatformPath([cwd, '.git', 'config']);
+
+    // Read the contents of the .git/config file synchronously
     try {
-      remotes = (
-        Helpers.run(`git remote -v`, { cwd, output: false })
-          .sync()
-          ?.toString() || ''
-      )
-        .trim()
-        .replace(new RegExp('\\(push\\)', 'g'), ' ')
-        .replace(new RegExp('\\t', 'g'), ' ')
-        .split('\n')
-        .filter(f => f.search('(fetch)') === -1)
-        .map(s => {
-          const [origin, url] = s.trim().split(' ');
-          return {
-            origin,
-            url,
-          };
+      const configFile = fse.readFileSync(gitConfigPath, 'utf-8');
+      const config = ini.parse(configFile);
+
+      // Extract remotes from the config object
+      const remotes = Object.keys(config)
+        .filter(key => key.startsWith('remote '))
+        .map(remoteKey => {
+          const name = remoteKey.split('"')[1]; // Parse out the name from the section key
+          const url = config[remoteKey].url;
+          return { origin: name, url };
         });
-    } catch (error) {}
-    return remotes;
+
+      return remotes;
+    } catch (error) {
+      return [];
+    }
   }
   //#endregion
 
