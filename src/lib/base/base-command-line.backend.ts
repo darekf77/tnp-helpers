@@ -14,7 +14,7 @@ export class BaseCommandLine<
     Helpers.error('Please select git command');
   }
 
-  prevennCwdIsNotProject() {
+  preventCwdIsNotProject() {
     if (!this.project) {
       Helpers.error('This is not a project folder', false, true);
     }
@@ -32,7 +32,7 @@ export class BaseCommandLine<
    * quick git update push
    */
   async update() {
-    this.prevennCwdIsNotProject();
+    this.preventCwdIsNotProject();
     Helpers.info('Updating & push project...');
     try {
       this.project.git.addAndCommit(
@@ -48,7 +48,7 @@ export class BaseCommandLine<
   }
 
   async deepUpdate(noExit = false) {
-    this.prevennCwdIsNotProject();
+    this.preventCwdIsNotProject();
     Helpers.info('Deep updating & pushing project with children...');
     const updateChildren = async (project: PROJECT): Promise<void> => {
       if (!project.isMonorepo) {
@@ -168,7 +168,7 @@ export class BaseCommandLine<
 
   //#region commands / pull
   async pull() {
-    this.prevennCwdIsNotProject();
+    this.preventCwdIsNotProject();
     await this.project.pullProcess();
     this._exit();
   }
@@ -193,7 +193,7 @@ ${
 
   async reset() {
     // Helpers.clearConsole();
-    this.prevennCwdIsNotProject();
+    this.preventCwdIsNotProject();
     const parent = this.project.parent as BaseProject;
     const branchFromLinkedProjectConfig = parent?.linkedProjects?.find(l => {
       return (
@@ -280,7 +280,7 @@ ${
   //#region commands / soft
   soft() {
     // TODO when aciton commit
-    this.prevennCwdIsNotProject();
+    this.preventCwdIsNotProject();
     this.project.git.resetSoftHEAD(1);
     this._exit();
   }
@@ -288,7 +288,7 @@ ${
 
   //#region commands / rebase
   async rebase() {
-    this.prevennCwdIsNotProject();
+    this.preventCwdIsNotProject();
     const currentBranch = this.project.git.currentBranchName;
     let safeReset = 10;
     let rebaseBranch =
@@ -324,7 +324,7 @@ ${
    * stash only staged files
    */
   stash() {
-    this.prevennCwdIsNotProject();
+    this.preventCwdIsNotProject();
     this.project.git.stash({ onlyStaged: true });
     this._exit();
   }
@@ -335,7 +335,7 @@ ${
    * stash all files
    */
   stashAll() {
-    this.prevennCwdIsNotProject();
+    this.preventCwdIsNotProject();
     this.project.git.stageAllFiles();
     this.project.git.stash({ onlyStaged: false });
     this._exit();
@@ -347,7 +347,7 @@ ${
    * push force to all orgins
    */
   async pushAllForce() {
-    this.prevennCwdIsNotProject();
+    this.preventCwdIsNotProject();
     await this.pushAll(true);
   }
 
@@ -355,7 +355,7 @@ ${
    * push to all origins
    */
   async pushAll(force = false) {
-    this.prevennCwdIsNotProject();
+    this.preventCwdIsNotProject();
     const remotes = this.project.git.allOrigins;
     Helpers.info(`
 
@@ -398,7 +398,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
       noExit?: boolean;
     } = {},
   ) {
-    this.prevennCwdIsNotProject();
+    this.preventCwdIsNotProject();
     await this.project.git.meltActionCommits(true);
     await this.project.pushProcess({
       ...options,
@@ -426,7 +426,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
       noExit?: boolean;
     } = {},
   ) {
-    this.prevennCwdIsNotProject();
+    this.preventCwdIsNotProject();
     await this.project.pushProcess({
       ...options,
       forcePushNoQuestion: options.force,
@@ -444,7 +444,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
 
   //#region  commands / melt
   public async melt() {
-    this.prevennCwdIsNotProject();
+    this.preventCwdIsNotProject();
     await this.meltUpdateCommits(true);
     this._exit();
   }
@@ -571,7 +571,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
 
   //#region commands / set origin
   SET_ORIGIN() {
-    this.prevennCwdIsNotProject();
+    this.preventCwdIsNotProject();
     const newOriginNameOrUrl: string = this.firstArg;
     const proj = this.project;
     if (proj && proj.git.isInsideGitRepo) {
@@ -588,7 +588,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
 
   //#region commands / rename origin
   RENAME_ORIGIN() {
-    this.prevennCwdIsNotProject();
+    this.preventCwdIsNotProject();
     const newOriginNameOrUrl: string = this.firstArg;
     const proj = this.project;
     if (proj && proj.git.isInsideGitRepo) {
@@ -602,7 +602,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
 
   //#region commands / last hash tag
   LAST_TAG_HASH() {
-    this.prevennCwdIsNotProject();
+    this.preventCwdIsNotProject();
     Helpers.info(this.project.git.lastTagHash());
     this._exit();
   }
@@ -610,7 +610,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
 
   //#region commands / last tag
   LAST_TAG() {
-    this.prevennCwdIsNotProject();
+    this.preventCwdIsNotProject();
     const proj = this.project;
     Helpers.info(`
 
@@ -636,7 +636,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
    * TODO move somewhere
    */
   async lint() {
-    this.prevennCwdIsNotProject();
+    this.preventCwdIsNotProject();
     await this.project.lint();
   }
   //#endregion
@@ -646,7 +646,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
    * TODO move somewhere
    */
   async version() {
-    this.prevennCwdIsNotProject();
+    this.preventCwdIsNotProject();
     console.log('Current project verison: ' + this.project.version);
     this._exit();
   }
@@ -657,7 +657,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
    * TODO move somewhere
    */
   async init() {
-    this.prevennCwdIsNotProject();
+    this.preventCwdIsNotProject();
     await this.project.init();
     this._exit();
   }
@@ -668,7 +668,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
    * TODO move somewhere
    */
   async struct() {
-    this.prevennCwdIsNotProject();
+    this.preventCwdIsNotProject();
     await this.project.struct();
     this._exit();
   }
@@ -679,7 +679,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
    * TODO move somewhere
    */
   async info() {
-    this.prevennCwdIsNotProject();
+    this.preventCwdIsNotProject();
     Helpers.clearConsole();
     await this.project.info();
     await this.project.saveAllLinkedProjectsToDB();
@@ -689,7 +689,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
 
   //#region commands / info
   modified() {
-    this.prevennCwdIsNotProject();
+    this.preventCwdIsNotProject();
     const proj = this.project;
     const libs: BaseProject[] = proj.children.filter(child => {
       process.stdout.write('.');
@@ -750,7 +750,7 @@ Would you like to update current project configuration?`)
 
   //#region commands / remotes
   REMOTES() {
-    this.prevennCwdIsNotProject();
+    this.preventCwdIsNotProject();
     const folders = Helpers.foldersFrom(this.project.location);
 
     folders
@@ -762,13 +762,18 @@ Would you like to update current project configuration?`)
   }
   //#endregion
 
+  countCommits() {
+    console.log(Helpers.git.countCommits(this.cwd));
+    this._exit();
+  }
+
   isTerminalSupported() {
     console.log(`Terminal is supported: ${Helpers.isSupportedFiredevTerminal}`);
     this._exit();
   }
 
   PROJ_EXT() {
-    this.prevennCwdIsNotProject();
+    this.preventCwdIsNotProject();
     const p = this.project.pathFor('.vscode/extensions.json');
     const extensions: { recommendations: string[] } = Helpers.readJson(
       p,
@@ -789,7 +794,7 @@ Would you like to update current project configuration?`)
   }
 
   projdb() {
-    this.prevennCwdIsNotProject();
+    this.preventCwdIsNotProject();
     Helpers.info(`Projects db location:
     ${this.project.projectsDbLocation}
 

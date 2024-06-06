@@ -1,36 +1,59 @@
+//#region imports
 import { _, path, crossPlatformPath } from 'tnp-core/src';
 import type { BaseProject } from './base-project';
 import { CLASS } from 'typescript-class-helpers/src';
 import { Helpers } from '../index';
+//#endregion
 
+//#region core porject environment
 export type CoreProjectEnvironment = {
   shortName?: string;
   name?: string;
   description?: string;
   onlineLink?: string;
 };
+//#endregion
+
+//#region constants
+//#region constants / defult db
 const defaultDb = {
   projects: [],
-}
+};
+//#endregion
+//#endregion
 
+//#region core project command args options
 export type CoreCommandArgOptions<PROJECT extends BaseProject> = {
-  project?: PROJECT,
+  project?: PROJECT;
   /**
    * watch mode
    */
-  watch?: boolean,
-  prod?: boolean,
-  debug?: boolean,
+  watch?: boolean;
+  prod?: boolean;
+  debug?: boolean;
   /**
    * first arg from command line
    */
-  firstArg?: string,
+  firstArg?: string;
 };
+//#endregion
 
 export class CoreProject<PROJECT extends BaseProject = BaseProject> {
+  //#region static
+
+  //#region static / core projects
   public static coreProjects: CoreProject<any>[] = [];
-  static from<Proj extends BaseProject = BaseProject>(options: Omit<CoreProject<Proj>, 'name' | 'url' | 'branch'>): CoreProject<Proj> {
-    const proj: CoreProject<Proj> = _.merge(new (CoreProject as any)(), _.cloneDeep(options));
+  //#endregion
+
+  //#region static / from
+  static from<Proj extends BaseProject = BaseProject>(
+    options: Omit<CoreProject<Proj>, 'name' | 'url' | 'branch'>,
+  ): CoreProject<Proj> {
+    //#region @backendFunc
+    const proj: CoreProject<Proj> = _.merge(
+      new (CoreProject as any)(),
+      _.cloneDeep(options),
+    );
 
     const methodsToCheck = [
       ...CLASS.getMethodsNames(CoreProject),
@@ -40,16 +63,28 @@ export class CoreProject<PROJECT extends BaseProject = BaseProject> {
     // console.log('methodsToCheck '+ proj.name, methodsToCheck)
     for (const commandName of methodsToCheck) {
       // console.log('initing commandName', commandName)
-      proj[commandName as string] = proj[commandName] || proj?.extends[commandName] || (() => {
-        Helpers.error(`${_.upperFirst(_.startCase(commandName))} not defined for ${proj.name}`)
-      }) as any;
+      proj[commandName as string] =
+        proj[commandName] ||
+        proj?.extends[commandName] ||
+        ((() => {
+          Helpers.error(
+            `${_.upperFirst(_.startCase(commandName))} not defined for ${proj.name}`,
+          );
+        }) as any);
     }
     this.coreProjects.push(proj);
     return proj as CoreProject<Proj>;
+    //#endregion
   }
+  //#endregion
 
-  private constructor() { }
+  //#endregion
 
+  //#region constructor
+  private constructor() {}
+  //#endregion
+
+  //#region properties
   extends?: CoreProject<any>;
   color?: string;
   /**
@@ -77,7 +112,9 @@ export class CoreProject<PROJECT extends BaseProject = BaseProject> {
    * project environments
    */
   environments?: CoreProjectEnvironment[] = [];
+  //#endregion
 
+  //#region methods & getters
   startCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
   relaseCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
   deployCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
@@ -110,25 +147,33 @@ export class CoreProject<PROJECT extends BaseProject = BaseProject> {
   get url(): string {
     return (this.urlHttp ? this.urlHttp : this.urlSSH) || '';
   }
+  //#endregion
 }
 
-
-
-
 export const CoreTypescriptProject = CoreProject.from<BaseProject>({
+  //#region configuration
   branches: ['master', 'develop'],
   urlHttp: 'https://github.com/microsoft/TypeScript',
   environments: [],
-  recognizedFn: (project) => {
+  recognizedFn: project => {
     //#region @backendFunc
-    return !project.hasFile('angular.json') && !_.isUndefined(Helpers.filesFrom(project.location, false)
-      .find(f => path.basename(f).startsWith('tsconfig')));
+    return (
+      !project.hasFile('angular.json') &&
+      !_.isUndefined(
+        Helpers.filesFrom(project.location, false).find(f =>
+          path.basename(f).startsWith('tsconfig'),
+        ),
+      )
+    );
     //#endregion
   },
   async startCommand({ project }) {
     //#region @backendFunc
     project.makeSureNodeModulesInstalled();
-    const mainFilePath = Helpers.getValueFromJSON(project.pathFor('package.json'), 'main');
+    const mainFilePath = Helpers.getValueFromJSON(
+      project.pathFor('package.json'),
+      'main',
+    );
     project.run(`node ${mainFilePath}`).sync();
     //#endregion
   },
@@ -137,16 +182,17 @@ export const CoreTypescriptProject = CoreProject.from<BaseProject>({
     project.makeSureNodeModulesInstalled();
     project.run(`npm-run tsc ${watch ? '--watch' : ''}`).sync();
     //#endregion
-  }
+  },
+  //#endregion
 });
 
-
 export const CoreAngularProject = CoreProject.from<BaseProject>({
+  //#region configuration
   extends: CoreTypescriptProject,
   branches: ['master', 'develop'],
   urlHttp: 'https://github.com/angular/angular-cli',
   environments: [],
-  recognizedFn: (project) => {
+  recognizedFn: project => {
     return project.hasFile('angular.json');
   },
   async startCommand({ project }) {
@@ -157,5 +203,6 @@ export const CoreAngularProject = CoreProject.from<BaseProject>({
   async buildCommand({ project }) {
     project.makeSureNodeModulesInstalled();
     project.run(`npm-run ng build`).sync();
-  }
+  },
+  //#endregion
 });

@@ -1,7 +1,9 @@
 //#region imports
 import {
-  _, os,
-  path, fse,
+  _,
+  os,
+  path,
+  fse,
   child_process,
   fkill,
   crossPlatformPath,
@@ -44,9 +46,7 @@ import * as spawn from 'cross-spawn';
 //   }
 // }
 
-
 export class HelpersProcess {
-
   async restartApplicationItself(nameOfApp: string) {
     Helpers.log(`Restarting ${nameOfApp}`);
     return new Promise(() => {
@@ -55,7 +55,7 @@ export class HelpersProcess {
           spawn(process.argv.shift(), [...process.argv, '--restarting'], {
             cwd: crossPlatformPath(process.cwd()),
             detached: true,
-            stdio: 'inherit'
+            stdio: 'inherit',
           });
         });
         process.exit();
@@ -77,13 +77,17 @@ export class HelpersProcess {
     return `${content}
   // [${config.frameworkName}] GENERATED CONTENT FOR BACKEND VERSION
   // [${config.frameworkName}] GENERATED CONTENT FOR BACKEND VERSION
-          `.trim()
+          `.trim();
   }
 
-  async changeCwdWrapper(dir: string, functionToExecure: Function, logLevel: Level = Level.__NOTHING) {
+  async changeCwdWrapper(
+    dir: string,
+    functionToExecure: Function,
+    logLevel: Level = Level.__NOTHING,
+  ) {
     const currentCwd = crossPlatformPath(process.cwd());
     Helpers.changeCwd(dir);
-    Log.disableLogs(logLevel)
+    Log.disableLogs(logLevel);
     await Helpers.runSyncOrAsync({ functionFn: functionToExecure });
     Log.enableLogs();
     Helpers.changeCwd(currentCwd);
@@ -101,43 +105,49 @@ export class HelpersProcess {
    * @deprecated
    */
   goToDir(dir = '..') {
-    const previous = crossPlatformPath(process.cwd())
+    const previous = crossPlatformPath(process.cwd());
     try {
-
-      dir = path.isAbsolute(dir) ? dir :
-        crossPlatformPath(path.resolve(path.join(crossPlatformPath(process.cwd()), dir)));
+      dir = path.isAbsolute(dir)
+        ? dir
+        : crossPlatformPath(
+            path.resolve(path.join(crossPlatformPath(process.cwd()), dir)),
+          );
 
       if (path.basename(dir) === config.folder.external) {
-
-        const belowExternal = path.resolve(path.join(dir, '..'))
+        const belowExternal = path.resolve(path.join(dir, '..'));
         const classProject = CLASS.getBy('Project') as typeof BaseProject;
-        if (fse.existsSync(belowExternal) && !!(classProject).ins.From(belowExternal)) {
+        if (
+          fse.existsSync(belowExternal) &&
+          !!classProject.ins.From(belowExternal)
+        ) {
           dir = belowExternal;
         }
       }
 
-      process.chdir(dir)
-    }
-    catch (err) {
-      this.goToDir(previous)
+      process.chdir(dir);
+    } catch (err) {
+      this.goToDir(previous);
       return false;
     }
     return true;
   }
 
-  async pressKeyOrWait(message = 'Press enter try again', printWaitMessages = 0) {
+  async pressKeyOrWait(
+    message = 'Press enter try again',
+    printWaitMessages = 0,
+  ) {
     if (_.isNumber(printWaitMessages) && printWaitMessages > 0) {
       Helpers.log(`Please wait (${printWaitMessages}) seconds`);
       await Helpers.pressKeyOrWait(message, printWaitMessages - 1);
       return;
     }
 
-    return new Promise((resovle) => {
+    return new Promise(resovle => {
       Helpers.log(message);
       process.stdin.once('data', function () {
-        resovle(void 0)
+        resovle(void 0);
       });
-    })
+    });
   }
 
   /**
@@ -149,7 +159,10 @@ export class HelpersProcess {
       spawn.sync('pause', '', { shell: true, stdio: [0, 1, 2] });
       return;
     }
-    require('child_process').spawnSync('read _ ', { shell: true, stdio: [0, 1, 2] });
+    require('child_process').spawnSync('read _ ', {
+      shell: true,
+      stdio: [0, 1, 2],
+    });
     // return new Promise((resovle) => {
     //   Helpers.log(message);
     //   process.stdin.once('data', function () {
@@ -160,22 +173,22 @@ export class HelpersProcess {
 
   async list<T = string>(
     question: string,
-    choices: { name: string; value: T; }[],
+    choices: { name: string; value: T }[],
   ) {
-    const res = await inquirer.prompt({
+    const res = (await inquirer.prompt({
       type: 'list',
       name: 'value',
       message: question,
       choices,
       pageSize: 10,
       loop: true,
-    } as any) as any;
+    } as any)) as any;
     return res.value as T;
   }
 
   async multipleChoicesAsk(
     question: string,
-    choices: { name: string; value: string; }[],
+    choices: { name: string; value: string }[],
     autocomplete: boolean = false,
   ): Promise<string[]> {
     if (autocomplete) {
@@ -197,16 +210,42 @@ export class HelpersProcess {
       // console.log({ res })
       return res;
     } else {
-      const res = await inquirer.prompt({
+      const res = (await inquirer.prompt({
         type: 'checkbox',
         name: 'value',
         message: question,
         choices,
         pageSize: 10,
         loop: false,
-      } as any) as any;
+      } as any)) as any;
       return res.value;
     }
+  }
+
+  async input({
+    defaultValue,
+    question,
+  }: {
+    defaultValue?: string;
+    question: string;
+  }): Promise<string> {
+    //#region @backendFunc
+    const initial = defaultValue || '';
+    try {
+      // Create an input prompt
+      const response = await inquirer.prompt({
+        type: 'input',
+        name: 'name',
+        message: question,
+        default:initial,
+      });
+
+      return response.name;
+    } catch (error) {
+      console.error(error)
+      return void 0;
+    }
+    //#endregion
   }
 
   /**
@@ -214,7 +253,7 @@ export class HelpersProcess {
    */
   async selectChoicesAsk<T = string>(
     question: string,
-    choices: { name: string; value: T; }[],
+    choices: { name: string; value: T }[],
   ): Promise<string> {
     // console.log({ choices })
     // Helpers.pressKeyAndContinue()
@@ -237,30 +276,35 @@ export class HelpersProcess {
 
   async autocompleteAsk<T = string>(
     question: string,
-    choices: { name: string; value: T; }[],
-    pageSize = 10
+    choices: { name: string; value: T }[],
+    pageSize = 10,
   ): Promise<T> {
-
     function source(__, input) {
       input = input || '';
-      return new Promise((resolve) => {
-        const fuzzyResult = fuzzy.filter(input, choices.map(f => f.name));
+      return new Promise(resolve => {
+        const fuzzyResult = fuzzy.filter(
+          input,
+          choices.map(f => f.name),
+        );
         resolve(
-          fuzzyResult.map((el) => {
-            return { name: el.original, value: choices.find(c => c.name === el.original).value };
-          })
+          fuzzyResult.map(el => {
+            return {
+              name: el.original,
+              value: choices.find(c => c.name === el.original).value,
+            };
+          }),
         );
       });
     }
 
-    const res: { command: T } = await inquirer.prompt({
+    const res: { command: T } = (await inquirer.prompt({
       type: 'autocomplete',
       name: 'command',
       pageSize,
       source,
       message: question,
-      choices
-    } as any) as any;
+      choices,
+    } as any)) as any;
 
     return res.command;
   }
@@ -275,22 +319,31 @@ export class HelpersProcess {
     }
 
     try {
-      return fse.readFileSync('/proc/version', 'utf8').toLowerCase().includes('microsoft');
+      return fse
+        .readFileSync('/proc/version', 'utf8')
+        .toLowerCase()
+        .includes('microsoft');
     } catch (_) {
       return false;
     }
-  };
+  }
 
   getWorkingDirOfProcess(PID: number) {
     try {
-      const cwd = child_process.execSync(`lsof -p ${PID} | awk '$4=="cwd" {print $9}'`).toString().trim()
+      const cwd = child_process
+        .execSync(`lsof -p ${PID} | awk '$4=="cwd" {print $9}'`)
+        .toString()
+        .trim();
       return cwd;
     } catch (e) {
       Helpers.error(e);
     }
   }
 
-  outputToVScode(data: { label: string; option: string; }[] | string, disableEncode = false) {
+  outputToVScode(
+    data: { label: string; option: string }[] | string,
+    disableEncode = false,
+  ) {
     if (_.isObject(data)) {
       data = JSON.stringify(data);
     }
@@ -301,22 +354,19 @@ export class HelpersProcess {
     }
   }
 
-
   async actionWrapper(fn: () => void, taskName: string = 'Task') {
     function currentDate() {
       return `[${dateformat(new Date(), 'dd-mm-yyyy HH:MM:ss')}]`;
     }
     // global.spinner && global.spinner.start()
-    Helpers.taskStarted(`${currentDate()} "${taskName}" Started..`)
+    Helpers.taskStarted(`${currentDate()} "${taskName}" Started..`);
     await Helpers.runSyncOrAsync({ functionFn: fn });
-    Helpers.taskDone(`${currentDate()} "${taskName}" Done`)
+    Helpers.taskDone(`${currentDate()} "${taskName}" Done`);
     // global.spinner && global.spinner.stop()
   }
 
-
-
   terminalLine() {
-    return _.times(process.stdout.columns, () => '-').join('')
+    return _.times(process.stdout.columns, () => '-').join('');
   }
 
   async killAllNodeExceptCurrentProcess() {
@@ -325,69 +375,102 @@ export class HelpersProcess {
       const currentProcessId = process.pid;
 
       // Command to list all Node.js processes
-      const listProcessesCommand = process.platform === 'win32'
-        ? 'tasklist /fi "imagename eq node.exe" /fo csv' : 'ps -A -o pid,command | grep node';
+      const listProcessesCommand =
+        process.platform === 'win32'
+          ? 'tasklist /fi "imagename eq node.exe" /fo csv'
+          : 'ps -A -o pid,command | grep node';
 
       // Execute the command to list processes
-      exec(listProcessesCommand, { shell: process.platform === 'win32' ? 'cmd.exe' : void 0 }, (error, stdout, stderr) => {
-        if (error) {
-          reject(new Error(`Error occurred while listing processes: ${error.message}`));
-          return;
-        }
-        if (stderr) {
-          reject(new Error(`Error occurred while listing processes: ${stderr}`));
-          return;
-        }
+      exec(
+        listProcessesCommand,
+        { shell: process.platform === 'win32' ? 'cmd.exe' : void 0 },
+        (error, stdout, stderr) => {
+          if (error) {
+            reject(
+              new Error(
+                `Error occurred while listing processes: ${error.message}`,
+              ),
+            );
+            return;
+          }
+          if (stderr) {
+            reject(
+              new Error(`Error occurred while listing processes: ${stderr}`),
+            );
+            return;
+          }
 
-        // Split the output into lines and filter out non-node processes
-        const processes = stdout.split('\n')
-          .map(line => line.trim())
-          .filter(line => line.includes('node') && !line.includes('grep') && !line.includes('tasklist'));
+          // Split the output into lines and filter out non-node processes
+          const processes = stdout
+            .split('\n')
+            .map(line => line.trim())
+            .filter(
+              line =>
+                line.includes('node') &&
+                !line.includes('grep') &&
+                !line.includes('tasklist'),
+            );
 
-        // Extract the process IDs
-        const processIds = processes.map(line => parseInt(line.split(',')[1]));
+          // Extract the process IDs
+          const processIds = processes.map(line =>
+            parseInt(line.split(',')[1]),
+          );
 
-        // Filter out the current process ID
-        const processesToKill = processIds.filter(id => id !== currentProcessId).filter(f => !!f);
+          // Filter out the current process ID
+          const processesToKill = processIds
+            .filter(id => id !== currentProcessId)
+            .filter(f => !!f);
 
-        // If there are no processes to kill, resolve immediately
-        if (processesToKill.length === 0) {
-          resolve();
-          return;
-        }
+          // If there are no processes to kill, resolve immediately
+          if (processesToKill.length === 0) {
+            resolve();
+            return;
+          }
 
-        // Kill the processes
-        let numProcessesKilled = 0;
-        processesToKill.forEach(id => {
-          const killCommand = process.platform === 'win32' ? `taskkill /pid ${id} /f` : `kill ${id}`;
-          exec(killCommand, (error) => {
-            if (error) {
-              console.error(`Error occurred while killing process ${id}:`, error);
-            } else {
-              console.log(`Successfully killed process ${id}`);
-            }
-            numProcessesKilled++;
-            if (numProcessesKilled === processesToKill.length) {
-              resolve();
-            }
+          // Kill the processes
+          let numProcessesKilled = 0;
+          processesToKill.forEach(id => {
+            const killCommand =
+              process.platform === 'win32'
+                ? `taskkill /pid ${id} /f`
+                : `kill ${id}`;
+            exec(killCommand, error => {
+              if (error) {
+                console.error(
+                  `Error occurred while killing process ${id}:`,
+                  error,
+                );
+              } else {
+                console.log(`Successfully killed process ${id}`);
+              }
+              numProcessesKilled++;
+              if (numProcessesKilled === processesToKill.length) {
+                resolve();
+              }
+            });
           });
-        });
-      });
+        },
+      );
     });
   }
 
   killAllNode() {
-    Helpers.info('Killing all node processes before pull...')
+    Helpers.info('Killing all node processes before pull...');
     try {
       if (process.platform === 'win32') {
-        Helpers.run(`taskkill /f /im node.exe`, { output: false, silence: true }).sync();
+        Helpers.run(`taskkill /f /im node.exe`, {
+          output: false,
+          silence: true,
+        }).sync();
       } else {
         Helpers.run(`fkill -f node`, { output: false, silence: true }).sync();
       }
     } catch (error) {
-      Helpers.error(`[${config.frameworkName}] not able to kill all node processes`)
+      Helpers.error(
+        `[${config.frameworkName}] not able to kill all node processes`,
+      );
     }
-    Helpers.info('DONE KILL ALL NODE PROCESSES')
+    Helpers.info('DONE KILL ALL NODE PROCESSES');
   }
 
   clearConsole() {
@@ -400,16 +483,10 @@ export class HelpersProcess {
     // } catch (error) {
     //   console.log('clear console not succedd')
     // }
-
   }
-
-
-
-
 
   // process.on('uncaughtException', cleanExit)
   // process.on('unhandledRejection', cleanExit)
-
 
   // process.once('unhandledRejection', (err, aa) => {
   //   error(`'Exiting unhandledRejection
@@ -439,17 +516,28 @@ ${Helpers.terminalLine()}\n`;
     return `
 ${Helpers.terminalLine()}
 <-- ${isDirectory ? 'Path to directory' : 'Path to file'}: -->
-${isDirectory ? pathToFileOrFolder.split('/').map(c => `/${c}`).join('').replace(/^\//, '') : (
-        path.dirname(pathToFileOrFolder.split('/').map(c => `/${c}`).join('').replace(/^\//, ''))
-        + '\n/' + CLI.chalk.bold(path.basename(pathToFileOrFolder))
-      )
-      }
+${
+  isDirectory
+    ? pathToFileOrFolder
+        .split('/')
+        .map(c => `/${c}`)
+        .join('')
+        .replace(/^\//, '')
+    : path.dirname(
+        pathToFileOrFolder
+          .split('/')
+          .map(c => `/${c}`)
+          .join('')
+          .replace(/^\//, ''),
+      ) +
+      '\n/' +
+      CLI.chalk.bold(path.basename(pathToFileOrFolder))
+}
 ${Helpers.terminalLine()}\n`;
-  };
-
+  }
 
   prepareWatchCommand(cmd) {
-    return os.platform() === 'win32' ? `"${cmd}"` : `'${cmd}'`
+    return os.platform() === 'win32' ? `"${cmd}"` : `'${cmd}'`;
   }
 
   getStringFrom(command: string, descriptionOfCommand?: string) {
@@ -457,16 +545,20 @@ ${Helpers.terminalLine()}\n`;
       const res = Helpers.run(command, { output: false }).sync().toString();
       return res;
     } catch (error) {
-      Helpers.warn(`Not able to get string from "${descriptionOfCommand ? descriptionOfCommand : command}"`);
+      Helpers.warn(
+        `Not able to get string from "${descriptionOfCommand ? descriptionOfCommand : command}"`,
+      );
       return void 0;
     }
   }
 
-  async waitForMessegeInStdout(proc: child_process.ChildProcess, message: string) {
+  async waitForMessegeInStdout(
+    proc: child_process.ChildProcess,
+    message: string,
+  ) {
     return new Promise((resolve, reject) => {
       let resolved = false;
-      proc.stdout.on('data', (data) => {
-
+      proc.stdout.on('data', data => {
         // console.log(`
 
         // [waitForMessegeInStdout] data: ${data}
@@ -474,14 +566,14 @@ ${Helpers.terminalLine()}\n`;
 
         // `);
         if (_.isObject(data) && _.isFunction(data.toString)) {
-          data = data.toString()
+          data = data.toString();
         }
 
         if (_.isString(data) && data.search(message) !== -1) {
           resolved = true;
           resolve(void 0);
         }
-      })
+      });
       proc.once('exit', () => {
         // console.log(`
 
@@ -491,12 +583,9 @@ ${Helpers.terminalLine()}\n`;
         if (!resolved) {
           reject();
         }
-      })
-    })
-
+      });
+    });
   }
 
-
   //#endregion
-
 }
