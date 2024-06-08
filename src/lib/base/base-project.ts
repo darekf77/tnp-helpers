@@ -599,6 +599,40 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
+  /**
+   * @deprecated
+   */
+  async bumpPatchVersion() {
+    //#region @backendFunc
+
+
+    // Read package.json
+    const packageJson = this.readJson(config.file.package_json) as any;
+    const version = packageJson?.version;
+    if (!version) {
+      return;
+    }
+
+    const versionComponents = version.match(/^(\d+)\.(\d+)\.(\d+)(-.+)?$/);
+    const major = versionComponents[1];
+    const minor = versionComponents[2];
+    const patch = versionComponents[3];
+    const preRelease = versionComponents[4] || '';
+
+    // Increment the patch version
+    const newPatch = parseInt(patch, 10) + 1;
+
+    // Construct the new version
+    const newVersion = `${major}.${minor}.${newPatch}${preRelease}`;
+
+    // Update the version in the package.json object
+    packageJson.version = newVersion;
+
+    // Write the updated package.json back to disk
+    this.writeJson(config.file.package_json, packageJson);
+    //#endregion
+  }
+
   //#region methods & getters  / get version path as number
   get versionPathAsNumber(): number {
     //#region @backendFunc

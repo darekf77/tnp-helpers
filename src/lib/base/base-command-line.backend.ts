@@ -50,26 +50,30 @@ export class BaseCommandLine<
   async deepUpdate(noExit = false) {
     this.preventCwdIsNotProject();
     Helpers.info('Deep updating & pushing project with children...');
-    const updateChildren = async (project: PROJECT): Promise<void> => {
+    const updateProject = async (project: PROJECT): Promise<void> => {
+      try {
+        await project.bumpPatchVersion();
+      } catch (error) {}
+      try {
+        project.git.addAndCommit(
+          `chore: ${!!this.firstArg ? this.firstArg : 'update'}`,
+        );
+      } catch (error) {}
+      await project.git.pushCurrentBranch({
+        askToRetry: true,
+        forcePushNoQuestion: true,
+      });
+
       if (!project.isMonorepo) {
         for (const child of project.children) {
           if (child.git.isGitRoot) {
-            try {
-              child.git.addAndCommit(
-                `chore: ${!!this.firstArg ? this.firstArg : 'update'}`,
-              );
-            } catch (error) {}
-            await child.git.pushCurrentBranch({
-              askToRetry: true,
-              forcePushNoQuestion: true,
-            });
-            await updateChildren(child);
+            await updateProject(child);
           }
         }
       }
     };
 
-    await updateChildren(this.project);
+    await updateProject(this.project);
 
     Helpers.info('Done');
     this._exit();
