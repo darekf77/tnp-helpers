@@ -56,7 +56,7 @@ export class BaseCommandLine<
       } catch (error) {}
       try {
         project.git.addAndCommit(
-          `chore: ${!!this.firstArg ? this.firstArg : 'update'}`,
+          `chore: ${!!this.firstArg ? this.args.join(' ') : 'update'}`,
         );
       } catch (error) {}
       await project.git.pushCurrentBranch({
