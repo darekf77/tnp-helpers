@@ -20,6 +20,21 @@ export class BaseCommandLine<
     }
   }
 
+  removeSubmodules() {
+    Helpers.taskStarted('Removing submodules...');
+    for (const folderAbsPath of Helpers.foldersFrom(this.cwd, {
+      recursive: false,
+    })) {
+      if (Helpers.exists(crossPlatformPath([folderAbsPath, '.git']))) {
+        try {
+          Helpers.run(`git rm --cached ${path.basename(folderAbsPath)}`).sync();
+        } catch (error) {}
+      }
+    }
+    Helpers.taskDone('Done');
+    this._exit();
+  }
+
   //#region commands / set editor
   async setEditor() {
     await this.ins.configDb.selectCodeEditor();
