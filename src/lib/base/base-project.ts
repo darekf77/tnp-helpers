@@ -810,10 +810,13 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
+  //#region methods & getters  / delete node_modules
   deleteNodeModules() {
     this.remove(config.folder.node_modules);
   }
+  //#endregion
 
+  //#region methods & getters  /reinstall node modules
   reinstalNodeModules(options?: { useYarn?: boolean; force?: boolean }) {
     //#region @backendFunc
     this.deleteNodeModules();
@@ -823,7 +826,9 @@ ${projectsThatShouldBeLinked
     ).sync();
     //#endregion
   }
+  //#endregion
 
+  //#region methods & getters  / make sure node modules installed
   makeSureNodeModulesInstalled(options?: {
     checkPackages?: boolean;
     useYarn?: boolean;
@@ -833,11 +838,19 @@ ${projectsThatShouldBeLinked
       this.reinstalNodeModules(options);
     }
   }
+  //#endregion
 
+  //#region methods & getters  / prefer yarn over npm
   preferYarnOverNpm(): boolean {
     return false;
   }
+  //#endregion
 
+  //#region methods & getters  / node modules empty
+  /**
+   *
+   * @returns true if node_modules folder is empty
+   */
   nodeModulesEmpty() {
     //#region @backendFunc
     return (
@@ -846,6 +859,7 @@ ${projectsThatShouldBeLinked
     );
     //#endregion
   }
+  //#endregion
 
   //#region methods & getters  / path exits
   /**
