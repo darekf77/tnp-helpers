@@ -25,13 +25,29 @@ export abstract class CommandLineFeature<
   get firstArg() {
     return _.first(this.args);
   }
+
+  protected __project: PROJECT;
+  protected get project(): PROJECT {
+    return this.__project;
+  }
+  protected set project(v: PROJECT) {
+    if (!v) {
+      Helpers.error(
+        `Command line cannot be executed on folder that is not know project.`,
+        false,
+        true,
+      );
+    }
+    this.__project = v;
+  }
+
   constructor(
     protected readonly argsWithParams: string,
     protected readonly methodNameToCall: string,
     /**
      * nearest project to cwd
      */
-    protected project: PROJECT,
+    project: PROJECT,
     /**
      * process.cwd()
      */

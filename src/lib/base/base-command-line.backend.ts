@@ -563,6 +563,10 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
   async pd() {
     await this.pushDocs();
   }
+
+  async pdocs() {
+    await this.pushDocs();
+  }
   //#endregion
 
   //#region commands / push test
