@@ -35,6 +35,8 @@ export type CoreCommandArgOptions<PROJECT extends BaseProject> = {
    * first arg from command line
    */
   firstArg?: string;
+  argsWithParams?: string;
+  exitCallback?: () => void;
 };
 //#endregion
 
