@@ -605,7 +605,6 @@ ${projectsThatShouldBeLinked
   async bumpPatchVersion() {
     //#region @backendFunc
 
-
     // Read package.json
     const packageJson = this.readJson(config.file.package_json) as any;
     const version = packageJson?.version;
@@ -819,17 +818,19 @@ ${projectsThatShouldBeLinked
   //#region methods & getters  /reinstall node modules
   reinstalNodeModules(options?: { useYarn?: boolean; force?: boolean }) {
     //#region @backendFunc
+    Helpers.taskStarted(`Reinstalling node modules for ${this.genericName}`);
     this.deleteNodeModules();
     Helpers.run(
       `${options?.useYarn ? 'yarn' : 'npm'}  install ${options?.force ? '--force' : ''}`,
       { cwd: this.location },
     ).sync();
+    Helpers.taskDone(`Reinstalled node modules for ${this.genericName}`);
     //#endregion
   }
   //#endregion
 
   //#region methods & getters  / make sure node modules installed
-  makeSureNodeModulesInstalled(options?: {
+  async makeSureNodeModulesInstalled(options?: {
     checkPackages?: boolean;
     useYarn?: boolean;
     force?: boolean;
@@ -1357,6 +1358,27 @@ ${projectsThatShouldBeLinked
       args,
       commitMessageRequired,
     );
+
+    if (!this.automaticallyAddAllChnagesWhenPushingToGit()) {
+      if (
+        commitData.commitMessage
+          ?.split(':')
+          .map(p => p.trim())
+          .every(p => p === this.git.currentBranchName)
+      ) {
+        // QUICK_FIX
+        Helpers.error(
+          `
+
+        Please provide more specific commit message than branch name
+
+
+        `,
+          false,
+          true,
+        );
+      }
+    }
 
     while (true) {
       try {
@@ -2285,7 +2307,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
       // ...this.parent.children.map(c => c.location),
     ].map(l => crossPlatformPath([l, config.folder.node_modules]));
 
-    this.makeSureNodeModulesInstalled();
+    await this.makeSureNodeModulesInstalled();
 
     for (const [index, lib] of this.sortedLibrariesByDeps.entries()) {
       Helpers.info(

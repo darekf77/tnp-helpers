@@ -169,7 +169,7 @@ export const CoreTypescriptProject = CoreProject.from<BaseProject>({
   },
   async startCommand({ project }) {
     //#region @backendFunc
-    project.makeSureNodeModulesInstalled();
+    await project.makeSureNodeModulesInstalled();
     const mainFilePath = Helpers.getValueFromJSON(
       project.pathFor('package.json'),
       'main',
@@ -179,7 +179,7 @@ export const CoreTypescriptProject = CoreProject.from<BaseProject>({
   },
   async buildCommand({ project, watch }) {
     //#region @backendFunc
-    project.makeSureNodeModulesInstalled();
+    await project.makeSureNodeModulesInstalled();
     project.run(`npm-run tsc ${watch ? '--watch' : ''}`).sync();
     //#endregion
   },
@@ -196,12 +196,12 @@ export const CoreAngularProject = CoreProject.from<BaseProject>({
     return project.hasFile('angular.json');
   },
   async startCommand({ project }) {
-    project.makeSureNodeModulesInstalled();
+    await project.makeSureNodeModulesInstalled();
     const port = await project.assignFreePort(4200);
     project.run(`npm-run ng serve --port ${port}`).sync();
   },
   async buildCommand({ project }) {
-    project.makeSureNodeModulesInstalled();
+    await project.makeSureNodeModulesInstalled();
     project.run(`npm-run ng build`).sync();
   },
   //#endregion
