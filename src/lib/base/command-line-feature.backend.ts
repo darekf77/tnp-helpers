@@ -31,13 +31,13 @@ export abstract class CommandLineFeature<
     return this.__project;
   }
   protected set project(v: PROJECT) {
-    if (!v) {
-      Helpers.error(
-        `Command line cannot be executed on folder that is not know project.`,
-        false,
-        true,
-      );
-    }
+    // if (!v) {
+    //   Helpers.error(
+    //     `Command line cannot be executed on folder that is not know project.`,
+    //     false,
+    //     true,
+    //   );
+    // }
     this.__project = v;
   }
 

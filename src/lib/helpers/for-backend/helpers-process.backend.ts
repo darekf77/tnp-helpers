@@ -455,7 +455,7 @@ export class HelpersProcess {
   }
 
   killAllNode() {
-    Helpers.info('Killing all node processes before pull...');
+    Helpers.info('Killing all node processes...');
     try {
       if (process.platform === 'win32') {
         Helpers.run(`taskkill /f /im node.exe`, {
