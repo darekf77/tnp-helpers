@@ -370,6 +370,10 @@ ${
     await this.pushAll(true);
   }
 
+  async pAllForce() {
+    await this.pushAllForce();
+  }
+
   async pAllf() {
     await this.pushAllForce();
   }
