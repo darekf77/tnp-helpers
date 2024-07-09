@@ -89,7 +89,7 @@ export abstract class BaseProject<
     const nearsetProj = this.ins.nearestTo(
       crossPlatformPath([this.location, '..']),
     );
-    const linkedPorj = nearsetProj.linkedProjects.find(l => {
+    const linkedPorj = nearsetProj?.linkedProjects?.find(l => {
       return (
         this.location ===
         crossPlatformPath([nearsetProj.location, l.relativeClonePath])
@@ -1102,7 +1102,7 @@ ${projectsThatShouldBeLinked
     if (forcerRemoveNodeModules) {
       Helpers.remove(source, true);
     }
-    this.run('yarn install').sync();
+    this.run('yarn install --ignore-engines').sync();
     Helpers.taskDone(`Reinstalling done for ${this.genericName}`);
     //#endregion
   }
@@ -2264,17 +2264,22 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
   //#endregion
 
   //#region getters & methods / build libraries
-  public async buildLibraries({
-    rebuild = false,
-    watch = false,
-    strategy,
-    onlySelectedLibs,
-  }: {
-    rebuild?: boolean;
-    watch?: boolean;
-    strategy?: 'link' | 'copy';
-    onlySelectedLibs?: string[];
-  } = {}) {
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  public async buildLibraries(
+    {
+      rebuild = false,
+      watch = false,
+      strategy,
+      onlySelectedLibs,
+      // buildType,
+    }: {
+      rebuild?: boolean;
+      watch?: boolean;
+      strategy?: 'link' | 'copy';
+      onlySelectedLibs?: string[];
+      // buildType: 'angular' | 'typescript';
+    } = {} as any,
+  ) {
     //#region @backend
     await this.saveAllLinkedProjectsToDB();
     if (!strategy) {
