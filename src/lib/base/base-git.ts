@@ -545,9 +545,9 @@ export class BaseGit<
     if (this.automaticallyAddAllChnagesWhenPushingToGit() || cloneChildren) {
       const childrenRepos = this.project.children.filter(
         f => f.git.isInsideGitRepo && f.git.isGitRoot,
-      );
+      ) as PROJCET[];
       for (const child of childrenRepos) {
-        await child.pullProcess();
+        await child.git.pullProcess();
       }
     }
     await this.project.linkedProjects.saveAllLinkedProjectsToDB();
@@ -698,7 +698,7 @@ export class BaseGit<
       }
       const childrenRepos = this.project.children.filter(
         f => f.git.isInsideGitRepo && f.git.isGitRoot,
-      ) as PROJCET[ ];
+      ) as PROJCET[];
       for (const child of childrenRepos) {
         await child.git.pushProcess(options);
       }
