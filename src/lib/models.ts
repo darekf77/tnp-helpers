@@ -7,15 +7,29 @@ export const BaseProjectTypeArr = core.CoreModels.BaseProjectTypeArr;
  * Angular project type
  */
 export type NgProject = {
-  "projectType": "library" | "application",
+  projectType: 'library' | 'application';
   /**
    * where ng-packagr.json is located, tsconfig etc.
    */
-  "root": string,
+  root: string;
   /**
    * Source code project
    */
-  "sourceRoot": string,
-  "prefix": string;
-}
+  sourceRoot: string;
+  prefix: string;
+};
 
+
+export type LibraryBuildCommandOptions = {
+  watch?: boolean;
+  buildType: core.CoreModels.LibraryType;
+};
+
+export type LibrariesBuildOptions = {
+  rebuild?: boolean;
+  watch?: boolean;
+  strategy?: 'link' | 'copy';
+  onlySelectedLibs?: string[];
+  buildType: core.CoreModels.LibraryType;
+  onlyBuildLib?: string;
+};

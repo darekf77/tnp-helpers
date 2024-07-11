@@ -1,7 +1,8 @@
 //#region imports
 import {
   //#region @backend
-  fse, child_process
+  fse,
+  child_process,
   //#endregion
 } from 'tnp-core';
 import { Helpers } from '../index';
@@ -9,18 +10,16 @@ import { path, crossPlatformPath } from 'tnp-core/src';
 import { config } from 'tnp-config/src';
 import { _ } from 'tnp-core/src';
 import type { BaseProject } from './base-project';
-import { Low } from "lowdb"
+import { Low } from 'lowdb';
 import { ConfigDatabase } from './config-database';
 import { ProjectDatabase } from './project-database';
 //#region @backend
 import { os } from 'tnp-core/src';
-import { JSONFilePreset } from "../lowdb/node";
+import { JSONFilePreset } from '../lowdb/node';
 export { ChildProcess } from 'child_process';
 import { CLI } from 'tnp-cli/src';
 //#endregion
 //#endregion
-
-
 
 export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
   /**
@@ -41,7 +40,7 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
   //#endregion
 
   //#region constructor
-  constructor(protected classFn: any) { }
+  constructor(protected classFn: any) {}
   //#endregion
 
   //#region fields & getters / allowed types
@@ -59,7 +58,9 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
    */
   get Current(): T {
     //#region @backendFunc
-    const current = (this.classFn as typeof BaseProject).ins.From(process.cwd())
+    const current = (this.classFn as typeof BaseProject).ins.From(
+      process.cwd(),
+    );
     if (!current) {
       Helpers.warn(`[firedev-helpers] Current location is not a ${CLI.chalk.bold(config.frameworkName)} type project.
 
@@ -79,7 +80,9 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
    */
   typeFrom(location: string, recrusiveCall = false): string {
     //#region @backendFunc
-    if (Helpers.exists(crossPlatformPath([location, config.file.package_json]))) {
+    if (
+      Helpers.exists(crossPlatformPath([location, config.file.package_json]))
+    ) {
       return this.NPM_PROJECT_KEY;
     }
     if (recrusiveCall) {
@@ -103,7 +106,7 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
     let location = crossPlatformPath(locationOfProject.replace(/\/\//g, '/'));
 
     if (!_.isString(location)) {
-      Helpers.warn(`[project.from] location is not a string`)
+      Helpers.warn(`[project.from] location is not a string`);
       return;
     }
     if (path.basename(location) === 'dist') {
@@ -111,24 +114,30 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
     }
     location = crossPlatformPath(path.resolve(location));
 
-    const alreadyExist = this.projects.find(l => l.location.trim() === location.trim());
+    const alreadyExist = this.projects.find(
+      l => l.location.trim() === location.trim(),
+    );
     if (alreadyExist) {
       return alreadyExist as any;
     }
 
     //#region @backend
     if (!fse.existsSync(location)) {
-      Helpers.log(`[firedev-helpers][project.from] Cannot find project in location: ${location}`, 1);
+      Helpers.log(
+        `[firedev-helpers][project.from] Cannot find project in location: ${location}`,
+        1,
+      );
       this.emptyLocations.push(location);
       return;
     }
 
-
     let type = this.typeFrom(location);
     if (type) {
-      let resultProject = new (this.classFn)() as BaseProject;
+      let resultProject = new this.classFn() as BaseProject;
 
-      const pj = Helpers.readJson(crossPlatformPath([location, config.file.package_json]))
+      const pj = Helpers.readJson(
+        crossPlatformPath([location, config.file.package_json]),
+      );
 
       // @ts-ignore
       resultProject.location = location;
@@ -150,26 +159,41 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
   //#region fields & getters / get project nearest to path
   nearestTo(
     absoluteLocation: string,
-    options?: { type?: (string | string[]); findGitRoot?: boolean; onlyOutSideNodeModules?: boolean }): T {
+    options?: {
+      type?: string | string[];
+      findGitRoot?: boolean;
+      onlyOutSideNodeModules?: boolean;
+    },
+  ): T {
     //#region @backendFunc
 
     options = options || {};
     const { type, findGitRoot, onlyOutSideNodeModules } = options;
 
     if (_.isString(type) && !this.allowedTypes.includes(type)) {
-      Helpers.error(`[firedev-helpers][project.nearestTo] wrong type: ${type}`, false, true)
+      Helpers.error(
+        `[firedev-helpers][project.nearestTo] wrong type: ${type}`,
+        false,
+        true,
+      );
     }
     if (fse.existsSync(absoluteLocation)) {
       absoluteLocation = fse.realpathSync(absoluteLocation);
     }
-    if (fse.existsSync(absoluteLocation) && !fse.lstatSync(absoluteLocation).isDirectory()) {
+    if (
+      fse.existsSync(absoluteLocation) &&
+      !fse.lstatSync(absoluteLocation).isDirectory()
+    ) {
       absoluteLocation = path.dirname(absoluteLocation);
     }
 
-    let project: (T & BaseProject);
+    let project: T & BaseProject;
     let previousLocation: string;
     while (true) {
-      if (onlyOutSideNodeModules && (path.basename(path.dirname(absoluteLocation)) === 'node_modules')) {
+      if (
+        onlyOutSideNodeModules &&
+        path.basename(path.dirname(absoluteLocation)) === 'node_modules'
+      ) {
         absoluteLocation = path.dirname(path.dirname(absoluteLocation));
       }
       project = this.From(absoluteLocation, options) as any;
@@ -201,7 +225,10 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
         return;
       }
       absoluteLocation = crossPlatformPath(path.resolve(newAbsLocation));
-      if (!fse.existsSync(absoluteLocation) && absoluteLocation.split('/').length < 2) {
+      if (
+        !fse.existsSync(absoluteLocation) &&
+        absoluteLocation.split('/').length < 2
+      ) {
         return;
       }
       if (previousLocation === absoluteLocation) {
@@ -245,7 +272,6 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
     const projectsList = [];
     let previousAbsLocation: string;
     while (absoluteLocation.startsWith(stopOnCwd)) {
-
       if (previousAbsLocation === absoluteLocation) {
         break;
       }
@@ -268,5 +294,47 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
   }
   //#endregion
 
-}
+  //#region fields & getters / sort group of projects
+  public sortGroupOfProject<T extends BaseProject = BaseProject>(
+    projects: T[],
+    resoveDepsArray: (proj: T) => string[],
+    projNameToCompare: (proj: T) => string,
+  ): T[] {
+    const visited: { [key: string]: boolean } = {};
+    const stack: { [key: string]: boolean } = {};
+    const result: T[] = [];
 
+    const visit = (project: T) => {
+      if (stack[projNameToCompare(project)]) {
+        // Circular dependency detected
+        Helpers.error(
+          `Circular dependency detected involving project: ${projNameToCompare(project)}`,
+        );
+      }
+
+      if (!visited[projNameToCompare(project)]) {
+        visited[projNameToCompare(project)] = true;
+        stack[projNameToCompare(project)] = true;
+
+        const depsResolved = resoveDepsArray(project);
+        depsResolved.forEach(dependency => {
+          const dependentProject = projects.find(p => {
+            // console.log(`comparing :"${projNameToCompare(p)}" and "${dependency}"`)
+            return projNameToCompare(p) === dependency;
+          });
+          if (dependentProject) {
+            visit(dependentProject);
+          }
+        });
+
+        stack[projNameToCompare(project)] = false;
+        result.push(project);
+      }
+    };
+
+    projects.forEach(project => visit(project));
+    return result;
+    // return result.reverse(); // Reverse the result to get the correct order
+  }
+  //#endregion
+}

@@ -44,8 +44,8 @@ export class HelpersGit {
   //#endregion
 
   //#region get penultimate commit hash
-  penultimageCommitHash(cwd): string {
-    Helpers.log('[penultimageCommitHash] ' + cwd, 1);
+  penultimateCommitHash(cwd): string {
+    Helpers.log('[penultimateCommitHash] ' + cwd, 1);
     try {
       let hash =
         this.isInsideGitRepo(cwd) &&

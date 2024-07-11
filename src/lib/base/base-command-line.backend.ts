@@ -67,7 +67,7 @@ export class BaseCommandLine<
     Helpers.info('Deep updating & pushing project with children...');
     const updateProject = async (project: PROJECT): Promise<void> => {
       try {
-        await project.bumpPatchVersion();
+        await project.npmHelpers.bumpPatchVersion();
       } catch (error) {}
       try {
         project.git.addAndCommit(
@@ -145,7 +145,7 @@ export class BaseCommandLine<
       Helpers.taskStarted(`Getting code editor info...`);
       const editor = await this.ins.configDb.getCodeEditor();
       Helpers.taskDone(`Got code editor info...`);
-      const embededProject = proj.embeddedProject as BaseProject;
+      const embededProject = proj.linkedProjects.embeddedProject as BaseProject;
       const porjToOpen = embededProject || proj;
       const locaitonFolderToOpen = porjToOpen.location;
       Helpers.info('Initing and opening project...');
@@ -188,7 +188,7 @@ export class BaseCommandLine<
   //#region commands / pull
   async pull() {
     this.preventCwdIsNotProject();
-    await this.project.pullProcess();
+    await this.project.git.pullProcess();
     this._exit();
   }
   //#endregion
@@ -214,12 +214,13 @@ ${
     // Helpers.clearConsole();
     this.preventCwdIsNotProject();
     const parent = this.project.parent as BaseProject;
-    const branchFromLinkedProjectConfig = parent?.linkedProjects?.find(l => {
-      return (
-        crossPlatformPath([parent.location, l.relativeClonePath]) ===
-        this.project.location
-      );
-    })?.deafultBranch;
+    const branchFromLinkedProjectConfig =
+      parent?.linkedProjects?.linkedProjects.find(l => {
+        return (
+          crossPlatformPath([parent.location, l.relativeClonePath]) ===
+          this.project.location
+        );
+      })?.deafultBranch;
 
     let overrideBranchToReset =
       this.firstArg ||
@@ -237,7 +238,7 @@ ${
     }
 
     const resetOnlyChildren =
-      !!this.project.getLinkedProjectsConfig().resetOnlyChildren;
+      !!this.project.linkedProjects.getLinkedProjectsConfig().resetOnlyChildren;
 
     const branches = Helpers.uniqArray([
       ...this.__filterBranchesByPattern(overrideBranchToReset),
@@ -286,7 +287,7 @@ ${
 
     const res = await Helpers.questionYesNo(
       `Reset hard and pull current project ` +
-        `${resetProject.linkedProjects.length > 0 ? '(and children)' : ''} ?`,
+        `${resetProject.linkedProjects.linkedProjects.length > 0 ? '(and children)' : ''} ?`,
     );
     if (res) {
       await resetProject.resetProcess(overrideBranchToReset);
@@ -431,7 +432,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
   ) {
     this.preventCwdIsNotProject();
     await this.project.git.meltActionCommits(true);
-    await this.project.pushProcess({
+    await this.project.git.pushProcess({
       ...options,
       forcePushNoQuestion: options.force,
       args: this.args,
@@ -458,7 +459,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
     } = {},
   ) {
     this.preventCwdIsNotProject();
-    await this.project.pushProcess({
+    await this.project.git.pushProcess({
       ...options,
       forcePushNoQuestion: options.force,
       args: this.args,
@@ -682,7 +683,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
    */
   async version() {
     this.preventCwdIsNotProject();
-    console.log('Current project verison: ' + this.project.version);
+    console.log('Current project verison: ' + this.project.npmHelpers.version);
     this._exit();
   }
   //#endregion
@@ -717,7 +718,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
     this.preventCwdIsNotProject();
     Helpers.clearConsole();
     await this.project.info();
-    await this.project.saveAllLinkedProjectsToDB();
+    await this.project.linkedProjects.saveAllLinkedProjectsToDB();
     this._exit();
   }
   //#endregion
@@ -766,7 +767,7 @@ ${linkedProjects.map(l => `- ${l.relativeClonePath}`).join('\n')}
 
 Would you like to update current project configuration?`)
     ) {
-      this.project.addLinkedProjects(linkedProjects);
+      this.project.linkedProjects.addLinkedProjects(linkedProjects);
     }
     await this.project.init();
     Helpers.info(`Linked projects updated`);
@@ -828,12 +829,12 @@ Would you like to update current project configuration?`)
   projdb() {
     this.preventCwdIsNotProject();
     Helpers.info(`Projects db location:
-    ${this.project.projectsDbLocation}
+    ${this.project.linkedProjects.projectsDbLocation}
 
     opening in vscode...
 
     `);
-    Helpers.run(`code ${this.project.projectsDbLocation}`).sync();
+    Helpers.run(`code ${this.project.linkedProjects.projectsDbLocation}`).sync();
     this._exit();
   }
 

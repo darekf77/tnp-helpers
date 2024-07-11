@@ -1,4 +1,12 @@
 //#region import
+//#region @backend
+import { translate } from './translate';
+
+import { fse, portfinder, chalk } from 'tnp-core/src';
+export { ChildProcess } from 'child_process';
+import { CommandOutputOptions } from 'tnp-core/src';
+
+//#endregion
 import { CoreModels } from 'tnp-core/src';
 import { CLI } from 'tnp-cli/src';
 import { path, crossPlatformPath } from 'tnp-core/src';
@@ -13,15 +21,16 @@ import {
   TypeOfCommit,
 } from '../index';
 import { BaseProjectResolver } from './base-project-resolver';
-import { BaseProjectType, NgProject } from '../models';
-//#region @backend
-import { translate } from './translate';
-import * as json5Write from 'json10-writer/src';
-import { fse, portfinder, chalk } from 'tnp-core/src';
-export { ChildProcess } from 'child_process';
-import { CommandOutputOptions } from 'tnp-core/src';
-import * as tsfmt from 'typescript-formatter';
-//#endregion
+import {
+  BaseProjectType,
+  LibrariesBuildOptions,
+  LibraryBuildCommandOptions,
+  NgProject,
+} from '../models';
+import type { BaseLibraryBuild } from './base-library-build';
+import { BaseNpmHelpers } from './base-npm-helpers';
+import { BaseLinkedProjects } from './base-linked-projects';
+import { BaseGit } from './base-git';
 //#endregion
 
 const takenPorts = [];
@@ -36,111 +45,6 @@ export abstract class BaseProject<
   static ins = new BaseProjectResolver<BaseProject>(BaseProject);
   //#endregion
 
-  //#region static / sort group of projects
-  public static sortGroupOfProject<T extends BaseProject = BaseProject>(
-    projects: T[],
-    resoveDepsArray: (proj: T) => string[],
-    projNameToCompare: (proj: T) => string,
-  ): T[] {
-    const visited: { [key: string]: boolean } = {};
-    const stack: { [key: string]: boolean } = {};
-    const result: T[] = [];
-
-    const visit = (project: T) => {
-      if (stack[projNameToCompare(project)]) {
-        // Circular dependency detected
-        Helpers.error(
-          `Circular dependency detected involving project: ${projNameToCompare(project)}`,
-        );
-      }
-
-      if (!visited[projNameToCompare(project)]) {
-        visited[projNameToCompare(project)] = true;
-        stack[projNameToCompare(project)] = true;
-
-        const depsResolved = resoveDepsArray(project);
-        depsResolved.forEach(dependency => {
-          const dependentProject = projects.find(p => {
-            // console.log(`comparing :"${projNameToCompare(p)}" and "${dependency}"`)
-            return projNameToCompare(p) === dependency;
-          });
-          if (dependentProject) {
-            visit(dependentProject);
-          }
-        });
-
-        stack[projNameToCompare(project)] = false;
-        result.push(project);
-      }
-    };
-
-    projects.forEach(project => visit(project));
-    return result;
-    // return result.reverse(); // Reverse the result to get the correct order
-  }
-  //#endregion
-
-  get embeddedProject(): PROJCET {
-    const cacheKey = 'embeddedProject' + _.kebabCase(this.location);
-    if (!_.isUndefined(this.globalCache[cacheKey])) {
-      return this.globalCache[cacheKey];
-    }
-    // Helpers.taskStarted(`Detecting embedded project for ${this.location}`); // TODO it is slow
-    const nearsetProj = this.ins.nearestTo(
-      crossPlatformPath([this.location, '..']),
-    );
-    const linkedPorj = nearsetProj?.linkedProjects?.find(l => {
-      return (
-        this.location ===
-        crossPlatformPath([nearsetProj.location, l.relativeClonePath])
-      );
-    });
-    if (!linkedPorj || !linkedPorj.internalRealtiveProjectPath) {
-      return;
-    }
-    const pathToEmbededProj = crossPlatformPath([
-      nearsetProj.location,
-      linkedPorj.relativeClonePath,
-      linkedPorj.internalRealtiveProjectPath || '',
-    ]);
-    const embdedresult = this.ins.From(pathToEmbededProj);
-    // Helpers.taskDone(`Embedded project detected for ${this.location}`);
-    this.globalCache[cacheKey] = embdedresult;
-    return this.globalCache[cacheKey];
-  }
-
-  get projectsDbLocation() {
-    //#region @backendFunc
-    return this.ins.projectsDb.projectsDbLocation;
-    //#endregion
-  }
-
-  //#region static / save location to db
-  async saveLocationToDB() {
-    //#region @backendFunc
-    const db = await this.ins.projectsDb.useDB();
-
-    const existed = db.data.projects.find(f => f.location === this.location);
-    // Helpers.info(`Saving location to db for ${this.genericName}, exised: ${!!existed}`);
-    if (!existed) {
-      try {
-        await db.update(data => {
-          if (data.projects.length > 50) {
-            data.projects.shift();
-          }
-          data.projects.push({
-            location: this.location,
-          });
-        });
-        // Helpers.info(`Location saved to db for ${this.genericName}, db: ${this.ins.projectsDbLocation(_.kebabCase(this.orgName))}`);
-      } catch (error) {
-        Helpers.warn(`Cannot save location to db`);
-      }
-    }
-    //#endregion
-  }
-  //#endregion
-
   //#endregion
 
   //#region fields
@@ -150,7 +54,6 @@ export abstract class BaseProject<
     return BaseProject.cache;
   }
   readonly type: TYPE | string = 'unknow';
-  protected readonly packageJSON: any;
 
   /**
    * resolve instance
@@ -161,6 +64,11 @@ export abstract class BaseProject<
    * only available after executing *this.assignFreePort()*
    */
   readonly port: string;
+
+  public libraryBuild: BaseLibraryBuild;
+  public npmHelpers: BaseNpmHelpers;
+  public linkedProjects: BaseLinkedProjects;
+  public git: BaseGit;
   //#endregion
 
   //#region constructor
@@ -170,26 +78,21 @@ export abstract class BaseProject<
      * doesn't need to be real path -> can be link
      */
     public readonly location: string,
-  ) {}
-  //#endregion
+  ) {
+    //#region @backend
+    this.libraryBuild = new (require('./base-library-build')
+      .BaseLibraryBuild as typeof BaseLibraryBuild)(this as any);
 
-  //#region methods & getters / save all linked projects to db
-  async saveAllLinkedProjectsToDB() {
-    const proj = this;
-    await proj.saveLocationToDB();
-    for (const link of proj.linkedProjects) {
-      const linkedPorj = this.ins.From([
-        proj.location,
-        link.relativeClonePath,
-        link.internalRealtiveProjectPath || '',
-      ]);
-      // console.log({ linkedPorj })
-      if (linkedPorj) {
-        await linkedPorj.saveLocationToDB();
-      } else {
-        Helpers.warn(`Folder ${link.relativeClonePath} is missing projects...`);
-      }
-    }
+    this.npmHelpers = new (require('./base-npm-helpers')
+      .BaseNpmHelpers as typeof BaseNpmHelpers)(this as any);
+
+    this.linkedProjects = new (require('./base-linked-projects')
+      .BaseLinkedProjects as typeof BaseLinkedProjects)(this as any);
+
+    this.git = new (require('./base-git').BaseGit as typeof BaseGit)(
+      this as any,
+    );
+    //#endregion
   }
   //#endregion
 
@@ -259,165 +162,10 @@ export abstract class BaseProject<
   }
   //#endregion
 
-  //#region methods & getters  / add linked project
-  addLinkedProject(linkedProj: LinkedProject | string) {
-    const linkedProject: LinkedProject = _.isString(linkedProj)
-      ? LinkedProject.fromName(linkedProj)
-      : linkedProj;
-    //#region @backendFunc
-    const linkedProjectsConfig = this.getLinkedProjectsConfig();
-    linkedProjectsConfig.projects.push(LinkedProject.from(linkedProject));
-    this.setLinkedProjectsConfig(linkedProjectsConfig);
-    //#endregion
-  }
-  //#endregion
-
-  //#region methods & getters  / add linked projects
-  addLinkedProjects(linkedProjs: LinkedProject[]) {
-    //#region @backendFunc
-    for (const linkedProj of linkedProjs) {
-      this.addLinkedProject(linkedProj);
-    }
-    //#endregion
-  }
-  //#endregion
-
-  //#region methods & getters  / set linked projects config
-  setLinkedProjectsConfig(linkedPorjectsConfig: Partial<LinkedPorjectsConfig>) {
-    //#region @backendFunc
-    if (!Helpers.exists(this.linkedProjectsConfigPath)) {
-      return;
-    }
-    const orgContent = Helpers.readFile(this.linkedProjectsConfigPath);
-    linkedPorjectsConfig = LinkedPorjectsConfig.from(linkedPorjectsConfig);
-    const writer = json5Write.load(orgContent);
-    writer.write(linkedPorjectsConfig);
-
-    const newContent = writer.toSource({
-      quote: 'double',
-      trailingComma: true,
-      quotaKey: true,
-    });
-    Helpers.writeFile(this.linkedProjectsConfigPath, newContent);
-
-    try {
-      tsfmt.processFiles([this.linkedProjectsConfigPath], {
-        verbose: false,
-        replace: true,
-        verify: false,
-        // tsconfig: true,
-        // tslint: true,
-        editorconfig: true,
-        tsfmt: true,
-      } as any);
-    } catch (error) {
-      // console.log('ts formatting error',error)
-    }
-    //#endregion
-  }
-  //#endregion
-
-  //#region methods & getters  / get linked projects config path
-  private get linkedProjectsConfigPath() {
-    return this.pathFor(config.file.linked_projects_json);
-  }
-  //#endregion
-
-  //#region methods & getters  / recreate linked projects config
-  protected recreateLinkedProjectsConfig() {
-    //#region @backendFunc
-    if (
-      !Helpers.exists(this.linkedProjectsConfigPath) &&
-      Helpers.exists(this.pathFor(config.file.firedev_jsonc))
-    ) {
-      Helpers.writeJson(
-        this.linkedProjectsConfigPath,
-        LinkedPorjectsConfig.from({ projects: [] }),
-      );
-    }
-    //#endregion
-  }
-  //#endregion
-
-  //#region methods & getters  / get linked projects config
-  getLinkedProjectsConfig(): LinkedPorjectsConfig {
-    //#region @backendFunc
-    this.recreateLinkedProjectsConfig();
-    const existedConfig = Helpers.readJson(
-      this.pathFor(config.file.linked_projects_json),
-      {},
-      true,
-    );
-    const orgExistedConfig = _.cloneDeep(existedConfig);
-    // console.log({ existedConfig });
-    let linkedPorjectsConfig = LinkedPorjectsConfig.from(existedConfig);
-    const currentRemoteUrl = this.git.originURL;
-    const currentBranch = this.git.currentBranchName;
-
-    linkedPorjectsConfig.projects = (linkedPorjectsConfig.projects || []).map(
-      (projOrProjName: LinkedProject) => {
-        if (_.isString(projOrProjName)) {
-          return LinkedProject.fromName(
-            projOrProjName,
-            currentRemoteUrl,
-            currentBranch,
-          );
-        }
-        if (!projOrProjName.relativeClonePath) {
-          projOrProjName.relativeClonePath = path
-            .basename(projOrProjName.remoteUrl())
-            .replace('.git', '');
-        }
-        projOrProjName = LinkedProject.from(projOrProjName);
-        if (!projOrProjName.remoteUrl()) {
-          projOrProjName.repoUrl = currentRemoteUrl.replace(
-            path.basename(currentRemoteUrl),
-            `${projOrProjName.relativeClonePath}.git`,
-          );
-        }
-        return projOrProjName;
-      },
-    );
-    // console.log({ linkedPorjectsConfig })
-    // @ts-ignore
-    linkedPorjectsConfig.projects = Helpers.uniqArray<LinkedProject>(
-      linkedPorjectsConfig.projects,
-      'relativeClonePath',
-    );
-    if (!_.isEqual(orgExistedConfig, linkedPorjectsConfig)) {
-      this.setLinkedProjectsConfig(linkedPorjectsConfig);
-    }
-    return linkedPorjectsConfig;
-    //#endregion
-  }
-  //#endregion
-
-  //#region methods & getters  / linked projects
-  get linkedProjects(): LinkedProject[] {
-    return this.getLinkedProjectsConfig().projects || [];
-  }
-  //#endregion
-
-  //#region methods & getters  / detected linked projects
-  get detectedLinkedProjects(): LinkedProject[] {
-    const detectedLinkedProjects = LinkedProject.detect(
-      this.location,
-      true, // TOOD fix recrusive
-    );
-    return detectedLinkedProjects;
-  }
-  //#endregion
-
-  //#region methods & getters  / linked projects prefix
-  get linkedProjectsPrefix() {
-    return this.getLinkedProjectsConfig().prefix;
-  }
-  //#endregion
-
   //#region getters & methods / link project exited
   get linkedProjectsExisted(): PROJCET[] {
     //#region @backendFunc
-    return this.linkedProjects
+    return this.linkedProjects.linkedProjects
       .map(f => {
         const proj = this.ins.From(this.pathFor(f.relativeClonePath));
         return proj;
@@ -427,116 +175,26 @@ export abstract class BaseProject<
   }
   //#endregion
 
-  //#region getters & methods / reset linked projects only to core branches
-  resetLinkedProjectsOnlyToCoreBranches() {
-    return false;
-  }
-  //#endregion
-
-  //#region getters & methods / get unexisted projects
-  protected async cloneUnexistedLinkedProjects(
-    actionType: 'pull' | 'push',
-    cloneChildren = false,
-  ) {
-    //#region @backendFunc
-    if (
-      actionType === 'push' &&
-      this.automaticallyAddAllChnagesWhenPushingToGit()
-    ) {
-      return;
-    }
-
-    // Helpers.taskStarted(`Checking linked projects in ${this.genericName}`);
-    const detectedLinkedProjects = this.detectedLinkedProjects;
-
-    // console.log({ detectedLinkedProjects })
-    // for (const detectedLinkedProject of detectedLinkedProjects) {
-    //   if (this.linkedProjects.find(f => f.relativeClonePath === detectedLinkedProject.relativeClonePath)) {
-    //     continue;
-    //   }
-    //   if (await Helpers.questionYesNo(`Do you want to remove unexisted linked project  ${detectedLinkedProject.relativeClonePath} ?`)) {
-    //     Helpers.taskStarted(`Removing unexisted project ${detectedLinkedProject.relativeClonePath}`);
-    //     Helpers.removeFolderIfExists(this.pathFor(detectedLinkedProject.relativeClonePath));
-    //     Helpers.taskDone(`Removed unexisted project ${detectedLinkedProject.relativeClonePath}`);
-    //   }
-    // }
-    // Helpers.taskDone(`Checking linked projects done in ${this.genericName}`);
-
-    const projectsThatShouldBeLinked = this.linkedProjects
-      .map(linkedProj => {
-        return detectedLinkedProjects.find(
-          f => f.relativeClonePath === linkedProj.relativeClonePath,
-        )
-          ? void 0
-          : linkedProj;
-      })
-      .filter(f => !!f) as LinkedProject[];
-
-    if (projectsThatShouldBeLinked.length > 0) {
-      Helpers.info(`
-
-${projectsThatShouldBeLinked
-  .map(
-    (p, index) =>
-      `- ${index + 1}. ${chalk.bold(p.relativeClonePath)} ${p.remoteUrl()} {${p.purpose ? ` purpose: ${p.purpose} }` : ''}`,
-  )
-  .join('\n')}
-
-      `);
-
-      if (!this.isMonorepo) {
-        if (
-          cloneChildren ||
-          (await Helpers.questionYesNo(
-            `Do you want to clone above (missing) linked projects ?`,
-          ))
-        ) {
-          for (const linkedProj of projectsThatShouldBeLinked) {
-            // console.log({linkedProj})
-            Helpers.info(
-              `Cloning unexisted project from url ${chalk.bold(linkedProj.remoteUrl())} to ${linkedProj.relativeClonePath}`,
-            );
-            await this.git.clone(
-              linkedProj.remoteUrl(),
-              linkedProj.relativeClonePath,
-              linkedProj.deafultBranch,
-            );
-            const childProjLocaiton = this.pathFor([
-              linkedProj.relativeClonePath,
-              linkedProj.internalRealtiveProjectPath,
-            ]);
-            const childProj = this.ins.From(childProjLocaiton);
-            if (childProj) {
-              await childProj.saveLocationToDB();
-            }
-          }
-        }
-      }
-    }
-    //#endregion
-  }
-  //#endregion
-
-  //#region methods & getters  / set type
+  //#region methods & getters / set type
   public setType(type: TYPE) {
     // @ts-ignore
     this.type = type;
   }
   //#endregion
 
-  //#region methods & getters  / type is
+  //#region methods & getters / type is
   public typeIs(...types: TYPE[]) {
     return this.type && types.includes(this.type as any);
   }
   //#endregion
 
-  //#region methods & getters  / type is not
+  //#region methods & getters / type is not
   public typeIsNot(...types: TYPE[]) {
     return !this.typeIs(...types);
   }
   //#endregion
 
-  //#region methods & getters  / basename
+  //#region methods & getters / basename
   /**
    * project folder basename
    */
@@ -547,12 +205,12 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / name
+  //#region methods & getters / name
   /**
    * name from package.json
    */
   get name(): string {
-    return this.packageJSON?.name || this.nameFromPomXML;
+    return this.npmHelpers?.name || this.nameFromPomXML;
   }
 
   get nameFromPomXML(): string {
@@ -565,134 +223,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / version
-  /**
-   * version from package.json -> property version
-   */
-  get version(): string {
-    return this.packageJSON?.version;
-  }
-  //#endregion
-
-  //#region methods & getters  / major version
-  /**
-   * Major Version from package.json
-   */
-  // @ts-ignore
-  get majorVersion(): number {
-    //#region @backendFunc
-    return Number(_.first((this.version || '').split('.')));
-    //#endregion
-  }
-  //#endregion
-
-  //#region methods & getters  / minor version
-  /**
-   * Minor Version from package.json
-   */
-  // @ts-ignore
-  get minorVersion(): number {
-    //#region @backendFunc
-    const [__, minor] = (this.version || '').split('.') || [void 0, void 0];
-    return Number(minor);
-    //#endregion
-  }
-  //#endregion
-
-  /**
-   * @deprecated
-   */
-  async bumpPatchVersion() {
-    //#region @backendFunc
-
-    // Read package.json
-    const packageJson = this.readJson(config.file.package_json) as any;
-    const version = packageJson?.version;
-    if (!version) {
-      return;
-    }
-
-    const versionComponents = version.match(/^(\d+)\.(\d+)\.(\d+)(-.+)?$/);
-    const major = versionComponents[1];
-    const minor = versionComponents[2];
-    const patch = versionComponents[3];
-    const preRelease = versionComponents[4] || '';
-
-    // Increment the patch version
-    const newPatch = parseInt(patch, 10) + 1;
-
-    // Construct the new version
-    const newVersion = `${major}.${minor}.${newPatch}${preRelease}`;
-
-    // Update the version in the package.json object
-    packageJson.version = newVersion;
-
-    // Write the updated package.json back to disk
-    this.writeJson(config.file.package_json, packageJson);
-    //#endregion
-  }
-
-  //#region methods & getters  / get version path as number
-  get versionPathAsNumber(): number {
-    //#region @backendFunc
-    const ver = this.version.split('.');
-    const res = Number(_.last(ver));
-    return isNaN(res) ? 0 : res;
-    //#endregion
-  }
-  //#endregion
-
-  //#region methods & getters  / dependencies
-  /**
-   * npm dependencies from package.json
-   */
-  get dependencies() {
-    return (this.packageJSON ? this.packageJSON.dependencies : {}) || {};
-  }
-  //#endregion
-
-  //#region methods & getters  / peer dependencies
-  /**
-   * peerDependencies dependencies
-   */
-  get peerDependencies() {
-    return (this.packageJSON ? this.packageJSON.peerDependencies : {}) || {};
-  }
-  //#endregion
-
-  //#region methods & getters  / dev dependencies
-  /**
-   * devDependencies dependencies
-   */
-  get devDependencies() {
-    return (this.packageJSON ? this.packageJSON.devDependencies : {}) || {};
-  }
-  //#endregion
-
-  //#region methods & getters  / resolutions dependencies
-  /**
-   * resolutions dependencies
-   */
-  get resolutions() {
-    return (this.packageJSON ? this.packageJSON['resolutions'] : {}) || {};
-  }
-  //#endregion
-
-  //#region methods & getters  / all dependencies
-  /**
-   *  object with all deps from package json
-   */
-  get allDependencies(): { [packageName: string]: string } {
-    return _.merge({
-      ...this.devDependencies,
-      ...this.peerDependencies,
-      ...this.dependencies,
-      ...this.resolutions,
-    }) as any;
-  }
-  //#endregion
-
-  //#region methods & getters  / get folder for possible project chhildrens
+  //#region methods & getters / get folder for possible project chhildrens
   protected getFoldersForPossibleProjectChildren(): string[] {
     //#region @backendFunc
     const isDirectory = source => fse.lstatSync(source).isDirectory();
@@ -734,7 +265,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / children
+  //#region methods & getters / children
   /**
    * alias to getAllChildren
    */
@@ -745,7 +276,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / get child
+  //#region methods & getters / get child
   getChildBy(nameOrBasename: string, errors = true): PROJCET {
     //#region @websqlFunc
     const c = this.children.find(
@@ -761,7 +292,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / parent
+  //#region methods & getters / parent
   get parent(): PROJCET {
     //#region @websqlFunc
     if (!_.isString(this.location) || this.location.trim() === '') {
@@ -772,7 +303,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / grandpa
+  //#region methods & getters / grandpa
   get grandpa(): PROJCET {
     //#region @websqlFunc
     if (!_.isString(this.location) || this.location.trim() === '') {
@@ -784,7 +315,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / generic name
+  //#region methods & getters / generic name
   get genericName() {
     //#region @websqlFunc
     let parent = this.parent as any as BaseProject;
@@ -809,60 +340,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / delete node_modules
-  deleteNodeModules() {
-    this.remove(config.folder.node_modules);
-  }
-  //#endregion
-
-  //#region methods & getters  /reinstall node modules
-  reinstalNodeModules(options?: { useYarn?: boolean; force?: boolean }) {
-    //#region @backendFunc
-    Helpers.taskStarted(`Reinstalling node modules for ${this.genericName}`);
-    this.deleteNodeModules();
-    Helpers.run(
-      `${options?.useYarn ? 'yarn' : 'npm'}  install ${options?.force ? '--force' : ''}`,
-      { cwd: this.location },
-    ).sync();
-    Helpers.taskDone(`Reinstalled node modules for ${this.genericName}`);
-    //#endregion
-  }
-  //#endregion
-
-  //#region methods & getters  / make sure node modules installed
-  async makeSureNodeModulesInstalled(options?: {
-    checkPackages?: boolean;
-    useYarn?: boolean;
-    force?: boolean;
-  }) {
-    if (this.nodeModulesEmpty()) {
-      this.reinstalNodeModules(options);
-    }
-  }
-  //#endregion
-
-  //#region methods & getters  / prefer yarn over npm
-  preferYarnOverNpm(): boolean {
-    return false;
-  }
-  //#endregion
-
-  //#region methods & getters  / node modules empty
-  /**
-   *
-   * @returns true if node_modules folder is empty
-   */
-  nodeModulesEmpty() {
-    //#region @backendFunc
-    return (
-      !this.hasFolder(config.folder.node_modules) ||
-      fse.readdirSync(this.pathFor(config.folder.node_modules)).length === 0
-    );
-    //#endregion
-  }
-  //#endregion
-
-  //#region methods & getters  / path exits
+  //#region methods & getters / path exits
   /**
    * same has project.hasFile();
    */
@@ -871,7 +349,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / has file
+  //#region methods & getters / has file
   /**
    * same as project.pathExists();
    */
@@ -890,7 +368,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / contains file
+  //#region methods & getters / contains file
   /**
    * same as project.pathhasFileExists();
    * but with path.resolve
@@ -903,7 +381,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / path for
+  //#region methods & getters / path for
   /**
    * absolute path:
    * concated project location with relative path
@@ -921,7 +399,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / write json
+  //#region methods & getters / write json
   writeJson(relativePath: string, json: object) {
     //#region @backendFunc
     if (path.isAbsolute(relativePath)) {
@@ -932,7 +410,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / run
+  //#region methods & getters / run
   /**
    * @deprecated us execute instead
    * use output from or more preciese crafted api
@@ -964,7 +442,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / execute
+  //#region methods & getters / execute
   /**
    * same as run but async
    */
@@ -994,7 +472,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / try run sync command
+  //#region methods & getters / try run sync command
   /**
    * try run but continue when it fails
    * @param command
@@ -1017,7 +495,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / output from command
+  //#region methods & getters / output from command
   outputFrom(
     command: string,
     //#region @backend
@@ -1030,7 +508,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / remove file
+  //#region methods & getters / remove file
   removeFile(fileRelativeToProjectPath: string) {
     //#region @backendFunc
     const fullPath = path.resolve(
@@ -1041,7 +519,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / read file
+  //#region methods & getters / read file
   readFile(fileRelativeToProjectPath: string) {
     //#region @backendFunc
     const fullPath = path.resolve(
@@ -1052,7 +530,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / read file
+  //#region methods & getters / read file
   readJson<T = {}>(fileRelativeToProjectPath: string): T {
     //#region @backendFunc
     const fullPath = path.resolve(
@@ -1063,7 +541,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / remove (fiel or folder)
+  //#region methods & getters / remove (fiel or folder)
   remove(relativePath: string, exactPath = true) {
     //#region @backend
     relativePath = relativePath.replace(/^\//, '');
@@ -1072,7 +550,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / remove folder by relative path
+  //#region methods & getters / remove folder by relative path
   removeFolderByRelativePath(relativePathToFolder: string) {
     //#region @backend
     relativePathToFolder = relativePathToFolder.replace(/^\//, '');
@@ -1083,32 +561,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / link node_modules to other project
-  linkNodeModulesTo(proj: Partial<BaseProject>) {
-    //#region @backendFunc
-    const source = this.pathFor(config.folder.node_modules);
-    const dest = proj.pathFor(config.folder.node_modules);
-    Helpers.remove(dest, true);
-    Helpers.createSymLink(source, dest);
-    //#endregion
-  }
-  //#endregion
-
-  //#region methods & getters  / reinstall node_modules
-  reinstallNodeModules(forcerRemoveNodeModules = false) {
-    //#region @backendFunc
-    Helpers.taskStarted(`Reinstalling node_modules in ${this.genericName}`);
-    const source = this.pathFor(config.folder.node_modules);
-    if (forcerRemoveNodeModules) {
-      Helpers.remove(source, true);
-    }
-    this.run('yarn install --ignore-engines').sync();
-    Helpers.taskDone(`Reinstalling done for ${this.genericName}`);
-    //#endregion
-  }
-  //#endregion
-
-  //#region methods & getters  / assign free port to project instance
+  //#region methods & getters / assign free port to project instance
   async assignFreePort(
     startFrom: number = 4200,
     howManyFreePortsAfterThatPort: number = 0,
@@ -1147,7 +600,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / remove project from disk/memory
+  //#region methods & getters / remove project from disk/memory
   removeItself() {
     //#region @backend
     this.ins.remove(this as any);
@@ -1155,7 +608,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / define property
+  //#region methods & getters / define property
   /**
    * Purpose: not initializing all classes at the beginning
    * Only for BaseFeatureForProject class
@@ -1199,7 +652,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / filter only copy
+  //#region methods & getters / filter only copy
   /**
    * fs.copy option filter function for copying only selected folders from project
    */
@@ -1210,7 +663,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / filter don't copy
+  //#region methods & getters / filter don't copy
   /**
    * fs.copy option filter function for copying only not selected folders from project
    */
@@ -1221,7 +674,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / get default develop Branch
+  //#region methods & getters / get default develop Branch
   /**
    * general default development branch for all kinds of projects
    */
@@ -1230,7 +683,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / get main branches
+  //#region methods & getters / get main branches
   /**
    * main/default hardcoded branches
    */
@@ -1239,13 +692,13 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / is using aciton commit
+  //#region methods & getters / is using aciton commit
   isUnsingActionCommit(): boolean {
     return false;
   }
   //#endregion
 
-  //#region methods & getters  / reset process
+  //#region methods & getters / reset process
   async resetProcess(overrideBranch?: string, recrusive = false) {
     //#region @backend
     // console.log(`CORE PROJECT BRANCH ${this.name}: ${this.core?.branch}, overrideBranch: ${overrideBranch}`)
@@ -1255,13 +708,13 @@ ${projectsThatShouldBeLinked
     Starting reset process for ${this.name || this.basename}
 
     `);
-    this._beforeAnyActionOnGitRoot();
+    this.git._beforeAnyActionOnGitRoot();
     let branchToReset =
       overrideBranch || this.core?.branch || this.getDefaultDevelopmentBranch();
 
     Helpers.info(`fetch data in ${this.genericName}`);
     this.git.fetch();
-    if (!this.getLinkedProjectsConfig().resetOnlyChildren) {
+    if (!this.linkedProjects.getLinkedProjectsConfig().resetOnlyChildren) {
       Helpers.logInfo(`reseting hard  in ${this.genericName}`);
       this.git.resetHard();
       Helpers.logInfo(
@@ -1277,11 +730,11 @@ ${projectsThatShouldBeLinked
       );
     }
 
-    for (const linked of this.linkedProjects) {
+    for (const linked of this.linkedProjects.linkedProjects) {
       const child = this.ins.From(this.pathFor([linked.relativeClonePath]));
       if (child) {
         await child.resetProcess(
-          child.resetLinkedProjectsOnlyToCoreBranches()
+          child.linkedProjects.resetLinkedProjectsOnlyToCoreBranches()
             ? void 0
             : branchToReset,
           true,
@@ -1292,292 +745,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / push process
-  async pullProcess(cloneChildren = false) {
-    //#region @backendFunc
-    await this._beforePullProcessAction(cloneChildren);
-    let uncommitedChanges = this.git.thereAreSomeUncommitedChange;
-    if (uncommitedChanges) {
-      Helpers.warn(`Stashing uncommit changes... in ${this.genericName}`);
-      try {
-        this.git.stageAllFiles();
-      } catch (error) {}
-      try {
-        this.git.stash();
-      } catch (error) {}
-    }
-
-    await this.git.pullCurrentBranch({ askToRetry: true });
-    const location = this.location;
-    this.ins.unload(this as any);
-    this.ins.add(this.ins.From(location) as any);
-    await this.saveLocationToDB();
-
-    if (this.automaticallyAddAllChnagesWhenPushingToGit() || cloneChildren) {
-      const childrenRepos = this.children.filter(
-        f => f.git.isInsideGitRepo && f.git.isGitRoot,
-      );
-      for (const child of childrenRepos) {
-        await child.pullProcess();
-      }
-    }
-    await this.saveAllLinkedProjectsToDB();
-    //#endregion
-  }
-  //#endregion
-
-  //#region methods & getters  / push process
-  async pushProcess(
-    options: {
-      force?: boolean;
-      typeofCommit?: TypeOfCommit;
-      origin?: string;
-      args?: string[];
-      exitCallBack?: () => void;
-      forcePushNoQuestion?: boolean;
-      commitMessageRequired?: boolean;
-      skipChildren?: boolean;
-    } = {},
-  ) {
-    //#region @backendFunc
-    const {
-      force = false,
-      typeofCommit,
-      forcePushNoQuestion,
-      origin = 'origin',
-      exitCallBack,
-      args = [],
-      commitMessageRequired,
-      skipChildren,
-    } = options;
-
-    await this._beforePushProcessAction();
-    await this.saveLocationToDB();
-    const commitData = await this._getCommitMessage(
-      typeofCommit,
-      args,
-      commitMessageRequired,
-    );
-
-    if (!this.automaticallyAddAllChnagesWhenPushingToGit()) {
-      if (
-        commitData.commitMessage
-          ?.split(':')
-          .map(p => p.trim())
-          .every(p => p === this.git.currentBranchName)
-      ) {
-        // QUICK_FIX
-        Helpers.error(
-          `
-
-        Please provide more specific commit message than branch name
-
-
-        `,
-          false,
-          true,
-        );
-      }
-    }
-
-    while (true) {
-      try {
-        await this.lint();
-        break;
-      } catch (error) {
-        Helpers.warn('Fix your code...');
-        if (
-          !(await Helpers.consoleGui.question.yesNo(
-            'Try again lint before commit ?',
-          ))
-        ) {
-          break;
-        }
-      }
-    }
-
-    if (!commitData.isActionCommit) {
-      Helpers.info(`
-
-      PROJECT: ${this.genericName}
-
-      Current commit:
-      - message to include {${commitData.commitMessage}}
-      - branch to checkout {${commitData.branchName}}
-      `);
-
-      if (this.git.lastCommitMessage() === commitData.commitMessage) {
-        if (
-          await Helpers.questionYesNo(
-            'Soft reset last commit with same message ?',
-          )
-        ) {
-          this.git.resetSoftHEAD(1);
-        }
-      }
-
-      if (!(await Helpers.questionYesNo('Commit and push this ?'))) {
-        exitCallBack();
-      }
-    }
-
-    if (this.automaticallyAddAllChnagesWhenPushingToGit()) {
-      // my project
-      this.git.stageAllFiles();
-    }
-
-    if (this.useGitBranchesAsMetadataForCommits()) {
-      Helpers.info('Checkingout branches (if needed)...');
-      if (this.git.currentBranchName?.trim() !== commitData.branchName) {
-        try {
-          this.git.checkout(commitData.branchName, {
-            createBranchIfNotExists: true,
-          });
-        } catch (error) {
-          Helpers.error('Please modyfiy you commit message or delete branch,');
-        }
-      }
-    }
-
-    try {
-      this.git.commit(commitData.commitMessage);
-    } catch (error) {
-      Helpers.warn(`Not commiting anything... `);
-    }
-
-    await this.git.pushCurrentBranch({
-      force,
-      origin,
-      forcePushNoQuestion,
-      askToRetry: true,
-    });
-
-    if (this.automaticallyAddAllChnagesWhenPushingToGit() && !skipChildren) {
-      if (this.getLinkedProjectsConfig().skipRecrusivePush) {
-        Helpers.warn(
-          `Skipping recrusive (children) push for ${this.genericName}`,
-        );
-        return;
-      }
-      const childrenRepos = this.children.filter(
-        f => f.git.isInsideGitRepo && f.git.isGitRoot,
-      );
-      for (const child of childrenRepos) {
-        await child.pushProcess(options);
-      }
-    }
-    await this.saveAllLinkedProjectsToDB();
-    //#endregion
-  }
-  //#endregion
-
-  //#region methods & getters  / before any action on git root
-  private _beforeAnyActionOnGitRoot() {
-    //#region @backendFunc
-    if (!this.git.isInsideGitRepo) {
-      Helpers.error(
-        `Project ${chalk.bold(this.name)} is not a git repository
-      locaiton: ${this.location}`,
-        false,
-        true,
-      );
-    }
-    if (!this.git.isGitRoot) {
-      Helpers.error(
-        `Project ${chalk.bold(this.name)} is not a git root
-      locaiton: ${this.location}`,
-        false,
-        true,
-      );
-    }
-    //#endregion
-  }
-  //#endregion
-
-  //#region before push action
-  protected async _beforePushProcessAction() {
-    //#region @backendFunc
-    this._beforeAnyActionOnGitRoot();
-
-    // for first projects
-    if (
-      this.git.isInsideGitRepo &&
-      this.git.isGitRoot &&
-      !this.git.currentBranchName?.trim()
-    ) {
-      if (
-        await Helpers.consoleGui.question.yesNo(
-          'Repository is empty...Commit "master" branch and commit all as "first commit" ?',
-        )
-      ) {
-        this.git.checkout('master');
-        this.git.stageAllFiles();
-        this.git.commit('first commit ');
-      }
-    }
-    await this.cloneUnexistedLinkedProjects('push');
-    //#endregion
-  }
-  //#endregion
-
-  //#region before push action
-  protected async _beforePullProcessAction(cloneChildren = false) {
-    //#region @backendFunc
-    this._beforeAnyActionOnGitRoot();
-    await this.cloneUnexistedLinkedProjects('pull', cloneChildren);
-    //#endregion
-  }
-  //#endregion
-
-  //#region resovle commit message
-  protected async _getCommitMessage(
-    typeofCommit: TypeOfCommit,
-    args: string[],
-    commitMessageRequired?: boolean,
-  ): Promise<CommitData> {
-    //#region @backendFunc
-    let commitData: CommitData;
-    if (this.useGitBranchesWhenCommitingAndPushing()) {
-      let argsCommitData = await CommitData.getFromArgs(args, typeofCommit);
-      // console.log({ argsCommitData })
-      if (argsCommitData.message) {
-        commitData = argsCommitData;
-      } else {
-        const commitDataBranch = await CommitData.getFromBranch(
-          this.git.currentBranchName,
-        );
-        commitData = commitDataBranch;
-        // console.log({ commitDataBranch })
-      }
-    } else {
-      let argsCommitData = await CommitData.getFromArgs(args, typeofCommit);
-      // console.log({ argsCommitData })
-      // console.log(argsCommitData)
-      if (!argsCommitData.message && commitMessageRequired) {
-        Helpers.error('Please provide message in argument', false, true);
-      }
-
-      if (!argsCommitData.message) {
-        argsCommitData.message = Helpers.git.ACTION_MSG_RESET_GIT_HARD_COMMIT;
-      }
-      commitData = argsCommitData;
-    }
-
-    if (commitData.message !== Helpers.git.ACTION_MSG_RESET_GIT_HARD_COMMIT) {
-      const { from, to } = this.transalteGitCommitFromArgs();
-      if (from && to) {
-        commitData.message = _.kebabCase(
-          await translate(commitData.message, { from, to }),
-        );
-      }
-    }
-
-    return commitData;
-    //#endregion
-  }
-  //#endregion
-
-  //#region methods & getters  / link project to
+  //#region methods & getters / link project to
   linkTo(destPackageLocation: string) {
     //#region @backend
     Helpers.createSymLink(this.location, destPackageLocation);
@@ -1585,7 +753,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region methods & getters  / write file
+  //#region methods & getters / write file
 
   writeFile(relativePath: string, content: string) {
     //#region @backend
@@ -1594,7 +762,7 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region getters & methods / ru command and get string
+  //#region getters & methods / run command and get string
   public runCommandGetString(this: BaseProject, command: string) {
     //#region @backendFunc
     return Helpers.commnadOutputAsString(command, this.location, {
@@ -1604,339 +772,10 @@ ${projectsThatShouldBeLinked
   }
   //#endregion
 
-  //#region getters & methods / git
-  public get git() {
-    const self = this;
-    return {
-      unstageAllFiles() {
-        //#region @backendFunc
-        Helpers.git.unstageAllFiles(self.location);
-        //#endregion
-      },
-      revertFileChanges(fileReletivePath: string) {
-        //#region @backendFunc
-        Helpers.git.revertFileChanges(self.location, fileReletivePath);
-        //#endregion
-      },
-      async clone(
-        url: string,
-        destinationFolderName = '',
-        branchName?: string,
-      ) {
-        //#region @backendFunc
-        const clondeFolderpath = Helpers.git.clone({
-          cwd: self.location,
-          url,
-          destinationFolderName,
-        });
-        if (branchName) {
-          try {
-            Helpers.git.checkout(clondeFolderpath, branchName);
-            await Helpers.git.pullCurrentBranch(clondeFolderpath, {
-              askToRetry: true,
-            });
-          } catch (error) {}
-        }
-        return crossPlatformPath([
-          clondeFolderpath,
-          destinationFolderName || '',
-        ]).replace(/\/$/g, '');
-        //#endregion
-      },
-      restoreLastVersion(localFilePath: string) {
-        //#region @backendFunc
-        return Helpers.git.restoreLastVersion(self.location, localFilePath);
-        //#endregion
-      },
-      stageAllFiles() {
-        //#region @backendFunc
-        Helpers.git.stageAllFiles(self.location);
-        //#endregion
-      },
-      stash(optinos?: { onlyStaged?: boolean }) {
-        //#region @backendFunc
-        Helpers.git.stash(self.location, optinos);
-        //#endregion
-      },
-      stashApply() {
-        //#region @backendFunc
-        Helpers.git.stashApply(self.location);
-        //#endregion
-      },
-      fetch() {
-        //#region @backendFunc
-        Helpers.git.fetch(self.location);
-        //#endregion
-      },
-      resetFiles(...relativePathes: string[]) {
-        //#region @backendFunc
-        return Helpers.git.resetFiles(self.location, ...relativePathes);
-        //#endregion
-      },
-      get isInsideGitRepo() {
-        //#region @backendFunc
-        return Helpers.git.isInsideGitRepo(self.location);
-        //#endregion
-      },
-      get isGitRoot() {
-        //#region @backendFunc
-        return Helpers.git.isGitRoot(self.location);
-        //#endregion
-      },
-      get originURL() {
-        //#region @backendFunc
-        return Helpers.git.getOriginURL(self.location);
-        //#endregion
-      },
-      commit(commitMessage?: string) {
-        //#region @backendFunc
-        return Helpers.git.commit(self.location, commitMessage);
-        //#endregion
-      },
-      /**
-       * alias to stage all and commit
-       */
-      addAndCommit(commitMessage: string) {
-        //#region @backendFunc
-        return Helpers.git.stageAllAndCommit(self.location, commitMessage);
-        //#endregion
-      },
-      stageAllAndCommit(commitMessage: string) {
-        //#region @backendFunc
-        return Helpers.git.stageAllAndCommit(self.location, commitMessage);
-        //#endregion
-      },
-      async pushCurrentBranch(options?: {
-        force?: boolean;
-        origin?: string;
-        askToRetry?: boolean;
-        forcePushNoQuestion?: boolean;
-      }) {
-        //#region @backendFunc
-        return await Helpers.git.pushCurrentBranch(self.location, options);
-        //#endregion
-      },
-      get allOrigins() {
-        //#region @backendFunc
-        return Helpers.git.allOrigins(self.location);
-        //#endregion
-      },
-      get uncommitedFiles() {
-        //#region @backendFunc
-        return Helpers.git.uncommitedFiles(self.location);
-        //#endregion
-      },
-      get thereAreSomeUncommitedChange() {
-        //#region @backendFunc
-        return Helpers.git.checkIfthereAreSomeUncommitedChange(self.location);
-        //#endregion
-      },
-      thereAreSomeUncommitedChangeExcept(filesList: string[] = []) {
-        //#region @backendFunc
-        return Helpers.git.thereAreSomeUncommitedChangeExcept(
-          filesList,
-          self.location,
-        );
-        //#endregion
-      },
-      meltActionCommits(soft = false) {
-        //#region @backend
-        return Helpers.git.meltActionCommits(self.location, soft);
-        //#endregion
-      },
-      async pullCurrentBranch(options?: {
-        askToRetry?: boolean;
-        defaultHardResetCommits?: number;
-      }) {
-        //#region @backendFunc
-        await Helpers.git.pullCurrentBranch(self.location, { ...options });
-        //#endregion
-      },
-      get currentBranchName() {
-        //#region @backendFunc
-        return Helpers.git.currentBranchName(self.location);
-        //#endregion
-      },
-      get listOfCurrentGitChanges() {
-        //#region @backendFunc
-        return Helpers.git.getListOfCurrentGitChanges(self.location);
-        //#endregion
-      },
-      getBranchesNamesBy(pattern: string | RegExp) {
-        //#region @backendFunc
-        return Helpers.git.getBranchesNames(self.location, pattern);
-        //#endregion
-      },
-      resetSoftHEAD(HEAD = 1) {
-        //#region @backendFunc
-        Helpers.git.resetSoftHEAD(self.location, HEAD);
-        //#endregion
-      },
-      resetHard(options?: { HEAD?: number }) {
-        //#region @backendFunc
-        Helpers.git.resetHard(self.location, options);
-        //#endregion
-      },
-      countComits() {
-        //#region @backendFunc
-        return Helpers.git.countCommits(self.location);
-        //#endregion
-      },
-      hasAnyCommits() {
-        //#region @backendFunc
-        return Helpers.git.hasAnyCommits(self.location);
-        //#endregion
-      },
-      get isInMergeProcess() {
-        //#region @backendFunc
-        return Helpers.git.isInMergeProcess(self.location);
-        //#endregion
-      },
-      lastCommitDate() {
-        //#region @backendFunc
-        return Helpers.git.lastCommitDate(self.location);
-        //#endregion
-      },
-      lastCommitHash() {
-        //#region @backendFunc
-        return Helpers.git.lastCommitHash(self.location);
-        //#endregion
-      },
-      lastCommitMessage() {
-        //#region @backendFunc
-        return Helpers.git.lastCommitMessage(self.location);
-        //#endregion
-      },
-      penultimageCommitHash() {
-        //#region @backendFunc
-        return Helpers.git.penultimageCommitHash(self.location);
-        //#endregion
-      },
-      checkTagExists(tag: string) {
-        //#region @backendFunc
-        return Helpers.git.checkTagExists(tag, self.location);
-        //#endregion
-      },
-      checkout(
-        branchName: string,
-        options?: {
-          createBranchIfNotExists?: boolean;
-          fetchBeforeCheckout?: boolean;
-          switchBranchWhenExists?: boolean;
-        },
-      ) {
-        //#region @backendFunc
-        return Helpers.git.checkout(self.location, branchName, options);
-        //#endregion
-      },
-      checkoutFromTo(
-        checkoutFromBranch: string,
-        branch: string,
-        origin = 'origin',
-      ) {
-        //#region @backendFunc
-        return Helpers.git.checkoutFromTo(
-          checkoutFromBranch,
-          branch,
-          origin,
-          self.location,
-        );
-        //#endregion
-      },
-      /**
-       *
-       * @param majorVersion example: v1, v2 etc.
-       * @returns tag name
-       */
-      lastTagNameForMajorVersion(majorVersion) {
-        //#region @backendFunc
-        return Helpers.git.lastTagNameForMajorVersion(
-          self.location,
-          majorVersion,
-        );
-        //#endregion
-      },
-      lastTagHash() {
-        //#region @backendFunc
-        return Helpers.git.lastTagHash(self.location);
-        //#endregion
-      },
-      get remoteOriginUrl() {
-        //#region @backendFunc
-        return Helpers.git.getOriginURL(self.location);
-        //#endregion
-      },
-      get lastTagVersionName() {
-        //#region @backendFunc
-        return Helpers.git.lastTagVersionName(self.location) || '';
-        //#endregion
-      },
-      get stagedFiles(): string[] {
-        //#region @backendFunc
-        return Helpers.git.stagedFiles(self.location);
-        //#endregion
-      },
-      /**
-       * TODO does this make any sense
-       */
-      renameOrigin(newNameOrUlr: string) {
-        //#region @backendFunc
-        if (!newNameOrUlr.endsWith('.git')) {
-          newNameOrUlr = newNameOrUlr + '.git';
-        }
-        const oldOrigin = self.git.originURL;
-        if (
-          !newNameOrUlr.startsWith('git@') &&
-          !newNameOrUlr.startsWith('https://')
-        ) {
-          newNameOrUlr = oldOrigin.replace(
-            path.basename(oldOrigin),
-            newNameOrUlr,
-          );
-        }
-
-        try {
-          self.run(`git remote rm origin`).sync();
-        } catch (error) {}
-
-        try {
-          self.run(`git remote add origin ${newNameOrUlr}`).sync();
-          Helpers.info(`Origin changed:
-        from: ${oldOrigin}
-          to: ${newNameOrUlr}\n`);
-        } catch (e) {
-          Helpers.error(
-            `Not able to change origin.. reverting to old`,
-            true,
-            true,
-          );
-          self.run(`git remote add origin ${oldOrigin}`).sync();
-        }
-        //#endregion
-      },
-    };
-  }
-  //#endregion
-
   //#region getters & methods / to string
   toString = () => {
     return `${this.name}=>${this.location}`;
   };
-  //#endregion
-
-  //#region getters & methods / check if loggin in to npm
-  protected checkIfLogginInToNpm() {
-    //#region @backendFunc
-    // if (!this.canBePublishToNpmRegistry) {
-    //   return;
-    // }
-    try {
-      this.run('npm whoami').sync();
-    } catch (e) {
-      Helpers.error(`Please login in to npm.`, false, true);
-    }
-    //#endregion
-  }
   //#endregion
 
   //#region getters & methods / find partners names
@@ -2053,15 +892,15 @@ ${projectsThatShouldBeLinked
   name: ${proj?.name}
   type: ${proj?.type}
   core project name: '${proj?.core?.name}'
-  embedded project: ${proj?.embeddedProject?.genericName || '< none >'}
+  embedded project: ${proj?.linkedProjects.embeddedProject?.genericName || '< none >'}
   children (${proj?.children.length}): ${!proj || !proj.children.length ? '< none >' : ''}
 ${proj?.children.map(c => '+' + c.genericName).join('\n')}
 ` +
         `
-linked porject prefix: "${this.linkedProjectsPrefix}"
+linked porject prefix: "${this.linkedProjects.linkedProjectsPrefix}"
 
-linked projects from json (${this.linkedProjects?.length || 0}):
-${(this.linkedProjects || []).map(c => '- ' + c.relativeClonePath).join('\n')}
+linked projects from json (${this.linkedProjects.linkedProjects?.length || 0}):
+${(this.linkedProjects.linkedProjects || []).map(c => '- ' + c.relativeClonePath).join('\n')}
 
   `,
     );
@@ -2071,369 +910,4 @@ ${(this.linkedProjects || []).map(c => '- ' + c.relativeClonePath).join('\n')}
   }
   //#endregion
 
-  //#region getters & methods / translate git commit from args
-  /**
-   * By default no translation of commit
-   */
-  transalteGitCommitFromArgs() {
-    return { from: void 0 as string, to: void 0 as string };
-  }
-  //#endregion
-
-  //#region getters & methods / us git branches when commiting and pushing
-  /**
-   * By defult true.. when commit branches will not function.
-   * (false is better for simple projects)
-   */
-  useGitBranchesWhenCommitingAndPushing() {
-    return true;
-  }
-  //#endregion
-
-  //#region getters & methods / automatically add all changes when pushing to git
-  /**
-   * usefull when pushing in project with childrens as git repos
-   */
-  automaticallyAddAllChnagesWhenPushingToGit() {
-    return false;
-  }
-  //#endregion
-
-  //#region getters & methods / use git branches as metadata for commits
-  /**
-   * usefull when pushing in project with childrens as git repos
-   */
-  useGitBranchesAsMetadataForCommits() {
-    return true;
-  }
-  //#endregion
-
-  //#region getters & methods / angular libraries
-  /**
-   * angular libraries from angular.json
-   */
-  get libraries(): PROJCET[] {
-    //#region @backendFunc
-    if (!this.pathExists(config.file.angular_json)) {
-      return [];
-    }
-    const projects = (
-      Object.values(
-        Helpers.readJson(this.pathFor(config.file.angular_json))?.projects ||
-          {},
-      ) as NgProject[]
-    ).filter(f => f.projectType === 'library');
-
-    const libraries = projects.map(c =>
-      this.ins.From(path.join(this.location, c.root)),
-    );
-    return libraries;
-    //#endregion
-  }
-  //#endregion
-
-  //#region getters & methods / sorted libraries by deps
-  get sortedLibrariesByDeps(): PROJCET[] {
-    //#region @backendFunc
-    const libs = this.libraries;
-    const sorted = BaseProject.sortGroupOfProject<PROJCET>(
-      libs,
-      proj => {
-        if (!_.isUndefined(proj.cache['deps'])) {
-          return proj.cache['deps'];
-        }
-
-        const uiJsonPath = proj.pathFor('ui-module.json');
-        if (Helpers.exists(uiJsonPath)) {
-          const uiModuleJson = Helpers.readJson(uiJsonPath);
-          const allLibs = (uiModuleJson.dependencies || []) as string[];
-          proj.cache['deps'] = allLibs.filter(
-            f => !_.isUndefined(libs.find(c => c.basename === f)),
-          );
-        } else {
-          const allLibs = Object.keys(proj.allDependencies);
-          proj.cache['deps'] = allLibs.filter(
-            f => !_.isUndefined(libs.find(c => c.name === f)),
-          );
-        }
-
-        // console.log(`${proj.name} => all libs`, proj.cache['deps'])
-        return proj.cache['deps'];
-      },
-      proj => {
-        if (!_.isUndefined(proj.cache['nameToCompare'])) {
-          // console.log(`CACHE ${proj.basename} => name: ` + proj.cache['nameToCompare'])
-          return proj.cache['nameToCompare'];
-        }
-        proj.cache['nameToCompare'] = Helpers.exists(
-          proj.pathFor('ui-module.json'),
-        )
-          ? proj.basename
-          : proj.name;
-        return proj.cache['nameToCompare'];
-      },
-    );
-
-    return sorted;
-    //#endregion
-  }
-  //#endregion
-
-  //#region getters & methods / get sorted libraries by deps for build
-  async getSortedLibrariesByDepsForBuild(
-    libs: PROJCET[],
-    dontSugestBuildAll = false,
-  ): Promise<PROJCET[]> {
-    //#region @backendFunc
-
-    let buildAll = false;
-    const lastSelectedJsonFile = 'tmp-last-selected.json';
-    const lastSelected =
-      Helpers.readJson(this.pathFor(lastSelectedJsonFile))?.lastSelected || [];
-
-    if (_.isArray(lastSelected) && lastSelected.length > 0) {
-      const selected = lastSelected.map(c => libs.find(l => l.basename == c));
-
-      Helpers.info(`
-Last selected libs
-
-${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('\n')}
-
-            `);
-      if (
-        await Helpers.consoleGui.question.yesNo(
-          `Continue build with last selected ?`,
-        )
-      ) {
-        libs = selected;
-        return libs;
-      }
-    }
-
-    if (libs.length < 6 && !dontSugestBuildAll) {
-      buildAll = await Helpers.consoleGui.question.yesNo(
-        'Should all libraries be included in build ?',
-      );
-    }
-    if (buildAll) {
-      return libs;
-    }
-    while (true) {
-      const selectedLibs = await Helpers.consoleGui.multiselect(
-        `Select libraries to build `,
-        libs.map(c => {
-          return { name: c.name, value: c.name, selected: true };
-        }),
-        true,
-      );
-      const selected = selectedLibs.map(c => libs.find(l => l.name == c));
-      Helpers.info(`
-
-${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('\n')}
-
-      `);
-      if (
-        await Helpers.consoleGui.question.yesNo(
-          `Continue build with ${selected.length} selected ?`,
-        )
-      ) {
-        libs = selected;
-        break;
-      }
-    }
-
-    Helpers.writeJson(this.pathFor(lastSelectedJsonFile), {
-      lastSelected: libs.map(c => c.basename),
-    });
-    return libs;
-    //#endregion
-  }
-  //#endregion
-
-  //#region getters & methods / get library build success command
-  get getLibraryBuildSuccessComamnd(): string {
-    //#region @backendFunc
-    const isAngularLib = Helpers.exists(this.pathFor('ng-package.json'));
-    if (isAngularLib) {
-      return `Trace: Build complete`;
-    } else {
-      return `Found 0 errors. Watching for file change`;
-    }
-    //#endregion
-  }
-  //#endregion
-
-  //#region getters & methods / build libraries
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  public async buildLibraries(
-    {
-      rebuild = false,
-      watch = false,
-      strategy,
-      onlySelectedLibs,
-      // buildType,
-    }: {
-      rebuild?: boolean;
-      watch?: boolean;
-      strategy?: 'link' | 'copy';
-      onlySelectedLibs?: string[];
-      // buildType: 'angular' | 'typescript';
-    } = {} as any,
-  ) {
-    //#region @backend
-    await this.saveAllLinkedProjectsToDB();
-    if (!strategy) {
-      strategy = 'link';
-    }
-    const allLibs = this.libraries;
-    const allLibsToBuild = this.sortedLibrariesByDeps.filter(f => {
-      if (!onlySelectedLibs) {
-        return true;
-      }
-      const nameMatchesPattern = onlySelectedLibs.find(c => f.name.includes(c));
-      const basenameMatchesPattern = onlySelectedLibs.find(c =>
-        f.basename.includes(c),
-      );
-      return nameMatchesPattern || basenameMatchesPattern;
-    });
-
-    let libsToWatch: PROJCET[] =
-      allLibsToBuild.length == 1
-        ? [_.first(allLibsToBuild)]
-        : await this.getSortedLibrariesByDepsForBuild(
-            allLibsToBuild,
-            allLibs.length != allLibsToBuild.length,
-          );
-
-    // await this.init();
-    const locationsForNodeModules = [
-      this.location,
-      // this.parent.location,
-      // ...this.parent.children.map(c => c.location),
-    ].map(l => crossPlatformPath([l, config.folder.node_modules]));
-
-    await this.makeSureNodeModulesInstalled();
-
-    for (const [index, lib] of this.sortedLibrariesByDeps.entries()) {
-      Helpers.info(
-        `Building (${index + 1}/${allLibs.length}) ${lib.basename} (${chalk.bold(lib.name)})`,
-      );
-
-      if (strategy === 'link') {
-        (() => {
-          const sourceDist = this.pathFor([config.folder.dist, lib.basename]);
-          for (const node_modules of locationsForNodeModules) {
-            const dest = crossPlatformPath([node_modules, lib.name]);
-            if (!Helpers.isSymlinkFileExitedOrUnexisted(dest)) {
-              Helpers.remove(dest);
-            }
-            console.log('linking from ', sourceDist);
-            console.log('linking to ', dest);
-            // Helpers.remove(dest);
-            Helpers.createSymLink(sourceDist, dest, {
-              continueWhenExistedFolderDoesntExists: true,
-            });
-          }
-
-          if (rebuild || !Helpers.exists(sourceDist)) {
-            Helpers.info(`Compiling ${lib.name} ...`);
-            this.run(lib.getLibraryBuildComamnd({ watch: false }), {
-              output: true,
-            }).sync();
-          }
-        })();
-
-        (() => {
-          const sourceDist = this.pathFor([config.folder.dist, lib.basename]);
-          const dest = this.pathFor([config.folder.node_modules, lib.name]);
-          if (!Helpers.isSymlinkFileExitedOrUnexisted(dest)) {
-            Helpers.remove(dest);
-          }
-          Helpers.createSymLink(sourceDist, dest, {
-            continueWhenExistedFolderDoesntExists: true,
-          });
-        })();
-      } else if (strategy === 'copy') {
-        const sourceDist = this.pathFor([config.folder.dist, lib.basename]);
-        const dest = this.pathFor([config.folder.node_modules, lib.name]);
-
-        if (rebuild || !Helpers.exists(sourceDist)) {
-          Helpers.info(`Compiling ${lib.name} ...`);
-          this.run(lib.getLibraryBuildComamnd({ watch: false }), {
-            output: true,
-          }).sync();
-        }
-
-        if (Helpers.isSymlinkFileExitedOrUnexisted(dest)) {
-          Helpers.remove(dest);
-        }
-
-        Helpers.copy(sourceDist, dest);
-      }
-    }
-
-    if (watch) {
-      for (const [index, lib] of libsToWatch.entries()) {
-        Helpers.info(
-          `Building for watch (${index + 1}/${libsToWatch.length}) ${lib.basename} (${chalk.bold(lib.name)})`,
-        );
-        await (async () => {
-          await this.run(lib.getLibraryBuildComamnd({ watch: true }), {
-            output: true,
-          }).unitlOutputContains(
-            lib.getLibraryBuildSuccessComamnd,
-            [],
-            0,
-            () => {
-              const sourceDist = this.pathFor([
-                config.folder.dist,
-                lib.basename,
-              ]);
-              const dest = this.pathFor([config.folder.node_modules, lib.name]);
-              Helpers.copy(sourceDist, dest);
-              console.log(`Sync done for ${lib.basename} to ${lib.name}`);
-            },
-          );
-        })();
-      }
-      // await this.__indexRebuilder.startAndWatch({ taskName: 'index rebuild watch' });
-      Helpers.success('BUILD DONE.. watching..');
-    } else {
-      // await this.__indexRebuilder.start({ taskName: 'index rebuild watch' });
-      Helpers.success('BUILD DONE');
-    }
-    //#endregion
-  }
-  //#endregion
-
-  //#region getters & methods / get library build success command
-  getLibraryBuildComamnd(options?: { watch: boolean }): string | undefined {
-    //#region @backendFunc
-    const { watch } = options;
-
-    const isAngularLib =
-      Helpers.exists(this.pathFor('ng-package.json')) ||
-      Helpers.exists(this.pathFor('tsconfig.app.json'));
-    if (isAngularLib) {
-      return `npm-run ng build ${this.basename} ${watch ? '--watch' : ''}`;
-    } else {
-      return `npm-run tsc -p libraries/${this.basename}/tsconfig.lib.json  ${watch ? '--watch' : ''} --preserveWatchOutput`;
-    }
-    //#endregion
-  }
-  //#endregion
-
-  //#region getters & methods / start npm task
-  startNpmTask(taskName: string, additionalArguments?: string | object) {
-    if (_.isObject(additionalArguments)) {
-      additionalArguments = Object.keys(additionalArguments)
-        .map(k => `--${k} ${additionalArguments[k]}`)
-        .join(' ');
-    }
-    return this.run(
-      `npm run ${taskName} ${additionalArguments ? ' -- ' + additionalArguments : ''}`,
-      { output: true },
-    );
-  }
-  //#endregion
 }
