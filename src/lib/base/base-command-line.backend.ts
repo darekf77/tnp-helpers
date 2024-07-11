@@ -62,6 +62,10 @@ export class BaseCommandLine<
     this._exit();
   }
 
+  async deepUp(noExit = false) {
+    await this.deepUpdate(noExit);
+  }
+
   async deepUpdate(noExit = false) {
     this.preventCwdIsNotProject();
     Helpers.info('Deep updating & pushing project with children...');
