@@ -93,10 +93,10 @@ export class BaseLinkedProjects<
         proj.location,
         link.relativeClonePath,
         link.internalRealtiveProjectPath || '',
-      ]);
+      ]) as PROJCET;
       // console.log({ linkedPorj })
       if (linkedPorj) {
-        await linkedPorj.saveLocationToDB();
+        await linkedPorj.linkedProjects.saveLocationToDB();
       } else {
         Helpers.warn(`Folder ${link.relativeClonePath} is missing projects...`);
       }

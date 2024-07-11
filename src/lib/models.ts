@@ -32,4 +32,5 @@ export type LibrariesBuildOptions = {
   onlySelectedLibs?: string[];
   buildType: core.CoreModels.LibraryType;
   onlyBuildLib?: string;
+  args?: string[];
 };

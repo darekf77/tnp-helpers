@@ -1,80 +1,120 @@
-// //#region @browser
+//#region imports
+import { Firedev, BaseContext } from 'firedev/src';
+import { Observable, map } from 'rxjs';
+import { HOST_BACKEND_PORT } from './app.hosts';
+//#region @browser
+import { NgModule, inject, Injectable } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+//#endregion
+//#endregion
 
-// import { NgModule } from '@angular/core';
+console.log('hello world');
+console.log('Your server will start on port '+ HOST_BACKEND_PORT);
+const host = 'http://localhost:' + HOST_BACKEND_PORT;
 
-// import { Component, OnInit } from '@angular/core';
+//#region tnp-helpers component
+//#region @browser
+@Component({
+  selector: 'app-tnp-helpers',
+  template: `hello from tnp-helpers<br>
+    <br>
+    users from backend
+    <ul>
+      <li *ngFor="let user of (users$ | async)"> {{ user | json }} </li>
+    </ul>
+  `,
+  styles: [` body { margin: 0px !important; } `],
+})
+export class TnpHelpersComponent {
+  userApiService = inject(UserApiService);
+  readonly users$: Observable<User[]> = this.userApiService.getAll();
+}
+//#endregion
+//#endregion
 
-// @Component({
-//   selector: 'app-tnp-helpers',
-//   template: `
-//   hello world
-//   `
-// })
+//#region  tnp-helpers api service
+//#region @browser
+@Injectable({
+  providedIn:'root'
+})
+export class UserApiService {
+  userControlller = Firedev.inject(()=> MainContext.getClass(UserController))
+  getAll() {
+    return this.userControlller.getAll()
+      .received
+      .observable
+      .pipe(map(r => r.body.json));
+  }
+}
+//#endregion
+//#endregion
 
-// export class TnpHelpersComponent implements OnInit {
-//   constructor() { }
+//#region  tnp-helpers module
+//#region @browser
+@NgModule({
+  exports: [TnpHelpersComponent],
+  imports: [CommonModule],
+  declarations: [TnpHelpersComponent],
+})
+export class TnpHelpersModule { }
+//#endregion
+//#endregion
 
-//   ngOnInit() { }
-// }
+//#region  tnp-helpers entity
+@Firedev.Entity({ className: 'User' })
+class User extends Firedev.Base.AbstractEntity {
+  public static ctrl?: UserController;
+  //#region @websql
+  @Firedev.Orm.Column.String()
+  //#endregion
+  name?: string;
+}
+//#endregion
 
-// @NgModule({
-//   imports: [],
-//   exports: [TnpHelpersComponent],
-//   declarations: [TnpHelpersComponent],
-//   providers: [],
-// })
-// export class TnpHelpersModule { }
+//#region  tnp-helpers controller
+@Firedev.Controller({ className: 'UserController' })
+class UserController extends Firedev.Base.CrudController<User> {
+  entityClassResolveFn = ()=> User;
+  //#region @websql
+  async initExampleDbData(): Promise<void> {
+    const superAdmin = new User();
+    superAdmin.name = 'super-admin';
+    await this.db.save(superAdmin);
+  }
+  //#endregion
+}
+//#endregion
 
-// //#endregion
+//#region  tnp-helpers context
+const MainContext = Firedev.createContext(()=>({
+  host,
+  contextName: 'MainContext',
+  contexts:{ BaseContext },
+  controllers: {
+    UserController,
+    // PUT FIREDEV CONTORLLERS HERE
+  },
+  entities: {
+    User,
+    // PUT FIREDEV ENTITIES HERE
+  },
+  database: true,
+  // disabledRealtime: true,
+}));
+//#endregion
 
+async function start() {
 
-// import { _, CoreModels } from 'tnp-core/src';
+  await MainContext.initialize();
 
-// //#region @backend
-// import { Helpers } from './index';
+  if (Firedev.isBrowser) {
+    const users = (await MainContext.getClassInstance(UserController).getAll().received)
+      .body?.json;
+    console.log({
+      'users from backend': users,
+    });
+  }
+}
 
-// //#endregion
-// import { CoreLibCategoryArr } from 'tnp-config';
-
-// async function start() {
-
-//   const data = _.times(25, (n) => {
-//     return `file${n}`;
-//   });
-
-//   //#region @backend
-//   await Helpers.workerCalculateArray(
-//     data,
-//     () => {
-//       let { dataChunk, n, tnpModels } = global as {
-//         dataChunk?: any[];
-//         n?: number;
-//         tnpModels?: typeof Models
-//       };
-
-//       // console.log(CoreLibCategoryArr.join(','));
-//       // console.log(global['dataChunk'])
-//       // console.log(global['n'])
-//       // Helpers.writeFile('', dataChunk.join(''))
-//       return new Promise(resolve => {
-//         setTimeout(() => {
-//           resolve();
-//           console.log(CoreLibCategoryArr.join(','))
-//           console.log(
-//             `resolved worker ${n} `
-//             + dataChunk.join(',')
-//           )
-//         }, 100);
-//       })
-//     }, {
-//     globals: {
-//       tnpModels: Models
-//     }
-//   });
-//   //#endregion
-
-// }
-
-
-// export default start;
-
+export default start;

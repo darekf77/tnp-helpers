@@ -632,7 +632,11 @@ export class BaseGit<
 
       Current commit:
       - message to include {${commitData.commitMessage}}
-      - branch to checkout {${commitData.branchName}}
+      ${
+        this.useGitBranchesAsMetadataForCommits()
+          ? `- branch to checkout ${commitData.branchName}`
+          : '- using current branch'
+      }
       `);
 
       if (this.project.git.lastCommitMessage() === commitData.commitMessage) {
@@ -694,9 +698,9 @@ export class BaseGit<
       }
       const childrenRepos = this.project.children.filter(
         f => f.git.isInsideGitRepo && f.git.isGitRoot,
-      );
+      ) as PROJCET[ ];
       for (const child of childrenRepos) {
-        await child.pushProcess(options);
+        await child.git.pushProcess(options);
       }
     }
     await this.project.linkedProjects.saveAllLinkedProjectsToDB();

@@ -222,13 +222,11 @@ export class BaseNpmHelpers<
     if (forcerRemoveNodeModules) {
       Helpers.remove(source, true);
     }
-    this.project
-      .run(
-        await this.prepareCommand({
-          useYarn: this.preferYarnOverNpm(),
-        }),
-      )
-      .sync();
+    await this.project.execute(
+      await this.prepareCommand({
+        useYarn: this.preferYarnOverNpm(),
+      }),
+    );
     Helpers.taskDone(`Reinstalling done for ${this.project.genericName}`);
     //#endregion
   }
@@ -258,37 +256,49 @@ export class BaseNpmHelpers<
    */
   get emptyNodeModules() {
     //#region @backendFunc
-    const node_modules = crossPlatformPath(
-      fse.realpathSync(
-        crossPlatformPath([this.project.location, config.folder.node_modules]),
-      ),
+    let node_modules_path = crossPlatformPath(
+      crossPlatformPath([this.project.location, config.folder.node_modules]),
     );
 
-    if (Helpers.isUnexistedLink(node_modules)) {
+    if (Helpers.exists(node_modules_path)) {
+      try {
+        const real_node_modules_path = crossPlatformPath(
+          fse.realpathSync(
+            crossPlatformPath([
+              this.project.location,
+              config.folder.node_modules,
+            ]),
+          ),
+        );
+        node_modules_path = real_node_modules_path;
+      } catch (error) {}
+    }
+
+    if (Helpers.isUnexistedLink(node_modules_path)) {
       try {
         Helpers.logWarn(
           `[npm-helpers][emptyNodeModules] removing unexisted node_modules` +
             ` link form ${this.project.location}`,
         );
-        fse.unlinkSync(node_modules);
+        fse.unlinkSync(node_modules_path);
       } catch (error) {}
       return true;
     }
 
-    if (!Helpers.exists(node_modules)) {
+    if (!Helpers.exists(node_modules_path)) {
       return true;
     }
 
-    if (!Helpers.exists(crossPlatformPath([node_modules, '.bin']))) {
+    if (!Helpers.exists(crossPlatformPath([node_modules_path, '.bin']))) {
       return true;
     }
 
-    if (Helpers.findChildren(node_modules, c => c).length === 0) {
+    if (Helpers.findChildren(node_modules_path, c => c).length === 0) {
       return true;
     }
 
     const package_json = crossPlatformPath([
-      path.dirname(node_modules),
+      path.dirname(node_modules_path),
       config.file.package_json,
     ]);
 
@@ -297,7 +307,8 @@ export class BaseNpmHelpers<
     ).length;
 
     const notFullyInstalled =
-      Helpers.findChildren(node_modules, c => c).length < minDepsLength + 1;
+      Helpers.findChildren(node_modules_path, c => c).length <
+      minDepsLength + 1;
 
     if (notFullyInstalled) {
       Helpers.logWarn(
@@ -351,7 +362,9 @@ export class BaseNpmHelpers<
   //#endregion
 
   //#region methods & getters / prepare command
-  async prepareCommand(optiosn?: CoreModels.NpmInstallOptions):Promise<string> {
+  async prepareCommand(
+    optiosn?: CoreModels.NpmInstallOptions,
+  ): Promise<string> {
     const {
       pkg,
       remove,

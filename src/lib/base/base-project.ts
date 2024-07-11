@@ -909,5 +909,4 @@ ${(this.linkedProjects.linkedProjects || []).map(c => '- ' + c.relativeClonePath
     // ${(this.detectedLinkedProjects || []).map(c => '- ' + c.relativeClonePath).join('\n')}
   }
   //#endregion
-
 }
