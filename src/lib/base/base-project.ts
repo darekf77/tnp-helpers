@@ -451,8 +451,9 @@ export abstract class BaseProject<
     options?: CoreModels.ExecuteOptions & { showCommand?: boolean },
   ): Promise<any> {
     //#region @backendFunc
+    options = options || {};
     if (_.isUndefined(options.showCommand)) {
-      options.showCommand = false;
+      options.showCommand = true;
     }
     if (!options) {
       options = {};

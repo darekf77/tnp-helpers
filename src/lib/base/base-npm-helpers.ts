@@ -222,11 +222,17 @@ export class BaseNpmHelpers<
     if (forcerRemoveNodeModules) {
       Helpers.remove(source, true);
     }
-    await this.project.execute(
-      await this.prepareCommand({
-        useYarn: this.preferYarnOverNpm(),
-      }),
-    );
+    this.project
+      .run(
+        await this.prepareCommand({
+          useYarn: this.preferYarnOverNpm(),
+        }),
+        {
+          output: true,
+          silence: false,
+        },
+      )
+      .sync();
     Helpers.taskDone(`Reinstalling done for ${this.project.genericName}`);
     //#endregion
   }
@@ -377,7 +383,7 @@ export class BaseNpmHelpers<
     } = optiosn || {};
 
     let command = '';
-    const commonOptions = `--ignore-engines --no-audit`;
+    const commonOptions = `--ignore-engines`;
 
     if (useYarn) {
       //#region yarn
@@ -389,7 +395,7 @@ export class BaseNpmHelpers<
               `&& touch ${config.file.yarn_lock} && `
             : ''
         }` +
-        `yarn ${remove ? 'remove' : 'add'} ${pkg ? pkg.name : ''} ` +
+        `yarn ${pkg ? (remove ? 'remove' : 'add') : 'install'} ${pkg ? pkg.name : ''} ` +
         ` ${generateYarnOrPackageJsonLock ? '' : '--no-lockfile'} ` +
         ` ${argsForFasterInstall} ` +
         ` ${pkg && pkg.installType && pkg.installType === '--save-dev' ? '-dev' : ''} `;
@@ -397,7 +403,7 @@ export class BaseNpmHelpers<
     } else {
       //#region npm
       const argsForFasterInstall =
-        `${force ? '--force' : ''} ${commonOptions} ` +
+        `${force ? '--force' : ''} ${commonOptions} --no-audit ` +
         `${silent ? '--silent --no-progress' : ''}   `;
 
       command =
