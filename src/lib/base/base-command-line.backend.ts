@@ -444,6 +444,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
         this._exit();
       },
       skipChildren: true,
+      setOrigin: this.params['setOrigin'],
     });
     if (options.noExit) {
       return;
@@ -470,6 +471,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
       exitCallBack: () => {
         this._exit();
       },
+      setOrigin: this.params['setOrigin'],
     });
     if (options.noExit) {
       return;
@@ -794,6 +796,25 @@ Would you like to update current project configuration?`)
     this._exit();
   }
 
+  async REMOTE_SSH() {
+    await Helpers.git.changeRemoteFromHttpsToSSh(this.cwd);
+    this._exit();
+  }
+
+  async REMOTE_http() {
+    await Helpers.git.changeRemoveFromSshToHttps(this.cwd);
+    this._exit();
+  }
+
+  async REMOTE_https() {
+    await this.REMOTE_http();
+  }
+
+  origin() {
+    console.log(Helpers.git.getOriginURL(this.cwd));
+    this._exit();
+  }
+
   origins() {
     this.REMOTES();
   }
@@ -838,7 +859,9 @@ Would you like to update current project configuration?`)
     opening in vscode...
 
     `);
-    Helpers.run(`code ${this.project.linkedProjects.projectsDbLocation}`).sync();
+    Helpers.run(
+      `code ${this.project.linkedProjects.projectsDbLocation}`,
+    ).sync();
     this._exit();
   }
 

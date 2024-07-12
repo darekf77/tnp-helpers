@@ -27,7 +27,7 @@ export class BaseGit<
     Helpers.git.revertFileChanges(this.project.location, fileReletivePath);
     //#endregion
   }
-  //#region methods & getters /
+  //#endregion
 
   //#region methods & getters / clone
   async clone(url: string, destinationFolderName = '', branchName?: string) {
@@ -562,6 +562,7 @@ export class BaseGit<
       typeofCommit?: TypeOfCommit;
       origin?: string;
       args?: string[];
+      setOrigin?: 'ssh' | 'http';
       exitCallBack?: () => void;
       forcePushNoQuestion?: boolean;
       commitMessageRequired?: boolean;
@@ -578,9 +579,16 @@ export class BaseGit<
       args = [],
       commitMessageRequired,
       skipChildren,
+      setOrigin,
     } = options;
 
     await this._beforePushProcessAction();
+    if (setOrigin === 'ssh') {
+      Helpers.git.changeRemoteFromHttpsToSSh(this.project.location);
+    } else if (setOrigin === 'http') {
+      Helpers.git.changeRemoveFromSshToHttps(this.project.location);
+    }
+
     await this.project.linkedProjects.saveLocationToDB();
     const commitData = await this._getCommitMessage(
       typeofCommit,

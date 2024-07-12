@@ -1210,6 +1210,66 @@ ${cwd}
   }
   //#endregion
 
+  async changeRemoteFromHttpsToSSh(
+    cwd: string,
+    diffrentOriginName: string = 'origin',
+  ) {
+    try {
+      const currentUrl =
+        (await this.getOriginURL(cwd, diffrentOriginName)) || '';
+      const httpsPattern = /^https:\/\/(.+?)\/(.+?\/.+?)(\.git)?$/;
+      const match = currentUrl.match(httpsPattern);
+
+      if (!match) {
+        Helpers.warn(
+          'The current remote URL is not in HTTPS format:' + currentUrl,
+        );
+        return;
+      }
+
+      const host = match[1];
+      const repoPath = match[2];
+      const sshUrl = `git@${host}:${repoPath}.git`;
+
+      await Helpers.run(`git remote set-url ${diffrentOriginName} ${sshUrl}`, {
+        cwd,
+      }).sync();
+      console.log('Remote URL has been changed to:', sshUrl);
+    } catch (error) {
+      console.error('Failed to change remote URL:', error);
+    }
+  }
+
+  async changeRemoveFromSshToHttps(
+    cwd: string,
+    diffrentOriginName: string = 'origin',
+  ) {
+    try {
+      const currentUrl =
+        (await this.getOriginURL(cwd, diffrentOriginName)) || '';
+      const sshPattern = /^git@(.+?):(.+?\/.+?)(\.git)?$/;
+      const match = currentUrl.match(sshPattern);
+
+      if (!match) {
+        Helpers.warn(
+          'The current remote URL is not in SSH format:' + currentUrl
+        );
+        return;
+      }
+
+      const host = match[1];
+      const repoPath = match[2];
+      const httpsUrl = `https://${host}/${repoPath}.git`;
+
+      await Helpers.run(`git remote set-url origin ${httpsUrl}`, {
+        cwd,
+      }).sync();
+      console.log('Remote URL has been changed to:', httpsUrl);
+    } catch (error) {
+      console.error('Failed to change remote URL:', error);
+    }
+  }
+
   unstageAllFiles(cwd: string) {
     try {
       Helpers.run(`git reset HEAD -- .`, { cwd }).sync();
