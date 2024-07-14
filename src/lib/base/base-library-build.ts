@@ -19,73 +19,55 @@ import type { BaseProject } from './base-project';
 /**
  * Base library build for standard angular/typescript projects
  */
-export class BaseLibraryBuild<
+export abstract class BaseLibraryBuild<
   PROJCET extends BaseProject = any,
 > extends BaseFeatureForProject {
   private cache: any = {};
 
-  //#region getters & methods / sorted libraries by deps
-  public get sortedLibrariesByDeps(): PROJCET[] {
-    //#region @backendFunc
-    const libs = this.libraries;
-    const sorted = this.project.ins.sortGroupOfProject<PROJCET>(
-      libs,
-      proj => {
-        if (!_.isUndefined(this.cache['deps'])) {
-          return this.cache['deps'];
-        }
-
-        const uiJsonPath = proj.pathFor('ui-module.json');
-        if (Helpers.exists(uiJsonPath)) {
-          const uiModuleJson = Helpers.readJson(uiJsonPath);
-          const allLibs = (uiModuleJson.dependencies || []) as string[];
-          this.cache['deps'] = allLibs.filter(
-            f => !_.isUndefined(libs.find(c => c.basename === f)),
-          );
-        } else {
-          const allLibs = Object.keys(proj.npmHelpers.allDependencies);
-          this.cache['deps'] = allLibs.filter(
-            f => !_.isUndefined(libs.find(c => c.name === f)),
-          );
-        }
-
-        // console.log(`${proj.name} => all libs`, this.cache['deps'])
-        return this.cache['deps'];
-      },
-      proj => {
-        if (!_.isUndefined(this.cache['nameToCompare'])) {
-          // console.log(`CACHE ${proj.basename} => name: ` + this.cache['nameToCompare'])
-          return this.cache['nameToCompare'];
-        }
-        this.cache['nameToCompare'] = Helpers.exists(
-          proj.pathFor('ui-module.json'),
-        )
-          ? proj.basename
-          : proj.name;
-        return this.cache['nameToCompare'];
-      },
-    );
-
-    return sorted;
-    //#endregion
+  //#region getters & methods / sort by deps
+  protected sortByDeps(libraries: PROJCET[]): PROJCET[] {
+    return libraries;
   }
-  //#endregion
 
-  //#region getters & methods / get sorted libraries by deps for build
-  async getSortedLibrariesByDepsForBuild(
-    libs: PROJCET[],
-    dontSugestBuildAll = false,
-  ): Promise<PROJCET[]> {
+  //#region getters & methods / get sorted libraries by deps for build\
+  /**
+   * Use cases:
+   * 1. build all libraries in normal mode
+   * 2. build all libraries in watch mode
+   * 3. build selected libraries in normal mode
+   *   (with first time all libraries will be build)
+   * 4. build selected libraries in watch mode
+   *    (use normal build for not selected libraries)
+   * 5. build selected libraries in watch mode
+   *    (skip normal build for not selected libraries)
+   */
+  async selectAndSaveLibraries({
+    libs: selectedLibs,
+    watch,
+    watchBuildSupported,
+  }: {
+    libs: PROJCET[];
+    watch: boolean;
+    watchBuildSupported?: boolean;
+  }): Promise<{ selectedLibs: PROJCET[]; skipRebuildingAllForWatch: boolean }> {
     //#region @backendFunc
-
     let buildAll = false;
+    let skipRebuildingAllForWatch = false;
+    if (selectedLibs.length <= 1) {
+      return { selectedLibs, skipRebuildingAllForWatch };
+    }
+    if (_.isUndefined(watchBuildSupported)) {
+      watchBuildSupported = true;
+    }
     const lastSelectedJsonFile = 'tmp-last-selected.json';
     const lastSelected =
       Helpers.readJson(this.project.pathFor(lastSelectedJsonFile))
         ?.lastSelected || [];
 
     if (_.isArray(lastSelected) && lastSelected.length > 0) {
-      const selected = lastSelected.map(c => libs.find(l => l.basename == c));
+      const selected = lastSelected.map(c =>
+        selectedLibs.find(l => l.basename == c),
+      );
 
       Helpers.info(`
 Last selected libs
@@ -95,31 +77,38 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
             `);
       if (
         await Helpers.consoleGui.question.yesNo(
-          `Continue watch build with last selected ?`,
+          `Continue ${watch ? 'watch' : ''} build with last selected ?`,
         )
       ) {
-        libs = selected;
-        return libs;
+        selectedLibs = selected;
+        if (watchBuildSupported && watch) {
+          skipRebuildingAllForWatch = await Helpers.consoleGui.question.yesNo(
+            `Skip rebuilding all libraries for watch mode ?`,
+          );
+        }
+        return { selectedLibs, skipRebuildingAllForWatch };
       }
     }
 
-    if (libs.length < 6 && !dontSugestBuildAll) {
+    // more than 6 libs can be hard to manage in watch mode
+    if (!watch || (watch && selectedLibs.length < 6)) {
       buildAll = await Helpers.consoleGui.question.yesNo(
-        'Should all libraries be included in watch build ?',
+        `Should all libraries be included in ${watch ? 'watch' : ''} build ?`,
       );
     }
+
     if (buildAll) {
-      return libs;
+      return { selectedLibs, skipRebuildingAllForWatch };
     }
     while (true) {
-      const selectedLibs = await Helpers.consoleGui.multiselect(
-        `Select libraries to build watch `,
-        libs.map(c => {
+      const pickedLibs = await Helpers.consoleGui.multiselect(
+        `Select libraries to ${watch ? 'watch' : ''} build `,
+        selectedLibs.map(c => {
           return { name: c.name, value: c.name, selected: true };
         }),
         true,
       );
-      const selected = selectedLibs.map(c => libs.find(l => l.name == c));
+      const selected = pickedLibs.map(c => selectedLibs.find(l => l.name == c));
       Helpers.info(`
 
 ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('\n')}
@@ -130,15 +119,15 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
           `Continue build with ${selected.length} selected ?`,
         )
       ) {
-        libs = selected;
+        selectedLibs = selected;
         break;
       }
     }
 
     Helpers.writeJson(this.project.pathFor(lastSelectedJsonFile), {
-      lastSelected: libs.map(c => c.basename),
+      lastSelected: selectedLibs.map(c => c.basename),
     });
-    return libs;
+    return { selectedLibs, skipRebuildingAllForWatch };
     //#endregion
   }
   //#endregion
@@ -157,7 +146,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
         this.project.location,
         config.folder.projects,
       );
-      const libraries = Helpers.findChildren<PROJCET>(
+      let libraries = Helpers.findChildren<PROJCET>(
         externalPath,
         childLocation => {
           const childProject = this.project.ins.From(childLocation);
@@ -168,6 +157,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
         },
         { allowAllNames: true },
       );
+      libraries = this.sortByDeps(libraries);
 
       this.cache['libraries'] = libraries;
       return libraries;
@@ -179,9 +169,10 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
       ) as NgProject[]
     ).filter(f => f.projectType === 'library');
 
-    const libraries = projects.map(c =>
+    let libraries = projects.map(c =>
       this.project.ins.From(path.join(this.project.location, c.root)),
     );
+    libraries = this.sortByDeps(libraries);
     this.cache['libraries'] = libraries;
     return libraries;
     //#endregion
@@ -189,44 +180,50 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
   //#endregion
 
   //#region getters & methods / selected libraries
-  async selectLibraries({ onlySelectedLibs }: { onlySelectedLibs: string[] }) {
+  async selectLibraries({
+    watch,
+    watchBuildSupported,
+  }: {
+    watch: boolean;
+    watchBuildSupported?: boolean;
+  }) {
     //#region @backendFunc
     const allLibs = this.libraries;
-    const allLibsToBuild = this.sortedLibrariesByDeps.filter(f => {
-      if (!onlySelectedLibs) {
-        return true;
-      }
-      const nameMatchesPattern = onlySelectedLibs.find(c => f.name.includes(c));
-      const basenameMatchesPattern = onlySelectedLibs.find(c =>
-        f.basename.includes(c),
-      );
-      return nameMatchesPattern || basenameMatchesPattern;
-    });
 
-    const libsToBuild = this.sortedLibrariesByDeps;
-    let libsToWatch: PROJCET[] =
-      allLibsToBuild.length == 1
-        ? [_.first(allLibsToBuild)]
-        : await this.getSortedLibrariesByDepsForBuild(
-            allLibsToBuild,
-            allLibs.length != allLibsToBuild.length,
-          );
-
-    return { libsToBuild, libsToWatch, allLibs };
+    /**
+     * all libraries to build
+     */
+    const { selectedLibs, skipRebuildingAllForWatch } =
+      await this.selectAndSaveLibraries({
+        libs: allLibs,
+        watch,
+        watchBuildSupported,
+      });
+    return {
+      skipRebuildingAllForWatch,
+      /**
+       * libs selected for build
+       */
+      selectedLibs,
+      /**
+       * all libs that can be in build
+       */
+      allLibs,
+    };
     //#endregion
   }
   //#endregion
 
   //#region getters & methods / build libraries
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  /**
+   * Angular library build
+   */
   public async buildLibraries(
     {
-      rebuild = false,
       watch = false,
       strategy,
-      onlySelectedLibs,
       buildType,
-    }: LibrariesBuildOptions = {} as any,
+    }: LibrariesBuildOptions & { watch: boolean } = {} as any,
   ) {
     //#region @backend
     await this.project.linkedProjects.saveAllLinkedProjectsToDB();
@@ -243,12 +240,18 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     await this.project.npmHelpers.makeSureNodeModulesInstalled();
     //#endregion
 
-    const { libsToBuild, libsToWatch, allLibs } = await this.selectLibraries({
-      onlySelectedLibs,
-    });
+    const { selectedLibs, allLibs, skipRebuildingAllForWatch } =
+      await this.selectLibraries({
+        watch,
+      });
 
     //#region normal build
-    for (const [index, lib] of libsToBuild.entries()) {
+    for (const [index, lib] of allLibs.entries()) {
+      if (watch && skipRebuildingAllForWatch) {
+        Helpers.info(
+          `Skipping build for watch mode (${index + 1}/${allLibs.length}) ${lib.basename} (${chalk.bold(lib.name)})`,
+        );
+      }
       Helpers.info(
         `Building (${index + 1}/${allLibs.length}) ${lib.basename} (${chalk.bold(lib.name)})`,
       );
@@ -273,7 +276,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
             });
           }
 
-          if (rebuild || !Helpers.exists(sourceDist)) {
+          if (!Helpers.exists(sourceDist)) {
             Helpers.info(`Compiling ${lib.name} ...`);
             this.project
               .run(
@@ -317,7 +320,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
           lib.name,
         ]);
 
-        if (rebuild || !Helpers.exists(sourceDist)) {
+        if (!Helpers.exists(sourceDist)) {
           Helpers.info(`Compiling ${lib.name} ...`);
           this.project
             .run(
@@ -344,9 +347,10 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
 
     //#region watch build
     if (watch) {
-      for (const [index, lib] of libsToWatch.entries()) {
+      for (const [index, lib] of selectedLibs.entries()) {
         Helpers.info(
-          `Building for watch (${index + 1}/${libsToWatch.length}) ${lib.basename} (${chalk.bold(lib.name)})`,
+          `Building for watch (${index + 1}/${selectedLibs.length}) ` +
+            `${lib.basename} (${chalk.bold(lib.name)})`,
         );
         await (async () => {
           await this.project

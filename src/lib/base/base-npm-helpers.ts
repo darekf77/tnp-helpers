@@ -371,7 +371,7 @@ export class BaseNpmHelpers<
   async prepareCommand(
     optiosn?: CoreModels.NpmInstallOptions,
   ): Promise<string> {
-    const {
+    let {
       pkg,
       remove,
       silent,
@@ -381,6 +381,8 @@ export class BaseNpmHelpers<
       generateYarnOrPackageJsonLock,
       ignoreOptional,
     } = optiosn || {};
+
+    force = true; // TODO QUICK_FIX
 
     let command = '';
     const commonOptions = `--ignore-engines`;

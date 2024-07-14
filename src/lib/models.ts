@@ -26,11 +26,6 @@ export type LibraryBuildCommandOptions = {
 };
 
 export type LibrariesBuildOptions = {
-  rebuild?: boolean;
-  watch?: boolean;
   strategy?: 'link' | 'copy';
-  onlySelectedLibs?: string[];
   buildType: core.CoreModels.LibraryType;
-  onlyBuildLib?: string;
-  args?: string[];
 };

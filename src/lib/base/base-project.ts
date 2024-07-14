@@ -80,6 +80,7 @@ export abstract class BaseProject<
     public readonly location: string,
   ) {
     //#region @backend
+    // @ts-ignore
     this.libraryBuild = new (require('./base-library-build')
       .BaseLibraryBuild as typeof BaseLibraryBuild)(this as any);
 
