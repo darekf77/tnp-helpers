@@ -26,8 +26,8 @@ export class BaseLinkedProjects<
     // Helpers.taskStarted(`Detecting embedded project for ${this.location}`); // TODO it is slow
     const nearsetProj = this.project.ins.nearestTo(
       crossPlatformPath([this.project.location, '..']),
-    );
-    const linkedPorj = nearsetProj?.linkedProjects?.find(l => {
+    ) as PROJCET;
+    const linkedPorj = nearsetProj?.linkedProjects?.linkedProjects.find(l => {
       return (
         this.project.location ===
         crossPlatformPath([nearsetProj.location, l.relativeClonePath])
@@ -41,7 +41,7 @@ export class BaseLinkedProjects<
       linkedPorj.relativeClonePath,
       linkedPorj.internalRealtiveProjectPath || '',
     ]);
-    const embdedresult = this.project.ins.From(pathToEmbededProj);
+    const embdedresult = this.project.ins.From(pathToEmbededProj) as PROJCET;
     // Helpers.taskDone(`Embedded project detected for ${this.location}`);
     this.cache[cacheKey] = embdedresult;
     return this.cache[cacheKey];

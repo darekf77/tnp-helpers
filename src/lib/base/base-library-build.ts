@@ -93,7 +93,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     // more than 6 libs can be hard to manage in watch mode
     if (!watch || (watch && selectedLibs.length < 6)) {
       buildAll = await Helpers.consoleGui.question.yesNo(
-        `Should all libraries be included in ${watch ? 'watch' : ''} build ?`,
+        `Should all libraries be included in${watch ? ' watch' : ' '}build ?`,
       );
     }
 
