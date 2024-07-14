@@ -196,7 +196,6 @@ export class BaseNpmHelpers<
 
   //#region methods & getters / make sure node modules installed
   async makeSureNodeModulesInstalled(options?: {
-    checkPackages?: boolean;
     useYarn?: boolean;
     force?: boolean;
   }) {
