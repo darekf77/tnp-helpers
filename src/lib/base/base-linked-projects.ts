@@ -337,9 +337,11 @@ ${projectsThatShouldBeLinked
               linkedProj.relativeClonePath,
               linkedProj.internalRealtiveProjectPath,
             ]);
-            const childProj = this.project.ins.From(childProjLocaiton);
+            const childProj = this.project.ins.From(
+              childProjLocaiton,
+            ) as PROJCET;
             if (childProj) {
-              await childProj.saveLocationToDB();
+              await childProj.linkedProjects.saveLocationToDB();
             }
           }
         }

@@ -141,27 +141,6 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     if (!_.isUndefined(this.cache['libraries'])) {
       return this.cache['libraries'];
     }
-    if (!this.project.pathExists(config.file.angular_json)) {
-      const externalPath = path.join(
-        this.project.location,
-        config.folder.projects,
-      );
-      let libraries = Helpers.findChildren<PROJCET>(
-        externalPath,
-        childLocation => {
-          const childProject = this.project.ins.From(childLocation);
-          if (childProject?.name === this.project.name) {
-            return void 0;
-          }
-          return childProject;
-        },
-        { allowAllNames: true },
-      );
-      libraries = this.sortByDeps(libraries);
-
-      this.cache['libraries'] = libraries;
-      return libraries;
-    }
     const projects = (
       Object.values(
         Helpers.readJson(this.project.pathFor(config.file.angular_json))

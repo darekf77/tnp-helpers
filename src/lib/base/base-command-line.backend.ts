@@ -2,6 +2,7 @@ import { Helpers, LinkedProject } from '../index';
 import { CommandLineFeature } from './command-line-feature.backend';
 import { BaseProject } from './base-project';
 import { chalk, _, path } from 'tnp-core/src';
+import { HOST_FILE_PATH } from 'tnp-config/src';
 import { TypeOfCommit, CommitData } from './commit-data';
 import { config } from 'tnp-config/src';
 import { crossPlatformPath } from 'tnp-core/src';
@@ -20,6 +21,14 @@ export class BaseCommandLine<
     }
   }
 
+  //#region commands / hosts
+  HOSTS() {
+    Helpers.run(`code ${crossPlatformPath(HOST_FILE_PATH)}`).sync();
+    process.exit(0);
+  }
+  //#endregion
+
+  //#region commands / remove submodules
   removeSubmodules() {
     Helpers.taskStarted('Removing submodules...');
     for (const folderAbsPath of Helpers.foldersFrom(this.cwd, {
@@ -34,6 +43,7 @@ export class BaseCommandLine<
     Helpers.taskDone('Done');
     this._exit();
   }
+  //#endregion
 
   //#region commands / set editor
   async setEditor() {
@@ -193,6 +203,14 @@ export class BaseCommandLine<
   async pull() {
     this.preventCwdIsNotProject();
     await this.project.git.pullProcess();
+    this._exit();
+  }
+  //#endregion
+
+  //#region commands / pull all
+  async pullAll() {
+    this.preventCwdIsNotProject();
+    await this.project.git.pullProcess(true);
     this._exit();
   }
   //#endregion

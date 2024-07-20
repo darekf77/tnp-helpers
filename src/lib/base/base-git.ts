@@ -519,6 +519,32 @@ export class BaseGit<
   }
   //#endregion
 
+  /**
+   * This is only for push/pull process
+   *
+   * There are 2 types of projects:
+   * - with linked-projects.json
+   * - with children from external folder
+   *
+   * projects that are children of this project (with its own git repo)
+   */
+  get gitChildren() {
+    let childrenRepos: PROJCET[] = [];
+
+    if (this.project.linkedProjects.linkedProjects.length > 0) {
+      childrenRepos = this.project.linkedProjects.linkedProjects.map(c => {
+        return this.project.ins.From(c.relativeClonePath) as PROJCET;
+      });
+    } else {
+      childrenRepos = this.project.children;
+    }
+
+    childrenRepos = childrenRepos.filter(
+      f => f.git.isInsideGitRepo && f.git.isGitRoot,
+    ) as PROJCET[];
+    return childrenRepos;
+  }
+
   //#region methods & getters / push process
   async pullProcess(cloneChildren = false) {
     //#region @backendFunc
@@ -543,10 +569,7 @@ export class BaseGit<
     await this.project.linkedProjects.saveLocationToDB();
 
     if (this.automaticallyAddAllChnagesWhenPushingToGit() || cloneChildren) {
-      const childrenRepos = this.project.children.filter(
-        f => f.git.isInsideGitRepo && f.git.isGitRoot,
-      ) as PROJCET[];
-      for (const child of childrenRepos) {
+      for (const child of this.gitChildren) {
         await child.git.pullProcess();
       }
     }
@@ -704,10 +727,8 @@ export class BaseGit<
         );
         return;
       }
-      const childrenRepos = this.project.children.filter(
-        f => f.git.isInsideGitRepo && f.git.isGitRoot,
-      ) as PROJCET[];
-      for (const child of childrenRepos) {
+
+      for (const child of this.gitChildren) {
         await child.git.pushProcess(options);
       }
     }

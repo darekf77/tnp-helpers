@@ -71,14 +71,23 @@ export abstract class BaseProject<
   public git: BaseGit;
   //#endregion
 
+  private __location: string;
+  get location(): string {
+    return this.__location;
+  }
+  set location(v: string) {
+    this.__location = crossPlatformPath(v);
+  }
+
   //#region constructor
   // @ts-ignore
   constructor(
     /**
      * doesn't need to be real path -> can be link
      */
-    public readonly location: string,
+    location: string,
   ) {
+    this.location = location;
     //#region @backend
     // @ts-ignore
     this.libraryBuild = new (require('./base-library-build')
@@ -319,27 +328,52 @@ export abstract class BaseProject<
   //#region methods & getters / generic name
   get genericName() {
     //#region @websqlFunc
-    let parent = this.parent as any as BaseProject;
-    // const nearest = this.ins.nearestTo(crossPlatformPath([this.location, '..']));
-    // const nerestProj = (nearest && nearest !== parent) ? (nearest.name || nearest.basename) : void 0;
-    // let secondNearest = nearest && this.ins.nearestTo(crossPlatformPath([nearest.location, '..']));
-    return [
-      // (secondNearest && secondNearest !== nearest) ? (secondNearest.name || secondNearest.basename) : void 0,
-      // nerestProj,
-      parent ? path.basename(path.dirname(parent.location)) : void 0,
-      parent ? parent.basename : path.basename(this.location),
-      this.basename,
-      //#region @backend
-      `(${CLI.chalk.bold.underline(this.name)})`,
-      ` (type=${CLI.chalk.italic.bold(this.type as string)})`,
-      //#endregion
-    ]
-      .filter(f => !!f)
-      .join('/')
-      .replace(/\(\)/, '');
+    if (!_.isUndefined(this.cache['genericName'])) {
+      return this.cache['genericName'];
+    }
+    let nameFromPackageJson = this.name;
+    //#region @backend
+    nameFromPackageJson = `${chalk.bold.gray(this.name)}`;
+    //#endregion
+
+    const sliceMinus = 8;
+    const shortPath =
+      '/' +
+      crossPlatformPath(this.location)
+        .split('/')
+        .slice(-1 * sliceMinus)
+        .join('/');
+
+    const result =
+      (shortPath.includes(crossPlatformPath(this.location)) ? '' : '(..)') +
+      this.checkAndBoldenPath(this.location)
+        .split('/')
+        .slice(-1 * sliceMinus)
+        .join('/') +
+      `(${nameFromPackageJson})`;
+
+    this.cache['genericName'] = result;
+    return this.cache['genericName'];
     //#endregion
   }
   //#endregion
+
+  private checkAndBoldenPath(fullPath: string) {
+    const parts = fullPath.split('/');
+
+    const result = parts.map((part, index) => {
+      const pathTocheck = parts.slice(0, index + 1).join('/');
+      // console.log('pathTocheck', pathTocheck);
+      //#region @backend
+      if (this.ins.From(pathTocheck)) {
+        return chalk.underline.italic.bold(part);
+      }
+      //#endregion
+      return part;
+    });
+
+    return result.join('/');
+  }
 
   //#region methods & getters / path exits
   /**
@@ -902,7 +936,12 @@ ${proj?.children.map(c => '+' + c.genericName).join('\n')}
 linked porject prefix: "${this.linkedProjects.linkedProjectsPrefix}"
 
 linked projects from json (${this.linkedProjects.linkedProjects?.length || 0}):
-${(this.linkedProjects.linkedProjects || []).map(c => '- ' + c.relativeClonePath).join('\n')}
+${(this.linkedProjects.linkedProjects || [])
+  .map(c => {
+    const proj = this.ins.From(this.pathFor(c.relativeClonePath));
+    return '- ' + proj ? proj.genericName : c.relativeClonePath;
+  })
+  .join('\n')}
 
   `,
     );
