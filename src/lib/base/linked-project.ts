@@ -1,15 +1,19 @@
 import { _, crossPlatformPath, path } from 'tnp-core/src';
 import { Helpers } from '../index';
 
-
 export class LinkedProject {
   //#region static
 
   //#region static / from
   static from(options: Partial<LinkedProject>) {
-    const linkedProj = _.merge(new (LinkedProject as any)(), _.cloneDeep(options)) as LinkedProject;
+    const linkedProj = _.merge(
+      new (LinkedProject as any)(),
+      _.cloneDeep(options),
+    ) as LinkedProject;
     if (!linkedProj.relativeClonePath) {
-      linkedProj.relativeClonePath = path.basename(linkedProj.remoteUrl().replace('.git', ''));
+      linkedProj.relativeClonePath = path.basename(
+        linkedProj.remoteUrl().replace('.git', ''),
+      );
     }
     if (!linkedProj.deafultBranch) {
       linkedProj.deafultBranch = 'master';
@@ -19,9 +23,16 @@ export class LinkedProject {
   //#endregion
 
   //#region static / from name
-  static fromName(projectName: string, currentRemoteUrl?: string, currentBranch?: string) {
+  static fromName(
+    projectName: string,
+    currentRemoteUrl?: string,
+    currentBranch?: string,
+  ) {
     return LinkedProject.from({
-      repoUrl: currentRemoteUrl?.replace(path.basename(currentRemoteUrl), `${projectName}.git`),
+      repoUrl: currentRemoteUrl?.replace(
+        path.basename(currentRemoteUrl),
+        `${projectName}.git`,
+      ),
       deafultBranch: currentBranch,
       relativeClonePath: projectName,
     });
@@ -31,11 +42,10 @@ export class LinkedProject {
   //#region static / detect
   static detect(insideLocation: string, recursive = false): LinkedProject[] {
     //#region @backendFunc
-    insideLocation = crossPlatformPath(insideLocation).replace(/\/$/, '')
-    const detectedLinkedProjects = Helpers
-      .foldersFrom(insideLocation, {
-        recursive,
-      })
+    insideLocation = crossPlatformPath(insideLocation).replace(/\/$/, '');
+    const detectedLinkedProjects = Helpers.foldersFrom(insideLocation, {
+      recursive,
+    })
       .filter(folderAbsPath => {
         // console.log('folderAbsPath', folderAbsPath);
         // Helpers.checkIfNameAllowedForFiredevProj(path.basename(folderAbsPath)) &&
@@ -43,16 +53,16 @@ export class LinkedProject {
         return Helpers.git.isGitRoot(folderAbsPath);
       })
       .map(folderAbsPath => {
-        const relativePath = folderAbsPath.replace(insideLocation + '/', '')
+        const relativePath = folderAbsPath.replace(insideLocation + '/', '');
         const projectName = path.basename(relativePath);
         return LinkedProject.from({
           repoUrl: Helpers.git.getOriginURL(folderAbsPath),
           relativeClonePath: projectName,
         });
-      })
-      .sort((a, b) => {
-        return (a.relativeClonePath || '').localeCompare((b.relativeClonePath || ''));
       });
+    // .sort((a, b) => {
+    //   return (a.relativeClonePath || '').localeCompare((b.relativeClonePath || ''));
+    // });
     return detectedLinkedProjects;
     //#endregion
   }
@@ -95,22 +105,20 @@ export class LinkedProject {
 }
 
 export class LinkedPorjectsConfig {
-
   //#region static
 
   //#region static / from
   static from(options: Partial<LinkedPorjectsConfig>) {
     options = options || {};
-    options.projects = (options.projects || [])
-      .map(linkedProjOrname => {
-        if (_.isString(linkedProjOrname)) {
-          return LinkedProject.fromName(linkedProjOrname);
-        }
-        return LinkedProject.from(linkedProjOrname);
-      })
-      .sort((a, b) => {
-        return (a.relativeClonePath || '').localeCompare((b.relativeClonePath || ''));
-      });
+    options.projects = (options.projects || []).map(linkedProjOrname => {
+      if (_.isString(linkedProjOrname)) {
+        return LinkedProject.fromName(linkedProjOrname);
+      }
+      return LinkedProject.from(linkedProjOrname);
+    });
+    // .sort((a, b) => {
+    //   return (a.relativeClonePath || '').localeCompare((b.relativeClonePath || ''));
+    // });
     return _.merge(new (LinkedPorjectsConfig as any)(), _.cloneDeep(options));
   }
   //#endregion

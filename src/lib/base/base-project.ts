@@ -31,6 +31,7 @@ import type { BaseLibraryBuild } from './base-library-build';
 import { BaseNpmHelpers } from './base-npm-helpers';
 import { BaseLinkedProjects } from './base-linked-projects';
 import { BaseGit } from './base-git';
+import { BaseVscodeHelpers } from './base-vscode';
 //#endregion
 
 const takenPorts = [];
@@ -68,6 +69,7 @@ export abstract class BaseProject<
   public libraryBuild: BaseLibraryBuild;
   public npmHelpers: BaseNpmHelpers;
   public linkedProjects: BaseLinkedProjects;
+  public vsCodeHelpers: BaseVscodeHelpers;
   public git: BaseGit;
   //#endregion
 
@@ -102,6 +104,8 @@ export abstract class BaseProject<
     this.git = new (require('./base-git').BaseGit as typeof BaseGit)(
       this as any,
     );
+    this.vsCodeHelpers = new (require('./base-vscode')
+      .BaseVscodeHelpers as typeof BaseVscodeHelpers)(this as any);
     //#endregion
   }
   //#endregion
@@ -358,6 +362,7 @@ export abstract class BaseProject<
   }
   //#endregion
 
+  //#region methods & getters / check and bolden path
   private checkAndBoldenPath(fullPath: string) {
     const parts = fullPath.split('/');
 
@@ -374,6 +379,7 @@ export abstract class BaseProject<
 
     return result.join('/');
   }
+  //#endregion
 
   //#region methods & getters / path exits
   /**
@@ -785,6 +791,50 @@ export abstract class BaseProject<
   linkTo(destPackageLocation: string) {
     //#region @backend
     Helpers.createSymLink(this.location, destPackageLocation);
+    //#endregion
+  }
+  //#endregion
+
+  //#region methods & getters / set value to json
+  setValueToJSON(
+    relativePath: string,
+    lodashGetPath: string,
+    value: any,
+  ): void {
+    //#region @backendFunc
+    Helpers.setValueToJSON(this.pathFor(relativePath), lodashGetPath, value);
+    //#endregion
+  }
+  //#endregion
+
+  //#region methods & getters / get value from json
+  getValueFromJSON(
+    relativePath: string,
+    lodashGetPath: string,
+    defaultValue: any = void 0,
+  ): any {
+    //#region @backendFunc
+    return Helpers.getValueFromJSON(
+      this.pathFor(relativePath),
+      lodashGetPath,
+      defaultValue,
+    );
+    //#endregion
+  }
+  //#endregion
+
+  //#region methods & getters / get value from jsonc
+  getValueFromJSONC(
+    relativePath: string,
+    lodashGetPath: string,
+    defaultValue: any = void 0,
+  ): any {
+    //#region @backendFunc
+    return Helpers.getValueFromJSONC(
+      this.pathFor(relativePath),
+      lodashGetPath,
+      defaultValue,
+    );
     //#endregion
   }
   //#endregion

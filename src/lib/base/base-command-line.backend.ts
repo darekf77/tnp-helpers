@@ -8,7 +8,7 @@ import { config } from 'tnp-config/src';
 import { crossPlatformPath } from 'tnp-core/src';
 
 export class BaseCommandLine<
-  PARAMS = any,
+  PARAMS  = any,
   PROJECT extends BaseProject<any, any> = BaseProject,
 > extends CommandLineFeature<PARAMS, PROJECT> {
   public _() {
@@ -21,10 +21,19 @@ export class BaseCommandLine<
     }
   }
 
+
+
   //#region commands / hosts
-  HOSTS() {
+  hosts() {
     Helpers.run(`code ${crossPlatformPath(HOST_FILE_PATH)}`).sync();
     process.exit(0);
+  }
+  //#endregion
+
+  //#region commands / count commits
+  countCommits() {
+    console.log(Helpers.git.countCommits(this.cwd));
+    this._exit();
   }
   //#endregion
 
@@ -838,16 +847,14 @@ Would you like to update current project configuration?`)
   }
   //#endregion
 
-  countCommits() {
-    console.log(Helpers.git.countCommits(this.cwd));
-    this._exit();
-  }
-
+  //#region is terminal supported
   isTerminalSupported() {
     console.log(`Terminal is supported: ${Helpers.isSupportedFiredevTerminal}`);
     this._exit();
   }
+  //#endregion
 
+  //#region prox ext
   PROJ_EXT() {
     this.preventCwdIsNotProject();
     const p = this.project.pathFor('.vscode/extensions.json');
@@ -868,7 +875,9 @@ Would you like to update current project configuration?`)
     }
     this._exit();
   }
+  //#endregion
 
+  //#region proj db
   projdb() {
     this.preventCwdIsNotProject();
     Helpers.info(`Projects db location:
@@ -882,6 +891,7 @@ Would you like to update current project configuration?`)
     ).sync();
     this._exit();
   }
+  //#endregion
 
   //#region filter all project branches by pattern
   private __filterBranchesByPattern(branchPatternOrBranchName: string) {

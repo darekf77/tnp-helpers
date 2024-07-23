@@ -202,9 +202,13 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
       watch = false,
       strategy,
       buildType,
+      copylink_to_node_modules,
     }: LibrariesBuildOptions & { watch: boolean } = {} as any,
-  ) {
+  ): Promise<void> {
     //#region @backend
+    if (!Array.isArray(copylink_to_node_modules)) {
+      copylink_to_node_modules = [];
+    }
     await this.project.linkedProjects.saveAllLinkedProjectsToDB();
     if (!strategy) {
       strategy = 'link';
@@ -212,10 +216,10 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
 
     //#region select target node_modules
     const locationsForNodeModules = [
-      this.project.location,
-      // this.parent.location,
-      // ...this.parent.children.map(c => c.location),
-    ].map(l => crossPlatformPath([l, config.folder.node_modules]));
+      this.project.pathFor(config.folder.node_modules),
+      ...copylink_to_node_modules,
+    ];
+
     await this.project.npmHelpers.makeSureNodeModulesInstalled();
     //#endregion
 
@@ -294,10 +298,6 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
           config.folder.dist,
           lib.basename,
         ]);
-        const dest = this.project.pathFor([
-          config.folder.node_modules,
-          lib.name,
-        ]);
 
         if (!Helpers.exists(sourceDist)) {
           Helpers.info(`Compiling ${lib.name} ...`);
@@ -314,11 +314,14 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
             .sync();
         }
 
-        if (Helpers.isSymlinkFileExitedOrUnexisted(dest)) {
-          Helpers.remove(dest);
+        for (const node_modules of locationsForNodeModules) {
+          const dest = crossPlatformPath([node_modules, lib.name]);
+          if (Helpers.isSymlinkFileExitedOrUnexisted(dest)) {
+            Helpers.remove(dest);
+          }
+          Helpers.copy(sourceDist, dest);
         }
 
-        Helpers.copy(sourceDist, dest);
         //#endregion
       }
     }
@@ -347,16 +350,20 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
               [],
               0,
               () => {
-                const sourceDist = this.project.pathFor([
-                  config.folder.dist,
-                  lib.basename,
-                ]);
-                const dest = this.project.pathFor([
-                  config.folder.node_modules,
-                  lib.name,
-                ]);
-                Helpers.copy(sourceDist, dest);
-                console.log(`Sync done for ${lib.basename} to ${lib.name}`);
+                if (strategy === 'copy') {
+                  const sourceDist = this.project.pathFor([
+                    config.folder.dist,
+                    lib.basename,
+                  ]);
+                  for (const node_modules of locationsForNodeModules) {
+                    const dest = crossPlatformPath([node_modules, lib.name]);
+                    if (Helpers.isSymlinkFileExitedOrUnexisted(dest)) {
+                      Helpers.remove(dest);
+                    }
+                    Helpers.copy(sourceDist, dest);
+                    console.log(`Sync done for ${lib.basename} to ${lib.name}`);
+                  }
+                }
               },
             );
         })();
@@ -406,6 +413,36 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     } else {
       return `Found 0 errors. Watching for file change`;
     }
+    //#endregion
+  }
+  //#endregion
+
+  //#region getters & methods / select copy to projects
+  async selectCopytoProjects(): Promise<string[]> {
+    //#region @backendFunc
+    const projects = (
+      this.project.ins.allProjectsFromFolder(
+        path.dirname(this.project.location),
+      ) as BaseProject[]
+    )
+      .filter(c => c.location !== this.project.location)
+      .map(p =>
+        p.linkedProjects?.embeddedProject
+          ? p.linkedProjects.embeddedProject
+          : p,
+      );
+
+    const locations = await Helpers.consoleGui.multiselect(
+      'Copy compiled version to projects',
+      projects.map(c => {
+        return {
+          name: c.genericName,
+          value: c.pathFor(config.folder.node_modules),
+        };
+      }),
+      true,
+    );
+    return locations;
     //#endregion
   }
   //#endregion

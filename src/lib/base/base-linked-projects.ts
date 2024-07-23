@@ -28,12 +28,20 @@ export class BaseLinkedProjects<
       crossPlatformPath([this.project.location, '..']),
     ) as PROJCET;
     const linkedPorj = nearsetProj?.linkedProjects?.linkedProjects.find(l => {
-      return (
-        this.project.location ===
-        crossPlatformPath([nearsetProj.location, l.relativeClonePath])
-      );
+      const copareTo = crossPlatformPath([
+        nearsetProj.location,
+        l.relativeClonePath,
+      ]);
+      if (this.project.location === copareTo) {
+        return true;
+      }
+      if (l.remoteUrl() === this.project.git.originURL) {
+        return true;
+      }
+      return false;
     });
     if (!linkedPorj || !linkedPorj.internalRealtiveProjectPath) {
+      // debugger
       return;
     }
     const pathToEmbededProj = crossPlatformPath([

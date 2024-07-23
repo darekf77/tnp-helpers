@@ -19,7 +19,6 @@ export type NgProject = {
   prefix: string;
 };
 
-
 export type LibraryBuildCommandOptions = {
   watch?: boolean;
   buildType: core.CoreModels.LibraryType;
@@ -28,4 +27,5 @@ export type LibraryBuildCommandOptions = {
 export type LibrariesBuildOptions = {
   strategy?: 'link' | 'copy';
   buildType: core.CoreModels.LibraryType;
+  copylink_to_node_modules?: string[];
 };

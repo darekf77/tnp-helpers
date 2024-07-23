@@ -21,7 +21,7 @@ import { CLI } from 'tnp-cli/src';
 //#endregion
 //#endregion
 
-export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
+export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
   /**
    * general name for project company
    */
@@ -31,7 +31,7 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
 
   //#region fields
   protected readonly NPM_PROJECT_KEY = 'npm';
-  protected projects: T[] = [];
+  protected projects: PROJECT[] = [];
   /**
    * To speed up checking folder I am keeping pathes for alterdy checked folder
    * This may break things that are creating new projects
@@ -56,7 +56,7 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
   /**
    * project from process.cwd()
    */
-  get Current(): T {
+  get Current(): PROJECT {
     //#region @backendFunc
     const current = (this.classFn as typeof BaseProject).ins.From(
       process.cwd(),
@@ -69,7 +69,7 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
      }`);
       return void 0;
     }
-    return current as unknown as T;
+    return current as unknown as PROJECT;
     //#endregion
   }
   //#endregion
@@ -95,7 +95,7 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
   //#endregion
 
   //#region fields & getters / from
-  From(locationOfProject: string | string[], options?: any): T {
+  From(locationOfProject: string | string[], options?: any): PROJECT {
     // console.log({
     //   locationOfProj
     // })
@@ -164,7 +164,7 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
       findGitRoot?: boolean;
       onlyOutSideNodeModules?: boolean;
     },
-  ): T {
+  ): PROJECT {
     //#region @backendFunc
 
     options = options || {};
@@ -187,7 +187,7 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
       absoluteLocation = path.dirname(absoluteLocation);
     }
 
-    let project: T & BaseProject;
+    let project: PROJECT & BaseProject;
     let previousLocation: string;
     while (true) {
       if (
@@ -241,13 +241,13 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
   //#endregion
 
   //#region fields & getters / unload project
-  unload(project: T) {
+  unload(project: PROJECT) {
     this.projects = this.projects.filter(f => f !== project);
   }
   //#endregion
 
   //#region fields & getters / remove project
-  remove(project: T) {
+  remove(project: PROJECT) {
     //#region @backend
     const location = project.location;
     this.projects = this.projects.filter(p => p.location !== location);
@@ -257,7 +257,7 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
   //#endregion
 
   //#region fields & getters / manually add project
-  add(project: T) {
+  add(project: PROJECT) {
     //#region @backend
     this.projects.push(project);
     //#endregion
@@ -271,6 +271,8 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
     const projects = {};
     const projectsList = [];
     let previousAbsLocation: string;
+    stopOnCwd = crossPlatformPath(stopOnCwd);
+    absoluteLocation = crossPlatformPath(absoluteLocation);
     while (absoluteLocation.startsWith(stopOnCwd)) {
       if (previousAbsLocation === absoluteLocation) {
         break;
@@ -284,12 +286,20 @@ export class BaseProjectResolver<T extends Partial<BaseProject> = any> {
         projects[proj.location] = proj;
         projectsList.push(proj);
         previousAbsLocation = absoluteLocation;
-        absoluteLocation = path.dirname(proj.location);
+        absoluteLocation = crossPlatformPath(path.dirname(proj.location));
         continue;
       }
       break;
     }
-    return projectsList as T[];
+    return projectsList as PROJECT[];
+    //#endregion
+  }
+
+  allProjectsFromFolder(folderLocation: string): PROJECT[] {
+    //#region @backendFunc
+    return Helpers.foldersFrom(folderLocation, { recursive: false })
+      .map(f => this.From(f))
+      .filter(f => !!f) as PROJECT[];
     //#endregion
   }
   //#endregion
