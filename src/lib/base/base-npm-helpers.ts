@@ -359,9 +359,11 @@ export class BaseNpmHelpers<
         .map(k => `--${k} ${additionalArguments[k]}`)
         .join(' ');
     }
-    return this.project.run(
-      `npm run ${taskName} ${additionalArguments ? ' -- ' + additionalArguments : ''}`,
-      { output: true },
+    const command = `npm run ${taskName} ${additionalArguments ? ' -- ' + additionalArguments : ''}`
+    Helpers.info(`Starting npm task: "${command}"`);
+
+    return this.project.run(command,
+      { output: true, biggerBuffer:true },
     );
   }
   //#endregion

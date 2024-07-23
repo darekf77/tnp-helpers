@@ -532,9 +532,14 @@ export class BaseGit<
     let childrenRepos: PROJCET[] = [];
 
     if (this.project.linkedProjects.linkedProjects.length > 0) {
-      childrenRepos = this.project.linkedProjects.linkedProjects.map(c => {
-        return this.project.ins.From(c.relativeClonePath) as PROJCET;
-      });
+      childrenRepos = this.project.linkedProjects.linkedProjects
+        .map(c => {
+          return this.project.ins.From([
+            this.project.location,
+            c.relativeClonePath,
+          ]) as PROJCET;
+        })
+        .filter(f => !!f);
     } else {
       childrenRepos = this.project.children;
     }

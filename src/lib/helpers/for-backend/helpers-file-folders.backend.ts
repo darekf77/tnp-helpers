@@ -6,9 +6,9 @@ import {
   rimraf,
   crossPlatformPath,
   json5,
-  CoreModels
+  CoreModels,
 } from 'tnp-core/src';
-import * as  underscore from 'underscore';
+import * as underscore from 'underscore';
 import * as glob from 'glob';
 import { JSON10 } from 'json10/src';
 import * as crypto from 'crypto';
@@ -17,14 +17,11 @@ declare const global: any;
 import { Helpers } from '../../index';
 import { config, extAllowedToReplace } from 'tnp-config/src';
 
-
-
 export interface GetRecrusiveFilesFromOptions {
   // withNameOnly?: string; // TODO
 }
 
 export class HelpersFileFolders {
-
   /**
    * Calculate file or string checksum
    */
@@ -35,10 +32,14 @@ export class HelpersFileFolders {
     return crypto
       .createHash(algorithm || 'md5')
       .update(fileContent, 'utf8')
-      .digest('hex')
+      .digest('hex');
   }
 
-  getValueFromJSON(filepath: string, lodashGetPath: string, defaultValue = void 0) {
+  getValueFromJSON(
+    filepath: string,
+    lodashGetPath: string,
+    defaultValue = void 0,
+  ) {
     if (!fse.existsSync(filepath)) {
       return defaultValue;
     }
@@ -46,7 +47,11 @@ export class HelpersFileFolders {
     return _.get(json, lodashGetPath, defaultValue);
   }
 
-  getValueFromJSONC(filepath: string, lodashGetPath: string, defaultValue = void 0) {
+  getValueFromJSONC(
+    filepath: string,
+    lodashGetPath: string,
+    defaultValue = void 0,
+  ) {
     if (!fse.existsSync(filepath)) {
       return defaultValue;
     }
@@ -54,24 +59,41 @@ export class HelpersFileFolders {
     return _.get(json, lodashGetPath, defaultValue);
   }
 
-  readValueFromJson(filepath: string, lodashGetPath: string, defaultValue = void 0) {
+  readValueFromJson(
+    filepath: string,
+    lodashGetPath: string,
+    defaultValue = void 0,
+  ) {
     return Helpers.getValueFromJSON(filepath, lodashGetPath, defaultValue);
   }
 
-  readValueFromJsonC(filepath: string, lodashGetPath: string, defaultValue = void 0) {
+  readValueFromJsonC(
+    filepath: string,
+    lodashGetPath: string,
+    defaultValue = void 0,
+  ) {
     return Helpers.getValueFromJSONC(filepath, lodashGetPath, defaultValue);
   }
 
-  setValueToJSON(filepath: string, lodashGetPath: string, value: any) {
+  setValueToJSON(filepath: string, lodashGetPath: string, value: any): void {
     if (!fse.existsSync(filepath)) {
       Helpers.error(`Not able to set value in json: ${filepath}`, true, true);
       return;
     }
     const json = Helpers.readJson(filepath);
     _.set(json, lodashGetPath, value);
-    Helpers.writeFile(filepath, json);
+    Helpers.writeJson(filepath, json);
   }
 
+  setValueToJSONC(filepath: string, lodashGetPath: string, value: any): void {
+    if (!fse.existsSync(filepath)) {
+      Helpers.error(`Not able to set value in json: ${filepath}`, true, true);
+      return;
+    }
+    const json = Helpers.readJsonC(filepath);
+    _.set(json, lodashGetPath, value);
+    Helpers.writeJsonC(filepath, json);
+  }
 
   /**
    * file size in bytes
@@ -82,7 +104,6 @@ export class HelpersFileFolders {
     }
     return fse.lstatSync(filePath).size;
   }
-
 
   pathFromLink(filePath: string) {
     return fse.readlinkSync(filePath);
@@ -95,8 +116,8 @@ export class HelpersFileFolders {
   // }
 
   /**
-  * @deprecated
-  */
+   * @deprecated
+   */
   renameFolder(from: string, to: string, cwd?: string) {
     Helpers.renameFiles(from, to, cwd);
   }
@@ -134,7 +155,9 @@ export class HelpersFileFolders {
       tmp = '/private/tmp';
     }
     if (process.platform === 'win32') {
-      tmp = crossPlatformPath(path.join(crossPlatformPath(os.homedir()), '/AppData/Local/Temp'))
+      tmp = crossPlatformPath(
+        path.join(crossPlatformPath(os.homedir()), '/AppData/Local/Temp'),
+      );
     }
     if (!Helpers.exists(tmp)) {
       Helpers.mkdirp(tmp);
@@ -193,17 +216,14 @@ export class HelpersFileFolders {
   //   child_process.execSync(command);
   // }
 
-
   isPlainFileOrFolder(filePath) {
     return /^([a-zA-Z]|\-|\_|\@|\#|\$|\!|\^|\&|\*|\(|\))+$/.test(filePath);
   }
-
 
   requireUncached(module) {
     delete require.cache[require.resolve(module)];
     return require(module);
   }
-
 
   /**
    * get default export object from  js file
@@ -221,64 +241,83 @@ export class HelpersFileFolders {
 
     (() => {
       const stringForRegex = `require\\(("|')\\.\\/([a-zA-Z0-9]|\\/|\\-|\\_|\\+|\\.)*("|')\\)`;
-      Helpers.log(`[firedev-helpre][require][${jsFilePath}] stringForRegex: ${stringForRegex}`, 1);
+      Helpers.log(
+        `[firedev-helpre][require][${jsFilePath}] stringForRegex: ${stringForRegex}`,
+        1,
+      );
 
-      fileContent = fileContent.split('\n').map(line => {
-        const matches = line.match(new RegExp(stringForRegex));
-        if (matches !== null) {
-          // console.log('matched', matches)
-          const rep = _.first(matches);
-          if (rep) {
-            const newFilename = path.join(path.dirname(jsFilePath), rep.split('(')[1].replace(/("|'|\))/g, ''));
-            line = line.replace(rep, `require('${newFilename}')`);
+      fileContent = fileContent
+        .split('\n')
+        .map(line => {
+          const matches = line.match(new RegExp(stringForRegex));
+          if (matches !== null) {
+            // console.log('matched', matches)
+            const rep = _.first(matches);
+            if (rep) {
+              const newFilename = path.join(
+                path.dirname(jsFilePath),
+                rep.split('(')[1].replace(/("|'|\))/g, ''),
+              );
+              line = line.replace(rep, `require('${newFilename}')`);
+            }
+            // console.log(line)
           }
-          // console.log(line)
-        }
 
-        // console.log('matched', matches)
+          // console.log('matched', matches)
 
-
-        return line;
-      }).join('\n');
+          return line;
+        })
+        .join('\n');
     })();
 
     (() => {
       const stringForRegex = `require\\(("|')([a-zA-Z0-9]|\\/|\\-|\\_|\\+|\\.)*("|')\\)`;
-      Helpers.log(`[firedev-helpre][require][${jsFilePath}] stringForRegex: ${stringForRegex}`, 1);
+      Helpers.log(
+        `[firedev-helpre][require][${jsFilePath}] stringForRegex: ${stringForRegex}`,
+        1,
+      );
 
-      fileContent = fileContent.split('\n').map(line => {
-        // console.log(`LINE: "${line}"`)
-        const matches = line.match(new RegExp(stringForRegex));
-        if (matches !== null) {
-          // console.log('matched', matches)
-          const rep = _.first(matches);
-          if (rep) {
-            const relativePart = rep.split('(')[1].replace(/("|'|\))/g, '');
-            // console.log(`RELATIVE PART: "${relativePart}"`)
-            if (relativePart.search('/') !== -1 && !relativePart.startsWith('/')) {
-              const newFilename = path.join(path.dirname(jsFilePath), 'node_modules', relativePart);
-              line = line.replace(rep, `require('${newFilename}')`);
+      fileContent = fileContent
+        .split('\n')
+        .map(line => {
+          // console.log(`LINE: "${line}"`)
+          const matches = line.match(new RegExp(stringForRegex));
+          if (matches !== null) {
+            // console.log('matched', matches)
+            const rep = _.first(matches);
+            if (rep) {
+              const relativePart = rep.split('(')[1].replace(/("|'|\))/g, '');
+              // console.log(`RELATIVE PART: "${relativePart}"`)
+              if (
+                relativePart.search('/') !== -1 &&
+                !relativePart.startsWith('/')
+              ) {
+                const newFilename = path.join(
+                  path.dirname(jsFilePath),
+                  'node_modules',
+                  relativePart,
+                );
+                line = line.replace(rep, `require('${newFilename}')`);
+              }
             }
+            // console.log(line)
           }
-          // console.log(line)
-        }
 
-        // console.log('matched', matches)
+          // console.log('matched', matches)
 
-
-        return line;
-      }).join('\n');
+          return line;
+        })
+        .join('\n');
     })();
 
-
-    return eval(fileContent)
+    return eval(fileContent);
   }
 
   tryRecreateDir(dirpath: string) {
     try {
       Helpers.mkdirp(dirpath);
     } catch (error) {
-      Helpers.log(`Trying to recreate directory: ${dirpath}`)
+      Helpers.log(`Trying to recreate directory: ${dirpath}`);
       Helpers.sleep(1);
       Helpers.mkdirp(dirpath);
     }
@@ -293,7 +332,9 @@ export class HelpersFileFolders {
     source = crossPlatformPath(source);
 
     if (source === destination) {
-      Helpers.warn('[firedev-helpers] Probably error... trying to copy the same folder...')
+      Helpers.warn(
+        '[firedev-helpers] Probably error... trying to copy the same folder...',
+      );
       return;
     }
 
@@ -306,16 +347,20 @@ export class HelpersFileFolders {
       const destMaybe = destination.replace(/\/$/, '');
       const stats = fse.lstatSync(destMaybe);
       const isNotDirectory = !stats.isDirectory();
-      const isSymbolicLink = stats.isSymbolicLink()
+      const isSymbolicLink = stats.isSymbolicLink();
       if (isNotDirectory || isSymbolicLink) {
         rimraf.sync(destMaybe);
       }
     }
-    options = _.merge({
-      overwrite: true,
-      recursive: true,
-    }, options);
-    if (process.platform === 'win32') { // TODO QUICK_FIX
+    options = _.merge(
+      {
+        overwrite: true,
+        recursive: true,
+      },
+      options,
+    );
+    if (process.platform === 'win32') {
+      // TODO QUICK_FIX
       options['dereference'] = true;
     }
 
@@ -326,7 +371,6 @@ export class HelpersFileFolders {
       fse.copySync(source, destination, options);
     }
   }
-
 
   // private deleteFolderRecursive = (pathToFolder) => {
   //   if (fs.existsSync(pathToFolder)) {
@@ -344,15 +388,15 @@ export class HelpersFileFolders {
 
   move(from: string, to: string) {
     if (!fse.existsSync(from)) {
-      Helpers.warn(`[move] File or folder doesnt not exists: ${from}`)
+      Helpers.warn(`[move] File or folder doesnt not exists: ${from}`);
       return;
     }
     if (!path.isAbsolute(from)) {
-      Helpers.warn(`[move] Source path is not absolute: ${from}`)
+      Helpers.warn(`[move] Source path is not absolute: ${from}`);
       return;
     }
     if (!path.isAbsolute(to)) {
-      Helpers.warn(`[move] Destination path is not absolute: ${to}`)
+      Helpers.warn(`[move] Destination path is not absolute: ${to}`);
       return;
     }
 
@@ -383,12 +427,12 @@ export class HelpersFileFolders {
     while (true) {
       try {
         fse.moveSync(from, to, {
-          overwrite: true
+          overwrite: true,
         });
         break;
       } catch (error) {
         if (global['tnpNonInteractive']) {
-          console.log(error)
+          console.log(error);
           Helpers.error(`[${config.frameworkName}-helpers] Not able to move files
 
 from: ${from}
@@ -402,43 +446,64 @@ to: ${to}
 from: ${from}
 to: ${to}
 
-        `)
+        `);
         Helpers.pressKeyAndContinue('Press any to try again this action');
       }
     }
-
   }
 
-
-  findChildren<T>(location, createFn: (childLocation: string) => T, options?: { allowAllNames: boolean; }): T[] {
+  findChildren<T>(
+    location,
+    createFn: (childLocation: string) => T,
+    options?: { allowAllNames: boolean },
+  ): T[] {
     const { allowAllNames } = options || {};
     let folders = Helpers.values(config.folder);
-    folders = folders.filter(f => ![
-      config.folder.shared,
-      // @LAST add something more here ?
-    ].includes(f));
+    folders = folders.filter(
+      f =>
+        ![
+          config.folder.shared,
+          // @LAST add something more here ?
+        ].includes(f),
+    );
 
     const notAllowed: RegExp[] = [
-      '.vscode', 'node_modules',
-      ...(allowAllNames ? [] : [
-        ...folders,
-        'e2e', 'tmp.*', 'dist.*', 'tests', 'module', 'browser', 'bundle*',
-        'components', '.git', 'bin', 'custom'
-      ])
-    ].filter(f => {
-      return ![config.folder.external].includes(f) && _.isString(f);
-    }).map(s => new RegExp(`^${Helpers.escapeStringForRegEx(s)}$`))
-
-    const isDirectory = source => fse.lstatSync(source).isDirectory()
-    const getDirectories = source =>
-      fse.readdirSync(source).map(name => path.join(source, name)).filter(isDirectory)
-
-    let subdirectories = getDirectories(location)
+      '.vscode',
+      'node_modules',
+      ...(allowAllNames
+        ? []
+        : [
+            ...folders,
+            'e2e',
+            'tmp.*',
+            'dist.*',
+            'tests',
+            'module',
+            'browser',
+            'bundle*',
+            'components',
+            '.git',
+            'bin',
+            'custom',
+          ]),
+    ]
       .filter(f => {
-        const folderNam = path.basename(f);
-        const allowed = (notAllowed.filter(p => p.test(folderNam)).length === 0);
-        return allowed;
+        return ![config.folder.external].includes(f) && _.isString(f);
       })
+      .map(s => new RegExp(`^${Helpers.escapeStringForRegEx(s)}$`));
+
+    const isDirectory = source => fse.lstatSync(source).isDirectory();
+    const getDirectories = source =>
+      fse
+        .readdirSync(source)
+        .map(name => path.join(source, name))
+        .filter(isDirectory);
+
+    let subdirectories = getDirectories(location).filter(f => {
+      const folderNam = path.basename(f);
+      const allowed = notAllowed.filter(p => p.test(folderNam)).length === 0;
+      return allowed;
+    });
     // console.log(subdirectories)
 
     return subdirectories
@@ -446,7 +511,7 @@ to: ${to}
         // console.log('child:', dir)
         return createFn(dir);
       })
-      .filter(c => !!c)
+      .filter(c => !!c);
   }
 
   /**
@@ -454,29 +519,41 @@ to: ${to}
    */
   findChildrenNavi<T>(location, createFn: (childLocation: string) => T): T[] {
     if (!fse.existsSync(location)) {
-      return []
+      return [];
     }
 
     const notAllowed: RegExp[] = [
-      '\.vscode', 'node\_modules',
+      '.vscode',
+      'node_modules',
       ...Helpers.values(config.folder),
-      'e2e', 'tmp.*', 'dist.*', 'tests',
-      'module', 'browser', 'bundle*',
-      'components', '\.git', '\.build', 'bin', 'custom'
-    ].map(s => new RegExp(s))
+      'e2e',
+      'tmp.*',
+      'dist.*',
+      'tests',
+      'module',
+      'browser',
+      'bundle*',
+      'components',
+      '.git',
+      '.build',
+      'bin',
+      'custom',
+    ].map(s => new RegExp(s));
 
-    const isDirectory = source => fse.lstatSync(source).isDirectory()
+    const isDirectory = source => fse.lstatSync(source).isDirectory();
     const getDirectories = source =>
-      fse.readdirSync(source).map(name => path.join(source, name)).filter(isDirectory)
+      fse
+        .readdirSync(source)
+        .map(name => path.join(source, name))
+        .filter(isDirectory);
 
-    let subdirectories = getDirectories(location)
-      .filter(f => {
-        const folderName = path.basename(f);
-        if (/.*es\-.*/.test(folderName)) {
-          return true
-        }
-        return (notAllowed.filter(p => p.test(folderName)).length === 0);
-      })
+    let subdirectories = getDirectories(location).filter(f => {
+      const folderName = path.basename(f);
+      if (/.*es\-.*/.test(folderName)) {
+        return true;
+      }
+      return notAllowed.filter(p => p.test(folderName)).length === 0;
+    });
 
     return subdirectories
       .map(dir => {
@@ -488,12 +565,14 @@ to: ${to}
   getRecrusiveFilesFrom(
     dir: string,
     ommitFolders: string[] = [],
-    options?: GetRecrusiveFilesFromOptions
+    options?: GetRecrusiveFilesFromOptions,
   ): string[] {
     options = options ? options : {};
     // const withNameOnly = options.withNameOnly;
     let files = [];
-    const readedFilesAndFolders = fse.existsSync(dir) ? fse.readdirSync(dir) : [];
+    const readedFilesAndFolders = fse.existsSync(dir)
+      ? fse.readdirSync(dir)
+      : [];
     const readed = readedFilesAndFolders
       .map(f => {
         const fullPath = path.join(dir, f);
@@ -505,28 +584,41 @@ to: ${to}
           ) {
             // Helpers.log(`Omitting: ${fullPath}`)
           } else {
-            Helpers
-              .getRecrusiveFilesFrom(fullPath, ommitFolders, options)
-              .forEach(aa => files.push(aa))
+            Helpers.getRecrusiveFilesFrom(
+              fullPath,
+              ommitFolders,
+              options,
+            ).forEach(aa => files.push(aa));
           }
           return;
         }
         return fullPath;
       })
-      .filter(f => !!f)
+      .filter(f => !!f);
     if (Array.isArray(readed)) {
-      readed.forEach(r => files.push(r))
+      readed.forEach(r => files.push(r));
     }
     return files;
   }
 
   checkIfNameAllowedForFiredevProj(folderName: string) {
     const notAllowed: RegExp[] = [
-      '^\.vscode$', '^node\_modules$',
+      '^.vscode$',
+      '^node_modules$',
       ...Helpers.values(config.tempFolders).map(v => `^${v}$`),
-      '^e2e$', '^tmp.*', '^dist.*', '^tests$', '^module$', '^browser', 'bundle*',
-      '^components$', '\.git', '^bin$', '^custom$', '^linked\-repos$',
-    ].map(s => new RegExp(s))
+      '^e2e$',
+      '^tmp.*',
+      '^dist.*',
+      '^tests$',
+      '^module$',
+      '^browser',
+      'bundle*',
+      '^components$',
+      '.git',
+      '^bin$',
+      '^custom$',
+      '^linked-repos$',
+    ].map(s => new RegExp(s));
 
     return notAllowed.filter(p => p.test(folderName)).length === 0;
   }
@@ -561,10 +653,8 @@ to: ${to}
       stream.on('end', function () {
         resolve(lines);
       });
-    })
-
-  };
-
+    });
+  }
 
   /**
    * Get the most recent changes file in direcory
@@ -574,50 +664,53 @@ to: ${to}
     let files = Helpers.getRecrusiveFilesFrom(dir);
 
     // use underscore for max()
-    return underscore.max(files, (f) => { // TODO refactor to lodash
+    return underscore.max(files, f => {
+      // TODO refactor to lodash
       // console.log(f);
       // ctime = creation time is used
       // replace with mtime for modification time
       // console.log( `${fse.statSync(f).mtimeMs} for ${f}`   )
       return fse.statSync(f).mtimeMs;
-
     });
   }
 
   getMostRecentFilesNames(dir): string[] {
-
     const allFiles = Helpers.getRecrusiveFilesFrom(dir);
     const mrf = Helpers.getMostRecentFileName(dir);
     const mfrMtime = fse.lstatSync(mrf).mtimeMs;
 
     return allFiles.filter(f => {
       const info = fse.lstatSync(f);
-      return (info.mtimeMs === mfrMtime && !info.isDirectory())
+      return info.mtimeMs === mfrMtime && !info.isDirectory();
     });
   }
 
   removeExcept(fromPath: string, exceptFolderAndFiles: string[]) {
-    fse.readdirSync(fromPath)
+    fse
+      .readdirSync(fromPath)
       .filter(f => {
-        return !exceptFolderAndFiles.includes(f)
+        return !exceptFolderAndFiles.includes(f);
       })
       .map(f => path.join(fromPath, f))
       .forEach(af => Helpers.removeFolderIfExists(af));
 
-    (glob.sync(`${fromPath}/*.*`))
+    glob
+      .sync(`${fromPath}/*.*`)
       .filter(f => {
-        return !exceptFolderAndFiles.includes(path.basename(f))
+        return !exceptFolderAndFiles.includes(path.basename(f));
       })
       .forEach(af => Helpers.removeFileIfExists(af));
   }
 
-  copy(sourceDir: string, destinationDir: string, options?:
-    {
+  copy(
+    sourceDir: string,
+    destinationDir: string,
+    options?: {
       filter?: any;
       overwrite?: boolean;
       recursive?: boolean;
-      asSeparatedFiles?: boolean,
-      asSeparatedFilesAllowNotCopied?: boolean,
+      asSeparatedFiles?: boolean;
+      asSeparatedFilesAllowNotCopied?: boolean;
       asSeparatedFilesSymlinkAsFile?: boolean;
       /**
        * folders to omit: example: ['src','node_modules']
@@ -633,26 +726,31 @@ to: ${to}
       copySymlinksAsFilesDeleteUnexistedLinksFromSourceFirst?: boolean;
       useTempFolder?: boolean;
       dontAskOnError?: boolean;
-    } & fse.CopyOptionsSync) {
-
-    Helpers.log(`Copying from:
+    } & fse.CopyOptionsSync,
+  ) {
+    Helpers.log(
+      `Copying from:
 
     ${sourceDir}
     to
     ${destinationDir}
 
-    `, 1);
+    `,
+      1,
+    );
     Helpers.log(options, 1);
 
     // sourceDir = sourceDir ? (sourceDir.replace(/\/$/, '')) : sourceDir;
     // destinationDir = destinationDir ? (destinationDir.replace(/\/$/, '')) : destinationDir;
     if (!fse.existsSync(sourceDir)) {
-      Helpers.warn(`[firedev-helper][copy] Source dir doesnt exist: ${sourceDir} for destination: ${destinationDir}`);
+      Helpers.warn(
+        `[firedev-helper][copy] Source dir doesnt exist: ${sourceDir} for destination: ${destinationDir}`,
+      );
       return;
     }
     if (!fse.existsSync(path.dirname(destinationDir))) {
       if (Helpers.isUnexistedLink(path.dirname(destinationDir))) {
-        Helpers.removeFileIfExists(path.dirname(destinationDir))
+        Helpers.removeFileIfExists(path.dirname(destinationDir));
       }
       Helpers.mkdirp(path.dirname(destinationDir));
     }
@@ -693,10 +791,17 @@ to: ${to}
     //   `);
     //   return;
     // }
-    if (_.isArray(options.omitFolders) && options.omitFolders.length >= 1
-      && _.isNil(options.filter) && _.isString(options.omitFoldersBaseFolder)
-      && path.isAbsolute(options.omitFoldersBaseFolder)) {
-      options.filter = Helpers.filterDontCopy(options.omitFolders, options.omitFoldersBaseFolder);
+    if (
+      _.isArray(options.omitFolders) &&
+      options.omitFolders.length >= 1 &&
+      _.isNil(options.filter) &&
+      _.isString(options.omitFoldersBaseFolder) &&
+      path.isAbsolute(options.omitFoldersBaseFolder)
+    ) {
+      options.filter = Helpers.filterDontCopy(
+        options.omitFolders,
+        options.omitFoldersBaseFolder,
+      );
     }
 
     if (options.copySymlinksAsFilesDeleteUnexistedLinksFromSourceFirst) {
@@ -709,7 +814,10 @@ to: ${to}
       }
     }
 
-    if (sourceDir === destinationDir || path.resolve(sourceDir) === path.resolve(destinationDir)) {
+    if (
+      sourceDir === destinationDir ||
+      path.resolve(sourceDir) === path.resolve(destinationDir)
+    ) {
       Helpers.warn(`[firedev-helper][copy] Trying to copy same source and destination
       from: ${sourceDir}
       to: ${destinationDir}
@@ -728,27 +836,30 @@ to: ${to}
         fse.copySync(tempDestination, destinationDir, options);
       } else {
         if (
-          (sourceDir === path.resolve(sourceDir))
-          && Helpers.isExistedSymlink(sourceDir)
-          && !Helpers.exists(fse.readlinkSync(sourceDir))
+          sourceDir === path.resolve(sourceDir) &&
+          Helpers.isExistedSymlink(sourceDir) &&
+          !Helpers.exists(fse.readlinkSync(sourceDir))
         ) {
           Helpers.warn(`[firedev-helpers] Not copying empty link from: ${sourceDir}
-          `)
+          `);
         } else {
           const copyFn = () => {
             try {
-
               if (options.asSeparatedFiles) {
-                const copyRecFn = (cwdForFiles) => {
-                  const files = Helpers.getRecrusiveFilesFrom(cwdForFiles, options.omitFolders);
+                const copyRecFn = cwdForFiles => {
+                  const files = Helpers.getRecrusiveFilesFrom(
+                    cwdForFiles,
+                    options.omitFolders,
+                  );
                   for (let index = 0; index < files.length; index++) {
                     const from = files[index];
                     const to = from.replace(sourceDir, destinationDir);
 
-
                     if (Helpers.isFolder(from)) {
                       if (
-                        options.omitFolders.includes(path.basename(path.dirname(from))) ||
+                        options.omitFolders.includes(
+                          path.basename(path.dirname(from)),
+                        ) ||
                         options.omitFolders.includes(path.basename(from))
                       ) {
                         continue;
@@ -757,7 +868,10 @@ to: ${to}
                       }
                     } else {
                       const copyFileFn = () => {
-                        if (!options.asSeparatedFilesSymlinkAsFile && Helpers.isExistedSymlink(from)) {
+                        if (
+                          !options.asSeparatedFilesSymlinkAsFile &&
+                          Helpers.isExistedSymlink(from)
+                        ) {
                           Helpers.createSymLink(from, to);
                         } else {
                           Helpers.copyFile(from, to);
@@ -766,33 +880,37 @@ to: ${to}
                       if (options.asSeparatedFilesAllowNotCopied) {
                         try {
                           copyFileFn();
-                        } catch (e) { }
+                        } catch (e) {}
                       } else {
                         copyFileFn();
                       }
                     }
                   }
-                }
+                };
                 copyRecFn(sourceDir);
               } else {
                 fse.copySync(sourceDir, destinationDir, options);
               }
             } catch (error) {
               const exitOnError = global['tnpNonInteractive'];
-              Helpers.log(error)
+              Helpers.log(error);
               if (!options!.dontAskOnError) {
-                Helpers.error(`[firedev-helper] Not able to copy folder:
+                Helpers.error(
+                  `[firedev-helper] Not able to copy folder:
                 from: ${crossPlatformPath(sourceDir)}
                 to: ${crossPlatformPath(destinationDir)}
                 options: ${json5.stringify(options)}
                 error: ${error?.message}
-                `, !exitOnError);
+                `,
+                  !exitOnError,
+                );
 
-                Helpers.pressKeyAndContinue(`Press any key to repeat copy action...`);
+                Helpers.pressKeyAndContinue(
+                  `Press any key to repeat copy action...`,
+                );
               }
               copyFn();
             }
-
           };
           if (process.platform === 'win32') {
             while (true) {
@@ -800,7 +918,7 @@ to: ${to}
                 copyFn();
                 break;
               } catch (error) {
-                Helpers.warn(`WARNING not able to copy .. trying again`)
+                Helpers.warn(`WARNING not able to copy .. trying again`);
                 Helpers.sleep(1);
                 continue;
               }
@@ -808,71 +926,78 @@ to: ${to}
           } else {
             copyFn();
           }
-
-
         }
       }
-
 
       // } catch (error) {
       //   console.trace(error);
       //   process.exit(0)
       // }
-
     }
   }
 
-
   filterDontCopy(basePathFoldersTosSkip: string[], projectOrBasepath: string) {
-
     return (src: string, dest: string) => {
       // console.log('src', src)
       src = crossPlatformPath(src);
-      const baseFolder = _.first(crossPlatformPath(src)
-        .replace(crossPlatformPath(projectOrBasepath), '')
-        .replace(/^\//, '').split('/'));
+      const baseFolder = _.first(
+        crossPlatformPath(src)
+          .replace(crossPlatformPath(projectOrBasepath), '')
+          .replace(/^\//, '')
+          .split('/'),
+      );
 
       // console.log('baseFolder', baseFolder)
       if (!baseFolder || baseFolder.trim() === '') {
         return true;
       }
-      const isAllowed = _.isUndefined(basePathFoldersTosSkip
-        .find(f => baseFolder.startsWith(crossPlatformPath(f))));
+      const isAllowed = _.isUndefined(
+        basePathFoldersTosSkip.find(f =>
+          baseFolder.startsWith(crossPlatformPath(f)),
+        ),
+      );
 
       // console.log('isAllowed', isAllowed)
       return isAllowed;
     };
-
   }
 
-  filterOnlyCopy(basePathFoldersOnlyToInclude: string[], projectOrBasepath: string) {
-
+  filterOnlyCopy(
+    basePathFoldersOnlyToInclude: string[],
+    projectOrBasepath: string,
+  ) {
     return (src: string, dest: string) => {
       src = crossPlatformPath(src);
-      const baseFolder = _.first(crossPlatformPath(src)
-        .replace(crossPlatformPath(projectOrBasepath), '')
-        .replace(/^\//, '').split('/'));
+      const baseFolder = _.first(
+        crossPlatformPath(src)
+          .replace(crossPlatformPath(projectOrBasepath), '')
+          .replace(/^\//, '')
+          .split('/'),
+      );
 
       if (!baseFolder || baseFolder.trim() === '') {
         return true;
       }
-      const isAllowed = !_.isUndefined(basePathFoldersOnlyToInclude
-        .find(f => baseFolder.startsWith(crossPlatformPath(f))));
+      const isAllowed = !_.isUndefined(
+        basePathFoldersOnlyToInclude.find(f =>
+          baseFolder.startsWith(crossPlatformPath(f)),
+        ),
+      );
 
       return isAllowed;
     };
-
   }
 
-
-  copyFile(sourcePath: string, destinationPath: string,
+  copyFile(
+    sourcePath: string,
+    destinationPath: string,
     options?: {
       transformTextFn?: (input: string) => string;
       debugMode?: boolean;
       fast?: boolean;
       dontCopySameContent?: boolean;
-    }): boolean {
-
+    },
+  ): boolean {
     if (_.isUndefined(options)) {
       options = {} as any;
     }
@@ -887,39 +1012,52 @@ to: ${to}
     }
     const { debugMode, fast, transformTextFn, dontCopySameContent } = options;
     if (_.isFunction(transformTextFn) && fast) {
-      Helpers.error(`[firedev-helpers][copyFile] You cannot use  transformTextFn in fast mode`);
+      Helpers.error(
+        `[firedev-helpers][copyFile] You cannot use  transformTextFn in fast mode`,
+      );
     }
 
     if (!fse.existsSync(sourcePath)) {
-      Helpers.logWarn(`[firedev-helpers][copyFile] No able to find source of ${sourcePath}`);
+      Helpers.logWarn(
+        `[firedev-helpers][copyFile] No able to find source of ${sourcePath}`,
+      );
       return false;
     }
     if (fse.lstatSync(sourcePath).isDirectory()) {
-      Helpers.warn(`[firedev-helpers][copyFile] Trying to copy directory as file: ${sourcePath}`, false)
+      Helpers.warn(
+        `[firedev-helpers][copyFile] Trying to copy directory as file: ${sourcePath}`,
+        false,
+      );
       return false;
     }
 
     if (sourcePath === destinationPath) {
-      Helpers.warn(`[firedev-helpers][copyFile] Trying to copy same file ${sourcePath}`);
+      Helpers.warn(
+        `[firedev-helpers][copyFile] Trying to copy same file ${sourcePath}`,
+      );
       return false;
     }
     let destDirPath = path.dirname(destinationPath);
 
     if (Helpers.isFolder(destinationPath)) {
-      Helpers.removeFolderIfExists(destinationPath)
+      Helpers.removeFolderIfExists(destinationPath);
     }
 
-    if (!Helpers.isSymlinkFileExitedOrUnexisted(destDirPath) && !fse.existsSync(destDirPath)) {
+    if (
+      !Helpers.isSymlinkFileExitedOrUnexisted(destDirPath) &&
+      !fse.existsSync(destDirPath)
+    ) {
       Helpers.mkdirp(destDirPath);
     }
-
 
     //#region it is good code
     if (Helpers.isExistedSymlink(destDirPath)) {
       destDirPath = fse.realpathSync(destDirPath);
-      const newDestinationPath = crossPlatformPath(path.join(destDirPath, path.basename(destinationPath)));
+      const newDestinationPath = crossPlatformPath(
+        path.join(destDirPath, path.basename(destinationPath)),
+      );
       if (Helpers.isFolder(newDestinationPath)) {
-        Helpers.removeFolderIfExists(newDestinationPath)
+        Helpers.removeFolderIfExists(newDestinationPath);
       }
 
       destinationPath = newDestinationPath;
@@ -936,7 +1074,8 @@ to: ${to}
       }
     }
 
-    debugMode && Helpers.log(`path.extname(sourcePath) ${path.extname(sourcePath)}`);
+    debugMode &&
+      Helpers.log(`path.extname(sourcePath) ${path.extname(sourcePath)}`);
 
     if (fast || !extAllowedToReplace.includes(path.extname(sourcePath))) {
       fse.copyFileSync(sourcePath, destinationPath);
@@ -946,7 +1085,8 @@ to: ${to}
         sourceData = transformTextFn(sourceData);
       }
 
-      debugMode && Helpers.log(`
+      debugMode &&
+        Helpers.log(`
       [firedev-helpers][copyFile] Write to: ${destinationPath} file:
 ============================================================================================
 ${sourceData}
@@ -964,9 +1104,11 @@ ${sourceData}
    */
   resolve(fileOrFolderPath: string) {
     if (fileOrFolderPath.startsWith('~')) {
-      fileOrFolderPath = path.join(os.homedir(), fileOrFolderPath.replace(`~/`, ''));
+      fileOrFolderPath = path.join(
+        os.homedir(),
+        fileOrFolderPath.replace(`~/`, ''),
+      );
     }
     return path.resolve(fileOrFolderPath);
   }
-
 }
