@@ -41,6 +41,7 @@ export type CoreCommandArgOptions<PROJECT extends BaseProject> = {
    */
   argsWithParams: string;
   copyto?:  string[];
+  copytoall?: boolean;
   /**
    * args from command line (clearn from params)
    */

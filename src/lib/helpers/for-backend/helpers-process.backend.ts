@@ -204,10 +204,12 @@ export class HelpersProcess {
         footer() {
           return CLI.chalk.green('(Scroll up and down to reveal more choices)');
         },
+        result(names) {
+          return _.values(this.map(names)) || [];
+         }
       });
 
       const res = await prompt.run();
-      // console.log({ res })
       return res;
     } else {
       const res = (await inquirer.prompt({

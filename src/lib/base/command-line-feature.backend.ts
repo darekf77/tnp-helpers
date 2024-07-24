@@ -8,13 +8,23 @@ import { config } from 'tnp-config/src';
 //#endregion
 
 export abstract class CommandLineFeature<
-  PARAMS extends { copyto?: string[] } = any,
+  PARAMS extends { copyto?: string[]; copytoall?: boolean } = any,
   PROJECT extends BaseProject<any, any> = BaseProject,
 > {
   /**
    * params from command line
    */
   protected params: PARAMS;
+
+  protected __transformArgsBeforeResolvingParams__(args: string[]): string[] {
+    const transformaed = args.map(a => {
+      return a
+        .replace(`--copyTo`, '--copyto')
+        .replace(`copyTo`, '--copyto')
+        .replace(`copyto`, '--copyto');
+    });
+    return transformaed;
+  }
 
   /**
    * clean args without params from command line
@@ -36,6 +46,7 @@ export abstract class CommandLineFeature<
     if (typeof this.params.copyto === 'boolean' && this.params.copyto) {
       this.params.copyto =
         await this.project.libraryBuild.selectCopytoProjects();
+      // console.log('sekeced',this.params.copyto)
     }
     const result = (this.params.copyto || [])
       .map(pathToSomething => {
@@ -65,6 +76,7 @@ export abstract class CommandLineFeature<
         // console.log(`exists: ${exists} for ${pathToSomething}`);
         return exists;
       });
+    // console.log(result);
     return result;
     //#endregion
   }
@@ -132,7 +144,11 @@ export abstract class CommandLineFeature<
       argsWithParams = argsWithParams.split(' ').slice(1).join(' ');
       this.argsWithParams = argsWithParams;
     }
-    this.params = require('minimist')(argsWithParams.split(' ')) || {};
+
+    this.params =
+      require('minimist')(
+        this.__transformArgsBeforeResolvingParams__(argsWithParams.split(' ')),
+      ) || {};
     delete this.params['_']; // TODO quickfix
     const allArgsToClear = Object.keys(this.params);
     // console.log(this.params)

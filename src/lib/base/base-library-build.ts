@@ -80,7 +80,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
           `Continue ${watch ? 'watch' : ''} build with last selected ?`,
         )
       ) {
-        selectedLibs = selected;
+        selectedLibs = selected as any;
         if (watchBuildSupported && watch) {
           skipRebuildingAllForWatch = await Helpers.consoleGui.question.yesNo(
             `Skip rebuilding all libraries for watch mode ?`,
@@ -119,7 +119,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
           `Continue build with ${selected.length} selected ?`,
         )
       ) {
-        selectedLibs = selected;
+        selectedLibs = selected as any;
         break;
       }
     }
@@ -221,12 +221,12 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     ];
 
     await this.project.npmHelpers.makeSureNodeModulesInstalled();
-    //#endregion
 
     const { selectedLibs, allLibs, skipRebuildingAllForWatch } =
       await this.selectLibraries({
         watch,
       });
+    //#endregion
 
     //#region normal build
     for (const [index, lib] of allLibs.entries()) {
@@ -239,66 +239,53 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
         `Building (${index + 1}/${allLibs.length}) ${lib.basename} (${chalk.bold(lib.name)})`,
       );
 
+      const sourceDist = this.project.pathFor([
+        config.folder.dist,
+        lib.basename,
+      ]);
+
       if (strategy === 'link') {
         //#region link dist to node_modules
-        (() => {
-          const sourceDist = this.project.pathFor([
-            config.folder.dist,
-            lib.basename,
-          ]);
-          for (const node_modules of locationsForNodeModules) {
-            const dest = crossPlatformPath([node_modules, lib.name]);
-            if (!Helpers.isSymlinkFileExitedOrUnexisted(dest)) {
-              Helpers.remove(dest);
-            }
-            // console.log('linking from ', sourceDist);
-            // console.log('linking to ', dest);
-            // Helpers.remove(dest);
-            Helpers.createSymLink(sourceDist, dest, {
-              continueWhenExistedFolderDoesntExists: true,
-            });
-          }
 
-          if (!Helpers.exists(sourceDist)) {
-            Helpers.info(`Compiling ${lib.name} ...`);
-            this.project
-              .run(
-                lib.libraryBuild.getLibraryBuildComamnd({
-                  watch: false,
-                  buildType,
-                }),
-                {
-                  output: true,
-                },
-              )
-              .sync();
-          }
-        })();
-
-        (() => {
-          const sourceDist = this.project.pathFor([
-            config.folder.dist,
-            lib.basename,
-          ]);
-          const dest = this.project.pathFor([
-            config.folder.node_modules,
-            lib.name,
-          ]);
+        for (const node_modules of locationsForNodeModules) {
+          const dest = crossPlatformPath([node_modules, lib.name]);
           if (!Helpers.isSymlinkFileExitedOrUnexisted(dest)) {
             Helpers.remove(dest);
           }
+          // console.log('linking from ', sourceDist);
+          // console.log('linking to ', dest);
+          // Helpers.remove(dest);
           Helpers.createSymLink(sourceDist, dest, {
             continueWhenExistedFolderDoesntExists: true,
           });
-        })();
+          console.log(
+            `Sync (link) done for ${lib.basename} to ${lib.name} (${crossPlatformPath(
+              [
+                path.basename(path.dirname(node_modules)),
+                config.folder.node_modules,
+              ],
+            )})`,
+          );
+        }
+
+        if (!Helpers.exists(sourceDist)) {
+          Helpers.info(`Compiling ${lib.name} ...`);
+          this.project
+            .run(
+              lib.libraryBuild.getLibraryBuildComamnd({
+                watch: false,
+                buildType,
+              }),
+              {
+                output: true,
+              },
+            )
+            .sync();
+        }
+
         //#endregion
       } else if (strategy === 'copy') {
         //#region copy dist to node_modules
-        const sourceDist = this.project.pathFor([
-          config.folder.dist,
-          lib.basename,
-        ]);
-
         if (!Helpers.exists(sourceDist)) {
           Helpers.info(`Compiling ${lib.name} ...`);
           this.project
@@ -320,8 +307,13 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
             Helpers.remove(dest);
           }
           Helpers.copy(sourceDist, dest);
+          console.log(
+            `Sync done for ${lib.basename} to ${lib.name} (${crossPlatformPath([
+              path.basename(path.dirname(node_modules)),
+              config.folder.node_modules,
+            ])})`,
+          );
         }
-
         //#endregion
       }
     }
@@ -335,6 +327,28 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
             `${lib.basename} (${chalk.bold(lib.name)})`,
         );
         await (async () => {
+          const debouncedBuild = _.debounce(() => {
+            const sourceDist = this.project.pathFor([
+              config.folder.dist,
+              lib.basename,
+            ]);
+            for (const node_modules of locationsForNodeModules) {
+              const dest = crossPlatformPath([node_modules, lib.name]);
+              if (Helpers.isSymlinkFileExitedOrUnexisted(dest)) {
+                Helpers.remove(dest);
+              }
+              Helpers.copy(sourceDist, dest);
+              // console.log({ sourceDist, dest });
+              console.log(
+                `Sync (watch) done for ${lib.basename} to ${lib.name} (${crossPlatformPath(
+                  [
+                    path.basename(path.dirname(node_modules)),
+                    config.folder.node_modules,
+                  ],
+                )})`,
+              );
+            }
+          }, 500);
           await this.project
             .run(
               lib.libraryBuild.getLibraryBuildComamnd({
@@ -351,18 +365,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
               0,
               () => {
                 if (strategy === 'copy') {
-                  const sourceDist = this.project.pathFor([
-                    config.folder.dist,
-                    lib.basename,
-                  ]);
-                  for (const node_modules of locationsForNodeModules) {
-                    const dest = crossPlatformPath([node_modules, lib.name]);
-                    if (Helpers.isSymlinkFileExitedOrUnexisted(dest)) {
-                      Helpers.remove(dest);
-                    }
-                    Helpers.copy(sourceDist, dest);
-                    console.log(`Sync done for ${lib.basename} to ${lib.name}`);
-                  }
+                  debouncedBuild();
                 }
               },
             );
