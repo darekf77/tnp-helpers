@@ -8,7 +8,7 @@ import { config } from 'tnp-config/src';
 import { crossPlatformPath } from 'tnp-core/src';
 
 export class BaseCommandLine<
-  PARAMS  = any,
+  PARAMS = any,
   PROJECT extends BaseProject<any, any> = BaseProject,
 > extends CommandLineFeature<PARAMS, PROJECT> {
   public _() {
@@ -20,8 +20,6 @@ export class BaseCommandLine<
       Helpers.error('This is not a project folder', false, true);
     }
   }
-
-
 
   //#region commands / hosts
   hosts() {
@@ -481,6 +479,24 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
   //#endregion
 
   //#region commands / push
+  async _preventPushPullFromNotCorrectBranch() {
+    const devBranch =
+      this.project.git.duringPushWarnIfProjectNotOnSpecyficDevBranch();
+    if (!!devBranch && devBranch !== this.project.git.currentBranchName) {
+      Helpers.warn(
+        `
+
+
+
+        You are not on ${devBranch} branch. Please switch to this branch and try again
+
+
+        `,
+        false,
+      );
+      Helpers.pressKeyAndContinue();
+    }
+  }
   async push(
     options: {
       force?: boolean;
@@ -491,6 +507,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
     } = {},
   ) {
     this.preventCwdIsNotProject();
+    await this._preventPushPullFromNotCorrectBranch();
     await this.project.git.pushProcess({
       ...options,
       forcePushNoQuestion: options.force,

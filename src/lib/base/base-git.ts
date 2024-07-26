@@ -519,6 +519,7 @@ export class BaseGit<
   }
   //#endregion
 
+  //#region getters & methods / get children
   /**
    * This is only for push/pull process
    *
@@ -549,6 +550,7 @@ export class BaseGit<
     ) as PROJCET[];
     return childrenRepos;
   }
+  //#endregion
 
   //#region methods & getters / push process
   async pullProcess(cloneChildren = false) {
@@ -851,4 +853,12 @@ export class BaseGit<
     //#endregion
   }
   //#endregion
+
+  /**
+   * This will prevent accidental branch change for firedev projects
+   * @returns branch name
+   */
+  duringPushWarnIfProjectNotOnSpecyficDevBranch(): string {
+    return void 0;
+  }
 }
