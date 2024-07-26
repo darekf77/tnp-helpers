@@ -1206,26 +1206,13 @@ ${cwd}
   //#endregion
 
   //#region get list of changes files from commit
-  async getChangedFiles(commitHash: string): Promise<string[]> {
-    return Helpers.commnadOutputAsString();
-    return await new Promise<string[]>((resolve, reject) => {
-      child_process.exec(
-        `git diff-tree --no-commit-id --name-only -r ${commitHash}`,
-        (error, stdout, stderr) => {
-          if (error) {
-            reject(`Error: ${error.message}`);
-            return;
-          }
-          if (stderr) {
-            reject(`Error: ${stderr}`);
-            return;
-          }
-          // Split the output by new lines to get an array of changed files
-          const changedFiles = stdout.trim().split('\n');
-          resolve(changedFiles);
-        },
-      );
-    });
+  async getChangedFiles(cwd: string, commitHash: string): Promise<string[]> {
+    const output = await Helpers.commnadOutputAsStringAsync(
+      'git diff-tree --no-commit-id --name-only -r ${commitHash}',
+      cwd,
+    );
+    const changedFiles = output.trim().split('\n');
+    return changedFiles;
   }
   //#endregion
 

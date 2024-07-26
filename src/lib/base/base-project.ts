@@ -349,14 +349,14 @@ export abstract class BaseProject<
         .join('/');
 
     const result =
-      (shortPath.includes(crossPlatformPath(this.location)) ? '' : '(..)') +
+      (shortPath.includes(crossPlatformPath(this.location)) ? '/' : '(..)') +
       this.checkAndBoldenPath(this.location)
         .split('/')
         .slice(-1 * sliceMinus)
         .join('/') +
       `(${nameFromPackageJson})`;
 
-    this.cache['genericName'] = result;
+    this.cache['genericName'] = result.replace(/\/\//g, '/');
     return this.cache['genericName'];
     //#endregion
   }
