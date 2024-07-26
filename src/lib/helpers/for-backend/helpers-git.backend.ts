@@ -180,7 +180,6 @@ export class HelpersGit {
         cwd,
         {
           biggerBuffer: true,
-          showWholeCommandNotOnlyLastLine: true,
         },
       );
 
@@ -374,7 +373,6 @@ export class HelpersGit {
       // console.log({ command, cwd })
       const branchNames = Helpers.commnadOutputAsString(command, cwd, {
         biggerBuffer: true,
-        showWholeCommandNotOnlyLastLine: true,
       });
       // console.log({ branchNames })
 
@@ -1200,12 +1198,33 @@ ${cwd}
   stagedFiles(cwd: string): string[] {
     cwd = crossPlatformPath(cwd).replace(/\/$/, '');
     const command = `git diff --name-only --cached`.trim();
-    const result =
-      Helpers.commnadOutputAsString(command, cwd, {
-        showWholeCommandNotOnlyLastLine: true,
-      }) || '';
+    const result = Helpers.commnadOutputAsString(command, cwd, {}) || '';
     return (result ? result.split('\n') : []).map(relative => {
       return crossPlatformPath([cwd, relative]);
+    });
+  }
+  //#endregion
+
+  //#region get list of changes files from commit
+  async getChangedFiles(commitHash: string): Promise<string[]> {
+    return Helpers.commnadOutputAsString();
+    return await new Promise<string[]>((resolve, reject) => {
+      child_process.exec(
+        `git diff-tree --no-commit-id --name-only -r ${commitHash}`,
+        (error, stdout, stderr) => {
+          if (error) {
+            reject(`Error: ${error.message}`);
+            return;
+          }
+          if (stderr) {
+            reject(`Error: ${stderr}`);
+            return;
+          }
+          // Split the output by new lines to get an array of changed files
+          const changedFiles = stdout.trim().split('\n');
+          resolve(changedFiles);
+        },
+      );
     });
   }
   //#endregion
@@ -1252,7 +1271,7 @@ ${cwd}
 
       if (!match) {
         Helpers.warn(
-          'The current remote URL is not in SSH format:' + currentUrl
+          'The current remote URL is not in SSH format:' + currentUrl,
         );
         return;
       }

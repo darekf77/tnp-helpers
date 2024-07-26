@@ -9,8 +9,7 @@ export class HelpersDependencies {
     Helpers.clearConsole()
     const questions = (await Helpers
       .commnadOutputAsStringAsync('/usr/libexec/java_home -V', process.cwd(), {
-        biggerBuffer: false,
-        showWholeCommandNotOnlyLastLine: true
+        biggerBuffer: false
       }))
       .split('\n')
       .map(f => crossPlatformPath(f).trim())
