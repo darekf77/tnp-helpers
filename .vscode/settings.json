@@ -106,5 +106,6 @@
   "editor.inlineSuggest.enabled": true,
   "tslint.alwaysShowRuleFailuresAsWarnings": false,
   "prettier.endOfLine": "auto",
-  "prettier.prettierPath": "./node_modules/prettier"
+  "prettier.prettierPath": "./node_modules/prettier",
+  "angular.enable-strict-mode-prompt": false
 }

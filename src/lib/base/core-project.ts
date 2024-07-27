@@ -37,6 +37,12 @@ export type CoreCommandArgOptions<PROJECT extends BaseProject> = {
    */
   firstArg: string;
   /**
+   * Not question for user ex.
+   * - automatic process of patch release
+   * - automatic deployment for default server
+   */
+  automaticProcess?: boolean;
+  /**
    * orignal args with params
    */
   argsWithParams: string;

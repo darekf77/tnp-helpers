@@ -32,6 +32,7 @@ import { BaseNpmHelpers } from './base-npm-helpers';
 import { BaseLinkedProjects } from './base-linked-projects';
 import { BaseGit } from './base-git';
 import { BaseVscodeHelpers } from './base-vscode';
+import { BaseReleaseProcess } from './base-release-process';
 //#endregion
 
 const takenPorts = [];
@@ -70,6 +71,7 @@ export abstract class BaseProject<
   public npmHelpers: BaseNpmHelpers;
   public linkedProjects: BaseLinkedProjects;
   public vsCodeHelpers: BaseVscodeHelpers;
+  public releaseProcess: BaseReleaseProcess;
   public git: BaseGit;
   //#endregion
 
@@ -106,6 +108,9 @@ export abstract class BaseProject<
     );
     this.vsCodeHelpers = new (require('./base-vscode')
       .BaseVscodeHelpers as typeof BaseVscodeHelpers)(this as any);
+
+    this.releaseProcess = new (require('./base-release-process')
+      .BaseReleaseProcess as typeof BaseReleaseProcess)(this as any);
     //#endregion
   }
   //#endregion
@@ -947,6 +952,12 @@ export abstract class BaseProject<
    * init and build() project
    */
   async build(buildOptions?: any) {
+    throw new Error('TODO IMPLEMENT');
+  }
+  //#endregion
+
+  //#region getters & methods / build
+  async release(releaseOptions?: any) {
     throw new Error('TODO IMPLEMENT');
   }
   //#endregion

@@ -480,21 +480,49 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
 
   //#region commands / push
   async _preventPushPullFromNotCorrectBranch() {
-    const devBranch =
-      this.project.git.duringPushWarnIfProjectNotOnSpecyficDevBranch();
-    if (!!devBranch && devBranch !== this.project.git.currentBranchName) {
-      Helpers.warn(
-        `
+    while (true) {
+      const devBranch =
+        this.project.git.duringPushWarnIfProjectNotOnSpecyficDevBranch();
+      if (!!devBranch && devBranch !== this.project.git.currentBranchName) {
+        Helpers.warn(
+          `
 
-
+        ${this.project.genericName}
 
         You are not on ${devBranch} branch. Please switch to this branch and try again
 
 
+
         `,
-        false,
-      );
-      Helpers.pressKeyAndContinue();
+          false,
+        );
+        const options = {
+          open: { name: 'Open in vscode' },
+          continue: { name: 'Continue (check again)' },
+          continueForce: { name: 'Continue (without checking)' },
+          exit: { name: 'Exit process' },
+        };
+        const res = await Helpers.selectChoicesAsk(
+          'What you want to do ?',
+          Object.keys(options).map(k => {
+            return { name: options[k].name, value: k };
+          }),
+        );
+        if (res === 'continue') {
+          continue;
+        }
+        if (res === 'exit') {
+          this._exit();
+        }
+        if (res === 'open') {
+          this.project.run('code . ').sync();
+          continue;
+        }
+        if (res === 'continueForce') {
+          return;
+        }
+      }
+      return;
     }
   }
   async push(

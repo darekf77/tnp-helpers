@@ -35,6 +35,50 @@ export class BaseNpmHelpers<
   }
   //#endregion
 
+  //#region methods & getters / version with patch plus one
+  get versionWithPatchPlusOne(): string {
+    const ver = this.version.split('.');
+    if (ver.length > 0) {
+      ver[ver.length - 1] = (parseInt(_.last(ver)) + 1).toString();
+    }
+    return ver.join('.');
+  }
+  //#endregion
+
+  //#region methods & getters / version with minor plus one and path zero
+  get versionWithMinorPlusOneAndPatchZero(): string {
+    const ver = this.version.split('.');
+    if (ver.length > 1) {
+      ver[1] = (parseInt(ver[1]) + 1).toString();
+      for (let index = 2; index < ver.length; index++) {
+        ver[index] = '0';
+      }
+    } else {
+      Helpers.warn(
+        `[npm-project] something went wrong with bumping minor version`,
+      );
+    }
+    return ver.join('.');
+  }
+  //#endregion
+
+  //#region methods & getters / version with major plus one and minor zero and patch zero
+  get versionWithMajorPlusOneAndMinorZeroAndPatchZero(): string {
+    const ver = this.version.split('.');
+    if (ver.length > 0) {
+      ver[0] = (parseInt(_.first(ver)) + 1).toString();
+      for (let index = 1; index < ver.length; index++) {
+        ver[index] = '0';
+      }
+    } else {
+      Helpers.warn(
+        `[npm-project] something went wrong with bumping major version`,
+      );
+    }
+    return ver.join('.');
+  }
+  //#endregion
+
   //#region methods & getters / major version
   /**
    * Major Version from package.json
@@ -359,12 +403,15 @@ export class BaseNpmHelpers<
         .map(k => `--${k} ${additionalArguments[k]}`)
         .join(' ');
     }
-    const command = `npm run ${taskName} ${additionalArguments ? ' -- ' + additionalArguments : ''}`
+    const command = `npm run ${taskName} ${
+      additionalArguments ? ' -- ' + additionalArguments : ''
+    }`;
     Helpers.info(`Starting npm task: "${command}"`);
 
-    return this.project.run(command,
-      { output: true, biggerBuffer:true },
-    );
+    return this.project.run(command, {
+      output: true,
+      biggerBuffer: true,
+    });
   }
   //#endregion
 

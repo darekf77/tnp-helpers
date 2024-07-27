@@ -26,11 +26,11 @@ export class HelpersConsoleGui {
     questionMessage: string,
     choices: { name: string; value: T }[],
     autocomplete?: boolean,
-  ) => {
+  ):Promise<T> => {
     if (autocomplete) {
-      return await Helpers.selectChoicesAsk(questionMessage, choices);
+      return await Helpers.selectChoicesAsk(questionMessage, choices) as T;
     }
-    return await Helpers.list(questionMessage, choices);
+    return await Helpers.list(questionMessage, choices) as T;
   };
   //#endregion
   //#endregion

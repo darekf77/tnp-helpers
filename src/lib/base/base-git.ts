@@ -317,6 +317,25 @@ export class BaseGit<
   }
   //#endregion
 
+  //#region methods & getters / get commit message by index
+  async getCommitMessageByIndex(index: number) {
+    //#region @backendFunc
+    return await Helpers.git.getCommitMessageByIndex(
+      this.project.location,
+      index,
+    );
+    //#endregion
+  }
+  //#endregion
+
+  //#region methods & getters / get commit hash by index
+  async getCommitHashByIndex(index: number) {
+    //#region @backendFunc
+    return await Helpers.git.getCommitHashByIndex(this.project.location, index);
+    //#endregion
+  }
+  //#endregion
+
   //#region methods & getters / penultimate commit hash
   penultimateCommitHash() {
     //#region @backendFunc

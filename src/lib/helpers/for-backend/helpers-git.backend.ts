@@ -1,4 +1,5 @@
 //#region imports
+import simpleGit from 'simple-git';
 import {
   _,
   path,
@@ -12,6 +13,7 @@ import { Helpers } from '../../index';
 import type { BaseProject } from '../../index';
 import { config } from 'tnp-config/src';
 import * as ini from 'ini';
+
 //#endregion
 
 export class HelpersGit {
@@ -272,6 +274,62 @@ export class HelpersGit {
     }
   }
   //#endregion
+
+  /**
+   * Get commit message by index
+   * @param cwd string
+   * @param index zero means last commit
+   */
+  async getCommitMessageByIndex(cwd: string, index: number): Promise<string> {
+    try {
+      const git = simpleGit(cwd);
+
+      // Get the list of commits with their messages
+      const log = await git.log();
+
+      // Reverse the array to handle zero-based index from the last commit
+      const commitMessages = log.all;
+
+      if (index < 0 || index >= commitMessages.length) {
+        console.warn(`[firedev-helpers][getCommitMessageByIndex] Index (${index}) out of bounds`);
+        return '';
+      }
+
+      // Return the commit message by index
+      return commitMessages[index].message;
+    } catch (error) {
+      console.error('Error:', error);
+      return '';
+    }
+  }
+
+  /**
+   * Get commit message by index
+   * @param cwd string
+   * @param index zero means last commit
+   */
+  async getCommitHashByIndex(cwd: string, index: number): Promise<string> {
+    try {
+      const git = simpleGit(cwd);
+
+      // Get the list of commits with their messages
+      const log = await git.log();
+
+      // Reverse the array to handle zero-based index from the last commit
+      const commits = log.all;
+
+      if (index < 0 || index >= commits.length) {
+        console.warn(`[firedev-helpers][getCommitMessageByIndex] Index (${index}) out of bounds`);
+        return '';
+      }
+
+      // Return the commit message by index
+      return commits[index].hash;
+    } catch (error) {
+      console.error('Error:', error);
+      return '';
+    }
+  }
 
   //#region get last commit date
   lastCommitMessage(cwd): string {
@@ -1216,6 +1274,7 @@ ${cwd}
   }
   //#endregion
 
+  //#region change remote from https to  ssh
   async changeRemoteFromHttpsToSSh(
     cwd: string,
     diffrentOriginName: string = 'origin',
@@ -1245,7 +1304,9 @@ ${cwd}
       console.error('Failed to change remote URL:', error);
     }
   }
+  //#endregion
 
+  //#region change remote from ssh to https
   async changeRemoveFromSshToHttps(
     cwd: string,
     diffrentOriginName: string = 'origin',
@@ -1275,10 +1336,13 @@ ${cwd}
       console.error('Failed to change remote URL:', error);
     }
   }
+  //#endregion
 
+  //#region unstage all files
   unstageAllFiles(cwd: string) {
     try {
       Helpers.run(`git reset HEAD -- .`, { cwd }).sync();
     } catch (error) {}
   }
+  //#endregion
 }

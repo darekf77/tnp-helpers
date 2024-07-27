@@ -29,3 +29,10 @@ export type LibrariesBuildOptions = {
   buildType: core.CoreModels.LibraryType;
   copylink_to_node_modules?: string[];
 };
+
+
+export interface ChangelogData {
+  changes: string[];
+  version: string;
+  date: string;
+}
