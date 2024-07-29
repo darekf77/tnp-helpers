@@ -5,7 +5,7 @@ import { BaseFeatureForProject } from './base-feature-for-project';
 export class BaseVscodeHelpers<
   PROJCET extends BaseProject = any,
 > extends BaseFeatureForProject {
-  get extensions(): string[] {
+  private get extensions(): string[] {
     return Helpers.uniqArray([
       //#region @backend
       'Angular.ng-template', // high cpu usage ??
@@ -73,5 +73,14 @@ export class BaseVscodeHelpers<
       'DavidAnson.vscode-markdownlint',
       //#endregion
     ]);
+  }
+
+  recreateExtensions(): void {
+    this.project.writeFile(
+      '.vscode/extensions.json',
+      JSON.stringify({
+        recommendations: this.extensions,
+      }, null, 2),
+    );
   }
 }

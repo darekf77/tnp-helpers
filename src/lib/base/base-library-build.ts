@@ -204,7 +204,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
       releaseBuild = false,
       buildType,
       copylink_to_node_modules,
-    }: LibrariesBuildOptions & { watch: boolean } = {} as any,
+    }: LibrariesBuildOptions & { watch?: boolean } = {} as any,
   ): Promise<void> {
     //#region @backend
     if (!Array.isArray(copylink_to_node_modules)) {
@@ -237,6 +237,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
         Helpers.info(
           `Skipping build for watch mode (${index + 1}/${allLibs.length}) ${lib.basename} (${chalk.bold(lib.name)})`,
         );
+        continue;
       }
       Helpers.info(
         `Building (${index + 1}/${allLibs.length}) ${lib.basename} (${chalk.bold(lib.name)})`,

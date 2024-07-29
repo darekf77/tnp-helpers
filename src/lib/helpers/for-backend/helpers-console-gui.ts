@@ -1,7 +1,6 @@
 import { _ } from 'tnp-core/src';
 import { Helpers } from '../../index';
 
-
 export class HelpersConsoleGuiQuestion {
   //#region qestion yes / no
   //#region @backend
@@ -44,11 +43,13 @@ export class HelpersConsoleGui {
     questionMessage: string,
     choices: { name: string; value: string }[],
     autocomplete?: boolean,
+    selected?: { name: string; value: string }[],
   ) => {
     return await Helpers.multipleChoicesAsk(
       questionMessage,
       choices,
       !!autocomplete,
+      selected,
     );
   };
   //#endregion

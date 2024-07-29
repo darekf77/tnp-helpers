@@ -925,24 +925,59 @@ Would you like to update current project configuration?`)
   //#endregion
 
   //#region prox ext
-  PROJ_EXT() {
+  async INSTALL_PROJECT_EXTENSIONS(): Promise<void> {
+    await this.INSTALL_PROJ_EXT();
+  }
+  async INSTALL_PROJECT_EXT(): Promise<void> {
+    await this.INSTALL_PROJ_EXT();
+  }
+  async INS_PROJ_EXT(): Promise<void> {
+    await this.INSTALL_PROJ_EXT();
+  }
+  async INSTALL_PROJ_EXT(): Promise<void> {
     this.preventCwdIsNotProject();
+    this.project.vsCodeHelpers.recreateExtensions();
     const p = this.project.pathFor('.vscode/extensions.json');
     const extensions: { recommendations: string[] } = Helpers.readJson(
       p,
       { recommendations: [] },
       true,
     );
-    for (let index = 0; index < extensions.recommendations.length; index++) {
-      const extname = extensions.recommendations[index];
+    const menuItems = extensions.recommendations.map(r => {
+      return { name: r, value: r, enabled: true, selected: true };
+    });
+
+    // console.log(
+    //   `Extensions to install: ${extensions.recommendations.join(', ')}`,
+    // );
+    let extensionsToInstall = [];
+    while (true) {
+      Helpers.clearConsole();
+      extensionsToInstall = await Helpers.consoleGui.multiselect(
+        'Select extensions to install',
+        menuItems,
+        true,
+        menuItems,
+      );
+      Helpers.info(extensionsToInstall.join(', '));
+      if (!(await Helpers.questionYesNo(`Install extensions ?`))) {
+        continue;
+      }
+      break;
+    }
+
+    for (let index = 0; index < extensionsToInstall.length; index++) {
+      const extname = extensionsToInstall[index];
       try {
         Helpers.taskStarted(`Installing: ${extname}`);
         Helpers.run(`code --install-extension ${extname}`).sync();
         Helpers.taskDone(`Installed: ${extname}`);
       } catch (error) {
         Helpers.warn(`Not able to install ${extname}`);
+        Helpers.pressKeyOrWait('Press any key to continue...');
       }
     }
+    Helpers.info('Done installing');
     this._exit();
   }
   //#endregion

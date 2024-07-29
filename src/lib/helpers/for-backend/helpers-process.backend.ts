@@ -190,6 +190,7 @@ export class HelpersProcess {
     question: string,
     choices: { name: string; value: string }[],
     autocomplete: boolean = false,
+    selected?: { name: string; value: string }[],
   ): Promise<string[]> {
     if (autocomplete) {
       // console.log({ choices })
@@ -200,6 +201,8 @@ export class HelpersProcess {
         limit: 10,
         multiple: true,
         choices,
+        initial: selected.map(s => s.name),
+        // selected,
         hint: '- Space to select. Return to submit',
         footer() {
           return CLI.chalk.green('(Scroll up and down to reveal more choices)');
@@ -216,6 +219,7 @@ export class HelpersProcess {
         type: 'checkbox',
         name: 'value',
         message: question,
+        default: selected.map(s => s.name),
         choices,
         pageSize: 10,
         loop: false,

@@ -1002,6 +1002,11 @@ export abstract class BaseProject<
   embedded project: ${proj?.linkedProjects.embeddedProject?.genericName || '< none >'}
   children (${proj?.children.length}): ${!proj || !proj.children.length ? '< none >' : ''}
 ${proj?.children.map(c => '+' + c.genericName).join('\n')}
+
+  libraries (${proj?.libraryBuild?.libraries?.length}): ${
+    !proj || !proj.libraryBuild?.libraries?.length ? '< none >' : ''
+  }
+${proj?.libraryBuild?.libraries?.map(c => '+' + c.genericName).join('\n')}
 ` +
         `
 linked porject prefix: "${this.linkedProjects.linkedProjectsPrefix}"
@@ -1010,7 +1015,7 @@ linked projects from json (${this.linkedProjects.linkedProjects?.length || 0}):
 ${(this.linkedProjects.linkedProjects || [])
   .map(c => {
     const proj = this.ins.From(this.pathFor(c.relativeClonePath));
-    return '- ' + proj ? proj.genericName : c.relativeClonePath;
+    return '- ' + proj ? proj?.genericName : c.relativeClonePath;
   })
   .join('\n')}
 
