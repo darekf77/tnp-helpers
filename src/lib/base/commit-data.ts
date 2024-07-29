@@ -89,7 +89,15 @@ export class CommitData {
         })
         .sort(({ num: a }, { num: b }) => b - a)
         .map(c => c.originalName)
-        .reverse(),
+        .reverse()
+        .filter(c => {
+          // is there is not letter in jira number skip it
+          const regexONlyNumbers = /^[0-9]+$/;
+          if (regexONlyNumbers.test(c.replace(/\-/g, ''))) {
+            return false;
+          }
+          return true;
+        }),
     );
     //#endregion
   }
@@ -208,7 +216,10 @@ export class CommitData {
   //#endregion
 
   //#region static / methods & getters / get from bramch
-  static async getFromBranch(currentBranchName: string) {
+  static async getFromBranch(
+    currentBranchName: string,
+    releaseWords: string[] = [],
+  ): Promise<CommitData> {
     //#region @backendFunc
     const typeOfCommit: TypeOfCommit = _.first(
       currentBranchName.split('/'),
@@ -222,6 +233,26 @@ export class CommitData {
       /\-/g,
       ' ',
     );
+
+    const versionRegex = new RegExp(
+      `(${releaseWords.join('|')})\\-\\d+\\-\\d+\\-\\d+\\-`,
+    );
+    const secondPartOfCurrentBranchName = _.last(currentBranchName.split('/'));
+    let resolveReleseVersionPart = versionRegex.test(
+      secondPartOfCurrentBranchName,
+    )
+      ? (
+          _.first(secondPartOfCurrentBranchName.match(versionRegex) || []) || ''
+        ).replace(/^[a-z]+\-/g, '')
+      : '';
+
+    let resolveReleseVersion = resolveReleseVersionPart
+      .replace(/\-/g, '.')
+      .replace(/\.$/g, '');
+
+    const releaseWord = _.first(
+      secondPartOfCurrentBranchName.split(resolveReleseVersionPart),
+    ).replace(/\-/g, '');
 
     const moduleNameData = this.getModuleNameFromBranch(currentBranchName);
     if (moduleNameData.commitModuleName) {
@@ -240,6 +271,28 @@ export class CommitData {
 
     messageFromBranch = messageFromBranch.trim();
 
+    const orgMessageFromBranch = messageFromBranch;
+    if (versionRegex.test(currentBranchName) && releaseWords.length > 0) {
+      var toReplaceReleaseVer1 =
+        `${releaseWord}-${resolveReleseVersionPart}`.replace(/\-/g, ' ');
+
+      messageFromBranch = messageFromBranch.replace(
+        toReplaceReleaseVer1.trim(),
+        `${releaseWord} ${resolveReleseVersion}`,
+      );
+    }
+
+    // console.log({
+    //   secondPartOfCurrentBranchName,
+    //   resolveReleseVersionPart,
+    //   releaseWord,
+    //   toReplaceReleaseVer1,
+    //   orgMessageFromBranch,
+    //   messageFromBranch,
+    //   resolveReleseVersion,
+    //   versionRegex: versionRegex.source,
+    // });
+
     const result = CommitData.from({
       message: messageFromBranch,
       typeOfCommit,
@@ -248,6 +301,7 @@ export class CommitData {
       teamID: teamIdData.teamID,
     });
 
+    //#region warning about missing sub-issue
     if (typeOfCommit === 'feature' && jiraNumbers.length === 1) {
       Helpers.info(`
 
@@ -261,6 +315,7 @@ export class CommitData {
         process.exit(0);
       }
     }
+    //#endregion
 
     return result;
     //#endregion

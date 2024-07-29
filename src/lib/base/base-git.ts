@@ -642,7 +642,7 @@ export class BaseGit<
     } = {},
   ): Promise<void> {
     //#region @backendFunc
-    const {
+    let {
       force = false,
       typeofCommit,
       skipLint,
@@ -700,6 +700,10 @@ export class BaseGit<
     //#endregion
 
     //#region lint
+    if (commitData.typeOfCommit === 'release') {
+      skipLint = true;
+    }
+    // console.log({ skipLint, typeofCommit });
     if (!skipLint) {
       while (true) {
         try {
@@ -895,6 +899,7 @@ export class BaseGit<
       } else {
         const commitDataBranch = await CommitData.getFromBranch(
           this.project.git.currentBranchName,
+          this.project.releaseProcess.getReleaseWords(),
         );
         commitData = commitDataBranch;
         // console.log({ commitDataBranch })

@@ -43,6 +43,7 @@ export class BaseReleaseProcess<
       >
     >,
   ): Promise<void> {
+    //#region @backendFunc
     while (true) {
       Helpers.clearConsole();
       this.newVersion = options?.newVersion;
@@ -72,8 +73,12 @@ export class BaseReleaseProcess<
         continue;
       }
 
+      await this.project.git.stageAllFiles();
+      await this.project.git.restoreLastVersion(config.file._gitignore);
       await this.commitAndPush();
+      break;
     }
+    //#endregion
   }
   //#endregion
 
@@ -151,6 +156,13 @@ export class BaseReleaseProcess<
   private async publishToNpm(): Promise<boolean> {
     //#region   @backendFunc
     if (!this.automaticRelease) {
+      if (
+        !(await Helpers.questionYesNo(
+          `Publish packages to npm (yes) ? ..or it's just a version bump (no)`,
+        ))
+      ) {
+        return true;
+      }
       if (
         await Helpers.questionYesNo(`Preview compiled code before publish ?`)
       ) {
@@ -336,7 +348,9 @@ export class BaseReleaseProcess<
 
     while (true) {
       Helpers.info(`New version will be: ${newVersion}`);
-      const confirm = await Helpers.questionYesNo('Do you want to continue?');
+      const confirm = await Helpers.questionYesNo(
+        'Do you want to continue? (no -> edit version manually) ',
+      );
       if (confirm) {
         break;
       } else {
@@ -431,7 +445,7 @@ export class BaseReleaseProcess<
         await this.getChangelogContentToAppend(askForEveryItem);
 
       console.log(
-        `New thing for change log:\n${chalk.gray.bold(thingsToAddToChangeLog)}`,
+        `New things for changelog.md:\n${chalk.gray.bold(thingsToAddToChangeLog)}`,
       );
 
       if (
