@@ -354,7 +354,7 @@ export class CommitData {
         .trim()}`;
     } else {
       if (this.teamID) {
-        commitMsg = `${jiras.join(' - ')} : ${(this.message || '')
+        commitMsg = `${jiras.join(' - ')} - ${(this.message || '')
           .split('\n')
           .map(c => c.replace(/\-/g, ' '))
           .join('\n-')
