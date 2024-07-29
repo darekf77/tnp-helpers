@@ -1,6 +1,12 @@
 //#region imports
 //#region @backend
-import { chalk, crossPlatformPath, fse, path } from 'tnp-core/src';
+import {
+  chalk,
+  child_process,
+  crossPlatformPath,
+  fse,
+  path,
+} from 'tnp-core/src';
 //#endregion
 import { _ } from 'tnp-core/src';
 import { Helpers } from '../index';
@@ -17,8 +23,19 @@ export class BaseNpmHelpers<
   private packageJSON: PackageJson;
   constructor(project: PROJCET) {
     super(project);
-    this.packageJSON = project.readJson(config.file.package_json);
+    this.project = project;
+    this.reloadPackageJsonInMemory();
   }
+
+  //#region methods & getters / reload package json in memory
+  /**
+   * if something else change package.json in this project
+   * and you know that you need to reload it..
+   */
+  reloadPackageJsonInMemory(): void {
+    this.packageJSON = this.project.readJson(config.file.package_json);
+  }
+  //#endregion
 
   //#region methods & getters / name
   get name(): string {
@@ -32,6 +49,27 @@ export class BaseNpmHelpers<
    */
   get version(): string {
     return this.packageJSON?.version;
+  }
+
+  set version(newVersion: string) {
+    this.packageJSON.version = newVersion;
+    this.project.writeJson(config.file.package_json, this.packageJSON);
+  }
+  //#endregion
+
+  //#region methods & getters / update dependency
+  updateDependency(packageName: string, version: string): void {
+    //#region @backendFunc
+    for (const depsName of CoreModels.PackageJsonDependencyObjArr) {
+      if (
+        this.packageJSON[depsName] &&
+        this.packageJSON[depsName][packageName]
+      ) {
+        this.packageJSON[depsName][packageName] = version;
+      }
+    }
+    this.project.writeJson(config.file.package_json, this.packageJSON);
+    //#endregion
   }
   //#endregion
 
@@ -203,21 +241,6 @@ export class BaseNpmHelpers<
       ...(packageJson.dependencies || {}),
       ...(packageJson.resolutions || {}),
     }) as any;
-  }
-  //#endregion
-
-  //#region getters & methods / check if loggin in to npm
-  checkIfLogginInToNpm() {
-    //#region @backendFunc
-    // if (!this.canBePublishToNpmRegistry) {
-    //   return;
-    // }
-    try {
-      this.project.run('npm whoami').sync();
-    } catch (e) {
-      Helpers.error(`Please login in to npm.`, false, true);
-    }
-    //#endregion
   }
   //#endregion
 
@@ -472,6 +495,114 @@ export class BaseNpmHelpers<
       //#endregion
     }
     return command;
+  }
+  //#endregion
+
+  //#region methods & getters / check if logged in to registry
+  /**
+   *
+   * @param registry without specified registr is checking npm registry
+   * @returns
+   */
+  async isLoggedInToRegistry(registry?: string): Promise<boolean> {
+    //#region @backendFunc
+    // validate registry with regex
+    if (registry && registry.match(/^(https?:\/\/)?([a-z0-9-]+\.?)+(:\d+)?$/)) {
+      throw new Error(`Invalid registry: ${registry}`);
+    }
+    return new Promise((resolve, reject) => {
+      child_process.exec(
+        registry ? `npm whoami --registry=${registry}` : 'npm whoami',
+        { cwd: this.project.location },
+        (error, stdout, stderr) => {
+          if (error) {
+            if (stderr.includes('ENEEDAUTH')) {
+              resolve(false);
+            } else {
+              reject(new Error(stderr));
+            }
+          } else {
+            resolve(true);
+          }
+        },
+      );
+    });
+    //#endregion
+  }
+  //#endregion
+
+  //#region methods & getters / login to registry
+  /**
+   * Prompt the user to log in to a specific npm registry.
+   * @param {string} [registry] - Optional npm registry URL.
+   * @returns {Promise<void>} - A promise that resolves when the login process completes.
+   */
+  async loginToRegistry(registry?: string): Promise<void> {
+    //#region @backendFunc
+    return new Promise((resolve, reject) => {
+      const command = registry
+        ? `npm login --registry=${registry}`
+        : 'npm login';
+
+      const child = child_process.exec(command, (error, stdout, stderr) => {
+        if (error) {
+          reject(new Error(stderr));
+        } else {
+          resolve();
+        }
+      });
+
+      child.stdout.pipe(process.stdout);
+      child.stderr.pipe(process.stderr);
+      process.stdin.pipe(child.stdin);
+    });
+    //#endregion
+  }
+  //#endregion
+
+  //#region methods & getters / check if logged in to npm
+  async makeSureLoggedInToNpmRegistry(registry?: string): Promise<void> {
+    //#region @backendFunc
+    while (true) {
+      let loggedIn = await this.isLoggedInToRegistry();
+      if (loggedIn) {
+        Helpers.info(`You logged in to npm registry=${registry || '< default npm>'}`);
+        break;
+      }
+      Helpers.pressKeyAndContinue(
+        `
+        NPM REGISTRY: ${!registry ? '< default public npm >' : registry}
+
+        You are not logged in to npm. Please login to npm and press any key to continue...
+
+        `,
+      );
+
+      try {
+        if (!!registry) {
+          Helpers.info(`Enter you npm credentials for registry: ${registry}`);
+        }
+        await this.loginToRegistry();
+      } catch (error) {}
+    }
+    //#endregion
+  }
+
+  /**
+   * @deprecated
+   * use makeSureLoggedInToNpmRegistry()
+   */
+  checkIfLogginInToNpm() {
+    //#region @backendFunc
+    // if (!this.canBePublishToNpmRegistry) {
+    //   return;
+    // }
+    try {
+      this.project.run('npm whoami').sync();
+    } catch (e) {
+      Helpers.error(`Please login in to npm.`, false, true);
+    }
+    //#endregion
   }
   //#endregion
 }

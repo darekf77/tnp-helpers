@@ -26,8 +26,13 @@ export type LibraryBuildCommandOptions = {
 
 export type LibrariesBuildOptions = {
   strategy?: 'link' | 'copy';
+  /**
+   * @deprecated
+   * this will be detected in future
+   */
   buildType: core.CoreModels.LibraryType;
   copylink_to_node_modules?: string[];
+  releaseBuild?: boolean;
 };
 
 

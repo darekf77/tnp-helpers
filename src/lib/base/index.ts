@@ -5,10 +5,12 @@ export * from './base-library-build';
 export * from './base-npm-helpers';
 export * from './base-linked-projects';
 export * from './base-git';
+export * from './base-release-process';
 export * from './commit-data';
 export * from './core-project';
 export * from './linked-project';
 //#region @backend
+export * from './translate';
 export * from './base-start-config.backend';
 export * from './command-line-feature.backend';
 export * from './base-command-line.backend';

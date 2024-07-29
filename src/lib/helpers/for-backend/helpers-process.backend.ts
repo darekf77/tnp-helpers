@@ -27,26 +27,8 @@ const { AutoComplete } = require('enquirer');
 import * as spawn from 'cross-spawn';
 //#endregion
 
-// TODO idea of procees someday to change
-
-/**
- * - long buffer by default
- * - easy catch output of commands
- * - wrap with try catch
- * - handle backgroud proceses
- */
-// function childExc(command: string) {
-//   return {
-//     syncExecutedValue({ displayOutput = false }): string {
-//       return '';
-//     },
-//     asycRun({ hideOutput: 'all' | 'stdout' | 'stder' }) {
-
-//     }
-//   }
-// }
-
 export class HelpersProcess {
+  //#region restart application itself
   async restartApplicationItself(nameOfApp: string) {
     Helpers.log(`Restarting ${nameOfApp}`);
     return new Promise(() => {
@@ -62,7 +44,9 @@ export class HelpersProcess {
       }, 5000);
     });
   }
+  //#endregion
 
+  //#region os is macos
   osIsMacOs(versino: 'big-sur' | 'catalina') {
     if (versino == 'big-sur') {
       return os.release().startsWith('20.');
@@ -72,14 +56,18 @@ export class HelpersProcess {
     }
     // TODO other oses
   }
+  //#endregion
 
+  //#region  generate file wrap
   generatedFileWrap(content: string) {
     return `${content}
   // [${config.frameworkName}] GENERATED CONTENT FOR BACKEND VERSION
   // [${config.frameworkName}] GENERATED CONTENT FOR BACKEND VERSION
           `.trim();
   }
+  //#endregion
 
+  //#region change cwd wrapper
   async changeCwdWrapper(
     dir: string,
     functionToExecure: Function,
@@ -92,14 +80,18 @@ export class HelpersProcess {
     Log.enableLogs();
     Helpers.changeCwd(currentCwd);
   }
+  //#endregion
 
+  //#region change cwd
   changeCwd(dir?: string) {
     if (!dir) {
       return;
     }
     Helpers.goToDir(dir);
   }
+  //#endregion
 
+  //#region go to dir
   /**
    * // TODO refactor this
    * @deprecated
@@ -131,7 +123,9 @@ export class HelpersProcess {
     }
     return true;
   }
+  //#endregion
 
+  //#region press key or wait
   async pressKeyOrWait(
     message = 'Press enter try again',
     printWaitMessages = 0,
@@ -149,7 +143,9 @@ export class HelpersProcess {
       });
     });
   }
+  //#endregion
 
+  //#region press key and continue
   /**
    * @deprecated use questions instead
    */
@@ -170,7 +166,9 @@ export class HelpersProcess {
     //   });
     // })
   }
+  //#endregion
 
+  //#region list
   async list<T = string>(
     question: string,
     choices: { name: string; value: T }[],
@@ -185,7 +183,9 @@ export class HelpersProcess {
     } as any)) as any;
     return res.value as T;
   }
+  //#endregion
 
+  //#region multiple choices ask
   async multipleChoicesAsk(
     question: string,
     choices: { name: string; value: string }[],
@@ -206,7 +206,7 @@ export class HelpersProcess {
         },
         result(names) {
           return _.values(this.map(names)) || [];
-         }
+        },
       });
 
       const res = await prompt.run();
@@ -223,13 +223,18 @@ export class HelpersProcess {
       return res.value;
     }
   }
+  //#endregion
 
+  //#region input
   async input({
     defaultValue,
     question,
+    // required, // TODO something is werid with required
   }: {
     defaultValue?: string;
     question: string;
+    // required?: boolean;
+    validate?: (value: string) => boolean;
   }): Promise<string> {
     //#region @backendFunc
     const initial = defaultValue || '';
@@ -239,17 +244,20 @@ export class HelpersProcess {
         type: 'input',
         name: 'name',
         message: question,
-        default:initial,
+        default: initial,
+        // required: _.isNil(required) ? true : required,
       });
 
       return response.name;
     } catch (error) {
-      console.error(error)
+      console.error(error);
       return void 0;
     }
     //#endregion
   }
+  //#endregion
 
+  //#region select
   /**
    * TODO wierd problem when pressing key like "i"
    */
@@ -275,7 +283,9 @@ export class HelpersProcess {
     const res = await prompt.run();
     return res;
   }
+  //#endregion
 
+  //#region autocomplete ask
   async autocompleteAsk<T = string>(
     question: string,
     choices: { name: string; value: T }[],
@@ -310,26 +320,9 @@ export class HelpersProcess {
 
     return res.command;
   }
+  //#endregion
 
-  get isWsl() {
-    if (process.platform !== 'linux') {
-      return false;
-    }
-
-    if (os.release().toLowerCase().includes('microsoft')) {
-      return true;
-    }
-
-    try {
-      return fse
-        .readFileSync('/proc/version', 'utf8')
-        .toLowerCase()
-        .includes('microsoft');
-    } catch (_) {
-      return false;
-    }
-  }
-
+  //#region get working dir of process
   getWorkingDirOfProcess(PID: number) {
     try {
       const cwd = child_process
@@ -341,7 +334,9 @@ export class HelpersProcess {
       Helpers.error(e);
     }
   }
+  //#endregion
 
+  //#region output to vscode
   outputToVScode(
     data: { label: string; option: string }[] | string,
     disableEncode = false,
@@ -355,7 +350,9 @@ export class HelpersProcess {
       console.log(encodeURIComponent(data as any));
     }
   }
+  //#endregion
 
+  //#region action wrapper
   async actionWrapper(fn: () => void, taskName: string = 'Task') {
     function currentDate() {
       return `[${dateformat(new Date(), 'dd-mm-yyyy HH:MM:ss')}]`;
@@ -366,11 +363,18 @@ export class HelpersProcess {
     Helpers.taskDone(`${currentDate()} "${taskName}" Done`);
     // global.spinner && global.spinner.stop()
   }
+  //#endregion
 
+  //#region terminal line
   terminalLine() {
     return _.times(process.stdout.columns, () => '-').join('');
   }
+  //#endregion
 
+  //#region kill all node except current process
+  /**
+   * TOOD @LAST
+   */
   async killAllNodeExceptCurrentProcess() {
     return new Promise<void>((resolve, reject) => {
       // Get the current process ID
@@ -455,7 +459,9 @@ export class HelpersProcess {
       );
     });
   }
+  //#endregion
 
+  //#region kill all node
   killAllNode() {
     Helpers.info('Killing all node processes...');
     try {
@@ -474,29 +480,9 @@ export class HelpersProcess {
     }
     Helpers.info('DONE KILL ALL NODE PROCESSES');
   }
+  //#endregion
 
-  clearConsole() {
-    Helpers.msgCacheClear();
-    console.log('\x1Bc');
-
-    // process.stdout.write('\033c\033[3J');
-    // try {
-    //   run('clear').sync()
-    // } catch (error) {
-    //   console.log('clear console not succedd')
-    // }
-  }
-
-  // process.on('uncaughtException', cleanExit)
-  // process.on('unhandledRejection', cleanExit)
-
-  // process.once('unhandledRejection', (err, aa) => {
-  //   error(`'Exiting unhandledRejection
-
-  //     Reason: ${err}
-  //     ${JSON.stringify(aa)}
-  //   `);
-  // })
+  //#region format path
   formatPath(pathToFileOrFolder: string) {
     if (!_.isString(pathToFileOrFolder)) {
       return `\n< provided path is not string: ${pathToFileOrFolder} >\n`;
@@ -537,11 +523,21 @@ ${
 }
 ${Helpers.terminalLine()}\n`;
   }
+  //#endregion
 
+  //#region prepare wathc command
+  /**
+   * @deprecated
+   */
   prepareWatchCommand(cmd) {
     return os.platform() === 'win32' ? `"${cmd}"` : `'${cmd}'`;
   }
+  //#endregion
 
+  //#region get string from
+  /**
+   * @deprecated
+   */
   getStringFrom(command: string, descriptionOfCommand?: string) {
     try {
       const res = Helpers.run(command, { output: false }).sync().toString();
@@ -553,7 +549,9 @@ ${Helpers.terminalLine()}\n`;
       return void 0;
     }
   }
+  //#endregion
 
+  //#region wait for message in stdout
   async waitForMessegeInStdout(
     proc: child_process.ChildProcess,
     message: string,
@@ -588,6 +586,5 @@ ${Helpers.terminalLine()}\n`;
       });
     });
   }
-
   //#endregion
 }

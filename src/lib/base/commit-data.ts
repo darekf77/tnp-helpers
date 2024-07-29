@@ -1,13 +1,25 @@
 import {
   _,
   //#region @backend
-  chalk
+  chalk,
   //#endregion
 } from 'tnp-core';
 import { Helpers } from '../index';
 
-export type CommonCommitMsgBranch = | 'refactor' | 'chore' | 'style' | 'docs' | 'test' | 'ci' | 'build';
-export type TypeOfCommit = 'feature' | 'bugfix' | 'performance' | CommonCommitMsgBranch;
+export type CommonCommitMsgBranch =
+  | 'refactor'
+  | 'chore'
+  | 'style'
+  | 'docs'
+  | 'test'
+  | 'ci'
+  | 'build'
+  | 'release';
+export type TypeOfCommit =
+  | 'feature'
+  | 'bugfix'
+  | 'performance'
+  | CommonCommitMsgBranch;
 export type TypeOfMsgPrefix = 'feat' | 'fix' | 'perf' | CommonCommitMsgBranch;
 const regexTeamsID: RegExp = /[A-Z0-9]+\#/;
 
@@ -15,31 +27,10 @@ const regexCommitModuleInArgs: RegExp = /\[[a-z|\-|\,]+\]/;
 const regexCommitModuleInBranch: RegExp = /\-\-[a-z|\-|\_]+\-\-/;
 
 export class CommitData {
-
-  private _message: string;
   //#region static
 
-  //#region extract jira numbers
-  /**
-   *
-   * @returns jiras (from oldest to newset)
-   */
-  private static extractAndOrderJiraNumbers(commitOrBranchName: string): string[] {
-    //#region @backendFunc
-    return (commitOrBranchName.match(/[A-Z0-9]+\-[0-9]+/g) || [])
-      .map(originalName => {
-        return { originalName, num: Number(originalName.replace(/[A-Z]+/g, '').replace(/\-+/g, '')) }
-      })
-      .sort(({ num: a }, { num: b }) => b - a)
-      .map(c => c.originalName)
-      .reverse()
-      ;
-    //#endregion
-  }
-  //#endregion
-
-  //#region clean http(s) from commit message
-  private static cleanHttpFromCommitMessage(commitMsg): string {
+  //#region static / methods & getters / clean http(s) from commit message
+  private static cleanHttpFromCommitMessage(commitMsg: string): string {
     if (!commitMsg) {
       return commitMsg;
     }
@@ -49,45 +40,132 @@ export class CommitData {
   }
   //#endregion
 
-
+  //#region static / methods & getters / get temas id from
   private static getTeamsIdFrom(commitMsg: string) {
     let teamID = _.first(commitMsg.match(regexTeamsID));
     if (teamID) {
       commitMsg = commitMsg.replace(teamID, '');
     }
     return {
-      commitMsgOrBranchName: commitMsg, teamID
+      commitMsgOrBranchName: commitMsg,
+      teamID,
     };
   }
+  //#endregion
 
-  //#region clean http(s) from commit message
+  //#region static / methods & getters / get module name from
   private static getModuleNameFrom(commitMsg: string) {
     let commitModuleName = _.first(commitMsg.match(regexCommitModuleInArgs));
     if (commitModuleName) {
       commitMsg = commitMsg.replace(commitModuleName, '');
     }
-    commitModuleName = commitModuleName?.replace(/\[/g, '').replace(/\]/g, '')
+    commitModuleName = commitModuleName?.replace(/\[/g, '').replace(/\]/g, '');
     return {
-      commitMsg, commitModuleName,
+      commitMsg,
+      commitModuleName,
     };
   }
+  //#endregion
 
+  //#region static / methods & getters / extract jira numbers
+  /**
+   *
+   * @returns jiras (from oldest to newset)
+   */
+  static extractAndOrderJiraNumbers(commitOrBranchName: string): string[] {
+    //#region @backendFunc
+    return Helpers.uniqArray(
+      (
+        _.first(commitOrBranchName.split('\n')).match(/[A-Z0-9]+\-[0-9]+/g) ||
+        []
+      )
+        .map(originalName => {
+          return {
+            originalName,
+            num: Number(
+              originalName.replace(/[A-Z]+/g, '').replace(/\-+/g, ''),
+            ),
+          };
+        })
+        .sort(({ num: a }, { num: b }) => b - a)
+        .map(c => c.originalName)
+        .reverse(),
+    );
+    //#endregion
+  }
+  //#endregion
+
+  //#region static / methods & getters / clean message from jira numbers, team id and stuff
+  static cleanMessageFromJiraNumTeamIdEtc(
+    message: string,
+    optinos?: {
+      teamID: string;
+      commitModuleName: string;
+      jiraNumbers: string[];
+    },
+  ): string {
+    message = message || '';
+    let { teamID, commitModuleName, jiraNumbers } = optinos || {};
+    teamID = teamID || this.getTeamsIdFrom(message).teamID || '';
+    commitModuleName =
+      commitModuleName ||
+      this.getModuleNameFrom(message).commitModuleName ||
+      '';
+    jiraNumbers = jiraNumbers || this.extractAndOrderJiraNumbers(message) || [];
+
+    if (!!teamID.trim()) {
+      message = message.replace(teamID.toLowerCase().replace('-', ' '), ' ');
+      message = message.replace(teamID.toUpperCase().replace('-', ' '), ' ');
+    }
+
+    for (const jira of jiraNumbers || []) {
+      message = message.replace(jira.toLowerCase().replace('-', ' '), ' ');
+      message = message.replace(jira.toUpperCase().replace('-', ' '), ' ');
+      message = message.replace(jira, ' ');
+      message = message.replace(jira.toLowerCase(), ' ');
+      message = message.replace(regexCommitModuleInArgs, ' ');
+      message = message.replace(regexCommitModuleInBranch, ' ');
+      message = message.replace(/\ \ /g, ' ');
+    }
+
+    if (!!teamID.trim()) {
+      message = message.replace(/\_/g, ' ');
+    }
+    if (!!commitModuleName.trim()) {
+      message = message.replace(commitModuleName.replace(/\-/g, ' '), ' ');
+      message = message.replace(commitModuleName.replace(/\,/g, ' '), ' ');
+      message = message.replace(commitModuleName.replace(/\,/g, '_'), ' ');
+    }
+    return message
+      .replace(/\ \ /g, ' ')
+      .replace(/\ \ /g, ' ')
+      .replace(/\ \ /g, ' ');
+  }
+
+  //#endregion
+
+  //#region static / methods & getters / get module name from branch
   private static getModuleNameFromBranch(branchName: string) {
     let commitModuleName = _.first(branchName.match(regexCommitModuleInBranch));
     if (commitModuleName) {
       branchName = branchName.replace(commitModuleName, '');
-      commitModuleName = commitModuleName?.replace(/^\-\-/, '')?.replace(/\-\-$/, '');
+      commitModuleName = commitModuleName
+        ?.replace(/^\-\-/, '')
+        ?.replace(/\-\-$/, '');
       if (commitModuleName.startsWith('-')) {
         commitModuleName = commitModuleName.replace(/^\-/, '');
       }
     }
-    commitModuleName = commitModuleName?.replace(/^\-\-/, '')?.replace(/\-\-$/, '').replace(/\_/, ',')
+    commitModuleName = commitModuleName
+      ?.replace(/^\-\-/, '')
+      ?.replace(/\-\-$/, '')
+      .replace(/\_/, ',');
 
     return { commitModuleName };
   }
   //#endregion
 
-  //#region get from args
+  //#region static / methods & getters / get from args
   static async getFromArgs(args: string[], typeOfCommit: TypeOfCommit) {
     //#region @backendFunc
     let messageFromArgs = args.join(' ');
@@ -116,7 +194,6 @@ export class CommitData {
       messageFromArgs = split.join('\n- ');
     }
 
-
     // console.log({ messageFromArgs })
 
     return CommitData.from({
@@ -124,30 +201,41 @@ export class CommitData {
       typeOfCommit,
       jiraNumbers,
       commitModuleName: moduleNameData.commitModuleName,
-      teamID: teamIdData.teamID
+      teamID: teamIdData.teamID,
     });
     //#endregion
   }
   //#endregion
 
-  //#region get from bramch
+  //#region static / methods & getters / get from bramch
   static async getFromBranch(currentBranchName: string) {
     //#region @backendFunc
-    const typeOfCommit: TypeOfCommit = _.first(currentBranchName.split('/')) as any;
+    const typeOfCommit: TypeOfCommit = _.first(
+      currentBranchName.split('/'),
+    ) as any;
     const teamIdData = this.getTeamsIdFrom(currentBranchName);
     currentBranchName = teamIdData.commitMsgOrBranchName;
 
     const jiraNumbers = this.extractAndOrderJiraNumbers(currentBranchName);
 
-    let messageFromBranch = _.last(currentBranchName.split('/')).replace(/\-/g, ' ');
+    let messageFromBranch = _.last(currentBranchName.split('/')).replace(
+      /\-/g,
+      ' ',
+    );
 
     const moduleNameData = this.getModuleNameFromBranch(currentBranchName);
     if (moduleNameData.commitModuleName) {
-      messageFromBranch = messageFromBranch.replace(moduleNameData.commitModuleName.replace(/\,/g, '_'), '');
+      messageFromBranch = messageFromBranch.replace(
+        moduleNameData.commitModuleName.replace(/\,/g, '_'),
+        '',
+      );
     }
 
     for (const jira of jiraNumbers) {
-      messageFromBranch = messageFromBranch.replace(jira.replace(/\-/g, ' '), '');
+      messageFromBranch = messageFromBranch.replace(
+        jira.replace(/\-/g, ' '),
+        '',
+      );
     }
 
     messageFromBranch = messageFromBranch.trim();
@@ -157,12 +245,10 @@ export class CommitData {
       typeOfCommit,
       jiraNumbers,
       commitModuleName: moduleNameData.commitModuleName,
-      teamID: teamIdData.teamID
+      teamID: teamIdData.teamID,
     });
 
-
     if (typeOfCommit === 'feature' && jiraNumbers.length === 1) {
-
       Helpers.info(`
 
         You current feature branch "${currentBranchName}"
@@ -170,20 +256,24 @@ export class CommitData {
 
         Proper example: feature/JIRANUM-<number-of-sub-issue>-JIRANUM-<number-of-main-issue>-commit-name
 
-          `)
+          `);
       if (!(await Helpers.questionYesNo('Continue without sub-issue?'))) {
-        process.exit(0)
+        process.exit(0);
       }
     }
-
 
     return result;
     //#endregion
   }
   //#endregion
 
-  //#region  from
-  public static from(options: Pick<CommitData, 'message' | 'jiraNumbers' | 'typeOfCommit' | 'commitModuleName' | 'teamID'>): CommitData {
+  //#region static / methods & getters / from
+  public static from(
+    options: Pick<
+      CommitData,
+      'message' | 'jiraNumbers' | 'typeOfCommit' | 'commitModuleName' | 'teamID'
+    >,
+  ): CommitData {
     options = (options ? options : {}) as any;
     // console.log(options)
     const opt = _.merge(new CommitData(), _.cloneDeep(options));
@@ -195,35 +285,30 @@ export class CommitData {
   //#endregion
 
   //#region fields
+  private _message: string;
   typeOfCommit: TypeOfCommit;
+  /**
+   * ex. JIRA-2132 or MYJIRAREFIX-234234
+   */
+  jiraNumbers: string[];
 
-  private clearMessage(message: string) {
-    if (this.teamID && _.isString(this.teamID)) {
-      message = message.replace(this.teamID.toLowerCase().replace('-', ' '), ' ');
-      message = message.replace(this.teamID.toUpperCase().replace('-', ' '), ' ');
-    }
+  readonly commitModuleName: string;
+  readonly teamID: string;
+  //#endregion
 
-    for (const jira of (this.jiraNumbers || [])) {
-      message = message.replace(jira.toLowerCase().replace('-', ' '), ' ');
-      message = message.replace(jira.toUpperCase().replace('-', ' '), ' ');
-      message = message.replace(jira, ' ');
-      message = message.replace(jira.toLowerCase(), ' ');
-      message = message.replace(regexCommitModuleInArgs, ' ');
-      message = message.replace(regexCommitModuleInBranch, ' ');
-      message = message.replace(/\ \ /g, ' ');
-    }
+  //#region methods & getters
 
-    if (this.teamID && _.isString(this.teamID)) {
-      message = message.replace(/\_/g, ' ');
-    }
-    if (this.commitModuleName) {
-      message = message.replace(this.commitModuleName.replace(/\-/g, ' '), ' ');
-      message = message.replace(this.commitModuleName.replace(/\,/g, ' '), ' ');
-      message = message.replace(this.commitModuleName.replace(/\,/g, '_'), ' ');
-    }
-    return message;
+  //#region methods & getters / clear message
+  private clearMessage(message: string): string {
+    return CommitData.cleanMessageFromJiraNumTeamIdEtc(message, {
+      teamID: this.teamID,
+      commitModuleName: this.commitModuleName,
+      jiraNumbers: this.jiraNumbers,
+    });
   }
+  //#endregion
 
+  //#region methods & getters / message
   /**
    * pure message what was done (without jira or prefixes)
    * => is included in this.commitMessage
@@ -234,15 +319,7 @@ export class CommitData {
   set message(message) {
     this._message = this.clearMessage(message);
   }
-  /**
-   * ex. JIRA-2132 or MYJIRAREFIX-234234
-   */
-  jiraNumbers: string[];
-
-  readonly commitModuleName: string;
-  readonly teamID: string;
   //#endregion
-
 
   //#region methods & getters / branch prefix
   get branchPrefix(): TypeOfMsgPrefix {
@@ -255,7 +332,7 @@ export class CommitData {
     } else if (typeOfCommit === 'performance') {
       return 'perf';
     }
-    return this.typeOfCommit as any || 'feat';
+    return (this.typeOfCommit as any) || 'feat';
     //#endregion
   }
   //#endregion
@@ -267,49 +344,84 @@ export class CommitData {
       return this.message;
     }
     const jiras = this.jiraNumbers || [];
-    let commitMsg = ''
+    let commitMsg = '';
 
-    if (this.teamID) {
-      commitMsg = `${jiras.join(' - ')} : ${(this.message || '').split('\n').map(c => c.replace(/\-/g, ' ')).join('\n-').trim()}`;
+    if (this.typeOfCommit === 'release') {
+      commitMsg = `${(this.message || '')
+        .split('\n')
+        .map(c => c.replace(/\-/g, ' '))
+        .join('\n-')
+        .trim()}`;
     } else {
-      if (this.commitModuleName) {
-        commitMsg = `${(jiras.length > 0) ? '[' + [_.first(jiras)].join(',') + '] ' : ''}${this.branchPrefix}${'(' + this.commitModuleName + ')'}:`
-          + ` ${(this.message || '').split('\n').map(c => c.replace(/\-/g, ' ')).join('\n-').trim()}`;
+      if (this.teamID) {
+        commitMsg = `${jiras.join(' - ')} : ${(this.message || '')
+          .split('\n')
+          .map(c => c.replace(/\-/g, ' '))
+          .join('\n-')
+          .trim()}`;
       } else {
-        commitMsg = `${this.branchPrefix}${(jiras.length > 0) ? '(' + [_.first(jiras)].join(',') + ')' : ''}:`
-          + ` ${(this.message || '').split('\n').map(c => c.replace(/\-/g, ' ')).join('\n-').trim()}`;
+        if (this.commitModuleName) {
+          commitMsg =
+            `${
+              jiras.length > 0 ? '[' + [_.first(jiras)].join(',') + '] ' : ''
+            }${this.branchPrefix}${'(' + this.commitModuleName + ')'}:` +
+            ` ${(this.message || '')
+              .split('\n')
+              .map(c => c.replace(/\-/g, ' '))
+              .join('\n-')
+              .trim()}`;
+        } else {
+          commitMsg =
+            `${this.branchPrefix}${
+              jiras.length > 0 ? '(' + [_.first(jiras)].join(',') + ')' : ''
+            }:` +
+            ` ${(this.message || '')
+              .split('\n')
+              .map(c => c.replace(/\-/g, ' '))
+              .join('\n-')
+              .trim()}`;
+        }
       }
     }
-
-
-
     return commitMsg.replace(': :', ': ');
 
     //#endregion
   }
   //#endregion
 
-  get branchName() {
+  //#region methods & getters / branch name
+  get branchName(): string {
     //#region @backendFunc
     const teamId = this.teamID ? `${this.teamID}` : '';
+    const jiraNumbers =
+      (this.typeOfCommit === 'release' ? [] : this.jiraNumbers) || [];
     if (teamId) {
-      return `${this.typeOfCommit || 'feature'}/${teamId}${this.jiraNumbers.map(c => c.toUpperCase()).join('-')}`
-        + `${this.jiraNumbers.length > 0 ? '-' : ''}${_.snakeCase(this.message)}`;
+      return (
+        `${this.typeOfCommit || 'feature'}/${teamId}${jiraNumbers.map(c => c.toUpperCase()).join('-')}` +
+        `${jiraNumbers.length > 0 ? '-' : ''}${_.snakeCase(this.message)}`
+      );
     }
     if (this.commitModuleName) {
-      return `${this.typeOfCommit || 'feature'}/${this.jiraNumbers.map(c => c.toUpperCase()).join('-')}`
-        + `${this.jiraNumbers.length > 0 ? '-' : ''}--${this.commitModuleName.replace(/\,/g, '_')}--${_.kebabCase(this.message)}`;
+      return (
+        `${this.typeOfCommit || 'feature'}/${jiraNumbers.map(c => c.toUpperCase()).join('-')}` +
+        `${jiraNumbers.length > 0 ? '-' : ''}--${this.commitModuleName.replace(/\,/g, '_')}--${_.kebabCase(this.message)}`
+      );
     }
-    return `${this.typeOfCommit || 'feature'}/${this.jiraNumbers.map(c => c.toUpperCase()).join('-')}`
-      + `${this.jiraNumbers.length > 0 ? '-' : ''}${_.kebabCase(this.message)}`;
+    return (
+      `${this.typeOfCommit || 'feature'}/${jiraNumbers.map(c => c.toUpperCase()).join('-')}` +
+      `${jiraNumbers.length > 0 ? '-' : ''}${_.kebabCase(this.message)}`
+    );
     //#endregion
   }
+  //#endregion
 
+  //#region methods & getters / is action commit
   get isActionCommit() {
     //#region @backendFunc
     return this.message === Helpers.git.ACTION_MSG_RESET_GIT_HARD_COMMIT;
     //#endregion
   }
+  //#endregion
 
-
+  //#endregion
 }

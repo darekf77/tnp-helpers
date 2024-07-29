@@ -1,9 +1,15 @@
 //#region imports
-import { Helpers } from 'tnp-helpers/src';
+//#region @backend
+import { translate } from './translate';
+//#endregion
+import { Helpers } from '../index';
 import { BaseFeatureForProject } from './base-feature-for-project';
 import type { BaseProject } from './base-project';
-import { CoreModels, chalk } from 'tnp-core/src';
+import { CoreModels, chalk, dateformat, _ } from 'tnp-core/src';
 import type { ChangelogData } from '.././models';
+import { CommitData } from './commit-data';
+import { config } from 'tnp-config/src';
+
 //#endregion
 
 export class BaseReleaseProcess<
@@ -17,23 +23,337 @@ export class BaseReleaseProcess<
   automaticRelease: boolean = false;
   type: CoreModels.ReleaseType;
   lastChangesSummary: string;
+  newVersion: string;
+  commitsForChangelog: {
+    commitMessages: string;
+    index: number;
+  }[] = [];
   //#endregion
+
+  getReleaseWords(): string[] {
+    return ['release'];
+  }
 
   //#region methods & getters / start release
   public async startRelease(
     options?: Partial<
-      Pick<BaseReleaseProcess<PROJCET>, 'automaticRelease' | 'type'>
+      Pick<
+        BaseReleaseProcess<PROJCET>,
+        'automaticRelease' | 'type' | 'newVersion'
+      >
     >,
   ): Promise<void> {
+    while (true) {
+      Helpers.clearConsole();
+      this.newVersion = options?.newVersion;
+      this.automaticRelease = options?.automaticRelease || false;
+      await this.resetReleaseFiles();
+      this.project.npmHelpers.reloadPackageJsonInMemory();
+      this.lastChangesSummary = await this.generateLastChangesSummary();
+      console.log(
+        `${chalk.bold.underline(`Release process for ${this.project.name}`)}:\n` +
+          (await this.lastChangesSummary),
+      );
+      this.type = await this.selectReleaseType();
+      await this.confirmNewVersion();
+      this.commitsForChangelog = await this.selectChangelogCommits();
+      await this.updateChangeLogFromCommits();
+      await this.bumpNewVersionEverywhere();
+      await this.buildAllLibraries();
+      if (!(await this.testBeforePublish())) {
+        continue;
+      }
+      if (!(await this.publishToNpm())) {
+        continue;
+      }
+
+      await this.reinstallNodeModules();
+      if (!(await this.testAfterPublish())) {
+        continue;
+      }
+
+      await this.commitAndPush();
+    }
+  }
+  //#endregion
+
+  //#region methods & getters / reinstall node modules
+  private async reinstallNodeModules(): Promise<void> {
+    Helpers.taskStarted(
+      `Reinstalling node_modules to recreate package-lock.json`,
+    );
+    this.project.npmHelpers.reinstalNodeModules();
+    Helpers.taskDone(`Reinstalling node_modules to recreate package-lock.json`);
+  }
+  //#endregion
+
+  //#region methods & getters / select changelog commits
+  async selectChangelogCommits(): Promise<
+    {
+      commitMessages: string;
+      index: number;
+    }[]
+  > {
     //#region @backendFunc
-    Helpers.clearConsole();
-    this.lastChangesSummary = await this.generateLastChangesSummary();
-    console.log(`${chalk.bold.underline(`Release process for ${this.project.name}`)}:
+    const data = await this.getCommitsUpToReleaseCommit();
+    Helpers.info(
+      `Last commits up to release commiut:\n` +
+        data.map(d => `- ${d.commitMessages}`).join('\n'),
+    );
+    const useAllCommitsForChangelog = await Helpers.questionYesNo(
+      'Use all commits for changelog ?',
+    );
 
-${await this.lastChangesSummary}
-    `);
-    this.type = await this.selectReleaseType();
+    if (useAllCommitsForChangelog) {
+      return data;
+    }
+    const choices = await Helpers.consoleGui.multiselect(
+      'Select commits to add to changelog',
+      data.map(d => {
+        return {
+          name: d.commitMessages,
+          value: d.index?.toString(),
+        };
+      }),
+    );
+    return choices.map(v => {
+      return data.find(d => d.index.toString() === v);
+    });
+    //#endregion
+  }
+  //#endregion
 
+  //#region methods & getters / get commits up to release commit
+  private async getCommitsUpToReleaseCommit(): Promise<
+    {
+      commitMessages: string;
+      index: number;
+    }[]
+  > {
+    //#region @backendFunc
+    const lastReleaseCommitData = await this.getLastReleaseCommitData();
+    // console.log({ lastReleaseCommitData });
+    if (lastReleaseCommitData.index !== -1) {
+      const commits = [];
+      for (let index = 0; index < lastReleaseCommitData.index; index++) {
+        const commitMessages =
+          await this.project.git.getCommitMessageByIndex(index);
+        commits.push({ commitMessages, index });
+      }
+      return commits;
+    }
+    return [];
+    //#endregion
+  }
+  //#endregion
+
+  //#region methods & getters / publish to npm
+  private async publishToNpm(): Promise<boolean> {
+    //#region   @backendFunc
+    if (!this.automaticRelease) {
+      if (
+        await Helpers.questionYesNo(`Preview compiled code before publish ?`)
+      ) {
+        try {
+          const editor = await this.project.ins.configDb.getCodeEditor();
+          this.project.run(`cd dist && ${editor} .`, { output: true }).sync();
+        } catch (error) {}
+
+        Helpers.pressKeyOrWait(`Press any key to continue`);
+      }
+    }
+
+    if (!(await Helpers.questionYesNo(`Publish ${this.newVersion} to npm ?`))) {
+      return false;
+    }
+    await this.project.publish();
+    return true;
+    //#endregion
+  }
+  //#endregion
+
+  //#region methods & getters / test after publish
+  private async testAfterPublish(): Promise<boolean> {
+    //#region @backendFunc
+    if (!this.automaticRelease) {
+      if (
+        await Helpers.questionYesNo(
+          `Do you want to run test after fresh install (and before release commit ?) ?`,
+        )
+      ) {
+        if (!(await this.testLibraries())) {
+          Helpers.pressKeyOrWait(
+            `Test failed.. starting release again.. press any key to continue`,
+          );
+          return false;
+        }
+      }
+    }
+    return true;
+    //#endregion
+  }
+  //#endregion
+
+  //#region methods & getters / test before publish
+  private async testBeforePublish(): Promise<boolean> {
+    //#region @backendFunc
+    if (!this.automaticRelease) {
+      if (
+        await Helpers.questionYesNo(
+          `Do you want to run test before npm publish ?`,
+        )
+      ) {
+        if (!(await this.testLibraries())) {
+          Helpers.pressKeyOrWait(
+            `Test failed.. starting release again.. press any key to continue`,
+          );
+          return false;
+        }
+      }
+    }
+    return true;
+    //#endregion
+  }
+  //#endregion
+
+  //#region methods & getters / commit and push
+  private async commitAndPush(): Promise<void> {
+    //#region @backendFunc
+    const releaseCommitMessage = this.releaseCommitTemplate();
+    const lastCommitMessage = await this.project.git.penultimateCommitMessage();
+    const jiraNumbers =
+      CommitData.extractAndOrderJiraNumbers(lastCommitMessage);
+    const args = [jiraNumbers.join(' ') + ' ' + releaseCommitMessage];
+    // console.log({ jiraNumbers, args, lastCommitMessage });
+    await this.project.git.pushProcess({
+      typeofCommit: 'release',
+      askToConfirmPush: true,
+      askToConfirmBranchChange: true,
+      askToConfirmCommit: true,
+      skipLint: true,
+      args,
+      exitCallBack: () => {
+        process.exit(1);
+      },
+    });
+    //#endregion
+  }
+  //#endregion
+
+  //#region methods & getters / release commit template
+  protected releaseCommitTemplate(): string {
+    return `Release v${this.newVersion} + changelog.md update`;
+  }
+  //#endregion
+
+  //#region methods & getters / test libraries
+  private async testLibraries(): Promise<boolean> {
+    try {
+      this.project.run('npm run test', { output: true }).sync();
+      return true;
+    } catch (error) {
+      Helpers.info(`Test failed, you can run test manually`);
+      return false;
+    }
+  }
+  //#endregion
+
+  //#region methods & getters / build all libraries
+  async buildAllLibraries() {
+    await this.project.libraryBuild.buildLibraries({
+      watch: false,
+      releaseBuild: true,
+      buildType: 'angular',
+    });
+  }
+  //#endregion
+
+  //#region methods & getters / reset release files
+  async resetReleaseFiles() {
+    //#region @backendFunc
+    this.project.git.restoreLastVersion(this.changeLogPath);
+    for (const projToBump of this.toBumpProjects) {
+      projToBump.git.restoreLastVersion(config.file.package_json);
+      projToBump.git.restoreLastVersion(config.file.package_lock_json);
+    }
+    //#endregion
+  }
+  //#endregion
+
+  //#region methods & getters / to bump projects
+  get toBumpProjects() {
+    const toBumpProjects = [
+      this.project,
+      ...this.project.libraryBuild.libraries,
+    ] as PROJCET[];
+
+    return toBumpProjects;
+  }
+  //#endregion
+
+  //#region methods & getters / bump new version everywhere
+  async bumpNewVersionEverywhere() {
+    //#region @backendFunc
+    const allLibrariesNames = this.project.libraryBuild.libraries.map(
+      l => l.name,
+    );
+
+    for (const projToBump of this.toBumpProjects) {
+      projToBump.npmHelpers.version = this.newVersion;
+      for (const libName of allLibrariesNames) {
+        projToBump.npmHelpers.updateDependency(
+          libName,
+          (this.project.location === projToBump.location ? '' : '^') +
+            this.newVersion,
+        );
+      }
+    }
+    //#endregion
+  }
+  //#endregion
+
+  //#region methods & getters / confirm release type
+  async confirmNewVersion(): Promise<void> {
+    //#region @backendFunc
+    if (this.automaticRelease) {
+      return;
+    }
+    let newVersion = this.newVersion;
+    if (!this.newVersion) {
+      newVersion = this.project.npmHelpers.versionWithPatchPlusOne;
+      if (this.type === 'minor') {
+        newVersion =
+          this.project.npmHelpers.versionWithMinorPlusOneAndPatchZero;
+      }
+      if (this.type === 'major') {
+        newVersion =
+          this.project.npmHelpers
+            .versionWithMajorPlusOneAndMinorZeroAndPatchZero;
+      }
+    }
+
+    const originalNewVersion = newVersion;
+
+    while (true) {
+      Helpers.info(`New version will be: ${newVersion}`);
+      const confirm = await Helpers.questionYesNo('Do you want to continue?');
+      if (confirm) {
+        break;
+      } else {
+        newVersion = await Helpers.consoleGui.input({
+          question: 'Provide proper new version and press enter',
+          defaultValue: originalNewVersion,
+          validate(value: string) {
+            const regexForValidationNpmVersionWithPossiblePreRelease =
+              /^(\d+\.\d+\.\d+)(\-[a-zA-Z0-9]+)?$/;
+            return regexForValidationNpmVersionWithPossiblePreRelease.test(
+              value,
+            );
+          },
+        });
+      }
+    }
+    this.newVersion = newVersion;
     //#endregion
   }
   //#endregion
@@ -67,7 +387,151 @@ ${await this.lastChangesSummary}
   }
   //#endregion
 
-  generateChangesForChangelog() {}
+  //#region methods & getters / commit message in changelog transform fn
+  protected async commitMessageInChangelogTransformFn(
+    message: string,
+  ): Promise<string> {
+    return message;
+  }
+  //#endregion
+
+  //#region methods & getters / caclulate item
+  async getChangelogContentToAppend(askForEveryItem: boolean): Promise<string> {
+    //#region @backendFunc
+    let newChangeLogContentToAdd = '';
+    for (const commit of this.commitsForChangelog) {
+      const template =
+        (await this.changelogItemTemplate(commit.index, askForEveryItem)) +
+        '\n';
+      newChangeLogContentToAdd += template;
+    }
+
+    const thingsToAddToChangeLog = `${
+      newChangeLogContentToAdd
+        ? `${this.changeLogKeyWord()} ${this.newVersion} ` +
+          `(${dateformat(new Date(), 'yyyy-mm-dd')})\n` +
+          `----------------------------------\n` +
+          `${newChangeLogContentToAdd.trim() + '\n'}\n`
+        : ''
+    }`;
+    return thingsToAddToChangeLog;
+    //#endregion
+  }
+  //#endregion
+
+  //#region methods & getters / update changelog.md from commits
+  /**
+   * TODO extend this to all commits from last release
+   */
+  async updateChangeLogFromCommits(): Promise<void> {
+    //#region @backendFunc
+    let askForEveryItem = false;
+    while (true) {
+      let thingsToAddToChangeLog =
+        await this.getChangelogContentToAppend(askForEveryItem);
+
+      console.log(
+        `New thing for change log:\n${chalk.gray.bold(thingsToAddToChangeLog)}`,
+      );
+
+      if (
+        !(await Helpers.questionYesNo(
+          'Accept this new things in changelog (if no -> edit mode) ?',
+        ))
+      ) {
+        askForEveryItem = true;
+        continue;
+      }
+
+      const changeLogNewContent =
+        thingsToAddToChangeLog + `${this.changelogContent.trim()}\n`;
+
+      this.project.writeFile(this.changeLogPath, changeLogNewContent);
+      break;
+    }
+    //#endregion
+  }
+  //#endregion
+
+  //#region methods & getters / extract changed libraries in last commit
+  async extractChangedLibrariesInCommit(
+    hashOrIndex: string | number,
+  ): Promise<string> {
+    //#region @backendFunc
+    const hash = _.isString(hashOrIndex) ? hashOrIndex : void 0;
+    const index = _.isNumber(hashOrIndex) ? hashOrIndex : void 0;
+    const useHash = !!hash;
+    const lastChanges = useHash
+      ? await this.project.git.getChangedFilesInCommitByHash(hash)
+      : await this.project.git.getChangedFilesInCommitByIndex(index);
+
+    const libraries = this.project.libraryBuild.libraries.filter(l => {
+      const libraryRelativePath = l.location.replace(
+        this.project.location + '/',
+        '',
+      );
+      return lastChanges.some(c => c.includes(libraryRelativePath));
+    });
+    return libraries.map(l => l.name).join(', ');
+    //#endregion
+  }
+  //#endregion
+
+  //#region methods & getters / change log item template
+  async changelogItemTemplate(
+    hashOrIndex: string | number,
+    confirmEveryItem: boolean = false,
+  ): Promise<string> {
+    //#region @backendFunc
+    const hash = _.isString(hashOrIndex) ? hashOrIndex : void 0;
+    const index = _.isNumber(hashOrIndex) ? hashOrIndex : void 0;
+    const useHash = !!hash;
+    const commitMessage = useHash
+      ? await this.project.git.getCommitMessageByHash(hash)
+      : await this.project.git.getCommitMessageByIndex(index);
+    const jiraNumbers = CommitData.extractAndOrderJiraNumbers(commitMessage);
+    const message = CommitData.cleanMessageFromJiraNumTeamIdEtc(commitMessage);
+    // console.log({ data, commit });
+    const extractedLibraries =
+      await this.extractChangedLibrariesInCommit(hashOrIndex);
+    const translatedMessage = _.upperFirst(
+      await this.commitMessageInChangelogTransformFn(
+        message.replace(/\-/g, '').replace(/\:/g, ''),
+      ),
+    );
+
+    let result = (
+      `* [${_.last(jiraNumbers)}] - ` +
+      `${extractedLibraries ? extractedLibraries + ' - ' : ''}` +
+      ` ${translatedMessage}`
+    )
+      .replace(/\-  \-/g, ' - ')
+      .replace(/\ \ /g, ' ');
+
+    if (confirmEveryItem) {
+      console.log(
+        `Confirm changelog new item ${chalk.gray(`(from "${commitMessage}")`)}:\n` +
+          `\n${chalk.italic(result)}\n`,
+      );
+      const itemIsOK = await Helpers.questionYesNo('Is this item OK ?');
+      if (!itemIsOK) {
+        const confirm = await Helpers.consoleGui.input({
+          question: 'Provide proper changelog item or press enter to confirm',
+          defaultValue: result,
+          // required: false,
+        });
+        result = confirm;
+      }
+    }
+
+    // replace double spaces
+    result = result.replace(/\ \ /g, ' ');
+    result = result.replace(/\ \ /g, ' ');
+    result = result.replace(/\ \ /g, ' ');
+    return result;
+    //#endregion
+  }
+  //#endregion
 
   //#region methods & getters / generate last changes summary
   async generateLastChangesSummary(): Promise<string> {
@@ -77,7 +541,7 @@ ${await this.lastChangesSummary}
       ? '< nothing release yet >'
       : lastReleaseCommitData.lastRelaseCommitMsg;
 
-    return `${chalk.bold.gray('Last changelog notest summary')}:
+    return `${chalk.bold.gray('Last changelog.md notes summary')}:
 ${await this.getLastPackageVersionChangesFromChnagelog()}
 
 ${chalk.bold.gray(
@@ -147,10 +611,14 @@ ${await this.getLastChangesFromCommits({
     while (true) {
       const commitMessage =
         await this.project.git.getCommitMessageByIndex(index);
-      const releaseWorlds = ['release', 'wydanie'];
+
       const npmVersionRegex = /\d+\.\d+\.\d+/;
       // console.log('commitMessage', { index, commitMessage });
-      if (releaseWorlds.some(r => commitMessage.toLowerCase().includes(r))) {
+      if (
+        this.getReleaseWords().some(r =>
+          commitMessage.toLowerCase().includes(r),
+        )
+      ) {
         // console.log('FOUNDED', { commitMessage });
         const match = commitMessage.match(npmVersionRegex);
         if (match) {

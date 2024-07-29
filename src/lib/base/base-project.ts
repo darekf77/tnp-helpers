@@ -572,6 +572,7 @@ export abstract class BaseProject<
     const fullPath = path.resolve(
       path.join(this.location, fileRelativeToProjectPath),
     );
+    // console.log('fullPath', fullPath);
     return Helpers.readFile(fullPath);
     //#endregion
   }
@@ -952,6 +953,15 @@ export abstract class BaseProject<
    * init and build() project
    */
   async build(buildOptions?: any) {
+    throw new Error('TODO IMPLEMENT');
+  }
+  //#endregion
+
+  //#region getters & methods / publish
+  /**
+   * publish project to npm
+   */
+  async publish(publishOptions?: any) {
     throw new Error('TODO IMPLEMENT');
   }
   //#endregion

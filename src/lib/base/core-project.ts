@@ -31,6 +31,7 @@ export type CoreCommandArgOptions<PROJECT extends BaseProject> = {
   watch?: boolean;
   prod?: boolean;
   debug?: boolean;
+  isInReleaseProcess?: boolean;
   libraryBuildOptions?: LibrariesBuildOptions;
   /**
    * first arg from command line
@@ -46,7 +47,7 @@ export type CoreCommandArgOptions<PROJECT extends BaseProject> = {
    * orignal args with params
    */
   argsWithParams: string;
-  copyto?:  string[];
+  copyto?: string[];
   copytoall?: boolean;
   /**
    * args from command line (clearn from params)
@@ -113,6 +114,7 @@ export class CoreProject<PROJECT extends BaseProject = BaseProject> {
    * second color for project (optional)
    */
   thirdColor?: string;
+  npmRegistry?: string;
   description?: string;
   /**
    * ssh url for git repo
@@ -135,11 +137,11 @@ export class CoreProject<PROJECT extends BaseProject = BaseProject> {
   //#region methods & getters
   startCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
   relaseCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
+  publishCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
   deployCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
   testCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
   buildCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
   docsCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
-
   /**
    * function to recognize project
    */
@@ -203,6 +205,7 @@ export const CoreTypescriptProject = CoreProject.from<BaseProject>({
     project.run(`npm-run tsc ${watch ? '--watch' : ''}`).sync();
     //#endregion
   },
+
   //#endregion
 });
 

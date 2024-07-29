@@ -275,12 +275,37 @@ export class HelpersGit {
   }
   //#endregion
 
+  async getCommitMessageByHash(cwd: string, hash: string): Promise<string> {
+    //#region @backendFunc
+    try {
+      const git = simpleGit(cwd);
+
+      const log = await git.log({
+        // from: hash.trim(), TODO this is not working with "to" ... very weird
+        // to: hash.trim(), // TODO this is not working with "from" ... very weird
+      });
+      if (log.total === 0) {
+        console.warn(
+          `[firedev-helpers][getCommitMessageByHash] No commit found with hash "${hash}"`,
+        );
+        return '';
+      }
+      return log.all.find(f => f.hash === hash)?.message || '';
+    } catch (error) {
+      console.error('Error getting commit message by hash:', error);
+      throw error;
+    }
+    //#endregion
+  }
+
+  //#region get commit message by index
   /**
    * Get commit message by index
    * @param cwd string
    * @param index zero means last commit
    */
   async getCommitMessageByIndex(cwd: string, index: number): Promise<string> {
+    //#region @backendFunc
     try {
       const git = simpleGit(cwd);
 
@@ -291,7 +316,9 @@ export class HelpersGit {
       const commitMessages = log.all;
 
       if (index < 0 || index >= commitMessages.length) {
-        console.warn(`[firedev-helpers][getCommitMessageByIndex] Index (${index}) out of bounds`);
+        console.warn(
+          `[firedev-helpers][getCommitMessageByIndex] Index (${index}) out of bounds`,
+        );
         return '';
       }
 
@@ -301,14 +328,18 @@ export class HelpersGit {
       console.error('Error:', error);
       return '';
     }
+    //#endregion
   }
+  //#endregion
 
+  //#region get commit hash by index
   /**
    * Get commit message by index
    * @param cwd string
    * @param index zero means last commit
    */
   async getCommitHashByIndex(cwd: string, index: number): Promise<string> {
+    //#region @backendFunc
     try {
       const git = simpleGit(cwd);
 
@@ -319,7 +350,9 @@ export class HelpersGit {
       const commits = log.all;
 
       if (index < 0 || index >= commits.length) {
-        console.warn(`[firedev-helpers][getCommitMessageByIndex] Index (${index}) out of bounds`);
+        console.warn(
+          `[firedev-helpers][getCommitMessageByIndex] Index (${index}) out of bounds`,
+        );
         return '';
       }
 
@@ -329,7 +362,9 @@ export class HelpersGit {
       console.error('Error:', error);
       return '';
     }
+    //#endregion
   }
+  //#endregion
 
   //#region get last commit date
   lastCommitMessage(cwd): string {
@@ -348,6 +383,12 @@ export class HelpersGit {
       );
       return null;
     }
+  }
+  //#endregion
+
+  //#region get penultimate commit message
+  async penultimateCommitMessage(cwd: string): Promise<string> {
+    return await this.getCommitMessageByIndex(cwd, 1);
   }
   //#endregion
 
@@ -512,7 +553,7 @@ export class HelpersGit {
   //#endregion
 
   //#region commit
-  commit(cwd: string, commitMessage?: string) {
+  commit(cwd: string, commitMessage?: string): void {
     Helpers.log('[firedev-helpers][commit] ' + cwd, 1);
     if (!_.isString(commitMessage)) {
       commitMessage = 'update';
@@ -1215,16 +1256,19 @@ ${cwd}
   //#endregion
 
   //#region restore last version
-  restoreLastVersion(cwd: string, localFilePath: string) {
+  restoreLastVersion(cwd: string, relativeFilePath: string) {
     Helpers.log('[firedev-helpers][restoreLastVersion] ' + cwd, 1);
+    if (!Helpers.exists([cwd, relativeFilePath])) {
+      return;
+    }
     try {
-      Helpers.info(
-        `[firedev-helpers][git] restoring last verion of file ${path.basename(cwd)}/${localFilePath}`,
+      Helpers.log(
+        `[firedev-helpers][git] restoring last verion of file ${path.basename(cwd)}/${relativeFilePath}`,
       );
-      Helpers.run(`git checkout -- ${localFilePath}`, { cwd }).sync();
+      Helpers.run(`git checkout -- ${relativeFilePath}`, { cwd }).sync();
     } catch (error) {
       Helpers.warn(
-        `[firedev-helpers][git] Not able to resotre last version of file ${localFilePath}`,
+        `[firedev-helpers][git] Not able to resotre last version of file ${relativeFilePath}`,
       );
     }
   }
@@ -1345,4 +1389,54 @@ ${cwd}
     } catch (error) {}
   }
   //#endregion
+
+  /**
+   * Get the list of files changed in a specific commit by its hash.
+   * @param {string} hash - The hash of the commit.
+   * @returns {Promise<string[]>} - A promise that resolves to an array of file paths.
+   */
+  async getChangedFilesInCommitByHash(
+    cwd: string,
+    hash: string,
+  ): Promise<string[]> {
+    //#region @backendFunc
+    try {
+      const git = simpleGit(cwd);
+      const diffSummary = await git.diffSummary([`${hash}^!`]);
+      return diffSummary.files.map(file => file.file);
+    } catch (error) {
+      console.error('Error getting changed files by hash:', error);
+      throw error;
+    }
+    //#endregion
+  }
+
+  /**
+   * Get the list of files changed in a specific commit by its index in the commit history.
+   * Index 0 refers to the last commit.
+   * @param {number} index - The index of the commit.
+   * @returns {Promise<string[]>} - A promise that resolves to an array of file paths.
+   */
+  async getChangedFilesInCommitByIndex(
+    cwd: string,
+    index: number,
+  ): Promise<string[]> {
+    //#region @backendFunc
+    try {
+      const git = simpleGit(cwd);
+      const log = await git.log();
+      if (index >= log.total) {
+        console.warn(
+          '[firedev-helpers][getChangedFilesInCommitByIndex] Index out of range',
+        );
+        return [];
+      }
+      const hash = log.all[index].hash;
+      return this.getChangedFilesInCommitByHash(cwd, hash);
+    } catch (error) {
+      console.error('Error getting changed files by index:', error);
+      throw error;
+    }
+    //#endregion
+  }
 }

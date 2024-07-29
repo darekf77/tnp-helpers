@@ -54,9 +54,9 @@ export class BaseGit<
   //#endregion
 
   //#region methods & getters / restore last version
-  restoreLastVersion(localFilePath: string) {
+  restoreLastVersion(relativeFilePath: string): void {
     //#region @backendFunc
-    return Helpers.git.restoreLastVersion(this.project.location, localFilePath);
+    Helpers.git.restoreLastVersion(this.project.location, relativeFilePath);
     //#endregion
   }
   //#endregion
@@ -134,7 +134,7 @@ export class BaseGit<
   //#endregion
 
   //#region methods & getters / commit
-  commit(commitMessage?: string) {
+  commit(commitMessage?: string): void {
     //#region @backendFunc
     return Helpers.git.commit(this.project.location, commitMessage);
     //#endregion
@@ -310,9 +310,17 @@ export class BaseGit<
   //#endregion
 
   //#region methods & getters / last commit message
-  lastCommitMessage() {
+  lastCommitMessage(): string {
     //#region @backendFunc
     return Helpers.git.lastCommitMessage(this.project.location);
+    //#endregion
+  }
+  //#endregion
+
+  //#region methods & getters / last commit message
+  async penultimateCommitMessage(): Promise<string> {
+    //#region @backendFunc
+    return await Helpers.git.penultimateCommitMessage(this.project.location);
     //#endregion
   }
   //#endregion
@@ -323,6 +331,17 @@ export class BaseGit<
     return await Helpers.git.getCommitMessageByIndex(
       this.project.location,
       index,
+    );
+    //#endregion
+  }
+  //#endregion
+
+  //#region methods & getters / get commit message by hash
+  async getCommitMessageByHash(hash: string) {
+    //#region @backendFunc
+    return await Helpers.git.getCommitMessageByHash(
+      this.project.location,
+      hash,
     );
     //#endregion
   }
@@ -609,6 +628,10 @@ export class BaseGit<
     options: {
       force?: boolean;
       typeofCommit?: TypeOfCommit;
+      askToConfirmPush?: boolean;
+      askToConfirmCommit?: boolean;
+      skipLint?: boolean;
+      askToConfirmBranchChange?: boolean;
       origin?: string;
       args?: string[];
       setOrigin?: 'ssh' | 'http';
@@ -617,14 +640,18 @@ export class BaseGit<
       commitMessageRequired?: boolean;
       skipChildren?: boolean;
     } = {},
-  ) {
+  ): Promise<void> {
     //#region @backendFunc
     const {
       force = false,
       typeofCommit,
+      skipLint,
       forcePushNoQuestion,
       origin = 'origin',
       exitCallBack,
+      askToConfirmPush,
+      askToConfirmCommit,
+      askToConfirmBranchChange,
       args = [],
       commitMessageRequired,
       skipChildren,
@@ -632,11 +659,14 @@ export class BaseGit<
     } = options;
 
     await this._beforePushProcessAction();
+
+    //#region set proper origin
     if (setOrigin === 'ssh') {
       Helpers.git.changeRemoteFromHttpsToSSh(this.project.location);
     } else if (setOrigin === 'http') {
       Helpers.git.changeRemoveFromSshToHttps(this.project.location);
     }
+    //#endregion
 
     await this.project.linkedProjects.saveLocationToDB();
     const commitData = await this._getCommitMessage(
@@ -645,6 +675,7 @@ export class BaseGit<
       commitMessageRequired,
     );
 
+    //#region automatic push to git
     if (!this.automaticallyAddAllChnagesWhenPushingToGit()) {
       if (
         commitData.commitMessage
@@ -666,22 +697,27 @@ export class BaseGit<
         );
       }
     }
+    //#endregion
 
-    while (true) {
-      try {
-        await this.project.lint();
-        break;
-      } catch (error) {
-        Helpers.warn('Fix your code...');
-        if (
-          !(await Helpers.consoleGui.question.yesNo(
-            'Try again lint before commit ?',
-          ))
-        ) {
+    //#region lint
+    if (!skipLint) {
+      while (true) {
+        try {
+          await this.project.lint();
           break;
+        } catch (error) {
+          Helpers.warn('Fix your code...');
+          if (
+            !(await Helpers.consoleGui.question.yesNo(
+              'Try again lint before commit ?',
+            ))
+          ) {
+            break;
+          }
         }
       }
     }
+    //#endregion
 
     if (!commitData.isActionCommit) {
       Helpers.info(`
@@ -692,7 +728,7 @@ export class BaseGit<
       - message to include {${commitData.commitMessage}}
       ${
         this.useGitBranchesAsMetadataForCommits()
-          ? `- branch to checkout ${commitData.branchName}`
+          ? `- branch to checkout {${commitData.branchName}}`
           : '- using current branch'
       }
       `);
@@ -722,6 +758,12 @@ export class BaseGit<
       if (
         this.project.git.currentBranchName?.trim() !== commitData.branchName
       ) {
+        if (askToConfirmBranchChange) {
+          Helpers.info(`Changing branch to: ${commitData.branchName}`);
+          if (!(await Helpers.questionYesNo('Confirm branch change ?'))) {
+            exitCallBack();
+          }
+        }
         try {
           this.project.git.checkout(commitData.branchName, {
             createBranchIfNotExists: true,
@@ -732,10 +774,22 @@ export class BaseGit<
       }
     }
 
+    if (askToConfirmCommit) {
+      Helpers.info(`Commit message: ${commitData.commitMessage}`);
+      if (!(await Helpers.questionYesNo('Confirm commit ?'))) {
+        exitCallBack();
+      }
+    }
     try {
       this.project.git.commit(commitData.commitMessage);
     } catch (error) {
       Helpers.warn(`Not commiting anything... `);
+    }
+
+    if (askToConfirmPush) {
+      if (!(await Helpers.questionYesNo('Confirm push ?'))) {
+        exitCallBack();
+      }
     }
 
     await this.project.git.pushCurrentBranch({
@@ -863,7 +917,7 @@ export class BaseGit<
       const { from, to } = this.transalteGitCommitFromArgs();
       if (from && to) {
         commitData.message = _.kebabCase(
-          await translate(commitData.message, { from, to }),
+          await translate(commitData.message, { from, to } as any),
         );
       }
     }
@@ -879,5 +933,26 @@ export class BaseGit<
    */
   duringPushWarnIfProjectNotOnSpecyficDevBranch(): string {
     return void 0;
+  }
+
+  async getChangedFilesInCommitByHash(hash: string) {
+    //#region @backendFunc
+    return Helpers.git.getChangedFilesInCommitByHash(
+      this.project.location,
+      hash,
+    );
+    //#endregion
+  }
+
+  /**
+   * @param index 0 - means last commit
+   */
+  async getChangedFilesInCommitByIndex(index: number) {
+    //#region @backendFunc
+    return Helpers.git.getChangedFilesInCommitByIndex(
+      this.project.location,
+      index,
+    );
+    //#endregion
   }
 }

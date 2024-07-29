@@ -1,11 +1,14 @@
 import { _ } from 'tnp-core/src';
 import { Helpers } from '../../index';
 
+
 export class HelpersConsoleGuiQuestion {
+  //#region qestion yes / no
   //#region @backend
   async yesNo(questionMessage: string) {
     return await Helpers.questionYesNo(questionMessage);
   }
+  //#endregion
   //#endregion
 }
 
@@ -26,11 +29,11 @@ export class HelpersConsoleGui {
     questionMessage: string,
     choices: { name: string; value: T }[],
     autocomplete?: boolean,
-  ):Promise<T> => {
+  ): Promise<T> => {
     if (autocomplete) {
-      return await Helpers.selectChoicesAsk(questionMessage, choices) as T;
+      return (await Helpers.selectChoicesAsk(questionMessage, choices)) as T;
     }
-    return await Helpers.list(questionMessage, choices) as T;
+    return (await Helpers.list(questionMessage, choices)) as T;
   };
   //#endregion
   //#endregion

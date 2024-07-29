@@ -892,6 +892,31 @@ Would you like to update current project configuration?`)
   }
   //#endregion
 
+  //#region commands / lastCommitHash
+  LAST_COMMIT_HASH() {
+    console.log(Helpers.git.lastCommitHash(this.cwd));
+    this._exit();
+  }
+  //#endregion
+
+  //#region commands / commit message by hash
+  async COMMIT_MESSAGE_BY_HASH() {
+    const hash = this.firstArg;
+    console.log(await this.project.git.getCommitMessageByHash(hash));
+    this._exit();
+  }
+  //#endregion
+
+  //#region commands / last 5 commit hashes
+
+  async LAST_5_COMMITS() {
+    for (let index = 0; index < 5; index++) {
+      const hash = await this.project.git.getCommitHashByIndex(index);
+      console.log(hash);
+    }
+    this._exit();
+  }
+
   //#region is terminal supported
   isTerminalSupported() {
     console.log(`Terminal is supported: ${Helpers.isSupportedFiredevTerminal}`);

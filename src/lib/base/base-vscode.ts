@@ -62,6 +62,15 @@ export class BaseVscodeHelpers<
       'wcwhitehead.bootstrap-3-snippets',
       'wenfangdu.snippet-generator',
       'xabikos.javascriptsnippets',
+      'wmaurer.vscode-jumpy',
+      'nidu.copy-json-path',
+      'aaron-bond.better-comments',
+      'mikestead.dotenv',
+      'ryu1kn.partial-diff',
+      'Tyriar.sort-lines',
+      'ms-vscode-remote.remote-containers',
+      'ms-azuretools.vscode-docker',
+      'DavidAnson.vscode-markdownlint',
       //#endregion
     ]);
   }

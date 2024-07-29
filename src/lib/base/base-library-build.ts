@@ -201,6 +201,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     {
       watch = false,
       strategy,
+      releaseBuild = false,
       buildType,
       copylink_to_node_modules,
     }: LibrariesBuildOptions & { watch: boolean } = {} as any,
@@ -215,10 +216,12 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     }
 
     //#region select target node_modules
-    const locationsForNodeModules = [
-      this.project.pathFor(config.folder.node_modules),
-      ...copylink_to_node_modules,
-    ];
+    const locationsForNodeModules = releaseBuild
+      ? []
+      : [
+          this.project.pathFor(config.folder.node_modules),
+          ...copylink_to_node_modules,
+        ];
 
     await this.project.npmHelpers.makeSureNodeModulesInstalled();
 
