@@ -12,7 +12,6 @@ import { CLI } from 'tnp-cli/src';
 //#endregion
 
 export class HelpersCliTool {
-
   //#region resolve items from begin of args
   /**
    * Resolve projects or anything from begin of arguments string
@@ -20,12 +19,12 @@ export class HelpersCliTool {
   public resolveItemsFromArgsBegin<T = any>(
     argumentsCommands: string | string[],
     argsResolveFunc: (currentArg: string, restOfArgs: string) => T,
-    limit = Number.POSITIVE_INFINITY
+    limit = Number.POSITIVE_INFINITY,
   ): {
     /**
      * arr of resolve things
      */
-    allResolved: T[],
+    allResolved: T[];
     /**
      * command cleared
      */
@@ -36,7 +35,7 @@ export class HelpersCliTool {
     if (_.isString(tmpArgumentsCommands)) {
       tmpArgumentsCommands = (tmpArgumentsCommands || '').trim().split(' ');
     }
-    let clearedCommand = (tmpArgumentsCommands || []);
+    let clearedCommand = tmpArgumentsCommands || [];
 
     if (_.isArray(clearedCommand) && clearedCommand.length > 0) {
       while (true) {
@@ -44,10 +43,10 @@ export class HelpersCliTool {
           break;
         }
         const argToCheckIfIsSomething = clearedCommand.shift();
-        const resolvedSomething = argsResolveFunc
-          (argToCheckIfIsSomething,
-            clearedCommand.join(' ')
-          );
+        const resolvedSomething = argsResolveFunc(
+          argToCheckIfIsSomething,
+          clearedCommand.join(' '),
+        );
 
         if (!_.isNil(resolvedSomething)) {
           allResolved.push(resolvedSomething);
@@ -62,37 +61,41 @@ export class HelpersCliTool {
     } else {
       clearedCommand = [];
     }
-    return { allResolved, clearedCommand: (clearedCommand).join(' ') };
+    return { allResolved, clearedCommand: clearedCommand.join(' ') };
   }
   //#endregion
 
   //#region resolve item from begin of args
-  public resolveItemFromArgsBegin<T>(argumentsCommands: string | string[],
-    argsResolveFunc: (currentArg: string, restOfArgs: string) => T): {
-
-      /**
-       * resolve thing
-       */
-      resolved: T,
-      /**
-       * command cleared
-       */
-      clearedCommand: string;
-    } {
-    const { allResolved, clearedCommand } = Helpers.cliTool.resolveItemsFromArgsBegin(argumentsCommands, argsResolveFunc, 1);
+  public resolveItemFromArgsBegin<T>(
+    argumentsCommands: string | string[],
+    argsResolveFunc: (currentArg: string, restOfArgs: string) => T,
+  ): {
+    /**
+     * resolve thing
+     */
+    resolved: T;
+    /**
+     * command cleared
+     */
+    clearedCommand: string;
+  } {
+    const { allResolved, clearedCommand } =
+      Helpers.cliTool.resolveItemsFromArgsBegin(
+        argumentsCommands,
+        argsResolveFunc,
+        1,
+      );
     return { resolved: _.first(allResolved), clearedCommand };
   }
   //#endregion
-
 
   //#region clean command
   /**
    * remove params (as object) from command string
    */
-  public cleanCommand<T extends { [k: string]: string | boolean | string[] | boolean[] }>(
-    command: string | string[],
-    minimistOption: T
-  ): string {
+  public cleanCommand<
+    T extends { [k: string]: string | boolean | string[] | boolean[] },
+  >(command: string | string[], minimistOption: T): string {
     const isArray = _.isArray(command);
     if (isArray) {
       command = (command as string[]).join(' ');
@@ -107,21 +110,20 @@ export class HelpersCliTool {
     _.keys(minimistOption).forEach(paramName => {
       let value = minimistOption[paramName] as string[];
       if (!_.isArray(value)) {
-        value = [value]
+        value = [value];
       }
-      value.map(v => v.toString())
+      value
+        .map(v => v.toString())
         .forEach(v => {
-          [
-            paramName,
-            _.kebabCase(paramName),
-            _.camelCase(paramName)
-          ].forEach(p => {
-            command = (command as string)
-              .replace(new RegExp((`\\-\\-${p}\\=${v}`), 'g'), '')
-              .replace(new RegExp((`\\-\\-${p}\\ *${v}`), 'g'), '')
-              .replace(new RegExp((`\\-\\-${p}`), 'g'), '')
-          });
-        })
+          [paramName, _.kebabCase(paramName), _.camelCase(paramName)].forEach(
+            p => {
+              command = (command as string)
+                .replace(new RegExp(`\\-\\-${p}\\=${v}`, 'g'), '')
+                .replace(new RegExp(`\\-\\-${p}\\ *${v}`, 'g'), '')
+                .replace(new RegExp(`\\-\\-${p}`, 'g'), '');
+            },
+          );
+        });
     });
     return command.trim() as string;
   }
@@ -133,7 +135,9 @@ export class HelpersCliTool {
    */
   public getPramsFromArgs<T = object>(args: string | string[]): T {
     if (_.isArray(args)) {
-      args = Helpers.cliTool.fixUnexpectedCommandCharacters(args.join(' ')).split(' ');
+      args = Helpers.cliTool
+        .fixUnexpectedCommandCharacters(args.join(' '))
+        .split(' ');
     }
     if (_.isString(args)) {
       args = Helpers.cliTool.fixUnexpectedCommandCharacters(args).split(' ');
@@ -148,7 +152,7 @@ export class HelpersCliTool {
       if (v === 'false') {
         obj[key] = false;
       }
-    })
+    });
     return (_.isObject(obj) ? obj : {}) as T;
   }
   //#endregion
@@ -160,10 +164,10 @@ export class HelpersCliTool {
   protected fixUnexpectedCommandCharacters(command: string): string {
     command = (command || '').trim();
     if (/^\"/.test(command) && /\"$/.test(command)) {
-      command = command.replace(/^\"/, '').replace(/\"$/, '')
+      command = command.replace(/^\"/, '').replace(/\"$/, '');
     }
     if (/^\'/.test(command) && /\'$/.test(command)) {
-      command = command.replace(/^\'/, '').replace(/\'$/, '')
+      command = command.replace(/^\'/, '').replace(/\'$/, '');
     }
     return command.trim();
   }
@@ -177,26 +181,34 @@ export class HelpersCliTool {
    * @param restOfArgs arguments from command line
    * TODO REFACTOR
    */
-  public match({ functionOrClassName, restOfArgs, argsReplacements, classMethodsNames = [] }: {
-    functionOrClassName: string; restOfArgs: string[]; classMethodsNames?: string[];
-    argsReplacements?: object,
-  }): { isMatch: boolean; restOfArgs: string[], methodNameToCall?: string; } {
-
-    const simplifiedCmd = (commandStringOrClass: string | Function, shortVersion = false) => {
+  public match({
+    functionOrClassName,
+    restOfArgs,
+    argsReplacements,
+    classMethodsNames = [],
+  }: {
+    functionOrClassName: string;
+    restOfArgs: string[];
+    classMethodsNames?: string[];
+    argsReplacements?: object;
+  }): { isMatch: boolean; restOfArgs: string[]; methodNameToCall?: string } {
+    const simplifiedCmd = (
+      commandStringOrClass: string | Function,
+      shortVersion = false,
+    ) => {
       if (_.isFunction(commandStringOrClass)) {
         commandStringOrClass = CLASS.getName(commandStringOrClass);
       }
       if (!commandStringOrClass) {
-        commandStringOrClass = ''
+        commandStringOrClass = '';
       }
 
-      commandStringOrClass = _
-        .kebabCase(commandStringOrClass as string)
+      commandStringOrClass = _.kebabCase(commandStringOrClass as string)
         .replace(/\$/g, '')
         .replace(/\-/g, '')
         .replace(/\:/g, '')
         .replace(/\_/g, '')
-        .toLowerCase()
+        .toLowerCase();
 
       if (shortVersion) {
         const shortKey = Object.keys(argsReplacements).find(key => {
@@ -213,40 +225,41 @@ export class HelpersCliTool {
     let methodNameToCall: string;
     let counter = 0;
     // console.log({ restOfArgs }) // TODO @LASTS
-    isMatch = !_.isUndefined([_.first(restOfArgs)]
-      .filter(a => !a.startsWith('--')) // TODO fix this also for other special paramters
-      .find((argumentCommand, i) => {
+    isMatch = !_.isUndefined(
+      [_.first(restOfArgs)]
+        .filter(a => !a.startsWith('--')) // TODO fix this also for other special paramters
+        .find((argumentCommand, i) => {
+          if (++counter > 2) {
+            // console.log(`counter NOT OK ${argumentCommand}`)
+            return void 0;
+          }
+          // console.log(`counter ok for ${argumentCommand}`)
+          const nameInKC = simplifiedCmd(functionOrClassName);
+          const argInKC = simplifiedCmd(argumentCommand);
 
-        if (++counter > 2) {
-          // console.log(`counter NOT OK ${argumentCommand}`)
-          return void 0;
-        }
-        // console.log(`counter ok for ${argumentCommand}`)
-        const nameInKC = simplifiedCmd(functionOrClassName);
-        const argInKC = simplifiedCmd(argumentCommand);
-
-        let condition = (nameInKC === argInKC);
-        // console.log({ condition, nameInKC, argInKC, functionOrClassName })
-        if (condition) {
-          restOfArgs = _.slice(restOfArgs, i + 1, restOfArgs.length);
-        } else {
-          for (let index = 0; index < classMethodsNames.length; index++) {
-            const classMethod = classMethodsNames[index];
-            const nameMethodInKC = simplifiedCmd(nameInKC + classMethod);
-            const conditionFunParam = (nameMethodInKC === argInKC);
-            // if (classMethod === 'pfix') {
-            //   debugger
-            //   console.log({ conditionFunParam: condition, classMethod, argInKC, nameMethodInKC, functionOrClassName })
-            // }
-            if (conditionFunParam) {
-              restOfArgs = _.slice(restOfArgs, i + 1, restOfArgs.length);
-              methodNameToCall = classMethod;
-              return true;
+          let condition = nameInKC === argInKC;
+          // console.log({ condition, nameInKC, argInKC, functionOrClassName })
+          if (condition) {
+            restOfArgs = _.slice(restOfArgs, i + 1, restOfArgs.length);
+          } else {
+            for (let index = 0; index < classMethodsNames.length; index++) {
+              const classMethod = classMethodsNames[index];
+              const nameMethodInKC = simplifiedCmd(nameInKC + classMethod);
+              const conditionFunParam = nameMethodInKC === argInKC;
+              // if (classMethod === 'pfix') {
+              //   debugger
+              //   console.log({ conditionFunParam: condition, classMethod, argInKC, nameMethodInKC, functionOrClassName })
+              // }
+              if (conditionFunParam) {
+                restOfArgs = _.slice(restOfArgs, i + 1, restOfArgs.length);
+                methodNameToCall = classMethod;
+                return true;
+              }
             }
           }
-        }
-        return condition;
-      }));
+          return condition;
+        }),
+    );
     return { isMatch, restOfArgs, methodNameToCall };
   }
   //#endregion
@@ -257,18 +270,20 @@ export class HelpersCliTool {
    * @todo TODO replace with funciton below
    * @deprecated
    */
-  globalArgumentsParserTnp<Project extends BaseProject = BaseProject>(argsv: string[], ProjectClass?: Project) {
-
-    Helpers.log(`[${config.frameworkName}] Fixing global arguments started...`)
+  globalArgumentsParserTnp<Project extends BaseProject = BaseProject>(
+    argsv: string[],
+    ProjectClass?: Project,
+  ) {
+    Helpers.log(`[${config.frameworkName}] Fixing global arguments started...`);
     let options = require('minimist')(argsv);
     const toCheck = {
-      'tnpShowProgress': void 0,
-      'tnpNonInteractive': void 0,
-      'findNearestProject': void 0,
-      'findNearestProjectWithGitRoot': void 0,
-      'findNearestProjectType': void 0,
-      'findNearestProjectTypeWithGitRoot': void 0,
-      'cwd': void 0
+      tnpShowProgress: void 0,
+      tnpNonInteractive: void 0,
+      findNearestProject: void 0,
+      findNearestProjectWithGitRoot: void 0,
+      findNearestProjectType: void 0,
+      findNearestProjectTypeWithGitRoot: void 0,
+      cwd: void 0,
     };
     Object.keys(toCheck).forEach(key => {
       toCheck[key] = options[key];
@@ -281,11 +296,10 @@ export class HelpersCliTool {
       findNearestProjectWithGitRoot,
       findNearestProjectType,
       findNearestProjectTypeWithGitRoot,
-      cwd
+      cwd,
     } = options;
 
-    Object
-      .keys(options)
+    Object.keys(options)
       .filter(key => key.startsWith('tnp'))
       .forEach(key => {
         options[key] = !!options[key];
@@ -293,23 +307,29 @@ export class HelpersCliTool {
         // Helpers.log(`[start.backend] assigned to global: ${key}:${global[key]}`)
       });
 
-
-
     if (global['tnpNoColorsMode']) {
       CLI.chalk.level = 0;
     }
 
     let cwdFromArgs = cwd;
-    const findProjectWithGitRoot = !!findNearestProjectWithGitRoot ||
-      !!findNearestProjectTypeWithGitRoot;
+    const findProjectWithGitRoot =
+      !!findNearestProjectWithGitRoot || !!findNearestProjectTypeWithGitRoot;
 
     if (_.isBoolean(findNearestProjectType)) {
-      Helpers.error(`argument --findNearestProjectType `
-        + `needs to be library type:\n ${LibTypeArr.join(', ')}`, false, true);
+      Helpers.error(
+        `argument --findNearestProjectType ` +
+          `needs to be library type:\n ${LibTypeArr.join(', ')}`,
+        false,
+        true,
+      );
     }
     if (_.isBoolean(findNearestProjectTypeWithGitRoot)) {
-      Helpers.error(`argument --findNearestProjectTypeWithGitRoot `
-        + `needs to be library type:\n ${LibTypeArr.join(', ')}`, false, true);
+      Helpers.error(
+        `argument --findNearestProjectTypeWithGitRoot ` +
+          `needs to be library type:\n ${LibTypeArr.join(', ')}`,
+        false,
+        true,
+      );
     }
 
     if (!!findNearestProjectWithGitRoot) {
@@ -327,22 +347,35 @@ export class HelpersCliTool {
           findGitRoot: findProjectWithGitRoot,
         });
         if (!nearest) {
-          Helpers.error(`Not able to find neerest project for arguments: [\n ${argsv.join(',\n')}\n]`, false, true)
+          Helpers.error(
+            `Not able to find neerest project for arguments: [\n ${argsv.join(',\n')}\n]`,
+            false,
+            true,
+          );
         }
       }
       if (nearest) {
         cwdFromArgs = nearest.location;
       }
-      if (fse.existsSync(cwdFromArgs) && !fse.lstatSync(cwdFromArgs).isDirectory()) {
+      if (
+        fse.existsSync(cwdFromArgs) &&
+        !fse.lstatSync(cwdFromArgs).isDirectory()
+      ) {
         cwdFromArgs = path.dirname(cwdFromArgs);
       }
-      if (fse.existsSync(cwdFromArgs) && fse.lstatSync(cwdFromArgs).isDirectory()) {
+      if (
+        fse.existsSync(cwdFromArgs) &&
+        fse.lstatSync(cwdFromArgs).isDirectory()
+      ) {
         process.chdir(cwdFromArgs);
       } else {
-        Helpers.error(`[${config.frameworkName}] Incorrect --cwd argument `
-          + `for args: [\n ${argsv.join(',\n')}\n]`, false, true)
+        Helpers.error(
+          `[${config.frameworkName}] Incorrect --cwd argument ` +
+            `for args: [\n ${argsv.join(',\n')}\n]`,
+          false,
+          true,
+        );
       }
-
     }
     argsv = Helpers.cliTool.removeArg('findNearestProjectType', argsv);
 
@@ -359,7 +392,7 @@ export class HelpersCliTool {
     //   })
     // Helpers.log('after remove', argsv)
     // process.exit(0)
-    Helpers.log(`Fixing global arguments finish.`)
+    Helpers.log(`Fixing global arguments finish.`);
     return argsv.join(' ');
   }
 
@@ -371,45 +404,56 @@ export class HelpersCliTool {
    * @deprecated
    * replace with command below
    */
-  removeArg(argumentToRemove: string, commandWithArgs: string[] | string): string[] {
-    let argsv = Array.isArray(commandWithArgs) ? commandWithArgs : commandWithArgs.split(' ');
-    argsv = argsv.filter((f, i) => {
-      const regexString = `^\\-\\-(${argumentToRemove}$|${argumentToRemove}\\=)+`;
-      if ((new RegExp(regexString)).test(f)) {
-        const nextParam = argsv[i + 1];
-        if (nextParam && !nextParam.startsWith(`--`)) {
-          argsv[i + 1] = '';
+  removeArg(
+    argumentToRemove: string,
+    commandWithArgs: string[] | string,
+  ): string[] {
+    let argsv = Array.isArray(commandWithArgs)
+      ? commandWithArgs
+      : commandWithArgs.split(' ');
+    argsv = argsv
+      .filter((f, i) => {
+        const regexString = `^\\-\\-(${argumentToRemove}$|${argumentToRemove}\\=)+`;
+        if (new RegExp(regexString).test(f)) {
+          const nextParam = argsv[i + 1];
+          if (nextParam && !nextParam.startsWith(`--`)) {
+            argsv[i + 1] = '';
+          }
+          return false;
         }
-        return false;
-      }
-      return true;
-    }).filter(f => !!f);
+        return true;
+      })
+      .filter(f => !!f);
     return argsv;
   }
 
-  public removeArgsFromCommand(
-    commadWithArgs: string,
-    argsToClear: string[],
-  ) {
-    const argsObj = require('minimist')(commadWithArgs.split(' '))
+  public removeArgsFromCommand(commadWithArgs: string, argsToClear: string[]) {
+    const argsObj = require('minimist')(commadWithArgs.split(' '));
+    // console.log({ argsObj, argv: process.argv });
     for (let index = 0; index < argsToClear.length; index++) {
       const element = argsToClear[index];
 
       const value = argsObj[element];
-      const replaceForV = (v) => {
+      const replaceForV = v => {
         if (!v) {
           v = '';
         }
         v = `${v}`;
         commadWithArgs = commadWithArgs.replace(
-          new RegExp(`\\-+${Helpers.escapeStringForRegEx(element)}\\s*${Helpers.escapeStringForRegEx(v)}`, 'g'),
+          new RegExp(
+            `\\-+${Helpers.escapeStringForRegEx(element)}\\s*${Helpers.escapeStringForRegEx(v)}`,
+            'g',
+          ),
           '',
         );
         commadWithArgs = commadWithArgs.replace(
-          new RegExp(`\\-+${Helpers.escapeStringForRegEx(element)}\\=${Helpers.escapeStringForRegEx(v)}`, 'g'),
+          new RegExp(
+            `\\-+${Helpers.escapeStringForRegEx(element)}\\=${Helpers.escapeStringForRegEx(v)}`,
+            'g',
+          ),
           '',
         );
-      }
+      };
       if (_.isArray(value)) {
         for (let index = 0; index < value.length; index++) {
           replaceForV(value[index]);
@@ -428,8 +472,4 @@ export class HelpersCliTool {
     return commadWithArgs;
   }
   //#endregion
-
 }
-
-
-

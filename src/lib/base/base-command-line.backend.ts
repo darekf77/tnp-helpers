@@ -534,6 +534,8 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
       noExit?: boolean;
     } = {},
   ) {
+    // console.log('args', this.args);
+    // console.log(`argsWithParams "${this.argsWithParams}"` );
     this.preventCwdIsNotProject();
     await this._preventPushPullFromNotCorrectBranch();
     await this.project.git.pushProcess({

@@ -398,7 +398,18 @@ export class CommitData {
     if (this.message === Helpers.git.ACTION_MSG_RESET_GIT_HARD_COMMIT) {
       return this.message;
     }
-    const jiras = this.jiraNumbers || [];
+    const jiras = (this.jiraNumbers || []).map(d => {
+      if (
+        // open source providers
+        ['GITHUB-', 'GH-', 'BB-', 'BITBUCKET-', 'GL-', 'GITLAB-'].some(gh =>
+          d.startsWith(gh),
+        )
+      ) {
+        const [jira, num] = d.split('-');
+        return `#${num}`;
+      }
+      return d;
+    });
     let commitMsg = '';
 
     if (this.typeOfCommit === 'release') {

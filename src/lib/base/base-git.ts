@@ -733,7 +733,7 @@ export class BaseGit<
       ${
         this.useGitBranchesAsMetadataForCommits()
           ? `- branch to checkout {${commitData.branchName}}`
-          : '- using current branch'
+          : `- using current branch \n   (generated would be: ${commitData.branchName})`
       }
       `);
 

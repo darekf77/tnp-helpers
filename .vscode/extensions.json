@@ -60,6 +60,15 @@
     "ryu1kn.partial-diff",
     "Tyriar.sort-lines",
     "ms-vscode-remote.remote-containers",
-    "DavidAnson.vscode-markdownlint"
+    "DavidAnson.vscode-markdownlint",
+    "bibhasdn.unique-lines",
+    "streetsidesoftware.code-spell-checker",
+    "pranaygp.vscode-css-peek",
+    "kisstkondoros.vscode-codemetrics",
+    "vscode-icons-team.vscode-icons",
+    "Gruntfuggly.todo-tree",
+    "ms-vscode-remote.remote-ssh",
+    "tomoki1207.pdf",
+    "hediet.vscode-drawio"
   ]
 }

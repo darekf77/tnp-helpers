@@ -71,6 +71,17 @@ export class BaseVscodeHelpers<
       'ms-vscode-remote.remote-containers',
       'ms-azuretools.vscode-docker',
       'DavidAnson.vscode-markdownlint',
+      'bibhasdn.unique-lines',
+      'streetsidesoftware.code-spell-checker',
+      'pranaygp.vscode-css-peek',
+      // 'bengreenier.vscode-node-readme',
+      'kisstkondoros.vscode-codemetrics',
+      'vscode-icons-team.vscode-icons',
+      'Gruntfuggly.todo-tree',
+      'ms-vscode-remote.remote-ssh',
+      'tomoki1207.pdf',
+      'hediet.vscode-drawio',
+      // 'shardulm94.trailing-spaces',
       //#endregion
     ]);
   }
