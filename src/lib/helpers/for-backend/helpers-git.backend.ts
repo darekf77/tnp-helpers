@@ -275,6 +275,7 @@ export class HelpersGit {
   }
   //#endregion
 
+  //#region get commit message by hash
   async getCommitMessageByHash(cwd: string, hash: string): Promise<string> {
     //#region @backendFunc
     try {
@@ -297,6 +298,7 @@ export class HelpersGit {
     }
     //#endregion
   }
+  //#endregion
 
   //#region get commit message by index
   /**
@@ -1318,6 +1320,26 @@ ${cwd}
   }
   //#endregion
 
+  //#region get orign ssh from origin http
+  originHttpToSsh(originHttp: string, verbose = false) {
+    const httpsPattern = /^https:\/\/(.+?)\/(.+?\/.+?)(\.git)?$/;
+    const match = originHttp.match(httpsPattern);
+
+    if (!match) {
+      verbose &&
+        Helpers.warn(
+          'The current remote URL is not in HTTPS format:' + originHttp,
+        );
+      return;
+    }
+
+    const host = match[1];
+    const repoPath = match[2];
+    const sshUrl = `git@${host}:${repoPath}.git`;
+    return sshUrl;
+  }
+  //#endregion
+
   //#region change remote from https to  ssh
   async changeRemoteFromHttpsToSSh(
     cwd: string,
@@ -1326,20 +1348,8 @@ ${cwd}
     try {
       const currentUrl =
         (await this.getOriginURL(cwd, diffrentOriginName)) || '';
-      const httpsPattern = /^https:\/\/(.+?)\/(.+?\/.+?)(\.git)?$/;
-      const match = currentUrl.match(httpsPattern);
 
-      if (!match) {
-        Helpers.warn(
-          'The current remote URL is not in HTTPS format:' + currentUrl,
-        );
-        return;
-      }
-
-      const host = match[1];
-      const repoPath = match[2];
-      const sshUrl = `git@${host}:${repoPath}.git`;
-
+      const sshUrl = this.originHttpToSsh(currentUrl);
       await Helpers.run(`git remote set-url ${diffrentOriginName} ${sshUrl}`, {
         cwd,
       }).sync();
@@ -1347,6 +1357,26 @@ ${cwd}
     } catch (error) {
       console.error('Failed to change remote URL:', error);
     }
+  }
+  //#endregion
+
+  //#region get http origin from ssh origin
+  originSshToHttp(originSsh: string, verbose = false) {
+    const sshPattern = /^git@(.+?):(.+?\/.+?)(\.git)?$/;
+    const match = originSsh.match(sshPattern);
+
+    if (!match) {
+      verbose &&
+        Helpers.warn(
+          'The current remote URL is not in SSH format:' + originSsh,
+        );
+      return originSsh;
+    }
+
+    const host = match[1];
+    const repoPath = match[2];
+    const httpsUrl = `https://${host}/${repoPath}.git`;
+    return httpsUrl;
   }
   //#endregion
 
@@ -1358,20 +1388,8 @@ ${cwd}
     try {
       const currentUrl =
         (await this.getOriginURL(cwd, diffrentOriginName)) || '';
-      const sshPattern = /^git@(.+?):(.+?\/.+?)(\.git)?$/;
-      const match = currentUrl.match(sshPattern);
 
-      if (!match) {
-        Helpers.warn(
-          'The current remote URL is not in SSH format:' + currentUrl,
-        );
-        return;
-      }
-
-      const host = match[1];
-      const repoPath = match[2];
-      const httpsUrl = `https://${host}/${repoPath}.git`;
-
+      const httpsUrl = this.originSshToHttp(currentUrl);
       await Helpers.run(`git remote set-url origin ${httpsUrl}`, {
         cwd,
       }).sync();
@@ -1390,6 +1408,7 @@ ${cwd}
   }
   //#endregion
 
+  //#region get fils change in commit by hash
   /**
    * Get the list of files changed in a specific commit by its hash.
    * @param {string} hash - The hash of the commit.
@@ -1410,7 +1429,9 @@ ${cwd}
     }
     //#endregion
   }
+  //#endregion
 
+  //#region get fils change in commit by index
   /**
    * Get the list of files changed in a specific commit by its index in the commit history.
    * Index 0 refers to the last commit.
@@ -1439,4 +1460,5 @@ ${cwd}
     }
     //#endregion
   }
+  //#endregion
 }

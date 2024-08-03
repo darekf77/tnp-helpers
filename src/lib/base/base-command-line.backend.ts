@@ -470,6 +470,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
       },
       skipChildren: true,
       setOrigin: this.params['setOrigin'],
+      currentOrigin: this.project.git.originURL,
     });
     if (options.noExit) {
       return;
@@ -546,6 +547,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
         this._exit();
       },
       setOrigin: this.params['setOrigin'],
+      currentOrigin: this.project.git.originURL,
     });
     if (options.noExit) {
       return;
@@ -870,22 +872,43 @@ Would you like to update current project configuration?`)
     this._exit();
   }
 
-  async REMOTE_SSH() {
+  async SET_REMOTE_SSH() {
     await Helpers.git.changeRemoteFromHttpsToSSh(this.cwd);
     this._exit();
   }
 
-  async REMOTE_http() {
+  async SET_REMOTE_http() {
     await Helpers.git.changeRemoveFromSshToHttps(this.cwd);
     this._exit();
   }
 
-  async REMOTE_https() {
-    await this.REMOTE_http();
+  async SET_REMOTE_https() {
+    await this.SET_REMOTE_http();
   }
 
   origin() {
     console.log(Helpers.git.getOriginURL(this.cwd));
+    this._exit();
+  }
+
+  originHttp() {
+    console.log(
+      Helpers.git.originSshToHttp(Helpers.git.getOriginURL(this.cwd)),
+    );
+    this._exit();
+  }
+
+  originHttps() {
+    console.log(
+      Helpers.git.originSshToHttp(Helpers.git.getOriginURL(this.cwd)),
+    );
+    this._exit();
+  }
+
+  originssh() {
+    console.log(
+      Helpers.git.originHttpToSsh(Helpers.git.getOriginURL(this.cwd)),
+    );
     this._exit();
   }
 

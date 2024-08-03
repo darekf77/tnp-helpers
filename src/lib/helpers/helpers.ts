@@ -1,5 +1,5 @@
 //#region imports
-import { _ } from 'tnp-core/src';
+import { _, path } from 'tnp-core/src';
 import { HelpersArrayObj } from './helpers-array-obj';
 import { HelpersStringsRegexes } from './helpers-strings-regexes';
 import { HelpersStrings } from './helpers-strings';
@@ -110,11 +110,39 @@ export class HelpersFiredev extends CoreHelpers {
   //#endregion
 
   //#region methods & getters / uniqArray
-
-  async ncc(pathToJsFile: string, outputFile) {
+  /**
+   * Bundle file with node_modules into one file
+   */
+  async ncc(
+    pathToJsFile: string,
+    outputFilePath: string,
+    /**
+     * ! beforeWrite needs to return output
+     */
+    beforeWrite?: (options: {
+      output?: string;
+      copyToDestination?: (fileOrFolderAbsPath: string) => void;
+    }) => string,
+  ): Promise<void> {
     //#region @backendFunc
+
+    //#region quick fixes for output
+    // existsSync()
+    const replace = [
+      [
+        `var packageJson = JSON.parse(fs.readFileSync(__nccwpck_require__.ab ` +
+          `+ "package.json").toString());`,
+        `var packageJson = JSON.parse(fs.existsSync(__nccwpck_require__.ab + ` +
+          `"package.json") && fs.readFileSync(__nccwpck_require__.ab + "package.json").toString());`,
+      ],
+      ['module = undefined;', '/* module = undefined; */'],
+    ];
+
+    //#endregion
+
     Helpers.taskStarted(`Bundling node_modules for file: ${pathToJsFile}`);
     const data = await require('@vercel/ncc')(pathToJsFile, {
+      //#region ncc options
       // provide a custom cache path or disable caching
       cache: false,
       // out:'',
@@ -131,12 +159,40 @@ export class HelpersFiredev extends CoreHelpers {
       // sourceMapRegister: true, // default
       watch: false, // default
       license: '', // default does not generate a license file
-      target: 'es2015', // default
+      target: 'es5', // default
       v8cache: false, // default
       quiet: false, // default
       debugLog: false, // default
+      //#endregion
     });
-    Helpers.writeFile(outputFile, data.code);
+    let output = data.code;
+    replace.forEach(r => {
+      output = output.replace(r[0], r[1]);
+    });
+
+    if (_.isFunction(beforeWrite)) {
+      output = await Helpers.runSyncOrAsync({
+        functionFn: beforeWrite,
+        arrayOfParams: [
+          {
+            output,
+            copyToDestination(fileOrFolderAbsPath: string):void {
+              const destiantion = crossPlatformPath([
+                path.dirname(outputFilePath),
+                path.basename(fileOrFolderAbsPath),
+              ]);
+              if (Helpers.isFolder(fileOrFolderAbsPath)) {
+                Helpers.copy(fileOrFolderAbsPath, destiantion);
+              } else {
+                Helpers.copy(fileOrFolderAbsPath, destiantion);
+              }
+            },
+          },
+        ],
+      });
+    }
+
+    Helpers.writeFile(outputFilePath, output);
     Helpers.taskDone('Bundling finish');
     //#endregion
   }

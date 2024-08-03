@@ -51,6 +51,15 @@ export class BaseNpmHelpers<
     return this.packageJSON?.version;
   }
 
+   //#region methods & getters / bin
+  /**
+   * bin with cli config from package.json
+   */
+  get bin(): { [cliName: string]: string } {
+    return (this.packageJSON?.bin || {}) as any;
+  }
+  //#endregion
+
   set version(newVersion: string) {
     this.packageJSON.version = newVersion;
     this.project.writeJson(config.file.package_json, this.packageJSON);

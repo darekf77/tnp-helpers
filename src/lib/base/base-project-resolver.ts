@@ -241,8 +241,13 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
   //#endregion
 
   //#region fields & getters / unload project
-  unload(project: PROJECT) {
-    this.projects = this.projects.filter(f => f !== project);
+  unload(projectOrLocationOfProject: PROJECT | string) {
+
+    const location = _.isString(projectOrLocationOfProject)
+    ? projectOrLocationOfProject : projectOrLocationOfProject?.location;
+
+    this.projects = this.projects.filter(f => f.location !== location);
+    this.emptyLocations = this.emptyLocations.filter(f => f !==location);
   }
   //#endregion
 

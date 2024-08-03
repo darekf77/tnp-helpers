@@ -81,6 +81,7 @@ export class BaseVscodeHelpers<
       'ms-vscode-remote.remote-ssh',
       'tomoki1207.pdf',
       'hediet.vscode-drawio',
+      'antfu.file-nesting',
       // 'shardulm94.trailing-spaces',
       //#endregion
     ]);

@@ -638,6 +638,14 @@ export class BaseGit<
       exitCallBack?: () => void;
       forcePushNoQuestion?: boolean;
       commitMessageRequired?: boolean;
+      /**
+       * only needed when push github
+       * and I forgot to add my username before issue
+       * firedev pfix proper input my-repo#344
+       * that should be
+       * firedev pfix proper input my-username/my-repo#344
+       */
+      currentOrigin?: string;
       skipChildren?: boolean;
     } = {},
   ): Promise<void> {
@@ -656,6 +664,7 @@ export class BaseGit<
       commitMessageRequired,
       skipChildren,
       setOrigin,
+      currentOrigin,
     } = options;
 
     await this._beforePushProcessAction();
@@ -673,6 +682,7 @@ export class BaseGit<
       typeofCommit,
       args,
       commitMessageRequired,
+      currentOrigin,
     );
 
     //#region automatic push to git
@@ -724,6 +734,12 @@ export class BaseGit<
     //#endregion
 
     if (!commitData.isActionCommit) {
+      const commitMesageFromBranch = (
+        await CommitData.getFromBranch(commitData.branchName, {
+          currentOrigin,
+        })
+      ).commitMessage;
+
       Helpers.info(`
 
       PROJECT: ${this.project.genericName}
@@ -733,9 +749,22 @@ export class BaseGit<
       ${
         this.useGitBranchesAsMetadataForCommits()
           ? `- branch to checkout {${commitData.branchName}}`
-          : `- using current branch \n   (generated would be: ${commitData.branchName})`
+          : `- using current branch \n
+          (generated would be: ${commitData.branchName})
+          `
+      }`);
+
+      if (commitMesageFromBranch !== commitData.commitMessage) {
+        Helpers.logWarn(`Commit from args and commit from branch are different
+        commit message from args: ${commitData.branchName}
+        commit message from branch: ${commitMesageFromBranch}
+
+        `);
+      } else {
+        Helpers.logInfo(
+          chalk.gray(`Commit from args and commit from branch are the same...`)
+        );
       }
-      `);
 
       if (this.project.git.lastCommitMessage() === commitData.commitMessage) {
         if (
@@ -885,27 +914,44 @@ export class BaseGit<
 
   //#region methods & getters / resovle commit message
   protected async _getCommitMessage(
-    typeofCommit: TypeOfCommit,
+    typeOfCommit: TypeOfCommit,
     args: string[],
     commitMessageRequired?: boolean,
+    /**
+     * only needed when push github
+     * and I forgot to add my username before issue
+     * firedev pfix proper input my-repo#344
+     * that should be
+     * firedev pfix proper input my-username/my-repo#344
+     */
+    currentOrigin?: string,
   ): Promise<CommitData> {
     //#region @backendFunc
     let commitData: CommitData;
     if (this.useGitBranchesWhenCommitingAndPushing()) {
-      let argsCommitData = await CommitData.getFromArgs(args, typeofCommit);
+      let argsCommitData = await CommitData.getFromArgs(args, {
+        typeOfCommit,
+        currentOrigin,
+      });
       // console.log({ argsCommitData })
       if (argsCommitData.message) {
         commitData = argsCommitData;
       } else {
         const commitDataBranch = await CommitData.getFromBranch(
           this.project.git.currentBranchName,
-          this.project.releaseProcess.getReleaseWords(),
+          {
+            releaseWords: this.project.releaseProcess.getReleaseWords(),
+            currentOrigin,
+          },
         );
         commitData = commitDataBranch;
         // console.log({ commitDataBranch })
       }
     } else {
-      let argsCommitData = await CommitData.getFromArgs(args, typeofCommit);
+      let argsCommitData = await CommitData.getFromArgs(args, {
+        typeOfCommit,
+        currentOrigin,
+      });
       // console.log({ argsCommitData })
       // console.log(argsCommitData)
       if (!argsCommitData.message && commitMessageRequired) {

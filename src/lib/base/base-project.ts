@@ -232,6 +232,10 @@ export abstract class BaseProject<
     return this.npmHelpers?.name || this.nameFromPomXML;
   }
 
+  get nameForCli():string {
+    return this.name?.endsWith('-cli') ? this.name : `${this.name}-cli`;
+  }
+
   get nameFromPomXML(): string {
     const artifactIdPattern = /<artifactId>([^<]+)<\/artifactId>/;
     const match = (this.readFile('pom.xml') || '').match(artifactIdPattern);
@@ -401,6 +405,7 @@ export abstract class BaseProject<
    */
   hasFile(relativePath: string | string[]): boolean {
     //#region @backendFunc
+    // TODO prevent absolute path
     return Helpers.exists(this.pathFor(relativePath));
     //#endregion
   }
@@ -586,6 +591,39 @@ export abstract class BaseProject<
     );
     return Helpers.readJson5(fullPath);
     //#endregion
+  }
+  //#endregion
+
+  //#region methods & getters / copy files or folders
+  /**
+   * copy files or folders from
+   * project to destination
+   */
+  copy(filesOrFolderRelativePathes: string[]): {
+    to: (destination: string) => void;
+  } {
+    return {
+      to: (destination: string): void => {
+        //#region @backendFunc
+        for (
+          let index = 0;
+          index < filesOrFolderRelativePathes.length;
+          index++
+        ) {
+          const source = this.pathFor(filesOrFolderRelativePathes[index]);
+          const dest = crossPlatformPath([
+            destination,
+            filesOrFolderRelativePathes[index],
+          ]);
+          if (Helpers.isFolder(source)) {
+            Helpers.copy(source, dest);
+          } else {
+            Helpers.copyFile(source, dest);
+          }
+        }
+        //#endregion
+      },
+    };
   }
   //#endregion
 
