@@ -472,17 +472,24 @@ export class HelpersGit {
       }
       const command = `git branch -a`;
       // console.log({ command, cwd })
-      const branchNames = Helpers.commnadOutputAsString(command, cwd, {
-        biggerBuffer: true,
-      });
-      // console.log({ branchNames })
+      const branchNamesFromStdout = Helpers.commnadOutputAsString(
+        command,
+        cwd,
+        {
+          biggerBuffer: true,
+        },
+      );
+      // console.log({ branchPattern, branchNamesFromStdout });
 
-      const _branchNames = branchNames
+      const branchNamesFiltered = branchNamesFromStdout
         .toString()
         .trim()
         .split('\n')
-        .map(l => l.replace('*', '').trim())
+        .map(l => l.replace('*', '').replace(`remotes/origin/`, '').trim())
         .filter(l => {
+          if (l.includes('->')) {
+            return false;
+          }
           // console.log('testing: ' + l)
           if (_.isRegExp(branchPattern)) {
             const match = branchPattern.test(l);
@@ -493,7 +500,8 @@ export class HelpersGit {
           // }
           return true;
         });
-      return _branchNames;
+      // console.log({ _branchNames: branchNamesFiltered });
+      return branchNamesFiltered;
     } catch (e) {
       Helpers.log(e);
       Helpers.log(
@@ -851,8 +859,9 @@ export class HelpersGit {
   ): Promise<boolean> {
     options = options || {};
     options.origin = options.origin ? options.origin : 'origin';
-    const { askToRetry, origin, forcePushNoQuestion = false } = options || {};
-    let { force } = options || {};
+
+    const { askToRetry, origin, forcePushNoQuestion = false } = options;
+    let { force } = options;
     if (force && !forcePushNoQuestion) {
       Helpers.info(`
       Pushing force branch ${this.currentBranchName(cwd)} in location
@@ -894,9 +903,26 @@ ${cwd}
           return;
         }
 
-        force = await Helpers.consoleGui.question.yesNo(
-          'Try again with force push ?',
-        );
+        const pushOptions = {
+          normal: {
+            name: 'Try normal push again ?',
+          },
+          force: {
+            name: 'Try again with force push ?',
+          },
+          exit: {
+            name: 'Exit process',
+          },
+        };
+
+        const whatToDo = await Helpers.consoleGui.select<
+          keyof typeof pushOptions
+        >('What to do ?', pushOptions);
+
+        if (whatToDo === 'exit') {
+          process.exit(0);
+        }
+        force = (whatToDo === 'force');
         continue;
       }
     }
@@ -1325,12 +1351,18 @@ ${cwd}
     const httpsPattern = /^https:\/\/(.+?)\/(.+?\/.+?)(\.git)?$/;
     const match = originHttp.match(httpsPattern);
 
+    if (originHttp === 'undefined' || _.isNil(originHttp)) {
+      Helpers.error(
+        '[firedev-helpers][originHttpToSsh] Origin URL is not defined',
+      );
+      return originHttp;
+    }
     if (!match) {
       verbose &&
         Helpers.warn(
           'The current remote URL is not in HTTPS format:' + originHttp,
         );
-      return;
+      return originHttp;
     }
 
     const host = match[1];
@@ -1364,6 +1396,13 @@ ${cwd}
   originSshToHttp(originSsh: string, verbose = false) {
     const sshPattern = /^git@(.+?):(.+?\/.+?)(\.git)?$/;
     const match = originSsh.match(sshPattern);
+
+    if (originSsh === 'undefined' || _.isNil(originSsh)) {
+      Helpers.error(
+        '[firedev-helpers][originSshToHttp] Origin URL is not defined',
+      );
+      return originSsh;
+    }
 
     if (!match) {
       verbose &&

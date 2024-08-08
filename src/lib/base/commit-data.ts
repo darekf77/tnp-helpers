@@ -813,7 +813,7 @@ export class CommitData {
     //   otherIssues: this.issuesFromOtherProjects,
     // });
 
-    return branchName;
+    return branchName.replace(/\/\-/g, '/').replace(/\_\_\-/g, '__');
     //#endregion
   }
   //#endregion

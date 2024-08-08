@@ -168,11 +168,25 @@ export class HelpersProcess {
   }
   //#endregion
 
+
   //#region list
   async list<T = string>(
     question: string,
-    choices: { name: string; value: T }[],
+    choices:
+      | { name: string; value: T }[]
+      | { [choice: string]: { name: string } },
   ) {
+    if (!_.isArray(choices) && _.isObject(choices)) {
+      choices = Object.keys(choices)
+        .map(key => {
+          return {
+            name: choices[key].name,
+            value: key,
+          };
+        })
+        .reduce((a, b) => a.concat(b), []);
+    }
+
     const res = (await inquirer.prompt({
       type: 'list',
       name: 'value',
@@ -267,10 +281,24 @@ export class HelpersProcess {
    */
   async selectChoicesAsk<T = string>(
     question: string,
-    choices: { name: string; value: T }[],
+    choices:
+      | { name: string; value: T }[]
+      | { [choice: string]: { name: string } },
   ): Promise<string> {
     // console.log({ choices })
     // Helpers.pressKeyAndContinue()
+
+    if (!_.isArray(choices) && _.isObject(choices)) {
+      choices = Object.keys(choices)
+        .map(key => {
+          return {
+            name: choices[key].name,
+            value: key,
+          };
+        })
+        .reduce((a, b) => a.concat(b), []);
+    }
+
     const prompt = new AutoComplete({
       name: 'value',
       message: question,

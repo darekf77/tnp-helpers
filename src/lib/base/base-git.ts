@@ -590,10 +590,36 @@ export class BaseGit<
   }
   //#endregion
 
-  //#region methods & getters / push process
-  async pullProcess(cloneChildren = false) {
+  protected async setRemoteOriginType(
+    setOrigin: 'ssh' | 'http',
+  ): Promise<void> {
     //#region @backendFunc
+    if (setOrigin === ('https' as string)) {
+      setOrigin = 'http';
+    }
+    if (setOrigin === 'ssh') {
+      await Helpers.git.changeRemoteFromHttpsToSSh(this.project.location);
+    } else if (setOrigin === 'http') {
+      await Helpers.git.changeRemoveFromSshToHttps(this.project.location);
+    }
+    //#endregion
+  }
+
+  //#region methods & getters / push process
+  async pullProcess(
+    options: {
+      cloneChildren?: boolean;
+      setOrigin?: 'ssh' | 'http';
+    } = {},
+  ): Promise<void> {
+    //#region @backendFunc
+    options = options || {};
+    options.cloneChildren = !!options.cloneChildren;
+    let { cloneChildren, setOrigin } = options;
     await this._beforePullProcessAction(cloneChildren);
+
+    await this.setRemoteOriginType(setOrigin);
+
     let uncommitedChanges = this.project.git.thereAreSomeUncommitedChange;
     if (uncommitedChanges) {
       Helpers.warn(
@@ -615,7 +641,7 @@ export class BaseGit<
 
     if (this.automaticallyAddAllChnagesWhenPushingToGit() || cloneChildren) {
       for (const child of this.gitChildren) {
-        await child.git.pullProcess();
+        await child.git.pullProcess(options);
       }
     }
     await this.project.linkedProjects.saveAllLinkedProjectsToDB();
@@ -669,13 +695,7 @@ export class BaseGit<
 
     await this._beforePushProcessAction();
 
-    //#region set proper origin
-    if (setOrigin === 'ssh') {
-      Helpers.git.changeRemoteFromHttpsToSSh(this.project.location);
-    } else if (setOrigin === 'http') {
-      Helpers.git.changeRemoveFromSshToHttps(this.project.location);
-    }
-    //#endregion
+    await this.setRemoteOriginType(setOrigin);
 
     await this.project.linkedProjects.saveLocationToDB();
     const commitData = await this._getCommitMessage(
@@ -756,13 +776,16 @@ export class BaseGit<
 
       if (commitMesageFromBranch !== commitData.commitMessage) {
         Helpers.logWarn(`Commit from args and commit from branch are different
-        commit message from args: ${commitData.branchName}
+        commit message from args: ${commitData.commitMessage}
         commit message from branch: ${commitMesageFromBranch}
+
+        ADVICE: Is is better to use words instead characters to describe multiple
+        commit changes in one commit message
 
         `);
       } else {
         Helpers.logInfo(
-          chalk.gray(`Commit from args and commit from branch are the same...`)
+          chalk.gray(`Commit from args and commit from branch are the same...`),
         );
       }
 

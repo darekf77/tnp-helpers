@@ -209,7 +209,9 @@ export class BaseCommandLine<
   //#region commands / pull
   async pull() {
     this.preventCwdIsNotProject();
-    await this.project.git.pullProcess();
+    await this.project.git.pullProcess({
+      setOrigin: this.params['setOrigin'],
+    });
     this._exit();
   }
   //#endregion
@@ -217,7 +219,10 @@ export class BaseCommandLine<
   //#region commands / pull all
   async pullAll() {
     this.preventCwdIsNotProject();
-    await this.project.git.pullProcess(true);
+    await this.project.git.pullProcess({
+      cloneChildren: true,
+      setOrigin: this.params['setOrigin'],
+    });
     this._exit();
   }
   //#endregion
@@ -288,8 +293,7 @@ ${
       }
     }
 
-    overrideBranchToReset =
-      (overrideBranchToReset || '').split('/').pop() || '';
+    overrideBranchToReset = overrideBranchToReset || '';
     this.__resetInfo(
       overrideBranchToReset
         ? overrideBranchToReset
@@ -344,6 +348,7 @@ ${
       this.firstArg || this.project.getDefaultDevelopmentBranch();
 
     const branches = this.__filterBranchesByPattern(rebaseBranch);
+
     if (branches.length > 0) {
       rebaseBranch = await this.__selectBrach(branches);
     } else {
@@ -534,7 +539,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
       commitMessageRequired?: boolean;
       noExit?: boolean;
     } = {},
-  ) {
+  ): Promise<void> {
     // console.log('args', this.args);
     // console.log(`argsWithParams "${this.argsWithParams}"` );
     this.preventCwdIsNotProject();
@@ -1025,11 +1030,12 @@ Would you like to update current project configuration?`)
 
   //#region filter all project branches by pattern
   private __filterBranchesByPattern(branchPatternOrBranchName: string) {
-    return Helpers.arrays.uniqArray(
-      this.project.git.getBranchesNamesBy(branchPatternOrBranchName).map(a => {
-        return a.split('/').pop() || '';
-      }) || this.project.getMainBranches(),
+    const branches = Helpers.arrays.uniqArray(
+      this.project.git.getBranchesNamesBy(branchPatternOrBranchName) ||
+        this.project.getMainBranches(),
     );
+    // console.log('branches', branches);
+    return branches;
   }
   //#endregion
 

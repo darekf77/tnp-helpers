@@ -26,7 +26,9 @@ export class HelpersConsoleGui {
   //#region @backend
   select = async <T = string>(
     questionMessage: string,
-    choices: { name: string; value: T }[],
+    choices:
+      | { name: string; value: T }[]
+      | { [choice: string]: { name: string } },
     autocomplete?: boolean,
   ): Promise<T> => {
     if (autocomplete) {
