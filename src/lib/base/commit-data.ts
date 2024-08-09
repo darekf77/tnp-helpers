@@ -674,7 +674,7 @@ export class CommitData {
 
     const jirasExists = jiraNumbers.length > 0 || otherIssues.length > 0;
 
-    const issuesFromOtherProjectsConnected =
+    let issuesFromOtherProjectsConnected =
       (jiraNumbers.length > 0 ? ',' : '') +
       otherIssues
         .map(otherIssue => {
@@ -687,6 +687,11 @@ export class CommitData {
           return `${otherIssue.replace(`/${providerPrefix}-`, '#')}`;
         })
         .join(',');
+
+    if (issuesFromOtherProjectsConnected === ',') {
+      // QUICK_FIX
+      issuesFromOtherProjectsConnected = '';
+    }
 
     const jiras = (jiraNumbers || []).map(d => {
       if (
@@ -752,15 +757,6 @@ export class CommitData {
         }
       }
     }
-    // console.log({
-    //   jiraNumbers,
-    //   otherIssues,
-    //   jirasExists,
-    //   issuesFromOtherProjectsConnected,
-    //   jiras,
-    //   'this.message': this.message,
-    //   commitMsg,
-    // });
 
     return commitMsg.replace(': :', ': ');
 
@@ -806,14 +802,11 @@ export class CommitData {
         `${this.typeOfCommit || 'feature'}/${jiraNumbsConneted}` +
         `${_.kebabCase(this.message)}`;
     }
-    // console.log({
-    //   jiraNumbers,
-    //   branchName,
-    //   jiraNumbsConneted,
-    //   otherIssues: this.issuesFromOtherProjects,
-    // });
 
-    return branchName.replace(/\/\-/g, '/').replace(/\_\_\-/g, '__');
+    return branchName
+      .replace(/\/\-/g, '/') // QUICK_FIX
+      .replace(/\_\_\-/g, '__') // QUICK_FIX
+      .replace(/\-\-\-\-/g, '--'); // QUICK_FIX
     //#endregion
   }
   //#endregion

@@ -215,7 +215,7 @@ export class HelpersProcess {
         limit: 10,
         multiple: true,
         choices,
-        initial: selected.map(s => s.name),
+        initial: (selected || []).map(s => s.name),
         // selected,
         hint: '- Space to select. Return to submit',
         footer() {
