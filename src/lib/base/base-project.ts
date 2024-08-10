@@ -461,6 +461,17 @@ export abstract class BaseProject<
   }
   //#endregion
 
+   //#region methods & getters / write json
+   writeJsonC(relativePath: string, json: object) {
+    //#region @backendFunc
+    if (path.isAbsolute(relativePath)) {
+      Helpers.error(`Cannot join relative path with absolute: ${relativePath}`);
+    }
+    Helpers.writeJsonC(crossPlatformPath([this.location, relativePath]), json);
+    //#endregion
+  }
+  //#endregion
+
   //#region methods & getters / run
   /**
    * @deprecated us execute instead
@@ -584,6 +595,13 @@ export abstract class BaseProject<
   //#endregion
 
   //#region methods & getters / read file
+  /**
+   * read json file
+   * handle all json files
+   * jsonc, json5 , json
+   * @param fileRelativeToProjectPath
+   * @returns
+   */
   readJson<T = {}>(fileRelativeToProjectPath: string): T {
     //#region @backendFunc
     const fullPath = path.resolve(

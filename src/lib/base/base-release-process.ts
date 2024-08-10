@@ -313,11 +313,12 @@ export class BaseReleaseProcess<
     for (const projToBump of this.toBumpProjects) {
       projToBump.npmHelpers.version = this.newVersion;
       for (const libName of allLibrariesNames) {
-        projToBump.npmHelpers.updateDependency(
-          libName,
-          (this.project.location === projToBump.location ? '' : '^') +
+        projToBump.npmHelpers.updateDependency({
+          packageName: libName,
+          version:
+            (this.project.location === projToBump.location ? '' : '^') +
             this.newVersion,
-        );
+        });
       }
     }
     //#endregion

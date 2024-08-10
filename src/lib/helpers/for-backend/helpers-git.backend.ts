@@ -653,6 +653,54 @@ export class HelpersGit {
   }
   //#endregion
 
+  //#region find git root
+  findGitRoot(cwd: string) {
+    if (this.isGitRoot(cwd)) {
+      return cwd;
+    }
+
+    let absoluteLocation = crossPlatformPath(cwd);
+    let previousLocation: string;
+    if (fse.existsSync(absoluteLocation)) {
+      absoluteLocation = fse.realpathSync(absoluteLocation);
+    }
+    if (
+      fse.existsSync(absoluteLocation) &&
+      !fse.lstatSync(absoluteLocation).isDirectory()
+    ) {
+      absoluteLocation = path.dirname(absoluteLocation);
+    }
+
+    while (true) {
+      if (
+        path.basename(path.dirname(absoluteLocation)) ===
+        config.folder.node_modules
+      ) {
+        absoluteLocation = path.dirname(path.dirname(absoluteLocation));
+      }
+      if (this.isGitRoot(absoluteLocation)) {
+        break;
+      }
+      previousLocation = absoluteLocation;
+      const newAbsLocation = path.join(absoluteLocation, '..');
+      if (!path.isAbsolute(newAbsLocation)) {
+        return;
+      }
+      absoluteLocation = crossPlatformPath(path.resolve(newAbsLocation));
+      if (
+        !fse.existsSync(absoluteLocation) &&
+        absoluteLocation.split('/').length < 2
+      ) {
+        return;
+      }
+      if (previousLocation === absoluteLocation) {
+        return;
+      }
+    }
+    return absoluteLocation;
+  }
+  //#endregion
+
   //#region is git root
   isGitRoot(cwd: string) {
     Helpers.log('[firedev-helpers][isGitRoot] ' + cwd, 1);
@@ -922,7 +970,7 @@ ${cwd}
         if (whatToDo === 'exit') {
           process.exit(0);
         }
-        force = (whatToDo === 'force');
+        force = whatToDo === 'force';
         continue;
       }
     }

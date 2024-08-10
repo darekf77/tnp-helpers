@@ -397,6 +397,7 @@ ${
   //#endregion
 
   //#region commands / push all origins
+
   /**
    * push force to all orgins
    */
@@ -922,6 +923,14 @@ Would you like to update current project configuration?`)
   }
   //#endregion
 
+  //#region commands / git config
+  gitConfig() {
+    const root = Helpers.git.findGitRoot(this.cwd);
+    Helpers.run(`code ${crossPlatformPath([root, '.git', 'config'])}`).sync();
+    this._exit();
+  }
+  //#endregion
+
   //#region commands / lastCommitHash
   LAST_COMMIT_HASH() {
     console.log(Helpers.git.lastCommitHash(this.cwd));
@@ -946,6 +955,26 @@ Would you like to update current project configuration?`)
     }
     this._exit();
   }
+  //#endregion
+
+  //#region commands / update deps from
+  async updateDepsFrom() {
+    let locations: string[] =
+      this.args.join(' ').trim() === '' ? [] : this.args;
+
+    if (_.isArray(locations)) {
+      locations = locations.map(l => {
+        if (path.isAbsolute(l)) {
+          return path.resolve(l);
+        }
+        return path.resolve(path.join(this.cwd, l));
+      });
+    }
+    this.project.npmHelpers.updateDepsFrom(locations);
+
+    this._exit();
+  }
+  //#endregion
 
   //#region is terminal supported
   isTerminalSupported() {

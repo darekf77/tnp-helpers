@@ -27,6 +27,24 @@ export class BaseNpmHelpers<
     this.reloadPackageJsonInMemory();
   }
 
+  updateDepsFrom(locations: string[]) {
+    //#region @backendFunc
+    locations.forEach(location => {
+      const project = this.project.ins.From(location);
+      if (project) {
+        const packageJson = project.readJson(config.file.package_json);
+        const deps = this.allDepsFromPackageJson(packageJson);
+        Object.keys(deps).forEach(dep => {
+          if (this.dependencies[dep]) {
+            this.dependencies[dep] = deps[dep];
+          }
+        });
+      }
+    });
+    this.project.writeJson(config.file.package_json, this.packageJSON);
+    //#endregion
+  }
+
   //#region methods & getters / reload package json in memory
   /**
    * if something else change package.json in this project
@@ -51,7 +69,7 @@ export class BaseNpmHelpers<
     return this.packageJSON?.version;
   }
 
-   //#region methods & getters / bin
+  //#region methods & getters / bin
   /**
    * bin with cli config from package.json
    */
@@ -67,17 +85,119 @@ export class BaseNpmHelpers<
   //#endregion
 
   //#region methods & getters / update dependency
-  updateDependency(packageName: string, version: string): void {
+  /**
+   * @deprecated use updateDep
+   */
+  updateDependency({
+    packageName,
+    version,
+    updateFiredevJsonFirst,
+  }: {
+    packageName: string;
+    version: string | null;
+    updateFiredevJsonFirst?: boolean;
+  }): void {
     //#region @backendFunc
+    if (updateFiredevJsonFirst) {
+      const firedevJson =
+        this.project.readJson<any>(config.file.firedev_jsonc) || {};
+
+      if (!firedevJson) {
+        Helpers.error(`Firedev json is not valid in ${this.project.location}`);
+      }
+
+      const firedevJsonDeps = firedevJson.overrided?.dependencies || {};
+
+      if (version === null) {
+        // console.log('version change to ', 'null');
+        firedevJsonDeps[packageName] = version;
+      } else {
+        // console.log('version change to ', version);
+        firedevJsonDeps[packageName] = version;
+      }
+
+      // console.log('firedevJson', firedevJson);
+      this.project.writeJsonC(config.file.firedev_jsonc, firedevJson);
+    }
     for (const depsName of CoreModels.PackageJsonDependencyObjArr) {
       if (
         this.packageJSON[depsName] &&
         this.packageJSON[depsName][packageName]
       ) {
-        this.packageJSON[depsName][packageName] = version;
+        if (version === null) {
+          delete this.packageJSON[depsName][packageName];
+        } else {
+          this.packageJSON[depsName][packageName] = version;
+        }
       }
     }
     this.project.writeJson(config.file.package_json, this.packageJSON);
+    // Helpers.pressKeyAndContinue();
+    //#endregion
+  }
+  //#endregion
+
+  //#region methods & getters / update dependency
+  /**
+   * Update dependency in package.json
+   */
+  async updateDep({
+    packageName,
+    version,
+    updateFiredevJsonFirst,
+  }: {
+    packageName: string;
+    version: string | null;
+    updateFiredevJsonFirst?: boolean;
+  }): Promise<void> {
+    //#region @backendFunc
+    // const contirmUpdateArr= [
+    //   'chai',
+    //   'bootstrap',
+    //   '@types/mocha',
+    //   '@types/node-notifier'
+    // ];
+    // if(contirmUpdateArr.includes(packageName)) {
+    //   await Helpers.questionYesNo(`Do you want to update ${packageName} to ${version} ?`);
+    // }
+    if (
+      updateFiredevJsonFirst &&
+      this.project.hasFile(config.file.firedev_jsonc)
+    ) {
+      const firedevJson =
+        this.project.readJson<any>(config.file.firedev_jsonc) || {};
+
+      if (!firedevJson) {
+        Helpers.error(`Firedev json is not valid in ${this.project.location}`);
+      }
+
+      const firedevJsonDeps = firedevJson?.overrided?.dependencies || {};
+
+      if (version === null) {
+        // console.log('version change to ', 'null');
+        firedevJsonDeps[packageName] = version;
+      } else {
+        // console.log('version change to ', version);
+        firedevJsonDeps[packageName] = version;
+      }
+
+      // console.log('firedevJson', firedevJson);
+      this.project.writeJsonC(config.file.firedev_jsonc, firedevJson);
+    }
+    for (const depsName of CoreModels.PackageJsonDependencyObjArr) {
+      if (
+        this.packageJSON[depsName] &&
+        this.packageJSON[depsName][packageName]
+      ) {
+        if (version === null) {
+          delete this.packageJSON[depsName][packageName];
+        } else {
+          this.packageJSON[depsName][packageName] = version;
+        }
+      }
+    }
+    this.project.writeJson(config.file.package_json, this.packageJSON);
+    // Helpers.pressKeyAndContinue();
     //#endregion
   }
   //#endregion
@@ -575,7 +695,9 @@ export class BaseNpmHelpers<
     while (true) {
       let loggedIn = await this.isLoggedInToRegistry();
       if (loggedIn) {
-        Helpers.info(`You logged in to npm registry=${registry || '< default npm>'}`);
+        Helpers.info(
+          `You logged in to npm registry=${registry || '< default npm>'}`,
+        );
         break;
       }
       Helpers.pressKeyAndContinue(

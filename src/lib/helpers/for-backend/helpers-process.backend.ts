@@ -284,7 +284,7 @@ export class HelpersProcess {
     choices:
       | { name: string; value: T }[]
       | { [choice: string]: { name: string } },
-  ): Promise<string> {
+  ): Promise<T> {
     // console.log({ choices })
     // Helpers.pressKeyAndContinue()
 
