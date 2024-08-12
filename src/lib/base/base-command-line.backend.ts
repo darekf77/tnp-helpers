@@ -545,6 +545,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
     // console.log(`argsWithParams "${this.argsWithParams}"` );
     this.preventCwdIsNotProject();
     await this._preventPushPullFromNotCorrectBranch();
+
     await this.project.git.pushProcess({
       ...options,
       forcePushNoQuestion: options.force,

@@ -528,26 +528,6 @@ export class CommitData {
       teamID: teamIdData.teamID,
     });
 
-    //#region warning about missing sub-issue
-    if (
-      typeOfCommit === 'feature' &&
-      jiraNumbers.length === 1 &&
-      issuesFromOtherProjects.length === 0
-    ) {
-      Helpers.info(`
-
-        You current feature branch "${currentBranchName}"
-        doesn't have ${chalk.bold('main-issue')} and ${chalk.bold('sub-issue')} inlcueded.
-
-        Proper example: feature/JIRANUM-<number-of-sub-issue>-JIRANUM-<number-of-main-issue>-commit-name
-
-          `);
-      if (!(await Helpers.questionYesNo('Continue without sub-issue?'))) {
-        process.exit(0);
-      }
-    }
-    //#endregion
-
     return result;
     //#endregion
   }

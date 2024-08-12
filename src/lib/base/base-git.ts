@@ -705,6 +705,26 @@ export class BaseGit<
       currentOrigin,
     );
 
+    // #region warning about missing sub-issue
+    if (
+      commitData.typeOfCommit === 'feature' &&
+      commitData.jiraNumbers?.length === 1 &&
+      commitData.issuesFromOtherProjects?.length === 0
+    ) {
+      Helpers.info(`
+
+        You current feature branch "${this.project.git.currentBranchName}"
+        doesn't have ${chalk.bold('main-issue')} and ${chalk.bold('sub-issue')} inlcueded.
+
+        Proper example: feature/JIRANUM-<number-of-sub-issue>-JIRANUM-<number-of-main-issue>-commit-name
+
+          `);
+      if (!(await Helpers.questionYesNo('Continue without sub-issue?'))) {
+        process.exit(0);
+      }
+    }
+    //#endregion
+
     //#region automatic push to git
     if (!this.automaticallyAddAllChnagesWhenPushingToGit()) {
       if (
