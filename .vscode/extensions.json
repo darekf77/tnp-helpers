@@ -69,6 +69,7 @@
     "Gruntfuggly.todo-tree",
     "ms-vscode-remote.remote-ssh",
     "tomoki1207.pdf",
-    "hediet.vscode-drawio"
+    "hediet.vscode-drawio",
+    "antfu.file-nesting"
   ]
 }

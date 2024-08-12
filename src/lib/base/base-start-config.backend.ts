@@ -44,9 +44,9 @@ export class BaseStartConfig {
 
   public static prepareFromFiles(cliClassArr: string[]) {
     return this.prepareArgs(
-      cliClassArr // @ts-ignore
+      cliClassArr
         .map(c => require(path.resolve(c)).default)
-        .filter(f => _.isObject(f)),
+        .filter(f => _.isObject(f)) as any,
     );
   }
 
@@ -67,13 +67,16 @@ export class BaseStartConfig {
    */
   public readonly useStringArrForArgsFunctions: boolean;
   constructor(options: BaseStartConfigOptions) {
-
-    if(!Helpers.isSupportedFiredevTerminal) {
-      Helpers.error(`This terminal is not supported. Please use:
+    if (!Helpers.isSupportedFiredevTerminal) {
+      Helpers.error(
+        `This terminal is not supported. Please use:
 
       - git bash (on windows)
 
-      `,false,true)
+      `,
+        false,
+        true,
+      );
     }
 
     options = options ? options : {};

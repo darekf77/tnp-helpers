@@ -869,6 +869,30 @@ export abstract class BaseProject<
   }
   //#endregion
 
+  //#region methods & getters / set value to json
+  setValueToJSONC(
+    relativePath: string,
+    lodashGetPath: string,
+    value: any,
+  ): void {
+    //#region @backendFunc
+    Helpers.setValueToJSONC(this.pathFor(relativePath), lodashGetPath, value);
+    //#endregion
+  }
+  //#endregion
+
+  //#region methods & getters / set value to json
+  setValueToJSON5(
+    relativePath: string,
+    lodashGetPath: string,
+    value: any,
+  ): void {
+    //#region @backendFunc
+    Helpers.setValueToJSONC(this.pathFor(relativePath), lodashGetPath, value);
+    //#endregion
+  }
+  //#endregion
+
   //#region methods & getters / get value from json
   getValueFromJSON(
     relativePath: string,

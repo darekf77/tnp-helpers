@@ -4,27 +4,10 @@
   "overrided": {
     "ignoreDepsPattern": [],
     "includeAsDev": [],
-
-    "includeOnly": [
-      "tnp-models",
-      "task.js",
-      "json10-writer",
-      "lowdb",
-      "typescript",
-      // "enquirer",
-      // "inquirer-autocomplete-prompt",
-      // "cross-spawn",
-      // "fuzzy",
-      // "tnp-models",
-      // "dateformat",
-      // "express",
-      // "crypto",
-      // "underscore",
-    ],
-
+    "includeOnly": ["tnp-models", "task.js", "json10-writer", "lowdb", "typescript"],
     "dependencies": {},
     "linkedFolders": [],
-    "npmFixes": [],
+    "npmFixes": []
   },
 
   "smartContainerBuildTarget": "",
@@ -38,12 +21,12 @@
     "cliBuildNoDts": false,
     "cliBuildObscure": false,
     "cliBuildIncludeNodeModules": false,
-    "cliBuildUglify": false,
+    "cliBuildUglify": false
   },
 
   "smartContainerTarget": "",
   "type": "isomorphic-lib",
-  "version": "v16",
+  "version": "v18",
 
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -55,8 +38,5 @@
   "author": "",
   "homepage": "https://github.com/darekf77/tnp-helpers#readme",
   "workerPlugins": {},
-
-  "additionalNpmNames": [
-   "firedev-helpers"
- ],
+  "additionalNpmNames": ["firedev-helpers"]
 }
