@@ -189,8 +189,8 @@ export class BaseNpmHelpers<
     }
     for (const depsName of CoreModels.PackageJsonDependencyObjArr) {
       if (
-        addIfNotExists ||
-        (this.packageJSON[depsName] &&
+        this.packageJSON[depsName] &&
+        (addIfNotExists ||
           !_.isUndefined(this.packageJSON[depsName][packageName]))
       ) {
         if (_.isUndefined(version)) {
