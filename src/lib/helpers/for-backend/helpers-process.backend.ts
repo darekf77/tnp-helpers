@@ -168,7 +168,6 @@ export class HelpersProcess {
   }
   //#endregion
 
-
   //#region list
   async list<T = string>(
     question: string,
@@ -508,6 +507,8 @@ export class HelpersProcess {
     } catch (error) {
       Helpers.error(
         `[${config.frameworkName}] not able to kill all node processes`,
+        false,
+        true,
       );
     }
     Helpers.info('DONE KILL ALL NODE PROCESSES');

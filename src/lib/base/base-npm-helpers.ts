@@ -200,6 +200,13 @@ export class BaseNpmHelpers<
         }
       }
     }
+    if (updateFiredevJsonFirst && this.packageJSON[config.packageJsonFrameworkKey]) {
+      // QUICK_FIX
+      this.packageJSON[config.packageJsonFrameworkKey] = this.project.readJson(
+        // QUICK_FIX
+        config.file.firedev_jsonc,
+      );
+    }
     this.project.writeJson(config.file.package_json, this.packageJSON);
     // Helpers.pressKeyAndContinue();
     //#endregion
