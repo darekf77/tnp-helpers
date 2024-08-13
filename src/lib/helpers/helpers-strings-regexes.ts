@@ -1,10 +1,10 @@
-import { _ } from 'tnp-core/src';
+import { Utils, _ } from 'tnp-core/src';
 export class HelpersStringsRegexes {
 
 
 
   escapeStringForRegEx(s: string) {
-    return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    return Utils.escapeStringForRegEx(s);
   }
 
   matchExactOnce(s: string, regex: RegExp): string {

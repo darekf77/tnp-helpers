@@ -3,6 +3,7 @@ export * from './validators/validators';
 export { HelpersAngular } from './helpers/for-browser/angular.helper';
 //#endregion
 
+export * from './utils';
 import { HelpersFiredev as Base } from './helpers/helpers';
 /**
  * Firedev helpers

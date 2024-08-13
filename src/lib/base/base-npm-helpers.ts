@@ -145,10 +145,12 @@ export class BaseNpmHelpers<
     packageName,
     version,
     updateFiredevJsonFirst,
+    addIfNotExists,
   }: {
     packageName: string;
     version: string | null;
     updateFiredevJsonFirst?: boolean;
+    addIfNotExists?: boolean;
   }): Promise<void> {
     //#region @backendFunc
     // const contirmUpdateArr= [
@@ -164,8 +166,9 @@ export class BaseNpmHelpers<
       updateFiredevJsonFirst &&
       this.project.hasFile(config.file.firedev_jsonc)
     ) {
-      const firedevJson =
-        this.project.readJson<any>(config.file.firedev_jsonc) || {};
+      const firedevJson = (this.project.readJson<any>(
+        config.file.firedev_jsonc,
+      ) || {}) as CoreModels.FiredevJson;
 
       if (!firedevJson) {
         Helpers.error(`Firedev json is not valid in ${this.project.location}`);
@@ -173,12 +176,12 @@ export class BaseNpmHelpers<
 
       const firedevJsonDeps = firedevJson?.overrided?.dependencies || {};
 
-      if (version === null) {
-        // console.log('version change to ', 'null');
-        firedevJsonDeps[packageName] = version;
-      } else {
-        // console.log('version change to ', version);
-        firedevJsonDeps[packageName] = version;
+      if (addIfNotExists && !_.isUndefined(firedevJsonDeps[packageName])) {
+        if (_.isUndefined(version)) {
+          delete firedevJsonDeps[packageName];
+        } else {
+          firedevJsonDeps[packageName] = version;
+        }
       }
 
       // console.log('firedevJson', firedevJson);
@@ -186,10 +189,11 @@ export class BaseNpmHelpers<
     }
     for (const depsName of CoreModels.PackageJsonDependencyObjArr) {
       if (
-        this.packageJSON[depsName] &&
-        this.packageJSON[depsName][packageName]
+        addIfNotExists ||
+        (this.packageJSON[depsName] &&
+          !_.isUndefined(this.packageJSON[depsName][packageName]))
       ) {
-        if (version === null) {
+        if (_.isUndefined(version)) {
           delete this.packageJSON[depsName][packageName];
         } else {
           this.packageJSON[depsName][packageName] = version;
