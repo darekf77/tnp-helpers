@@ -159,7 +159,7 @@ export class BaseCommandLine<
           .results,
       ],
       'location',
-    ).reverse();
+    );
     Helpers.taskDone(`found ${results.length} projects...`);
 
     const openInEditor = async (proj: BaseProject) => {
