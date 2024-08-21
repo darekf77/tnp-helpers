@@ -2,7 +2,7 @@
 import { _, path, crossPlatformPath } from 'tnp-core/src';
 import type { BaseProject } from './base-project';
 import { CLASS } from 'typescript-class-helpers/src';
-import { Helpers, LibrariesBuildOptions } from '../index';
+import { Helpers, LibrariesBuildOptions, TestBuildOptions } from '../index';
 //#endregion
 
 //#region core porject environment
@@ -33,6 +33,7 @@ export type CoreCommandArgOptions<PROJECT extends BaseProject> = {
   debug?: boolean;
   isInReleaseProcess?: boolean;
   libraryBuildOptions?: LibrariesBuildOptions;
+  testBuildOptions?: TestBuildOptions;
   /**
    * first arg from command line
    */

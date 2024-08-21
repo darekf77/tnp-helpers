@@ -1028,6 +1028,16 @@ export abstract class BaseProject<
   }
   //#endregion
 
+ //#region getters & methods / build
+  /**
+   * init and build() project
+   */
+  async test(testOptions?: any) {
+    throw new Error('TODO IMPLEMENT');
+  }
+  //#endregion
+
+
   //#region getters & methods / build
   /**
    * init and build() project

@@ -35,6 +35,10 @@ export type LibrariesBuildOptions = {
   releaseBuild?: boolean;
 };
 
+export type TestBuildOptions = {
+  onlySpecyficFiles?: string[];
+  updateSnapshot?: boolean;
+}
 
 export interface ChangelogData {
   changes: string[];

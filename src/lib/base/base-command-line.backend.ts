@@ -539,6 +539,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
       origin?: string;
       commitMessageRequired?: boolean;
       noExit?: boolean;
+      overrideCommitMessage?: string;
     } = {},
   ): Promise<void> {
     // console.log('args', this.args);
@@ -549,7 +550,9 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
     await this.project.git.pushProcess({
       ...options,
       forcePushNoQuestion: options.force,
-      args: this.args,
+      args: options?.overrideCommitMessage
+        ? (options?.overrideCommitMessage || '').split(' ')
+        : this.args,
       exitCallBack: () => {
         this._exit();
       },
@@ -592,6 +595,22 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
   async pf() {
     await this.pushFeature();
   }
+
+  async pRel() {
+    await this.pushRelease();
+  }
+
+  async pushRelease() {
+    await this.meltUpdateCommits();
+    await this.push({
+      typeofCommit: 'release',
+      commitMessageRequired: true,
+      overrideCommitMessage:
+        `${_.first(this.project.releaseProcess.getReleaseWords())} ` +
+        `version ${this.project.npmHelpers.version}`,
+    });
+  }
+
   async pushFeature() {
     await this.meltUpdateCommits();
     await this.push({ typeofCommit: 'feature', commitMessageRequired: true });

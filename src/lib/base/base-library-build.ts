@@ -141,6 +141,15 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     if (!_.isUndefined(this.cache['libraries'])) {
       return this.cache['libraries'];
     }
+    const libraries = this.getLibraries();
+    this.cache['libraries'] = libraries;
+    return libraries;
+    //#endregion
+  }
+  //#endregion
+
+  protected getLibraries() {
+    //#region @backendFunc
     const projects = (
       Object.values(
         Helpers.readJson(this.project.pathFor(config.file.angular_json))
@@ -152,11 +161,9 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
       this.project.ins.From(path.join(this.project.location, c.root)),
     );
     libraries = this.sortByDeps(libraries);
-    this.cache['libraries'] = libraries;
     return libraries;
     //#endregion
   }
-  //#endregion
 
   //#region getters & methods / selected libraries
   async selectLibraries({
