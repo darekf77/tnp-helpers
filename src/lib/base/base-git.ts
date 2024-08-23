@@ -32,7 +32,7 @@ export class BaseGit<
   //#region methods & getters / clone
   async clone(url: string, destinationFolderName = '', branchName?: string) {
     //#region @backendFunc
-    const clondeFolderpath = Helpers.git.clone({
+    const clondeFolderpath = await Helpers.git.clone({
       cwd: this.project.location,
       url,
       destinationFolderName,
@@ -86,9 +86,9 @@ export class BaseGit<
   //#endregion
 
   //#region methods & getters / fetch
-  fetch() {
+  fetch(all = false) {
     //#region @backendFunc
-    Helpers.git.fetch(this.project.location);
+    Helpers.git.fetch(this.project.location, all);
     //#endregion
   }
   //#endregion
@@ -545,7 +545,7 @@ export class BaseGit<
     Helpers.info(`Cloning ${this.project.name}...`);
 
     // @LAST copy instead cloning
-    Helpers.git.clone({
+    await Helpers.git.clone({
       cwd,
       url: this.project.git.remoteOriginUrl,
       destinationFolderName: newProjectName,

@@ -87,7 +87,7 @@ export class BaseReleaseProcess<
     Helpers.taskStarted(
       `Reinstalling node_modules to recreate package-lock.json`,
     );
-    this.project.npmHelpers.reinstalNodeModules();
+    await this.project.npmHelpers.reinstallNodeModules();
     Helpers.taskDone(`Reinstalling node_modules to recreate package-lock.json`);
   }
   //#endregion

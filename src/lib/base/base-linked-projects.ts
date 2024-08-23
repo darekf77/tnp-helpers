@@ -41,7 +41,6 @@ export class BaseLinkedProjects<
       return false;
     });
     if (!linkedPorj || !linkedPorj.internalRealtiveProjectPath) {
-      // debugger
       return;
     }
     const pathToEmbededProj = crossPlatformPath([

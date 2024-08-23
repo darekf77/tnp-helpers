@@ -200,7 +200,10 @@ export class BaseNpmHelpers<
         }
       }
     }
-    if (updateFiredevJsonFirst && this.packageJSON[config.packageJsonFrameworkKey]) {
+    if (
+      updateFiredevJsonFirst &&
+      this.packageJSON[config.packageJsonFrameworkKey]
+    ) {
       // QUICK_FIX
       this.packageJSON[config.packageJsonFrameworkKey] = this.project.readJson(
         // QUICK_FIX
@@ -402,12 +405,11 @@ export class BaseNpmHelpers<
   //#endregion
 
   //#region methods & getters / make sure node modules installed
-  async makeSureNodeModulesInstalled(options?: {
-    useYarn?: boolean;
-    force?: boolean;
-  }) {
+  async makeSureNodeModulesInstalled(
+    options?: Omit<CoreModels.NpmInstallOptions, 'pkg'>,
+  ) {
     if (this.emptyNodeModules) {
-      this.reinstalNodeModules(options);
+     await this.reinstallNodeModules(options);
     }
   }
   //#endregion
@@ -418,43 +420,68 @@ export class BaseNpmHelpers<
   }
   //#endregion
 
-  //#region methods & getters / reinstall node_modules
-  async reinstallNodeModules(forcerRemoveNodeModules = false) {
+  //#region methods & getters / reinstall node modules
+  async reinstallNodeModules(
+    options?: Omit<CoreModels.NpmInstallOptions, 'pkg'>,
+  ) {
     //#region @backendFunc
-    Helpers.taskStarted(
-      `Reinstalling node_modules in ${this.project.genericName}`,
-    );
-    const source = this.project.pathFor(config.folder.node_modules);
-    if (forcerRemoveNodeModules) {
-      Helpers.remove(source, true);
+    options = _.cloneDeep(options || {});
+    if (_.isUndefined(options.useYarn)) {
+      options.useYarn = this.preferYarnOverNpm();
     }
-    this.project
-      .run(
-        await this.prepareCommand({
-          useYarn: this.preferYarnOverNpm(),
-        }),
-        {
+    if (_.isUndefined(options.removeYarnOrPackageJsonLock)) {
+      options.removeYarnOrPackageJsonLock = true;
+    }
+    Helpers.taskStarted(
+      `Reinstalling node modules for ${this.project.genericName} with ${options.useYarn ? 'yarn' : 'npm'}`,
+    );
+    while(true) {
+      this.deleteNodeModules();
+
+      try {
+        this.project
+        .run(await this.prepareCommand(options), {
           output: true,
           silence: false,
-        },
-      )
-      .sync();
-    Helpers.taskDone(`Reinstalling done for ${this.project.genericName}`);
-    //#endregion
-  }
-  //#endregion
+        })
+        .sync();
+        break;
+      } catch (error) {
+        console.log(error);
+        const nodeModulesInstallFailOptions = {
+          again: {
+            name: 'Try again normal installation',
+          },
+          againForce: {
+            name: 'Try again force installation',
+          },
+          skip: {
+            name: 'Skip this error and continue',
+          },
+          exit: {
+            name: 'Exit process',
+          },
+        };
+        const res = await Helpers.consoleGui.select<
+          keyof typeof nodeModulesInstallFailOptions
+        >('What to do?', nodeModulesInstallFailOptions);
+        if (res === 'again') {
+          options.force = false;
+          continue;
+        }
+        if (res === 'againForce') {
+          options.force = true;
+          continue;
+        }
+        if (res === 'exit') {
+          process.exit(0);
+        }
+        if (res === 'skip') {
+          break;
+        }
+      }
+    }
 
-  //#region methods & getters / reinstall node modules
-  reinstalNodeModules(options?: { useYarn?: boolean; force?: boolean }) {
-    //#region @backendFunc
-    Helpers.taskStarted(
-      `Reinstalling node modules for ${this.project.genericName}`,
-    );
-    this.deleteNodeModules();
-    Helpers.run(
-      `${options?.useYarn ? 'yarn' : 'npm'}  install ${options?.force ? '--force' : ''}`,
-      { cwd: this.project.location },
-    ).sync();
     Helpers.taskDone(
       `Reinstalled node modules for ${this.project.genericName}`,
     );
@@ -580,18 +607,16 @@ export class BaseNpmHelpers<
 
   //#region methods & getters / prepare command
   async prepareCommand(
-    optiosn?: CoreModels.NpmInstallOptions,
+    options?: CoreModels.NpmInstallOptions,
   ): Promise<string> {
     let {
       pkg,
-      remove,
       silent,
       useYarn,
       force,
       removeYarnOrPackageJsonLock,
       generateYarnOrPackageJsonLock,
-      ignoreOptional,
-    } = optiosn || {};
+    } = options || {};
 
     force = true; // TODO QUICK_FIX
 
@@ -604,11 +629,11 @@ export class BaseNpmHelpers<
       command =
         `${
           removeYarnOrPackageJsonLock
-            ? `rm ${config.file.yarn_lock} ` +
+            ? `(rm ${config.file.yarn_lock}  || true) ` +
               `&& touch ${config.file.yarn_lock} && `
             : ''
         }` +
-        `yarn ${pkg ? (remove ? 'remove' : 'add') : 'install'} ${pkg ? pkg.name : ''} ` +
+        `yarn ${pkg ? (pkg?.installType === 'remove' ? 'remove' : 'add') : 'install'} ${pkg ? pkg.name : ''} ` +
         ` ${generateYarnOrPackageJsonLock ? '' : '--no-lockfile'} ` +
         ` ${argsForFasterInstall} ` +
         ` ${pkg && pkg.installType && pkg.installType === '--save-dev' ? '-dev' : ''} `;
@@ -622,18 +647,22 @@ export class BaseNpmHelpers<
       command =
         `${
           removeYarnOrPackageJsonLock
-            ? `rm ${config.file.package_lock_json} ` +
+            ? `(rm ${config.file.package_lock_json} || true) ` +
               `&& touch ${config.file.package_lock_json}  && `
             : ''
         }` +
         `npx --node-options=--max-old-space-size=8000 npm ` +
-        `${remove ? 'uninstall' : 'install'} ${pkg ? pkg.name : ''} ` +
+        `${pkg?.installType === 'remove' ? 'uninstall' : 'install'} ${pkg ? pkg.name : ''} ` +
         ` ${generateYarnOrPackageJsonLock ? '' : '--no-package-lock'} ` +
-        ` ${ignoreOptional ? '--ignore-optional' : ''} ` +
         ` ${pkg && pkg.installType ? pkg.installType : ''} ` +
         ` ${argsForFasterInstall} `;
       //#endregion
     }
+    Helpers.info(`Command for npm install:
+
+      ${command}
+
+      `);
     return command;
   }
   //#endregion

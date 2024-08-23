@@ -206,8 +206,18 @@ export class HelpersProcess {
     selected?: { name: string; value: string }[],
   ): Promise<string[]> {
     if (autocomplete) {
-      // console.log({ choices })
-      // Helpers.pressKeyAndContinue()
+      // // console.log({ choices })
+      // // Helpers.pressKeyAndContinue()
+      // const { checkbox } = await import('@inquirer/prompts');
+      // const answer = await checkbox({
+      //   message: question,
+      //   pageSize: 10,
+      //   choices,
+      // });
+
+      // console.log({ answer });
+      // return answer;
+
       const prompt = new AutoComplete({
         name: 'value',
         message: question,

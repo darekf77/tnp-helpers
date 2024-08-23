@@ -1056,12 +1056,14 @@ ${cwd}
   //#endregion
 
   //#region fetch
-  fetch(cwd: string) {
+  fetch(cwd: string, all = false) {
+    Helpers.taskStarted('Fetching git changes');
     try {
-      child_process.execSync(`git fetch`, { cwd });
+      child_process.execSync(`git fetch ${all ? '--all' : ''}`, { cwd });
     } catch (error) {
       Helpers.error('Not able to git fetch.', false, true);
     }
+    Helpers.taskDone('Fetching git changes');
   }
   //#endregion
 
@@ -1150,7 +1152,7 @@ ${cwd}
   /**
    * @returns absolute path to cloned folder
    */
-  clone({
+  async clone({
     cwd,
     url,
     destinationFolderName = '',
@@ -1162,7 +1164,7 @@ ${cwd}
     destinationFolderName?: string;
     throwErrors?: boolean;
     override?: boolean;
-  }): string {
+  }): Promise<string> {
     cwd = crossPlatformPath(cwd);
     if (!Helpers.exists(cwd)) {
       try {
@@ -1173,6 +1175,9 @@ ${cwd}
     }
     Helpers.log('[clone] ' + cwd, 1);
     // const ALWAYS_HTTPS = true;
+    if (!url) {
+      Helpers.error(`[firedev-helpers] no url provided for cloning`);
+    }
 
     if (url.split(' ').length > 2) {
       // const [rUrl, rDest] = url.split(' ');
@@ -1224,7 +1229,7 @@ ${cwd}
       return cloneFolderPath;
     }
 
-    const commnad = url.startsWith(`https://`)
+    const commnad = (url.startsWith(`https://`) || url.startsWith(`http://`))
       ? `git -c http.sslVerify=false clone ${url} ${path.basename(cloneFolderPath)}`
       : `git clone ${url} ${path.basename(cloneFolderPath)}`;
     Helpers.info(`
@@ -1236,17 +1241,47 @@ ${cwd}
     if (throwErrors) {
       Helpers.run(commnad, { cwd }).sync();
     } else {
-      try {
-        Helpers.run(commnad, { cwd, output: false }).sync();
-      } catch (error) {
-        if (error?.stderr?.toString()?.search('remote: Not Found') !== -1) {
-          Helpers.warn(`[firedev-helpers][git] Project not found :${url}`);
-        } else {
-          Helpers.error(
-            `[firedev-helpers] Can't clone from url: ${CLI.chalk.bold(url)}..`,
-            false,
-            true,
-          );
+      while (true) {
+        try {
+          Helpers.run(commnad, { cwd, output: false }).sync();
+          break;
+        } catch (error) {
+          if (error?.stderr?.toString()?.search('remote: Not Found') !== -1) {
+            Helpers.error(
+              `[firedev-helpers][git] Project not found :${url}`,
+              true,
+              true,
+            );
+          } else {
+            Helpers.error(
+              `[firedev-helpers] Can't clone from url: ${CLI.chalk.bold(url)}..`,
+              true,
+              true,
+            );
+          }
+          const cloneLinkOpt = {
+            again: {
+              name: 'Try again',
+            },
+            skip: {
+              name: 'Skip cloning this repository',
+            },
+            exit: {
+              name: 'Exit process',
+            },
+          };
+          const res = await Helpers.consoleGui.select<
+            keyof typeof cloneLinkOpt
+          >('What to do?', cloneLinkOpt);
+          if (res === 'again') {
+            continue;
+          }
+          if (res === 'exit') {
+            process.exit(0);
+          }
+          if (res === 'skip') {
+            break;
+          }
         }
       }
     }

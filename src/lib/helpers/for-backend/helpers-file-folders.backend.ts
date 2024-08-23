@@ -76,8 +76,8 @@ export class HelpersFileFolders {
 
   setValueToJSON(filepath: string, lodashGetPath: string, value: any): void {
     if (!fse.existsSync(filepath)) {
-      Helpers.error(`Not able to set value in json: ${filepath}`, true, true);
-      return;
+      Helpers.warn(`Recreating unexised json file: ${filepath}`);
+      Helpers.writeFile(filepath, '{}');
     }
     const json = Helpers.readJson(filepath);
     _.set(json, lodashGetPath, value);
@@ -86,8 +86,8 @@ export class HelpersFileFolders {
 
   setValueToJSONC(filepath: string, lodashGetPath: string, value: any): void {
     if (!fse.existsSync(filepath)) {
-      Helpers.error(`Not able to set value in json: ${filepath}`, true, true);
-      return;
+      Helpers.warn(`Recreating unexised json file: ${filepath}`);
+      Helpers.writeFile(filepath, '{}');
     }
     const json = Helpers.readJsonC(filepath);
     _.set(json, lodashGetPath, value);

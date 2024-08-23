@@ -108,7 +108,19 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
         }),
         true,
       );
-      const selected = pickedLibs.map(c => selectedLibs.find(l => l.name == c));
+
+      // console.log({ pickedLibs });
+
+      const selected = pickedLibs
+        .map(c => selectedLibs.find(l => l.name == c))
+        .filter(c => {
+          // if (!!c) { // TODO QUICK_FIX
+          //   this.project.removeFile(lastSelectedJsonFile);
+          //   Helpers.warn(`Please restart this command`);
+          //   process.exit(0);
+          // }
+          return !!c;
+        });
       Helpers.info(`
 
 ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('\n')}

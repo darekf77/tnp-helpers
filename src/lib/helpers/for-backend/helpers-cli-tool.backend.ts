@@ -247,7 +247,6 @@ export class HelpersCliTool {
               const nameMethodInKC = simplifiedCmd(nameInKC + classMethod);
               const conditionFunParam = nameMethodInKC === argInKC;
               // if (classMethod === 'pfix') {
-              //   debugger
               //   console.log({ conditionFunParam: condition, classMethod, argInKC, nameMethodInKC, functionOrClassName })
               // }
               if (conditionFunParam) {

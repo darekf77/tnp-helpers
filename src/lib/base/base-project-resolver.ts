@@ -166,7 +166,6 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
     },
   ): PROJECT {
     //#region @backendFunc
-
     options = options || {};
     const { type, findGitRoot, onlyOutSideNodeModules } = options;
 
@@ -197,6 +196,7 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
         absoluteLocation = path.dirname(path.dirname(absoluteLocation));
       }
       project = this.From(absoluteLocation, options) as any;
+      // console.log(`is project  ${!!project} ${absoluteLocation}`);
       if (_.isString(type)) {
         if (this.allowedTypes.includes(project?.type)) {
           if (findGitRoot) {
@@ -242,12 +242,12 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
 
   //#region fields & getters / unload project
   unload(projectOrLocationOfProject: PROJECT | string) {
-
     const location = _.isString(projectOrLocationOfProject)
-    ? projectOrLocationOfProject : projectOrLocationOfProject?.location;
+      ? projectOrLocationOfProject
+      : projectOrLocationOfProject?.location;
 
     this.projects = this.projects.filter(f => f.location !== location);
-    this.emptyLocations = this.emptyLocations.filter(f => f !==location);
+    this.emptyLocations = this.emptyLocations.filter(f => f !== location);
   }
   //#endregion
 

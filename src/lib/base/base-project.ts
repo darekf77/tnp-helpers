@@ -232,7 +232,7 @@ export abstract class BaseProject<
     return this.npmHelpers?.name || this.nameFromPomXML;
   }
 
-  get nameForCli():string {
+  get nameForCli(): string {
     return this.name?.endsWith('-cli') ? this.name : `${this.name}-cli`;
   }
 
@@ -461,8 +461,8 @@ export abstract class BaseProject<
   }
   //#endregion
 
-   //#region methods & getters / write json
-   writeJsonC(relativePath: string, json: object) {
+  //#region methods & getters / write json
+  writeJsonC(relativePath: string, json: object) {
     //#region @backendFunc
     if (path.isAbsolute(relativePath)) {
       Helpers.error(`Cannot join relative path with absolute: ${relativePath}`);
@@ -649,6 +649,9 @@ export abstract class BaseProject<
   remove(relativePath: string, exactPath = true) {
     //#region @backend
     relativePath = relativePath.replace(/^\//, '');
+    if (path.basename(relativePath) === config.folder.node_modules) {
+      Helpers.info('Removing node_modules folder...');
+    }
     Helpers.remove([this.location, relativePath], exactPath);
     //#endregion
   }
@@ -1028,7 +1031,7 @@ export abstract class BaseProject<
   }
   //#endregion
 
- //#region getters & methods / build
+  //#region getters & methods / build
   /**
    * init and build() project
    */
@@ -1036,7 +1039,6 @@ export abstract class BaseProject<
     throw new Error('TODO IMPLEMENT');
   }
   //#endregion
-
 
   //#region getters & methods / build
   /**
