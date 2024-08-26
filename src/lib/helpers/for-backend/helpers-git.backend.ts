@@ -9,7 +9,7 @@ import {
   dateformat,
 } from 'tnp-core';
 import { CLI } from 'tnp-cli/src';
-import { Helpers } from '../../index';
+import { Helpers, UtilsTerminal } from '../../index';
 import type { BaseProject } from '../../index';
 import { config } from 'tnp-config/src';
 import * as ini from 'ini';
@@ -789,16 +789,11 @@ export class HelpersGit {
   private _pull(
     cwd: string,
     options?: {
-      askToRetry?: boolean;
       branchName?: string;
       defaultHardResetCommits?: number;
     },
   ) {
-    let {
-      branchName,
-      defaultHardResetCommits,
-      askToRetry = true,
-    } = options || {};
+    let { branchName, defaultHardResetCommits } = options || {};
     if (_.isNumber(defaultHardResetCommits)) {
       this.resetHard(cwd, { HEAD: defaultHardResetCommits });
     } else {
@@ -833,32 +828,57 @@ export class HelpersGit {
     Helpers.info(
       `[firedev-helpers][${dateformat(new Date(), 'dd-mm-yyyy HH:MM:ss')}] Pulling git changes in "${cwd}", origin=${Helpers.git.getOriginURL(cwd)}  `,
     );
-    try {
-      let currentLocalBranch = child_process
-        .execSync(`git branch | sed -n '/\* /s///p'`, { cwd })
-        .toString()
-        .trim();
-      Helpers.git._pull(cwd, { ...options, branchName: currentLocalBranch });
-      Helpers.info(
-        `[firedev-helpers] Branch "${currentLocalBranch}" updated successfully in ${path.basename(cwd)}`,
-      );
-    } catch (e) {
-      // console.log(e)
-      Helpers.error(
-        `[firedev-helpers] Cannot update current branch in: ${cwd}`,
-        askToRetry,
-        true,
-      );
-      if (askToRetry) {
-        await Helpers.questionYesNo(
-          `Do you wanna try again ?`,
-          async () => {
-            await Helpers.git.pullCurrentBranch(cwd, options);
-          },
-          () => {
-            process.exit(1);
-          },
+    while (true) {
+      try {
+        let currentLocalBranch = child_process
+          .execSync(`git branch | sed -n '/\* /s///p'`, { cwd })
+          .toString()
+          .trim();
+        Helpers.git._pull(cwd, {
+          ...options,
+          branchName: currentLocalBranch,
+        });
+        Helpers.info(
+          `[firedev-helpers] Branch "${currentLocalBranch}" updated successfully in ${path.basename(cwd)}`,
         );
+        break;
+      } catch (e) {
+        // console.log(e)
+        Helpers.error(
+          `[firedev-helpers] Cannot update current branch in: ${cwd}`,
+          askToRetry,
+          true,
+        );
+        if (askToRetry) {
+          //#region ask to retry question
+          const pullOptions = {
+            again: {
+              name: 'Try pull again',
+            },
+            skip: {
+              name: 'Skip pulling',
+            },
+            exit: {
+              name: 'Exit process',
+            },
+          };
+
+          const whatToDo = await UtilsTerminal.select<keyof typeof pullOptions>(
+            {
+              question: 'What to do ?',
+              choices: pullOptions,
+            },
+          );
+
+          if (whatToDo === 'skip') {
+            break;
+          }
+
+          if (whatToDo === 'exit') {
+            process.exit(0);
+          }
+          //#endregion
+        }
       }
     }
     Helpers.info(
@@ -963,9 +983,10 @@ ${cwd}
           },
         };
 
-        const whatToDo = await Helpers.consoleGui.select<
-          keyof typeof pushOptions
-        >('What to do ?', pushOptions);
+        const whatToDo = await UtilsTerminal.select<keyof typeof pushOptions>({
+          question: 'What to do ?',
+          choices: pushOptions,
+        });
 
         if (whatToDo === 'exit') {
           process.exit(0);
@@ -1229,9 +1250,10 @@ ${cwd}
       return cloneFolderPath;
     }
 
-    const commnad = (url.startsWith(`https://`) || url.startsWith(`http://`))
-      ? `git -c http.sslVerify=false clone ${url} ${path.basename(cloneFolderPath)}`
-      : `git clone ${url} ${path.basename(cloneFolderPath)}`;
+    const commnad =
+      url.startsWith(`https://`) || url.startsWith(`http://`)
+        ? `git -c http.sslVerify=false clone ${url} ${path.basename(cloneFolderPath)}`
+        : `git clone ${url} ${path.basename(cloneFolderPath)}`;
     Helpers.info(`
 
     Cloning:

@@ -3,11 +3,12 @@
 import { chalk } from 'tnp-core/src';
 export { ChildProcess } from 'child_process';
 //#endregion
+import { CoreModels } from 'tnp-core/src';
 import { path, crossPlatformPath } from 'tnp-core/src';
-import { config } from 'tnp-config/src';
+import { config, FilesNames } from 'tnp-config/src';
 import { _ } from 'tnp-core/src';
 import { BaseFeatureForProject } from './base-feature-for-project';
-import { Helpers } from '../index';
+import { Helpers, UtilsTerminal } from '../index';
 import {
   LibrariesBuildOptions,
   LibraryBuildCommandOptions,
@@ -20,14 +21,41 @@ import type { BaseProject } from './base-project';
  * Base library build for standard angular/typescript projects
  */
 export abstract class BaseLibraryBuild<
-  PROJCET extends BaseProject = any,
+  PROJCET extends BaseProject<any, any>,
 > extends BaseFeatureForProject {
   private cache: any = {};
 
   //#region getters & methods / sort by deps
   protected sortByDeps(libraries: PROJCET[]): PROJCET[] {
-    return libraries;
+    //#region @backendFunc
+    const libs = libraries;
+
+    const sorted = this.project.ins.sortGroupOfProject<PROJCET>(
+      libs,
+      proj => {
+        // resolve dependencies names
+        if (!_.isUndefined(proj.cache['deps'])) {
+          return proj.cache['deps'];
+        }
+        const allLibs = Object.keys(proj.npmHelpers.allDependencies);
+        proj.cache['deps'] = allLibs.filter(
+          f => !_.isUndefined(libs.find(c => c.name === f)),
+        );
+        return proj.cache['deps'];
+      },
+      proj => {
+        // resolve name to compare
+        if (!_.isUndefined(proj.cache['nameToCompare'])) {
+          return proj.cache['nameToCompare'];
+        }
+        proj.cache['nameToCompare'] = proj.name;
+        return proj.cache['nameToCompare'];
+      },
+    );
+    return sorted;
+    //#endregion
   }
+  //#endregion
 
   //#region getters & methods / get sorted libraries by deps for build\
   /**
@@ -41,15 +69,22 @@ export abstract class BaseLibraryBuild<
    * 5. build selected libraries in watch mode
    *    (skip normal build for not selected libraries)
    */
-  async selectAndSaveLibraries({
-    libs: selectedLibs,
-    watch,
-    watchBuildSupported,
-  }: {
-    libs: PROJCET[];
-    watch: boolean;
-    watchBuildSupported?: boolean;
-  }): Promise<{ selectedLibs: PROJCET[]; skipRebuildingAllForWatch: boolean }> {
+  async selectAndSaveLibraries(
+    // this: {},
+    {
+      selectedLibs,
+      watch,
+      watchBuildSupported,
+      skipAllLibsQuestion,
+      useLastUserConfiguration,
+    }: {
+      selectedLibs: PROJCET[];
+      watch: boolean;
+      watchBuildSupported?: boolean;
+      skipAllLibsQuestion?: boolean;
+      useLastUserConfiguration?: boolean;
+    },
+  ): Promise<{ selectedLibs: PROJCET[]; skipRebuildingAllForWatch: boolean }> {
     //#region @backendFunc
     let buildAll = false;
     let skipRebuildingAllForWatch = false;
@@ -59,15 +94,15 @@ export abstract class BaseLibraryBuild<
     if (_.isUndefined(watchBuildSupported)) {
       watchBuildSupported = true;
     }
-    const lastSelectedJsonFile = 'tmp-last-selected.json';
-    const lastSelected =
-      Helpers.readJson(this.project.pathFor(lastSelectedJsonFile))
+
+    const lastSelected: string[] =
+      Helpers.readJson(this.project.pathFor(FilesNames.tmpLastSelectedJsonFile))
         ?.lastSelected || [];
 
     if (_.isArray(lastSelected) && lastSelected.length > 0) {
-      const selected = lastSelected.map(c =>
-        selectedLibs.find(l => l.basename == c),
-      );
+      const selected = lastSelected
+        .map(c => selectedLibs.find(l => l.name == c))
+        .filter(c => !!c);
 
       Helpers.info(`
 Last selected libs
@@ -76,15 +111,20 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
 
             `);
       if (
-        await Helpers.consoleGui.question.yesNo(
-          `Continue ${watch ? 'watch' : ''} build with last selected ?`,
-        )
+        useLastUserConfiguration
+          ? true
+          : await Helpers.consoleGui.question.yesNo(
+              `Continue ${watch ? 'watch' : ''} build with last selected ?`,
+            )
       ) {
         selectedLibs = selected as any;
-        if (watchBuildSupported && watch) {
-          skipRebuildingAllForWatch = await Helpers.consoleGui.question.yesNo(
-            `Skip rebuilding all libraries for watch mode ?`,
-          );
+        // TODO maybe safe about skip
+        if ((watchBuildSupported && watch) || useLastUserConfiguration) {
+          skipRebuildingAllForWatch =
+            useLastUserConfiguration ||
+            (await Helpers.consoleGui.question.yesNo(
+              `Skip rebuilding all libraries for watch mode ?`,
+            ));
         }
         return { selectedLibs, skipRebuildingAllForWatch };
       }
@@ -92,35 +132,43 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
 
     // more than 6 libs can be hard to manage in watch mode
     if (!watch || (watch && selectedLibs.length < 6)) {
-      buildAll = await Helpers.consoleGui.question.yesNo(
-        `Should all libraries be included in${watch ? ' watch' : ' '}build ?`,
-      );
+      if (!skipAllLibsQuestion) {
+        buildAll = await Helpers.consoleGui.question.yesNo(
+          `Should all libraries be included in${watch ? ' watch' : ' '}build ?`,
+        );
+      }
     }
 
     if (buildAll) {
       return { selectedLibs, skipRebuildingAllForWatch };
     }
     while (true) {
-      const pickedLibs = await Helpers.consoleGui.multiselect(
-        `Select libraries to ${watch ? 'watch' : ''} build `,
-        selectedLibs.map(c => {
-          return { name: c.name, value: c.name, selected: true };
-        }),
-        true,
-      );
+      const defaultSelected = lastSelected
+        .map(c => selectedLibs.find(l => l.name == c))
+        .filter(c => !!c)
+        .map(c => c.name);
+
+      const pickedLibs = (
+        await UtilsTerminal.multiselect({
+          question: `Select libraries to ${watch ? 'watch' : ''} build `,
+          choices: selectedLibs.map(c => {
+            return { name: c.name, value: c.name, selected: true };
+          }),
+          defaultSelected,
+        })
+      ).map(c => selectedLibs.find(l => l.name == c));
 
       // console.log({ pickedLibs });
 
-      const selected = pickedLibs
-        .map(c => selectedLibs.find(l => l.name == c))
-        .filter(c => {
-          // if (!!c) { // TODO QUICK_FIX
-          //   this.project.removeFile(lastSelectedJsonFile);
-          //   Helpers.warn(`Please restart this command`);
-          //   process.exit(0);
-          // }
-          return !!c;
-        });
+      const selected = pickedLibs.filter(c => {
+        // if (!!c) { // TODO QUICK_FIX
+        //   this.project.removeFile(lastSelectedJsonFile);
+        //   Helpers.warn(`Please restart this command`);
+        //   process.exit(0);
+        // }
+        return !!c;
+      });
+
       Helpers.info(`
 
 ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('\n')}
@@ -136,9 +184,12 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
       }
     }
 
-    Helpers.writeJson(this.project.pathFor(lastSelectedJsonFile), {
-      lastSelected: selectedLibs.map(c => c.basename),
-    });
+    Helpers.writeJson(
+      this.project.pathFor(FilesNames.tmpLastSelectedJsonFile),
+      {
+        lastSelected: selectedLibs.map(c => c.name),
+      },
+    );
     return { selectedLibs, skipRebuildingAllForWatch };
     //#endregion
   }
@@ -155,11 +206,9 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     }
     const libraries = this.getLibraries();
     this.cache['libraries'] = libraries;
-    return libraries;
+    return libraries as any;
     //#endregion
   }
-  //#endregion
-
   protected getLibraries() {
     //#region @backendFunc
     const projects = (
@@ -171,43 +220,10 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
 
     let libraries = projects.map(c =>
       this.project.ins.From(path.join(this.project.location, c.root)),
-    );
+    ) as PROJCET[];
+
     libraries = this.sortByDeps(libraries);
     return libraries;
-    //#endregion
-  }
-
-  //#region getters & methods / selected libraries
-  async selectLibraries({
-    watch,
-    watchBuildSupported,
-  }: {
-    watch: boolean;
-    watchBuildSupported?: boolean;
-  }) {
-    //#region @backendFunc
-    const allLibs = this.libraries;
-
-    /**
-     * all libraries to build
-     */
-    const { selectedLibs, skipRebuildingAllForWatch } =
-      await this.selectAndSaveLibraries({
-        libs: allLibs,
-        watch,
-        watchBuildSupported,
-      });
-    return {
-      skipRebuildingAllForWatch,
-      /**
-       * libs selected for build
-       */
-      selectedLibs,
-      /**
-       * all libs that can be in build
-       */
-      allLibs,
-    };
     //#endregion
   }
   //#endregion
@@ -217,184 +233,128 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
    * Angular library build
    */
   public async buildLibraries(
+    // this:{},
     {
       watch = false,
       strategy,
       releaseBuild = false,
       buildType,
       copylink_to_node_modules,
-    }: LibrariesBuildOptions & { watch?: boolean } = {} as any,
+      outputLineReplace,
+      libraries,
+      useLastUserConfiguration,
+    }: LibrariesBuildOptions<PROJCET> & { watch?: boolean } = {} as any,
   ): Promise<void> {
     //#region @backend
+
+    await this.project.linkedProjects.saveAllLinkedProjectsToDB();
+
+    //#region prepare parameters
     if (!Array.isArray(copylink_to_node_modules)) {
       copylink_to_node_modules = [];
     }
-    await this.project.linkedProjects.saveAllLinkedProjectsToDB();
     if (!strategy) {
       strategy = 'link';
     }
+    //#endregion
 
     //#region select target node_modules
+    const useExternalProvidedLibs = !_.isNil(libraries);
+    const allLibs = useExternalProvidedLibs ? libraries : this.libraries;
+
     const locationsForNodeModules = releaseBuild
       ? []
       : [
           this.project.pathFor(config.folder.node_modules),
           ...copylink_to_node_modules,
+          ...(!useExternalProvidedLibs
+            ? []
+            : Helpers.uniqArray(
+                libraries.map(c =>
+                  c.parent.pathFor(config.folder.node_modules),
+                ),
+              )),
         ];
+    //#endregion
 
-    await this.project.npmHelpers.makeSureNodeModulesInstalled();
-
-    const { selectedLibs, allLibs, skipRebuildingAllForWatch } =
-      await this.selectLibraries({
+    //#region select libs to build
+    const { selectedLibs, skipRebuildingAllForWatch } =
+      await this.selectAndSaveLibraries({
+        selectedLibs: libraries ? libraries : allLibs,
         watch,
+        skipAllLibsQuestion: useExternalProvidedLibs,
+        useLastUserConfiguration,
       });
     //#endregion
 
     //#region normal build
-    for (const [index, lib] of allLibs.entries()) {
-      if (watch && skipRebuildingAllForWatch) {
+    const allParenProjsForExtenalLibsBuild: PROJCET[] = useExternalProvidedLibs
+      ? Helpers.uniqArray<PROJCET>(
+          libraries.map(c => c.parent),
+          'location',
+        )
+      : [this.project as any];
+
+    // console.log(
+    //   'SORTED PROJECTS',
+    //   additionalLibsProjs.map(c => c.name),
+    // );
+
+    // TODO @LAST sort additionalLibsProjs thing before ric
+    for (const libProj of allParenProjsForExtenalLibsBuild) {
+      await libProj.init();
+
+      for (const [index, lib] of libProj.libraryBuild.libraries.entries()) {
+        if (watch && skipRebuildingAllForWatch) {
+          Helpers.info(
+            `Skipping build for watch mode (${index + 1}/${allLibs.length})` +
+              ` ${lib.basename} (${chalk.bold(lib.name)})`,
+          );
+          continue;
+        }
         Helpers.info(
-          `Skipping build for watch mode (${index + 1}/${allLibs.length}) ${lib.basename} (${chalk.bold(lib.name)})`,
+          `Building (${index + 1}/${allLibs.length}) ${lib.basename}` +
+            ` (${chalk.bold(lib.name)})`,
         );
-        continue;
-      }
-      Helpers.info(
-        `Building (${index + 1}/${allLibs.length}) ${lib.basename} (${chalk.bold(lib.name)})`,
-      );
 
-      const sourceDist = this.project.pathFor([
-        config.folder.dist,
-        lib.basename,
-      ]);
-
-      if (strategy === 'link') {
-        //#region link dist to node_modules
-
-        for (const node_modules of locationsForNodeModules) {
-          const dest = crossPlatformPath([node_modules, lib.name]);
-          if (!Helpers.isSymlinkFileExitedOrUnexisted(dest)) {
-            Helpers.remove(dest);
-          }
-          // console.log('linking from ', sourceDist);
-          // console.log('linking to ', dest);
-          // Helpers.remove(dest);
-          Helpers.createSymLink(sourceDist, dest, {
-            continueWhenExistedFolderDoesntExists: true,
-          });
-          console.log(
-            `Sync (link) done for ${lib.basename} to ${lib.name} (${crossPlatformPath(
-              [
-                path.basename(path.dirname(node_modules)),
-                config.folder.node_modules,
-              ],
-            )})`,
-          );
-        }
-
-        if (!Helpers.exists(sourceDist)) {
-          Helpers.info(`Compiling ${lib.name} ...`);
-          this.project
-            .run(
-              lib.libraryBuild.getLibraryBuildComamnd({
-                watch: false,
-                buildType,
-              }),
-              {
-                output: true,
-              },
-            )
-            .sync();
-        }
-
-        //#endregion
-      } else if (strategy === 'copy') {
-        //#region copy dist to node_modules
-        if (!Helpers.exists(sourceDist)) {
-          Helpers.info(`Compiling ${lib.name} ...`);
-          this.project
-            .run(
-              lib.libraryBuild.getLibraryBuildComamnd({
-                watch: false,
-                buildType,
-              }),
-              {
-                output: true,
-              },
-            )
-            .sync();
-        }
-
-        for (const node_modules of locationsForNodeModules) {
-          const dest = crossPlatformPath([node_modules, lib.name]);
-          if (Helpers.isSymlinkFileExitedOrUnexisted(dest)) {
-            Helpers.remove(dest);
-          }
-          Helpers.copy(sourceDist, dest);
-          console.log(
-            `Sync done for ${lib.basename} to ${lib.name} (${crossPlatformPath([
-              path.basename(path.dirname(node_modules)),
-              config.folder.node_modules,
-            ])})`,
-          );
-        }
-        //#endregion
+        await libProj.libraryBuild.libNormalBuildProcess({
+          lib,
+          locationsForNodeModules: useExternalProvidedLibs
+            ? [
+                this.project.pathFor(config.folder.node_modules),
+                libProj.pathFor(config.folder.node_modules),
+              ]
+            : locationsForNodeModules,
+          strategy,
+          buildType,
+          outputLineReplace: outputLineReplace(
+            lib as any,
+            useExternalProvidedLibs,
+          ),
+        });
       }
     }
     //#endregion
 
     //#region watch build
+    for (const [index, lib] of selectedLibs.entries()) {
+      Helpers.info(
+        `Building for watch (${index + 1}/${selectedLibs.length}) ` +
+          `${lib.basename} (${chalk.bold(lib.name)})`,
+      );
+
+      await this.libWatchBuildProcess({
+        lib,
+        locationsForNodeModules,
+        strategy,
+        buildType,
+        outputLineReplace: outputLineReplace(lib, useExternalProvidedLibs),
+      });
+    }
+    //#endregion
+
+    //#region success message
     if (watch) {
-      for (const [index, lib] of selectedLibs.entries()) {
-        Helpers.info(
-          `Building for watch (${index + 1}/${selectedLibs.length}) ` +
-            `${lib.basename} (${chalk.bold(lib.name)})`,
-        );
-        await (async () => {
-          const debouncedBuild = _.debounce(() => {
-            const sourceDist = this.project.pathFor([
-              config.folder.dist,
-              lib.basename,
-            ]);
-            for (const node_modules of locationsForNodeModules) {
-              const dest = crossPlatformPath([node_modules, lib.name]);
-              if (Helpers.isSymlinkFileExitedOrUnexisted(dest)) {
-                Helpers.remove(dest);
-              }
-              Helpers.copy(sourceDist, dest);
-              // console.log({ sourceDist, dest });
-              console.log(
-                `Sync (watch) done for ${lib.basename} to ${lib.name} (${crossPlatformPath(
-                  [
-                    path.basename(path.dirname(node_modules)),
-                    config.folder.node_modules,
-                  ],
-                )})`,
-              );
-            }
-          }, 500);
-          await this.project
-            .run(
-              lib.libraryBuild.getLibraryBuildComamnd({
-                watch: true,
-                buildType,
-              }),
-              {
-                output: true,
-              },
-            )
-            .unitlOutputContains(
-              lib.libraryBuild.getLibraryBuildSuccessComamnd,
-              [],
-              0,
-              () => {
-                if (strategy === 'copy') {
-                  debouncedBuild();
-                }
-              },
-            );
-        })();
-      }
-      // await this.__indexRebuilder.startAndWatch({ taskName: 'index rebuild watch' });
       Helpers.success('BUILD DONE.. watching..');
     } else {
       // await this.__indexRebuilder.start({ taskName: 'index rebuild watch' });
@@ -402,6 +362,165 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     }
     //#endregion
 
+    //#endregion
+  }
+  //#endregion
+
+  //#region getters & methods / lib watch build process
+  protected async libWatchBuildProcess({
+    lib,
+    locationsForNodeModules,
+    strategy,
+    buildType,
+    outputLineReplace,
+  }: {
+    lib: PROJCET;
+    locationsForNodeModules: string[];
+    strategy: 'link' | 'copy';
+    buildType: CoreModels.LibraryType;
+    outputLineReplace?: (outputLine: string) => string;
+  }) {
+    //#region @backendFunc
+
+    //#region debouce copy/link
+    const debouncedBuild = _.debounce(() => {
+      const sourceDist = lib.parent.pathFor([config.folder.dist, lib.basename]);
+      for (const node_modules of locationsForNodeModules) {
+        const dest = crossPlatformPath([node_modules, lib.name]);
+        if (Helpers.isSymlinkFileExitedOrUnexisted(dest)) {
+          Helpers.remove(dest);
+        }
+        Helpers.copy(sourceDist, dest);
+        // console.log({ sourceDist, dest });
+        console.log(
+          `Sync (watch) done for ${lib.basename} to ${lib.name} (${crossPlatformPath(
+            [
+              path.basename(path.dirname(node_modules)),
+              config.folder.node_modules,
+            ],
+          )})`,
+        );
+      }
+    }, 500);
+    //#endregion
+
+    //#region watch build process
+    await (lib.parent as BaseProject).execute(
+      lib.libraryBuild.getLibraryBuildComamnd({
+        watch: true,
+        buildType,
+      }),
+      {
+        outputLineReplace,
+        resolvePromiseMsg: {
+          stdout: lib.libraryBuild.getLibraryBuildSuccessComamnd,
+        },
+        resolvePromiseMsgCallback: {
+          stdout: () => {
+            if (strategy === 'copy') {
+              debouncedBuild();
+            }
+          },
+        },
+      },
+    );
+    //#endregion
+
+    //#endregion
+  }
+  //#endregion
+
+  //#region getters & methods / lib normal build process
+  protected async libNormalBuildProcess({
+    lib,
+    locationsForNodeModules,
+    strategy,
+    buildType,
+    outputLineReplace,
+  }: {
+    lib: PROJCET;
+    locationsForNodeModules: string[];
+    strategy: 'link' | 'copy';
+    buildType: CoreModels.LibraryType;
+    outputLineReplace?: (outputLine: string) => string;
+  }) {
+    //#region @backendFunc
+
+    const libCompiledInDist = lib.parent.pathFor([
+      config.folder.dist,
+      lib.basename,
+    ]);
+
+    //#region compile process
+    const compileProcess = async () => {
+      if (!Helpers.exists(libCompiledInDist)) {
+        Helpers.info(`Compiling ${lib.name} ...`);
+        await (lib.parent as PROJCET).execute(
+          lib.libraryBuild.getLibraryBuildComamnd({
+            watch: false,
+            buildType,
+          }),
+          {
+            resolvePromiseMsg: {
+              stdout: lib.libraryBuild.getLibraryBuildSuccessComamnd,
+            },
+            outputLineReplace,
+          },
+        );
+      }
+    };
+    //#endregion
+
+    if (strategy === 'link') {
+      //#region link dist to node_modules
+
+      for (const node_modules_abs_path of locationsForNodeModules) {
+        const libInsideNodeModules = crossPlatformPath([
+          node_modules_abs_path,
+          lib.name,
+        ]);
+        if (!Helpers.isSymlinkFileExitedOrUnexisted(libInsideNodeModules)) {
+          Helpers.remove(libInsideNodeModules);
+        }
+        // console.log('linking from ', sourceDist);
+        // console.log('linking to ', dest);
+        // Helpers.remove(dest);
+        Helpers.createSymLink(libCompiledInDist, libInsideNodeModules, {
+          continueWhenExistedFolderDoesntExists: true,
+        });
+        console.log(
+          `Sync (link) done for ${lib.basename} to ${lib.name} (${crossPlatformPath(
+            [
+              path.basename(path.dirname(node_modules_abs_path)),
+              config.folder.node_modules,
+            ],
+          )})`,
+        );
+      }
+      await compileProcess();
+
+      //#endregion
+    } else if (strategy === 'copy') {
+      //#region copy dist to node_modules
+      await compileProcess();
+      for (const node_modules_abs_path of locationsForNodeModules) {
+        const libInsideNodeModules = crossPlatformPath([
+          node_modules_abs_path,
+          lib.name,
+        ]);
+        if (Helpers.isSymlinkFileExitedOrUnexisted(libInsideNodeModules)) {
+          Helpers.remove(libInsideNodeModules);
+        }
+        Helpers.copy(libCompiledInDist, libInsideNodeModules);
+        console.log(
+          `Sync done for ${lib.basename} to ${lib.name} (${crossPlatformPath([
+            path.basename(path.dirname(node_modules_abs_path)),
+            config.folder.node_modules,
+          ])})`,
+        );
+      }
+      //#endregion
+    }
     //#endregion
   }
   //#endregion

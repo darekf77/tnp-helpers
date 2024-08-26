@@ -1,5 +1,5 @@
 import { _ } from 'tnp-core/src';
-import { Helpers } from '../../index';
+import { Helpers, UtilsTerminal } from '../../index';
 
 export class HelpersConsoleGuiQuestion {
   //#region qestion yes / no
@@ -24,6 +24,9 @@ export class HelpersConsoleGui {
 
   //#region select
   //#region @backend
+  /**
+   * @deprecated use UtilsTerminal.select
+   */
   select = async <T = string>(
     questionMessage: string,
     choices:
@@ -41,18 +44,21 @@ export class HelpersConsoleGui {
 
   //#region multiselect
   //#region @backend
+  /**
+   * @deprecated use UtilsTerminal.multiselect
+   */
   multiselect = async (
     questionMessage: string,
     choices: { name: string; value: string }[],
     autocomplete?: boolean,
     selected?: { name: string; value: string }[],
   ) => {
-    return await Helpers.multipleChoicesAsk(
-      questionMessage,
+    return UtilsTerminal.multiselect({
+      autocomplete,
       choices,
-      !!autocomplete,
-      selected,
-    );
+      question: questionMessage,
+      defaultSelected: (selected || []).map(s => s.value),
+    });
   };
   //#endregion
   //#endregion

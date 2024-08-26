@@ -13,7 +13,7 @@ import { CLI } from 'tnp-cli/src';
 import * as dateformat from 'dateformat';
 import { exec } from 'child_process';
 import type { BaseProject } from '../../index';
-import { Helpers } from '../../index';
+import { Helpers, UtilsTerminal } from '../../index';
 import { CLASS } from 'typescript-class-helpers/src';
 import { config } from 'tnp-config/src';
 import { Log, Level } from 'ng2-logger/src';
@@ -169,6 +169,9 @@ export class HelpersProcess {
   //#endregion
 
   //#region list
+  /**
+   * @deprecated use UtilsTerminal.multiselect
+   */
   async list<T = string>(
     question: string,
     choices:
@@ -199,56 +202,21 @@ export class HelpersProcess {
   //#endregion
 
   //#region multiple choices ask
+  /**
+   * @deprecated use UtilsTerminal.multiselect
+   */
   async multipleChoicesAsk(
     question: string,
     choices: { name: string; value: string }[],
     autocomplete: boolean = false,
     selected?: { name: string; value: string }[],
   ): Promise<string[]> {
-    if (autocomplete) {
-      // // console.log({ choices })
-      // // Helpers.pressKeyAndContinue()
-      // const { checkbox } = await import('@inquirer/prompts');
-      // const answer = await checkbox({
-      //   message: question,
-      //   pageSize: 10,
-      //   choices,
-      // });
-
-      // console.log({ answer });
-      // return answer;
-
-      const prompt = new AutoComplete({
-        name: 'value',
-        message: question,
-        limit: 10,
-        multiple: true,
-        choices,
-        initial: (selected || []).map(s => s.name),
-        // selected,
-        hint: '- Space to select. Return to submit',
-        footer() {
-          return CLI.chalk.green('(Scroll up and down to reveal more choices)');
-        },
-        result(names) {
-          return _.values(this.map(names)) || [];
-        },
-      });
-
-      const res = await prompt.run();
-      return res;
-    } else {
-      const res = (await inquirer.prompt({
-        type: 'checkbox',
-        name: 'value',
-        message: question,
-        default: selected.map(s => s.name),
-        choices,
-        pageSize: 10,
-        loop: false,
-      } as any)) as any;
-      return res.value;
-    }
+    return UtilsTerminal.multiselect({
+      question,
+      choices,
+      autocomplete,
+      defaultSelected: (selected || []).map(s => s.value),
+    });
   }
   //#endregion
 
@@ -286,6 +254,7 @@ export class HelpersProcess {
 
   //#region select
   /**
+   * @deprecated use UtilsTerminal.multiselect
    * TODO wierd problem when pressing key like "i"
    */
   async selectChoicesAsk<T = string>(

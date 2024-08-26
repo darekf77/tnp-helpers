@@ -580,7 +580,7 @@ export class BaseGit<
         })
         .filter(f => !!f);
     } else {
-      childrenRepos = this.project.children;
+      childrenRepos = this.project.children as PROJCET[];
     }
 
     childrenRepos = childrenRepos.filter(

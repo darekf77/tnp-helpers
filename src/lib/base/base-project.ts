@@ -38,7 +38,7 @@ import { BaseReleaseProcess } from './base-release-process';
 const takenPorts = [];
 
 export abstract class BaseProject<
-  PROJCET extends BaseProject = any,
+  PROJCET extends BaseProject<any, any> = BaseProject<any, any>,
   TYPE = BaseProjectType,
 > {
   //#region static
@@ -67,7 +67,7 @@ export abstract class BaseProject<
    */
   readonly port: string;
 
-  public libraryBuild: BaseLibraryBuild;
+  public libraryBuild: BaseLibraryBuild<BaseProject>;
   public npmHelpers: BaseNpmHelpers;
   public linkedProjects: BaseLinkedProjects;
   public vsCodeHelpers: BaseVscodeHelpers;
