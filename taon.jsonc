@@ -4,10 +4,16 @@
   "overrided": {
     "ignoreDepsPattern": [],
     "includeAsDev": [],
-    "includeOnly": ["tnp-models", "task.js", "json10-writer", "lowdb", "typescript"],
+    "includeOnly": [
+      "tnp-models",
+      "task.js",
+      "json10-writer",
+      "lowdb",
+      "typescript",
+    ],
     "dependencies": {},
     "linkedFolders": [],
-    "npmFixes": []
+    "npmFixes": [],
   },
 
   "smartContainerBuildTarget": "",
@@ -21,7 +27,7 @@
     "cliBuildNoDts": false,
     "cliBuildObscure": false,
     "cliBuildIncludeNodeModules": false,
-    "cliBuildUglify": false
+    "cliBuildUglify": false,
   },
 
   "smartContainerTarget": "",
@@ -29,7 +35,7 @@
   "version": "v18",
 
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
   },
 
   "description": "",
@@ -38,5 +44,5 @@
   "author": "",
   "homepage": "https://github.com/darekf77/tnp-helpers#readme",
   "workerPlugins": {},
-  "additionalNpmNames": ["firedev-helpers"]
+  "additionalNpmNames": ["taon-helpers"],
 }
