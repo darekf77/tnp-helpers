@@ -139,7 +139,7 @@ export abstract class CommandLineFeature<
     const method = methods.find(m => m === firstArg);
     // console.log('className',className)
     if (method && !!className) {
-      // this prevents firedev reset develop => to run: firedev develop
+      // this prevents taon reset develop => to run: taon develop
       methodNameToCall = method;
       argsWithParams = argsWithParams.split(' ').slice(1).join(' ');
       this.argsWithParams = argsWithParams;

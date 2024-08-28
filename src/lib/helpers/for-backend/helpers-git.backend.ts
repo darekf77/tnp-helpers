@@ -25,7 +25,7 @@ export class HelpersGit {
 
   //#region get last commit hash
   lastCommitHash(cwd): string {
-    Helpers.log('[firedev-helpers][lastcommithash] ' + cwd, 1);
+    Helpers.log('[taon-helpers][lastcommithash] ' + cwd, 1);
     try {
       let hash =
         this.isInsideGitRepo(cwd) &&
@@ -37,7 +37,7 @@ export class HelpersGit {
     } catch (e) {
       Helpers.log(e, 1);
       Helpers.log(
-        `[firedev-helpers][lastCommitHash] Not able to get last commit hash for repository in ${cwd}`,
+        `[taon-helpers][lastCommitHash] Not able to get last commit hash for repository in ${cwd}`,
         1,
       );
       return null;
@@ -114,7 +114,7 @@ export class HelpersGit {
    */
   lastTagNameForMajorVersion(cwd, majorVersion: string): string {
     Helpers.log(
-      '[firedev-helpers][lastTagNameForMajorVersion] ' +
+      '[taon-helpers][lastTagNameForMajorVersion] ' +
         cwd +
         '  major ver:' +
         majorVersion,
@@ -219,7 +219,7 @@ export class HelpersGit {
       };
     } catch (error) {
       Helpers.error(
-        '[firedev-helpers][git] Error:' + error.message,
+        '[taon-helpers][git] Error:' + error.message,
         false,
         true,
       );
@@ -230,7 +230,7 @@ export class HelpersGit {
 
   //#region get last tag hash
   lastTagHash(cwd): string {
-    Helpers.log('[firedev-helpers][lastTagHash] ' + cwd, 1);
+    Helpers.log('[taon-helpers][lastTagHash] ' + cwd, 1);
     try {
       const tag = Helpers.git.lastTagVersionName(cwd);
       if (!tag) {
@@ -244,7 +244,7 @@ export class HelpersGit {
     } catch (e) {
       Helpers.log(e, 1);
       Helpers.log(
-        `[firedev-helpers][lastCommitHash] Not able to get last commit hash for repository in ${cwd}`,
+        `[taon-helpers][lastCommitHash] Not able to get last commit hash for repository in ${cwd}`,
         1,
       );
       return null;
@@ -254,7 +254,7 @@ export class HelpersGit {
 
   //#region get last commit date
   lastCommitDate(cwd: string): Date {
-    Helpers.log('[firedev-helpers][lastCommitDate] ' + cwd, 1);
+    Helpers.log('[taon-helpers][lastCommitDate] ' + cwd, 1);
     try {
       let unixTimestamp =
         this.isInsideGitRepo(cwd) &&
@@ -267,7 +267,7 @@ export class HelpersGit {
     } catch (e) {
       Helpers.log(e, 1);
       Helpers.log(
-        `[firedev-helpers][lastCommitDate] Cannot counts commits in branch in: ${cwd}`,
+        `[taon-helpers][lastCommitDate] Cannot counts commits in branch in: ${cwd}`,
         1,
       );
       return null;
@@ -287,7 +287,7 @@ export class HelpersGit {
       });
       if (log.total === 0) {
         console.warn(
-          `[firedev-helpers][getCommitMessageByHash] No commit found with hash "${hash}"`,
+          `[taon-helpers][getCommitMessageByHash] No commit found with hash "${hash}"`,
         );
         return '';
       }
@@ -319,7 +319,7 @@ export class HelpersGit {
 
       if (index < 0 || index >= commitMessages.length) {
         console.warn(
-          `[firedev-helpers][getCommitMessageByIndex] Index (${index}) out of bounds`,
+          `[taon-helpers][getCommitMessageByIndex] Index (${index}) out of bounds`,
         );
         return '';
       }
@@ -353,7 +353,7 @@ export class HelpersGit {
 
       if (index < 0 || index >= commits.length) {
         console.warn(
-          `[firedev-helpers][getCommitMessageByIndex] Index (${index}) out of bounds`,
+          `[taon-helpers][getCommitMessageByIndex] Index (${index}) out of bounds`,
         );
         return '';
       }
@@ -370,7 +370,7 @@ export class HelpersGit {
 
   //#region get last commit date
   lastCommitMessage(cwd): string {
-    Helpers.log('[firedev-helpers][lastCommitMessage] ' + cwd, 1);
+    Helpers.log('[taon-helpers][lastCommitMessage] ' + cwd, 1);
     try {
       let unixTimestamp = child_process
         .execSync(`git log -1 --pretty=%B`, { cwd })
@@ -380,7 +380,7 @@ export class HelpersGit {
     } catch (e) {
       Helpers.log(e, 1);
       Helpers.log(
-        `[firedev-helpers]lastCommitMessage] Cannot display last commit message in branch in: ${cwd}`,
+        `[taon-helpers]lastCommitMessage] Cannot display last commit message in branch in: ${cwd}`,
         1,
       );
       return null;
@@ -396,12 +396,12 @@ export class HelpersGit {
 
   //#region get number of commit in repository
   countCommits(cwd: string) {
-    Helpers.log('[firedev-helpers][countCommits] ' + cwd, 1);
+    Helpers.log('[taon-helpers][countCommits] ' + cwd, 1);
     if (!Helpers.git.hasAnyCommits(cwd)) {
       return 0;
     }
     try {
-      Helpers.log('[firedev-helpers] RUNNING COUNT COMMITS');
+      Helpers.log('[taon-helpers] RUNNING COUNT COMMITS');
       // git rev-parse HEAD &> /dev/null check if any commits
       let currentLocalBranch = this.currentBranchName(cwd);
       let value = Number(
@@ -416,7 +416,7 @@ export class HelpersGit {
     } catch (e) {
       Helpers.log(e, 1);
       Helpers.log(
-        `[firedev-helpers][countCommits] Cannot counts commits in branch in: ${cwd}`,
+        `[taon-helpers][countCommits] Cannot counts commits in branch in: ${cwd}`,
         1,
       );
       return 0;
@@ -426,7 +426,7 @@ export class HelpersGit {
 
   //#region get number of commit in repository
   hasAnyCommits(cwd: string) {
-    // con.log('[firedev-helpers][hasAnyCommits] ' + cwd, 1)
+    // con.log('[taon-helpers][hasAnyCommits] ' + cwd, 1)
     try {
       if (process.platform === 'win32') {
         Helpers.run('git rev-parse HEAD', {
@@ -450,7 +450,7 @@ export class HelpersGit {
 
   //#region get number of commit in repository
   isInMergeProcess(cwd: string) {
-    Helpers.log('[firedev-helpers][hasAnyCommits] ' + cwd, 1);
+    Helpers.log('[taon-helpers][hasAnyCommits] ' + cwd, 1);
     try {
       const message = (child_process.execSync(`git status`, { cwd }) || '')
         .toString()
@@ -464,7 +464,7 @@ export class HelpersGit {
 
   //#region get branches names
   getBranchesNames(cwd: string, pattern?: string | RegExp): string[] {
-    Helpers.log('[firedev-helpers][getBranchesNames] ' + cwd, 1);
+    Helpers.log('[taon-helpers][getBranchesNames] ' + cwd, 1);
     try {
       let branchPattern = pattern;
       if (_.isString(pattern)) {
@@ -505,7 +505,7 @@ export class HelpersGit {
     } catch (e) {
       Helpers.log(e);
       Helpers.log(
-        '[firedev-helpers][getBranchesNames] not able to get branches names',
+        '[taon-helpers][getBranchesNames] not able to get branches names',
       );
       return [];
     }
@@ -542,7 +542,7 @@ export class HelpersGit {
 
   //#region get current branch name
   currentBranchName(cwd) {
-    Helpers.log('[firedev-helpers][currentBranchName] ' + cwd, 1);
+    Helpers.log('[taon-helpers][currentBranchName] ' + cwd, 1);
     try {
       const branchName = child_process
         .execSync(`git branch | sed -n '/\* /s///p'`, { cwd })
@@ -564,7 +564,7 @@ export class HelpersGit {
 
   //#region commit
   commit(cwd: string, commitMessage?: string): void {
-    Helpers.log('[firedev-helpers][commit] ' + cwd, 1);
+    Helpers.log('[taon-helpers][commit] ' + cwd, 1);
     if (!_.isString(commitMessage)) {
       commitMessage = 'update';
     }
@@ -603,7 +603,7 @@ export class HelpersGit {
     commitMessage = commitMessage.replace(/\'\'/g, `'`);
 
     try {
-      Helpers.info(`[firedev-helpers][git][commit] trying to commit what it with argument:
+      Helpers.info(`[taon-helpers][git][commit] trying to commit what it with argument:
       "${commitMessage}"
       location: ${cwd}
       `);
@@ -614,7 +614,7 @@ export class HelpersGit {
     } catch (error) {
       Helpers.log(error);
       Helpers.log(
-        `[firedev-helpers][git][commit] not able to commit with command: ${commandToExecute}`,
+        `[taon-helpers][git][commit] not able to commit with command: ${commandToExecute}`,
       );
     }
   }
@@ -628,7 +628,7 @@ export class HelpersGit {
    *
    */
   getOriginURL(cwd: string, differentOriginName = '') {
-    Helpers.log('[firedev-helpers][getOriginURL] ' + cwd, 1);
+    Helpers.log('[taon-helpers][getOriginURL] ' + cwd, 1);
     if (!this.isInsideGitRepo(cwd)) {
       return;
     }
@@ -703,11 +703,11 @@ export class HelpersGit {
 
   //#region is git root
   isGitRoot(cwd: string) {
-    Helpers.log('[firedev-helpers][isGitRoot] ' + cwd, 1);
+    Helpers.log('[taon-helpers][isGitRoot] ' + cwd, 1);
     if (!fse.existsSync(crossPlatformPath([cwd, '.git']))) {
       return false;
     }
-    Helpers.log('[firedev-helpers][isGitRepo] ' + cwd, 1);
+    Helpers.log('[taon-helpers][isGitRepo] ' + cwd, 1);
 
     try {
       var rootGitCwd = Helpers.run('git rev-parse --show-toplevel', {
@@ -733,7 +733,7 @@ export class HelpersGit {
 
   //#region is git repo
   isInsideGitRepo(cwd: string) {
-    Helpers.log('[firedev-helpers][isGitRepo] ' + cwd, 1);
+    Helpers.log('[taon-helpers][isGitRepo] ' + cwd, 1);
     if (!Helpers.git.hasAnyCommits(cwd)) {
       return false;
     }
@@ -813,7 +813,7 @@ export class HelpersGit {
   ) {
     options = options || ({} as any);
     let { askToRetry } = options || {};
-    Helpers.log('[firedev-helpers][pullCurrentBranch] ' + cwd, 1);
+    Helpers.log('[taon-helpers][pullCurrentBranch] ' + cwd, 1);
     if (global['tnpNonInteractive']) {
       askToRetry = false;
     }
@@ -826,7 +826,7 @@ export class HelpersGit {
       return;
     }
     Helpers.info(
-      `[firedev-helpers][${dateformat(new Date(), 'dd-mm-yyyy HH:MM:ss')}] Pulling git changes in "${cwd}", origin=${Helpers.git.getOriginURL(cwd)}  `,
+      `[taon-helpers][${dateformat(new Date(), 'dd-mm-yyyy HH:MM:ss')}] Pulling git changes in "${cwd}", origin=${Helpers.git.getOriginURL(cwd)}  `,
     );
     while (true) {
       try {
@@ -839,13 +839,13 @@ export class HelpersGit {
           branchName: currentLocalBranch,
         });
         Helpers.info(
-          `[firedev-helpers] Branch "${currentLocalBranch}" updated successfully in ${path.basename(cwd)}`,
+          `[taon-helpers] Branch "${currentLocalBranch}" updated successfully in ${path.basename(cwd)}`,
         );
         break;
       } catch (e) {
         // console.log(e)
         Helpers.error(
-          `[firedev-helpers] Cannot update current branch in: ${cwd}`,
+          `[taon-helpers] Cannot update current branch in: ${cwd}`,
           askToRetry,
           true,
         );
@@ -941,7 +941,7 @@ ${cwd}
         process.exit(0);
       }
     }
-    Helpers.log('[firedev-helpers][pushCurrentBranch] ' + cwd, 1);
+    Helpers.log('[taon-helpers][pushCurrentBranch] ' + cwd, 1);
     const currentBranchName = Helpers.git.currentBranchName(cwd);
 
     while (true) {
@@ -962,7 +962,7 @@ ${cwd}
         break;
       } catch (err) {
         Helpers.error(
-          `[firedev-helpers] Not able to push branch ${currentBranchName} in (origin=${origin}):
+          `[taon-helpers] Not able to push branch ${currentBranchName} in (origin=${origin}):
         ${cwd}`,
           true,
           true,
@@ -1197,18 +1197,18 @@ ${cwd}
     Helpers.log('[clone] ' + cwd, 1);
     // const ALWAYS_HTTPS = true;
     if (!url) {
-      Helpers.error(`[firedev-helpers] no url provided for cloning`);
+      Helpers.error(`[taon-helpers] no url provided for cloning`);
     }
 
     if (url.split(' ').length > 2) {
       // const [rUrl, rDest] = url.split(' ');
-      Helpers.error(`[firedev-helpers]incorrect clone url "${url}"`);
+      Helpers.error(`[taon-helpers]incorrect clone url "${url}"`);
     }
 
     if (url.split(' ').length === 2) {
       const [rUrl, rDest] = url.split(' ');
       if (destinationFolderName) {
-        Helpers.error(`[firedev-helpers] wrong cloning argument
+        Helpers.error(`[taon-helpers] wrong cloning argument
 
         url = "${url}"
         destinationFolderName = "${destinationFolderName}"
@@ -1245,7 +1245,7 @@ ${cwd}
       Helpers.exists(path.join(cloneFolderPath, '.git'))
     ) {
       Helpers.warn(
-        `[firedev-helpers] Already cloned ${path.basename(cloneFolderPath)}...`,
+        `[taon-helpers] Already cloned ${path.basename(cloneFolderPath)}...`,
       );
       return cloneFolderPath;
     }
@@ -1270,13 +1270,13 @@ ${cwd}
         } catch (error) {
           if (error?.stderr?.toString()?.search('remote: Not Found') !== -1) {
             Helpers.error(
-              `[firedev-helpers][git] Project not found :${url}`,
+              `[taon-helpers][git] Project not found :${url}`,
               true,
               true,
             );
           } else {
             Helpers.error(
-              `[firedev-helpers] Can't clone from url: ${CLI.chalk.bold(url)}..`,
+              `[taon-helpers] Can't clone from url: ${CLI.chalk.bold(url)}..`,
               true,
               true,
             );
@@ -1311,7 +1311,7 @@ ${cwd}
     // const packageJson = path.join(cloneFolderPath, config.file.package_json);
     // Helpers.info(packageJson)
     // if (!Helpers.exists(packageJson) && Helpers.exists(cloneFolderPath)) {
-    //   Helpers.info(`[firedev-helpers] Recreating unexited package.json for project ${path.basename(cloneFolderPath)}..`);
+    //   Helpers.info(`[taon-helpers] Recreating unexited package.json for project ${path.basename(cloneFolderPath)}..`);
     //   try {
     //     Helpers.run(`npm init -y`, { cwd: cloneFolderPath, output: false }).sync();
     //   } catch (error) { }
@@ -1322,7 +1322,7 @@ ${cwd}
   //#region check if there are some uncommited changes
   checkIfthereAreSomeUncommitedChange(cwd: string) {
     Helpers.log(
-      '[firedev-helpers][checkIfthereAreSomeUncommitedChange] ' + cwd,
+      '[taon-helpers][checkIfthereAreSomeUncommitedChange] ' + cwd,
       1,
     );
     return Helpers.git.thereAreSomeUncommitedChangeExcept([], cwd);
@@ -1332,7 +1332,7 @@ ${cwd}
   //#region check if there are some uncommited changes except
   thereAreSomeUncommitedChangeExcept(filesList: string[] = [], cwd: string) {
     Helpers.log(
-      '[firedev-helpers][thereAreSomeUncommitedChangeExcept] ' + cwd,
+      '[taon-helpers][thereAreSomeUncommitedChangeExcept] ' + cwd,
       1,
     );
     filesList = filesList.map(f => crossPlatformPath(f));
@@ -1362,7 +1362,7 @@ ${cwd}
   //#region check if there are some uncommited changes except
   uncommitedFiles(cwd: string) {
     Helpers.log(
-      '[firedev-helpers][thereAreSomeUncommitedChangeExcept] ' + cwd,
+      '[taon-helpers][thereAreSomeUncommitedChangeExcept] ' + cwd,
       1,
     );
 
@@ -1390,18 +1390,18 @@ ${cwd}
 
   //#region restore last version
   restoreLastVersion(cwd: string, relativeFilePath: string) {
-    Helpers.log('[firedev-helpers][restoreLastVersion] ' + cwd, 1);
+    Helpers.log('[taon-helpers][restoreLastVersion] ' + cwd, 1);
     if (!Helpers.exists([cwd, relativeFilePath])) {
       return;
     }
     try {
       Helpers.log(
-        `[firedev-helpers][git] restoring last verion of file ${path.basename(cwd)}/${relativeFilePath}`,
+        `[taon-helpers][git] restoring last verion of file ${path.basename(cwd)}/${relativeFilePath}`,
       );
       Helpers.run(`git checkout -- ${relativeFilePath}`, { cwd }).sync();
     } catch (error) {
       Helpers.warn(
-        `[firedev-helpers][git] Not able to resotre last version of file ${relativeFilePath}`,
+        `[taon-helpers][git] Not able to resotre last version of file ${relativeFilePath}`,
       );
     }
   }
@@ -1409,13 +1409,13 @@ ${cwd}
 
   //#region reset files
   resetFiles(cwd: string, ...relativePathes: string[]) {
-    Helpers.log('[firedev-helpers][resetFiles] ' + cwd, 1);
+    Helpers.log('[taon-helpers][resetFiles] ' + cwd, 1);
     relativePathes.forEach(p => {
       try {
         Helpers.run(`git checkout HEAD -- ${p}`, { cwd }).sync();
       } catch (err) {
         Helpers.error(
-          `[firedev-helpers][git] Not able to reset files: ${p} inside project ${path.basename(cwd)}.`,
+          `[taon-helpers][git] Not able to reset files: ${p} inside project ${path.basename(cwd)}.`,
           true,
           true,
         );
@@ -1458,7 +1458,7 @@ ${cwd}
 
     if (originHttp === 'undefined' || _.isNil(originHttp)) {
       Helpers.error(
-        '[firedev-helpers][originHttpToSsh] Origin URL is not defined',
+        '[taon-helpers][originHttpToSsh] Origin URL is not defined',
       );
       return originHttp;
     }
@@ -1504,7 +1504,7 @@ ${cwd}
 
     if (originSsh === 'undefined' || _.isNil(originSsh)) {
       Helpers.error(
-        '[firedev-helpers][originSshToHttp] Origin URL is not defined',
+        '[taon-helpers][originSshToHttp] Origin URL is not defined',
       );
       return originSsh;
     }
@@ -1592,7 +1592,7 @@ ${cwd}
       const log = await git.log();
       if (index >= log.total) {
         console.warn(
-          '[firedev-helpers][getChangedFilesInCommitByIndex] Index out of range',
+          '[taon-helpers][getChangedFilesInCommitByIndex] Index out of range',
         );
         return [];
       }

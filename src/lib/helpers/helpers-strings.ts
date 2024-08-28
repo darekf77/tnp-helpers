@@ -18,7 +18,7 @@ export class HelpersStrings {
    */
   interpolateString<T = any>(value: string) {
     if (typeof value !== 'string') {
-      Helpers.warn('[firedev-heleprs] Value for interpolation is not string: ', value);
+      Helpers.warn('[taon-heleprs] Value for interpolation is not string: ', value);
       return value;
     }
 
@@ -26,7 +26,7 @@ export class HelpersStrings {
       withParameters(parameters: T) {
         if (typeof parameters !== 'object') {
           Helpers.log(parameters as any);
-          Helpers.warn('[firedev-heleprs] Parameters are not a object: ');
+          Helpers.warn('[taon-heleprs] Parameters are not a object: ');
           return value;
         }
         return value.replace(/{([^{}]*)}/g, function (a, b) {

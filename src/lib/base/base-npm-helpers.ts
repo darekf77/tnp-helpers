@@ -91,33 +91,33 @@ export class BaseNpmHelpers<
   updateDependency({
     packageName,
     version,
-    updateFiredevJsonFirst,
+    updateTaonJsonFirst,
   }: {
     packageName: string;
     version: string | null;
-    updateFiredevJsonFirst?: boolean;
+    updateTaonJsonFirst?: boolean;
   }): void {
     //#region @backendFunc
-    if (updateFiredevJsonFirst) {
-      const firedevJson =
-        this.project.readJson<any>(config.file.firedev_jsonc) || {};
+    if (updateTaonJsonFirst) {
+      const taonJson =
+        this.project.readJson<any>(config.file.taon_jsonc) || {};
 
-      if (!firedevJson) {
-        Helpers.error(`Firedev json is not valid in ${this.project.location}`);
+      if (!taonJson) {
+        Helpers.error(`Taon json is not valid in ${this.project.location}`);
       }
 
-      const firedevJsonDeps = firedevJson.overrided?.dependencies || {};
+      const taonJsonDeps = taonJson.overrided?.dependencies || {};
 
       if (version === null) {
         // console.log('version change to ', 'null');
-        firedevJsonDeps[packageName] = version;
+        taonJsonDeps[packageName] = version;
       } else {
         // console.log('version change to ', version);
-        firedevJsonDeps[packageName] = version;
+        taonJsonDeps[packageName] = version;
       }
 
-      // console.log('firedevJson', firedevJson);
-      this.project.writeJsonC(config.file.firedev_jsonc, firedevJson);
+      // console.log('taonJson', taonJson);
+      this.project.writeJsonC(config.file.taon_jsonc, taonJson);
     }
     for (const depsName of CoreModels.PackageJsonDependencyObjArr) {
       if (
@@ -144,12 +144,12 @@ export class BaseNpmHelpers<
   async updateDep({
     packageName,
     version,
-    updateFiredevJsonFirst,
+    updateTaonJsonFirst,
     addIfNotExists,
   }: {
     packageName: string;
     version: string | null;
-    updateFiredevJsonFirst?: boolean;
+    updateTaonJsonFirst?: boolean;
     addIfNotExists?: boolean;
   }): Promise<void> {
     //#region @backendFunc
@@ -163,29 +163,29 @@ export class BaseNpmHelpers<
     //   await Helpers.questionYesNo(`Do you want to update ${packageName} to ${version} ?`);
     // }
     if (
-      updateFiredevJsonFirst &&
-      this.project.hasFile(config.file.firedev_jsonc)
+      updateTaonJsonFirst &&
+      this.project.hasFile(config.file.taon_jsonc)
     ) {
-      const firedevJson = (this.project.readJson<any>(
-        config.file.firedev_jsonc,
-      ) || {}) as CoreModels.FiredevJson;
+      const taonJson = (this.project.readJson<any>(
+        config.file.taon_jsonc,
+      ) || {}) as CoreModels.TaonJson;
 
-      if (!firedevJson) {
-        Helpers.error(`Firedev json is not valid in ${this.project.location}`);
+      if (!taonJson) {
+        Helpers.error(`Taon json is not valid in ${this.project.location}`);
       }
 
-      const firedevJsonDeps = firedevJson?.overrided?.dependencies || {};
+      const taonJsonDeps = taonJson?.overrided?.dependencies || {};
 
-      if (addIfNotExists && !_.isUndefined(firedevJsonDeps[packageName])) {
+      if (addIfNotExists && !_.isUndefined(taonJsonDeps[packageName])) {
         if (_.isUndefined(version)) {
-          delete firedevJsonDeps[packageName];
+          delete taonJsonDeps[packageName];
         } else {
-          firedevJsonDeps[packageName] = version;
+          taonJsonDeps[packageName] = version;
         }
       }
 
-      // console.log('firedevJson', firedevJson);
-      this.project.writeJsonC(config.file.firedev_jsonc, firedevJson);
+      // console.log('taonJson', taonJson);
+      this.project.writeJsonC(config.file.taon_jsonc, taonJson);
     }
     for (const depsName of CoreModels.PackageJsonDependencyObjArr) {
       if (
@@ -201,13 +201,13 @@ export class BaseNpmHelpers<
       }
     }
     if (
-      updateFiredevJsonFirst &&
+      updateTaonJsonFirst &&
       this.packageJSON[config.packageJsonFrameworkKey]
     ) {
       // QUICK_FIX
       this.packageJSON[config.packageJsonFrameworkKey] = this.project.readJson(
         // QUICK_FIX
-        config.file.firedev_jsonc,
+        config.file.taon_jsonc,
       );
     }
     this.project.writeJson(config.file.package_json, this.packageJSON);

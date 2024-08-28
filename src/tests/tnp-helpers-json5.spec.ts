@@ -27,7 +27,7 @@ let json5Test2 = `
     `;
 
 
-describe('firedev-helpers json5', () => {
+describe('taon-helpers json5', () => {
 
   beforeEach(() => {
     Helpers.removeFileIfExists(tempFilePath);

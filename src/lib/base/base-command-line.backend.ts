@@ -1069,7 +1069,7 @@ Would you like to update current project configuration?`)
 
   //#region is terminal supported
   isTerminalSupported() {
-    console.log(`Terminal is supported: ${Helpers.isSupportedFiredevTerminal}`);
+    console.log(`Terminal is supported: ${Helpers.isSupportedTaonTerminal}`);
     this._exit();
   }
   //#endregion

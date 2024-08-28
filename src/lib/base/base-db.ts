@@ -31,7 +31,7 @@ export class BaseDb<DB extends object> {
 
   get projectsDbLocation() {
     //#region @backendFunc
-    const userFolder = crossPlatformPath([os.homedir(), `.firedev/apps/${this.dbName}-db/${this.ins.orgName}`]);
+    const userFolder = crossPlatformPath([os.homedir(), `.taon/apps/${this.dbName}-db/${this.ins.orgName}`]);
     try {
       Helpers.mkdirp(userFolder);
     } catch (error) { }
@@ -48,7 +48,7 @@ export class BaseDb<DB extends object> {
     try {
       this.lowDB = await JSONFilePreset(dbLocation, this.defaultDb);
     } catch (error) {
-      Helpers.error(`[firedev-helpers] Cannot use db.json file for projects in location, restoring default db.`, true, true)
+      Helpers.error(`[taon-helpers] Cannot use db.json file for projects in location, restoring default db.`, true, true)
       Helpers.writeJson(dbLocation, this.defaultDb);
       this.lowDB = await JSONFilePreset(dbLocation, this.defaultDb);
     }

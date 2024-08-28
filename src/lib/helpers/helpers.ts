@@ -63,14 +63,14 @@ export function applyMixins(derivedCtor: any, baseCtors: any[]) {
 }
 //#endregion
 
-export class HelpersFiredev extends CoreHelpers {
+export class HelpersTaon extends CoreHelpers {
   //#region staic
-  private static _instance: HelpersFiredev & CoreHelpers;
-  public static get Instance(): HelpersFiredev {
-    if (!HelpersFiredev._instance) {
-      HelpersFiredev._instance = new HelpersFiredev();
+  private static _instance: HelpersTaon & CoreHelpers;
+  public static get Instance(): HelpersTaon {
+    if (!HelpersTaon._instance) {
+      HelpersTaon._instance = new HelpersTaon();
     }
-    return HelpersFiredev._instance;
+    return HelpersTaon._instance;
   }
   //#endregion
 
@@ -256,7 +256,7 @@ export class HelpersFiredev extends CoreHelpers {
     //#region @backend
     if (!(await isElevated())) {
       Helpers.error(
-        `[firedev-helpers] Please run this program as sudo (or admin on windows)`,
+        `[taon-helpers] Please run this program as sudo (or admin on windows)`,
         false,
         true,
       );
@@ -557,7 +557,7 @@ export class HelpersFiredev extends CoreHelpers {
 /* eslint-disable prettier/prettier */
 //#region class mixins
 // @ts-ignore
-export interface HelpersFiredev extends
+export interface HelpersTaon extends
   HelpersStringsRegexes
   //#region @backend
   ,
@@ -567,7 +567,7 @@ export interface HelpersFiredev extends
 { }
 
 
-applyMixins(HelpersFiredev, [
+applyMixins(HelpersTaon, [
   HelpersStringsRegexes,
   //#region @backend
   HelpersProcess,

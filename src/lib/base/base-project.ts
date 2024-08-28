@@ -258,14 +258,14 @@ export abstract class BaseProject<
 
     let subdirectories = getDirectories(this.location).filter(f => {
       const folderName = path.basename(f);
-      return Helpers.checkIfNameAllowedForFiredevProj(folderName);
+      return Helpers.checkIfNameAllowedForTaonProj(folderName);
     });
 
-    // if (this.isTnp' && fse.existsSync(path.join(this.location, '../firedev-projects'))) {
-    //   subdirectories = subdirectories.concat(getDirectories(path.join(this.location, '../firedev-projects'))
+    // if (this.isTnp' && fse.existsSync(path.join(this.location, '../taon-projects'))) {
+    //   subdirectories = subdirectories.concat(getDirectories(path.join(this.location, '../taon-projects'))
     //     .filter(f => {
     //       const folderName = path.basename(f);
-    //       return Helpers.checkIfNameAllowedForFiredevProj(folderName);
+    //       return Helpers.checkIfNameAllowedForTaonProj(folderName);
     //     }))
     // }'
     return subdirectories;
@@ -699,7 +699,7 @@ export abstract class BaseProject<
       startFrom += 1;
       if (i++ === max) {
         Helpers.error(
-          `[firedev-helpers]] failed to assign free port after ${max} trys...`,
+          `[taon-helpers]] failed to assign free port after ${max} trys...`,
         );
       }
     }
@@ -744,7 +744,7 @@ export abstract class BaseProject<
             }
           } else {
             Helpers.warn(
-              `[firedev-helpers] Cannot create dynamic instance of class "${_.kebabCase(prefixedName.replace('__', ''))}".`,
+              `[taon-helpers] Cannot create dynamic instance of class "${_.kebabCase(prefixedName.replace('__', ''))}".`,
             );
           }
           // }

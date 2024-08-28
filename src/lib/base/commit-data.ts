@@ -328,9 +328,9 @@ export class CommitData {
       /**
        * only needed when push github
        * and I forgot to add my username before issue
-       * firedev pfix proper input my-repo#344
+       * taon pfix proper input my-repo#344
        * that should be
-       * firedev pfix proper input my-username/my-repo#344
+       * taon pfix proper input my-username/my-repo#344
        */
       currentOrigin?: string;
     },
@@ -412,9 +412,9 @@ export class CommitData {
       /**
        * only needed when push github
        * and I forgot to add my username before issue
-       * firedev pfix proper input my-repo#344
+       * taon pfix proper input my-repo#344
        * that should be
-       * firedev pfix proper input my-username/my-repo#344
+       * taon pfix proper input my-username/my-repo#344
        */
       currentOrigin?: string;
     },
@@ -608,7 +608,7 @@ export class CommitData {
 
   //#region methods & getters / issues from other projects
   /**
-   * ex. firedev/GH-12  darekf77/tnp-helpers/GH-4
+   * ex. taon/GH-12  darekf77/tnp-helpers/GH-4
    */
   get issuesFromOtherProjects(): string[] {
     return this.__issuesFromOtherProjects;

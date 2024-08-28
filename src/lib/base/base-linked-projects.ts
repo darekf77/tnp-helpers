@@ -180,7 +180,7 @@ export class BaseLinkedProjects<
     //#region @backendFunc
     if (
       !Helpers.exists(this.linkedProjectsConfigPath) &&
-      Helpers.exists(this.project.pathFor(config.file.firedev_jsonc))
+      Helpers.exists(this.project.pathFor(config.file.taon_jsonc))
     ) {
       Helpers.writeJson(
         this.linkedProjectsConfigPath,

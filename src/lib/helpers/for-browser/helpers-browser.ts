@@ -1,7 +1,7 @@
 // session tab it
 // realtime session
 
-const key = Symbol('[firedev-helpers] helper browser key')
+const key = Symbol('[taon-helpers] helper browser key')
 
 export class HelpersBrowser {
 

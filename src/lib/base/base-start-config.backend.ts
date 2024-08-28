@@ -67,7 +67,7 @@ export class BaseStartConfig {
    */
   public readonly useStringArrForArgsFunctions: boolean;
   constructor(options: BaseStartConfigOptions) {
-    if (!Helpers.isSupportedFiredevTerminal) {
+    if (!Helpers.isSupportedTaonTerminal) {
       Helpers.error(
         `This terminal is not supported. Please use:
 

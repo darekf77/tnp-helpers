@@ -667,9 +667,9 @@ export class BaseGit<
       /**
        * only needed when push github
        * and I forgot to add my username before issue
-       * firedev pfix proper input my-repo#344
+       * taon pfix proper input my-repo#344
        * that should be
-       * firedev pfix proper input my-username/my-repo#344
+       * taon pfix proper input my-username/my-repo#344
        */
       currentOrigin?: string;
       skipChildren?: boolean;
@@ -963,9 +963,9 @@ export class BaseGit<
     /**
      * only needed when push github
      * and I forgot to add my username before issue
-     * firedev pfix proper input my-repo#344
+     * taon pfix proper input my-repo#344
      * that should be
-     * firedev pfix proper input my-username/my-repo#344
+     * taon pfix proper input my-username/my-repo#344
      */
     currentOrigin?: string,
   ): Promise<CommitData> {
@@ -1022,7 +1022,7 @@ export class BaseGit<
   //#endregion
 
   /**
-   * This will prevent accidental branch change for firedev projects
+   * This will prevent accidental branch change for taon projects
    * @returns branch name
    */
   duringPushWarnIfProjectNotOnSpecyficDevBranch(): string {

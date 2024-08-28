@@ -25,7 +25,7 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
   /**
    * general name for project company
    */
-  public orgName: string = 'firedev';
+  public orgName: string = 'taon';
   configDb: ConfigDatabase = new ConfigDatabase(this);
   projectsDb: ProjectDatabase = new ProjectDatabase(this);
 
@@ -62,7 +62,7 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
       process.cwd(),
     );
     if (!current) {
-      Helpers.warn(`[firedev-helpers] Current location is not a ${CLI.chalk.bold(config.frameworkName)} type project.
+      Helpers.warn(`[taon-helpers] Current location is not a ${CLI.chalk.bold(config.frameworkName)} type project.
 
      location: "${process.cwd()}"
 
@@ -124,7 +124,7 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
     //#region @backend
     if (!fse.existsSync(location)) {
       Helpers.log(
-        `[firedev-helpers][project.from] Cannot find project in location: ${location}`,
+        `[taon-helpers][project.from] Cannot find project in location: ${location}`,
         1,
       );
       this.emptyLocations.push(location);
@@ -171,7 +171,7 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
 
     if (_.isString(type) && !this.allowedTypes.includes(type)) {
       Helpers.error(
-        `[firedev-helpers][project.nearestTo] wrong type: ${type}`,
+        `[taon-helpers][project.nearestTo] wrong type: ${type}`,
         false,
         true,
       );

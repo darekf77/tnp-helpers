@@ -5,7 +5,7 @@ import { Helpers } from "../..";
 import { config } from "tnp-config/src";
 
 
-export namespace ValidatorsFiredev {
+export namespace ValidatorsTaon {
   //#region @backend
   export function isDockerProject(location: string) {
     if (fse.existsSync(path.join(location, 'Dockerfile'))) {

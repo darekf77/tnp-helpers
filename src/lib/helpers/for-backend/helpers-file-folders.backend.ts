@@ -248,7 +248,7 @@ export class HelpersFileFolders {
     (() => {
       const stringForRegex = `require\\(("|')\\.\\/([a-zA-Z0-9]|\\/|\\-|\\_|\\+|\\.)*("|')\\)`;
       Helpers.log(
-        `[firedev-helpre][require][${jsFilePath}] stringForRegex: ${stringForRegex}`,
+        `[taon-helpre][require][${jsFilePath}] stringForRegex: ${stringForRegex}`,
         1,
       );
 
@@ -279,7 +279,7 @@ export class HelpersFileFolders {
     (() => {
       const stringForRegex = `require\\(("|')([a-zA-Z0-9]|\\/|\\-|\\_|\\+|\\.)*("|')\\)`;
       Helpers.log(
-        `[firedev-helpre][require][${jsFilePath}] stringForRegex: ${stringForRegex}`,
+        `[taon-helpre][require][${jsFilePath}] stringForRegex: ${stringForRegex}`,
         1,
       );
 
@@ -339,7 +339,7 @@ export class HelpersFileFolders {
 
     if (source === destination) {
       Helpers.warn(
-        '[firedev-helpers] Probably error... trying to copy the same folder...',
+        '[taon-helpers] Probably error... trying to copy the same folder...',
       );
       return;
     }
@@ -611,7 +611,7 @@ to: ${to}
     return files;
   }
 
-  checkIfNameAllowedForFiredevProj(folderName: string): boolean {
+  checkIfNameAllowedForTaonProj(folderName: string): boolean {
     const notAllowed: RegExp[] = [
       '^.vscode$',
       '^node_modules$',
@@ -754,7 +754,7 @@ to: ${to}
     // destinationDir = destinationDir ? (destinationDir.replace(/\/$/, '')) : destinationDir;
     if (!fse.existsSync(sourceDir)) {
       Helpers.warn(
-        `[firedev-helper][copy] Source dir doesnt exist: ${sourceDir} for destination: ${destinationDir}`,
+        `[taon-helper][copy] Source dir doesnt exist: ${sourceDir} for destination: ${destinationDir}`,
       );
       return;
     }
@@ -795,7 +795,7 @@ to: ${to}
     //   fse.existsSync(destinationDir) && fse.statSync(destinationDir),
     // ];
     // if (destStat && destStat.ino && destStat.dev && destStat.ino === srcStat.ino && destStat.dev === srcStat.dev) {
-    //   Helpers.warn(`[firedev-helper][copy] Same location stats.. Trying to copy same source and destination:
+    //   Helpers.warn(`[taon-helper][copy] Same location stats.. Trying to copy same source and destination:
     //   from: ${sourceDir}
     //   to: ${destinationDir}
     //   `);
@@ -829,7 +829,7 @@ to: ${to}
       crossPlatformPath(path.resolve(sourceDir)) ===
         crossPlatformPath(path.resolve(destinationDir))
     ) {
-      Helpers.warn(`[firedev-helper][copy] Trying to copy same source and destination
+      Helpers.warn(`[taon-helper][copy] Trying to copy same source and destination
       from: ${sourceDir}
       to: ${destinationDir}
       `);
@@ -852,7 +852,7 @@ to: ${to}
           Helpers.isExistedSymlink(sourceDir) &&
           !Helpers.exists(fse.readlinkSync(sourceDir))
         ) {
-          Helpers.warn(`[firedev-helpers] Not copying empty link from: ${sourceDir}
+          Helpers.warn(`[taon-helpers] Not copying empty link from: ${sourceDir}
           `);
         } else {
           const copyFn = (): void => {
@@ -908,7 +908,7 @@ to: ${to}
               Helpers.log(error);
               if (!options!.dontAskOnError) {
                 Helpers.error(
-                  `[firedev-helper] Not able to copy folder:
+                  `[taon-helper] Not able to copy folder:
                 from: ${crossPlatformPath(sourceDir)}
                 to: ${crossPlatformPath(destinationDir)}
                 options: ${json5.stringify(options)}
@@ -1025,19 +1025,19 @@ to: ${to}
     const { debugMode, fast, transformTextFn, dontCopySameContent } = options;
     if (_.isFunction(transformTextFn) && fast) {
       Helpers.error(
-        `[firedev-helpers][copyFile] You cannot use  transformTextFn in fast mode`,
+        `[taon-helpers][copyFile] You cannot use  transformTextFn in fast mode`,
       );
     }
 
     if (!fse.existsSync(sourcePath)) {
       Helpers.logWarn(
-        `[firedev-helpers][copyFile] No able to find source of ${sourcePath}`,
+        `[taon-helpers][copyFile] No able to find source of ${sourcePath}`,
       );
       return false;
     }
     if (fse.lstatSync(sourcePath).isDirectory()) {
       Helpers.warn(
-        `[firedev-helpers][copyFile] Trying to copy directory as file: ${sourcePath}`,
+        `[taon-helpers][copyFile] Trying to copy directory as file: ${sourcePath}`,
         false,
       );
       return false;
@@ -1045,7 +1045,7 @@ to: ${to}
 
     if (sourcePath === destinationPath) {
       Helpers.warn(
-        `[firedev-helpers][copyFile] Trying to copy same file ${sourcePath}`,
+        `[taon-helpers][copyFile] Trying to copy same file ${sourcePath}`,
       );
       return false;
     }
@@ -1099,7 +1099,7 @@ to: ${to}
 
       debugMode &&
         Helpers.log(`
-      [firedev-helpers][copyFile] Write to: ${destinationPath} file:
+      [taon-helpers][copyFile] Write to: ${destinationPath} file:
 ============================================================================================
 ${sourceData}
 ============================================================================================

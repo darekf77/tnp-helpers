@@ -4,9 +4,9 @@ export { HelpersAngular } from './helpers/for-browser/angular.helper';
 //#endregion
 
 export * from './utils';
-import { HelpersFiredev as Base } from './helpers/helpers';
+import { HelpersTaon as Base } from './helpers/helpers';
 /**
- * Firedev helpers
+ * Taon helpers
  */ // @ts-ignore
 export const Helpers: Base = Base.Instance as Base;
 export * from './base';
