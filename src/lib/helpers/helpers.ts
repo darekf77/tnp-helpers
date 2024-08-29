@@ -21,7 +21,7 @@ import { HelpersPath } from './for-backend/helpers-path.backend';
 import { HelpersNetwork } from './for-backend/helpers-network.backend';
 import { HelpersJSON5 } from './helpers-json5.backend';
 import { TsCodeExtractor } from './for-backend/ts-code/ts-code-extractor';
-import { CLI } from 'tnp-cli/src';
+import { CLI } from 'tnp-core/src';
 import { HelpersVscode } from './for-backend/helpers-vscode.backend';
 //#endregion
 import { config } from 'tnp-config/src';

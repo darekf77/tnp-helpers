@@ -8,7 +8,7 @@ import { CommandOutputOptions } from 'tnp-core/src';
 
 //#endregion
 import { CoreModels } from 'tnp-core/src';
-import { CLI } from 'tnp-cli/src';
+import { CLI } from 'tnp-core/src';
 import { path, crossPlatformPath } from 'tnp-core/src';
 import { config } from 'tnp-config/src';
 import { _ } from 'tnp-core/src';

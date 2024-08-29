@@ -1,5 +1,5 @@
 import { _, crossPlatformPath } from 'tnp-core/src';
-import { CLI } from 'tnp-cli/src';
+import { CLI } from 'tnp-core/src';
 import { Helpers } from '../../index';
 
 

@@ -9,7 +9,7 @@ import {
   crossPlatformPath,
   chalk,
 } from 'tnp-core';
-import { CLI } from 'tnp-cli/src';
+import { CLI } from 'tnp-core/src';
 import * as dateformat from 'dateformat';
 import { exec } from 'child_process';
 import type { BaseProject } from '../../index';

@@ -8,7 +8,7 @@ import {
   crossPlatformPath,
   dateformat,
 } from 'tnp-core';
-import { CLI } from 'tnp-cli/src';
+import { CLI } from 'tnp-core/src';
 import { Helpers, UtilsTerminal } from '../../index';
 import type { BaseProject } from '../../index';
 import { config } from 'tnp-config/src';

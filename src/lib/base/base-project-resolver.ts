@@ -17,7 +17,7 @@ import { ProjectDatabase } from './project-database';
 import { os } from 'tnp-core/src';
 import { JSONFilePreset } from '../lowdb/node';
 export { ChildProcess } from 'child_process';
-import { CLI } from 'tnp-cli/src';
+import { CLI } from 'tnp-core/src';
 //#endregion
 //#endregion
 

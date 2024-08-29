@@ -7,7 +7,7 @@ import { LibTypeArr } from 'tnp-config/src';
 import type { BaseProject } from '../../index';
 //#region @backend
 import { fse } from 'tnp-core/src';
-import { CLI } from 'tnp-cli/src';
+import { CLI } from 'tnp-core/src';
 //#endregion
 //#endregion
 
