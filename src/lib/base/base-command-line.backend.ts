@@ -15,6 +15,7 @@ export class BaseCommandLine<
     Helpers.error('Please select git command');
   }
 
+  //#region commands / prevent cwd is not project
   /**
    * TODO return argument not need for now
    */
@@ -43,6 +44,7 @@ export class BaseCommandLine<
     }
     return true;
   }
+  //#endregion
 
   //#region commands / hosts
   hosts() {
@@ -615,7 +617,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
   }
   //#endregion
 
-  //#region  commands / melt
+  //#region commands / melt
   public async melt() {
     if (!(await this.preventCwdIsNotProject())) {
       return;
@@ -625,7 +627,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
   }
   //#endregion
 
-  //#region melt updat ecommits
+  //#region commands / melt updat ecommits
   private async meltUpdateCommits(hideInfo = false) {
     if (this.project.git.meltActionCommits(true) > 0) {
       if (!hideInfo) {
