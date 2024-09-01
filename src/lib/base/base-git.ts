@@ -590,6 +590,7 @@ export class BaseGit<
   }
   //#endregion
 
+  //#region getters & methods / set remote origin type
   protected async setRemoteOriginType(
     setOrigin: 'ssh' | 'http',
   ): Promise<void> {
@@ -604,6 +605,7 @@ export class BaseGit<
     }
     //#endregion
   }
+  //#endregion
 
   //#region methods & getters / push process
   async pullProcess(
@@ -1021,6 +1023,7 @@ export class BaseGit<
   }
   //#endregion
 
+  //#region methods & getters / prevent accidental branch change for taon projects
   /**
    * This will prevent accidental branch change for taon projects
    * @returns branch name
@@ -1028,7 +1031,9 @@ export class BaseGit<
   duringPushWarnIfProjectNotOnSpecyficDevBranch(): string {
     return void 0;
   }
+  //#endregion
 
+  //#region methods & getters / get changed files in commit by hash
   async getChangedFilesInCommitByHash(hash: string) {
     //#region @backendFunc
     return Helpers.git.getChangedFilesInCommitByHash(
@@ -1037,7 +1042,9 @@ export class BaseGit<
     );
     //#endregion
   }
+  //#endregion
 
+  //#region methods & getters / get changed files in commit
   /**
    * @param index 0 - means last commit
    */
@@ -1049,4 +1056,19 @@ export class BaseGit<
     );
     //#endregion
   }
+  //#endregion
+
+  //#region methods & getters / get changes summary
+  async changesSummary() {
+    //#region @backendFunc
+    const fillStringWithSpaceUpTo = (str: string, length: number, specialCharacter = ' ') => {
+      return str + specialCharacter.repeat(length - str.length);
+    };
+    return await Helpers.git.changesSummary(
+      this.project.location,
+      `${fillStringWithSpaceUpTo(`[${this.project.name}]`, 40,'.')} `,
+    );
+    //#endregion
+  }
+  //#endregion
 }

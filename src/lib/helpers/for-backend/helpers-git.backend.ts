@@ -218,11 +218,7 @@ export class HelpersGit {
         created: createdFiles,
       };
     } catch (error) {
-      Helpers.error(
-        '[taon-helpers][git] Error:' + error.message,
-        false,
-        true,
-      );
+      Helpers.error('[taon-helpers][git] Error:' + error.message, false, true);
     }
     //#endregion
   }
@@ -1331,10 +1327,7 @@ ${cwd}
 
   //#region check if there are some uncommited changes except
   thereAreSomeUncommitedChangeExcept(filesList: string[] = [], cwd: string) {
-    Helpers.log(
-      '[taon-helpers][thereAreSomeUncommitedChangeExcept] ' + cwd,
-      1,
-    );
+    Helpers.log('[taon-helpers][thereAreSomeUncommitedChangeExcept] ' + cwd, 1);
     filesList = filesList.map(f => crossPlatformPath(f));
     try {
       const res = Helpers.run(
@@ -1361,10 +1354,7 @@ ${cwd}
 
   //#region check if there are some uncommited changes except
   uncommitedFiles(cwd: string) {
-    Helpers.log(
-      '[taon-helpers][thereAreSomeUncommitedChangeExcept] ' + cwd,
-      1,
-    );
+    Helpers.log('[taon-helpers][thereAreSomeUncommitedChangeExcept] ' + cwd, 1);
 
     try {
       const res = Helpers.run(
@@ -1601,6 +1591,27 @@ ${cwd}
     } catch (error) {
       console.error('Error getting changed files by index:', error);
       throw error;
+    }
+    //#endregion
+  }
+  //#endregion
+
+  //#region get changes summary
+  async changesSummary(cwd: string, prefix = ''): Promise<string> {
+    //#region @backendFunc
+    try {
+      const git = simpleGit(cwd);
+      const changesSummary = (await git.status()).files.map(c => c.path);
+      return (
+        changesSummary.length === 0
+          ? [` --- no changes --- `]
+          : changesSummary
+      )
+        .map(f => `\n${prefix}${f}`)
+        .join('');
+    } catch (error) {
+      console.error('Error getting changes summary:', error);
+      return ' --- No changes ---';
     }
     //#endregion
   }

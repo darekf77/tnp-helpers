@@ -956,6 +956,15 @@ Would you like to update current project configuration?`)
   }
   //#endregion
 
+  async changes() {
+    Helpers.info(await this.project.git.changesSummary());
+    Helpers.terminalLine();
+    for (const chil of this.project.children) {
+      Helpers.info(await chil.git.changesSummary());
+    }
+    this._exit();
+  }
+
   //#region commands / branch name
   BRANCH_NAME() {
     console.log(
