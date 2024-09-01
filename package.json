@@ -43,7 +43,7 @@
       "taon-helpers"
     ]
   },
-  "version": "18.0.10",
+  "version": "18.0.11",
   "dependencies": {
     "json10-writer": "~18.0.10",
     "lowdb": "7.0.1",
