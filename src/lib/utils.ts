@@ -1,5 +1,22 @@
 //#region imports
 import { _, chalk, CoreModels, Helpers, Utils } from 'tnp-core/src';
+//#region @backend
+import {
+  createPrinter,
+  createSourceFile,
+  factory,
+  getLeadingCommentRanges,
+  isSourceFile,
+  NodeArray,
+  ScriptKind,
+  ScriptTarget,
+  SourceFile,
+  Statement,
+  transform,
+  TransformationContext,
+  visitEachChild,
+} from 'typescript';
+//#endregion
 //#endregion
 
 //#region utils npm
@@ -233,6 +250,142 @@ export namespace UtilsTerminal {
     //#endregion
   };
 
+  //#endregion
+}
+//#endregion
+
+//#region utils typescript
+export namespace UtilsTypescript {
+  //#region remove region by name
+  /**
+   * Remove TypeScript region blocks by their name, including nested regions.
+   *
+   * @param sourceCode - The TypeScript source code as a string.
+   * @param regionName - The name of the region to remove.
+   * @returns Modified TypeScript code without the specified regions.
+   */
+  export const removeRegionByName = (
+    sourceCode: string,
+    regionName: string,
+  ): string => {
+    //#region @backendFunc
+    // Create a source file using TypeScript's compiler API
+    const sourceFile = createSourceFile(
+      'temp.ts',
+      sourceCode,
+      ScriptTarget.Latest,
+      true,
+      ScriptKind.TS,
+    );
+
+    // Prepare a printer to convert the modified AST back to code
+    const printer = createPrinter();
+
+    // Traverse the AST and remove specified //#region blocks
+    const transformer = <T extends Node>(context: TransformationContext) => {
+      const visit = (node: T): T | undefined => {
+        // @ts-ignore
+        if (isSourceFile(node)) {
+          const statements = removeRegions(node.statements, regionName);
+          // @ts-ignore
+          return factory.updateSourceFile(node, statements) as T;
+        }
+        // @ts-ignore
+        return visitEachChild(node, visit, context);
+      };
+
+      return visit;
+    };
+
+    // Apply the transformation
+    // @ts-ignore
+    const result = transform(sourceFile, [transformer]);
+
+    // Get the modified source file
+    const transformedSourceFile = result.transformed[0] as SourceFile;
+
+    // Print the transformed source file back to a string
+    const modifiedCode = printer.printFile(transformedSourceFile);
+
+    result.dispose();
+
+    return modifiedCode;
+    //#endregion
+  };
+
+  /**
+   * Removes the specified region blocks and handles nested regions.
+   *
+   * @param statements - List of statements in the source file.
+   * @param regionName - The name of the region to remove.
+   * @returns Modified list of statements without the specified regions.
+   */
+  const removeRegions = (
+    statements: NodeArray<Statement>,
+    regionName: string,
+  ): Statement[] => {
+    //#region @backendFunc
+    const result: Statement[] = [];
+    const stack: { insideTargetRegion: boolean; level: number }[] = [];
+    let currentLevel = 0;
+
+    for (const statement of statements) {
+      const commentRanges =
+        getLeadingCommentRanges(statement.getFullText(), 0) || [];
+      const commentText = statement.getFullText();
+
+      for (const range of commentRanges) {
+        const comment = commentText.slice(range.pos, range.end).trim();
+
+        // Detect start of a region
+        const regionMatch = comment.match(/^\/\/#region (.*)/);
+        if (regionMatch) {
+          currentLevel++;
+          const name = regionMatch[1].trim();
+
+          // Push the current state of the stack
+          stack.push({
+            insideTargetRegion:
+              stack.length > 0
+                ? stack[stack.length - 1].insideTargetRegion
+                : false,
+            level: currentLevel,
+          });
+
+          // Check if this region matches the target
+          if (name === regionName) {
+            stack[stack.length - 1].insideTargetRegion = true;
+          }
+
+          continue;
+        }
+
+        // Detect end of a region
+        if (comment.startsWith('//#endregion')) {
+          if (
+            stack.length > 0 &&
+            stack[stack.length - 1].level === currentLevel
+          ) {
+            stack.pop();
+          }
+          currentLevel--;
+          continue;
+        }
+      }
+
+      // Check the top of the stack to see if we're inside the target region
+      const insideTargetRegion =
+        stack.length > 0 ? stack[stack.length - 1].insideTargetRegion : false;
+
+      // Add statements that are not inside the target region
+      if (!insideTargetRegion) {
+        result.push(statement);
+      }
+    }
+
+    return result;
+    //#endregion
+  };
   //#endregion
 }
 //#endregion
