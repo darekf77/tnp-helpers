@@ -19,28 +19,48 @@ export class BaseCommandLine<
   /**
    * TODO return argument not need for now
    */
-  async preventCwdIsNotProject(): Promise<boolean> {
-    if (!this.project || !this.project.git.isGitRoot) {
-      if (!this.project.git.isGitRoot) {
-        const proj = this.ins.nearestTo(this.cwd, { findGitRoot: true });
-        if (proj) {
-          Helpers.info(`
-            Current folder (${this.cwd})
-            is not a git root folder, but nearest project with
-            git root has been found in: ${chalk.bold(proj.genericName)}
+  async cwdIsProject(options?: {
+    requireProjectWithGitRoot?: boolean;
+  }): Promise<boolean> {
+    const { requireProjectWithGitRoot } = options || {};
 
-            `);
-          const useRoot = await Helpers.questionYesNo(
-            'Would you like to use this project ?',
+    if (!!this.project && !requireProjectWithGitRoot) {
+      return true;
+    }
+
+    if (
+      requireProjectWithGitRoot &&
+      (!this.project || !this.project.git.isGitRoot)
+    ) {
+      const proj = this.ins.nearestTo(this.cwd, { findGitRoot: true });
+      if (proj) {
+        Helpers.info(`
+              Current folder (${this.cwd})
+              is not a git root folder, but nearest project with
+              git root has been found in: ${chalk.bold(proj.genericName)}
+
+              `);
+        const useRoot = await Helpers.questionYesNo(
+          'Would you like to use this project ?',
+        );
+        if (useRoot) {
+          this.project = proj;
+          this.cwd = proj.location;
+          return true;
+        } else {
+          Helpers.error(
+            `[${config.frameworkName}] This is not git root project folder`,
+            true,
+            true,
           );
-          if (useRoot) {
-            this.project = proj;
-            this.cwd = proj.location;
-            return true;
-          }
         }
+      } else {
+        Helpers.error(
+          `[${config.frameworkName}] This folder is not project folder`,
+          false,
+          true,
+        );
       }
-      Helpers.error('This is not a project folder', false, true);
     }
     return true;
   }
@@ -89,7 +109,7 @@ export class BaseCommandLine<
    * quick git update push
    */
   async update() {
-    if (!(await this.preventCwdIsNotProject())) {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     Helpers.info('Updating & push project...');
@@ -111,7 +131,7 @@ export class BaseCommandLine<
   }
 
   async deepUpdate(noExit = false) {
-    if (!(await this.preventCwdIsNotProject())) {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     Helpers.info('Deep updating & pushing project with children...');
@@ -237,7 +257,7 @@ export class BaseCommandLine<
 
   //#region commands / pull
   async pull() {
-    if (!(await this.preventCwdIsNotProject())) {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     await this.project.git.pullProcess({
@@ -249,7 +269,7 @@ export class BaseCommandLine<
 
   //#region commands / pull all
   async pullAll() {
-    if (!(await this.preventCwdIsNotProject())) {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     await this.project.git.pullProcess({
@@ -279,7 +299,7 @@ ${
 
   async reset() {
     // Helpers.clearConsole();
-    if (!(await this.preventCwdIsNotProject())) {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     const parent = this.project.parent as BaseProject;
@@ -318,7 +338,7 @@ ${
       Helpers.info(`Reseting only children...for defualt branches.`);
     } else {
       if (branches.length > 0) {
-        overrideBranchToReset = await this.__selectBrach(branches);
+        overrideBranchToReset = await this.__selectBrach(branches, 'reset');
       } else {
         Helpers.error(
           `No branch found by name "${overrideBranchToReset || this.firstArg}"`,
@@ -368,7 +388,7 @@ ${
   //#region commands / soft
   async soft() {
     // TODO when aciton commit
-    if (!(await this.preventCwdIsNotProject())) {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     this.project.git.resetSoftHEAD(1);
@@ -378,7 +398,7 @@ ${
 
   //#region commands / rebase
   async rebase() {
-    if (!(await this.preventCwdIsNotProject())) {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     const currentBranch = this.project.git.currentBranchName;
@@ -389,7 +409,7 @@ ${
     const branches = this.__filterBranchesByPattern(rebaseBranch);
 
     if (branches.length > 0) {
-      rebaseBranch = await this.__selectBrach(branches);
+      rebaseBranch = await this.__selectBrach(branches, 'reset');
     } else {
       Helpers.error(`No branch found by name "${rebaseBranch}"`, false, true);
     }
@@ -417,7 +437,8 @@ ${
    * stash only staged files
    */
   async stash() {
-    if (!(await this.preventCwdIsNotProject())) {
+    Helpers.info(`Stashing only staged files...`);
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     this.project.git.stash({ onlyStaged: true });
@@ -430,7 +451,7 @@ ${
    * stash all files
    */
   async stashAll() {
-    if (!(await this.preventCwdIsNotProject())) {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     this.project.git.stageAllFiles();
@@ -445,7 +466,7 @@ ${
    * push force to all orgins
    */
   async pushAllForce() {
-    if (!(await this.preventCwdIsNotProject())) {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     await this.pushAll(true);
@@ -467,7 +488,7 @@ ${
    * push to all origins
    */
   async pushAll(force = false) {
-    if (!(await this.preventCwdIsNotProject())) {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     const remotes = this.project.git.allOrigins;
@@ -512,7 +533,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
       noExit?: boolean;
     } = {},
   ) {
-    if (!(await this.preventCwdIsNotProject())) {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     await this.project.git.meltActionCommits(true);
@@ -593,7 +614,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
   ): Promise<void> {
     // console.log('args', this.args);
     // console.log(`argsWithParams "${this.argsWithParams}"` );
-    if (!(await this.preventCwdIsNotProject())) {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     await this._preventPushPullFromNotCorrectBranch();
@@ -619,7 +640,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
 
   //#region commands / melt
   public async melt() {
-    if (!(await this.preventCwdIsNotProject())) {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     await this.meltUpdateCommits(true);
@@ -740,6 +761,13 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
     await this.meltUpdateCommits();
     await this.push({ typeofCommit: 'test', commitMessageRequired: true });
   }
+
+  async pTest() {
+    await this.pushTest();
+  }
+  async pTests() {
+    await this.pushTest();
+  }
   //#endregion
 
   //#region commands / push perf
@@ -759,6 +787,25 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
   }
   //#endregion
 
+  //#region commands / select branch
+  async branch() {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
+      return;
+    }
+    await this.project.struct();
+    let branchName = this.firstArg;
+    const branches = this.__filterBranchesByPattern(branchName);
+
+    if (branches.length > 0) {
+      branchName = await this.__selectBrach(branches, 'checkout');
+    } else {
+      Helpers.error(`No branch found by name "${branchName}"`, false, true);
+    }
+    this.project.git.checkout(branchName);
+    this._exit();
+  }
+  //#endregion
+
   //#region commands / push build
   async pushBuild() {
     await this.meltUpdateCommits();
@@ -768,7 +815,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
 
   //#region commands / set origin
   async SET_ORIGIN() {
-    if (!(await this.preventCwdIsNotProject())) {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     const newOriginNameOrUrl: string = this.firstArg;
@@ -787,7 +834,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
 
   //#region commands / rename origin
   async RENAME_ORIGIN() {
-    if (!(await this.preventCwdIsNotProject())) {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     const newOriginNameOrUrl: string = this.firstArg;
@@ -803,7 +850,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
 
   //#region commands / last hash tag
   async LAST_TAG_HASH() {
-    if (!(await this.preventCwdIsNotProject())) {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     Helpers.info(this.project.git.lastTagHash());
@@ -813,7 +860,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
 
   //#region commands / last tag
   async LAST_TAG() {
-    if (!(await this.preventCwdIsNotProject())) {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     const proj = this.project;
@@ -841,7 +888,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
    * TODO move somewhere
    */
   async lint() {
-    if (!(await this.preventCwdIsNotProject())) {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     await this.project.lint();
@@ -853,7 +900,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
    * TODO move somewhere
    */
   async version() {
-    if (!(await this.preventCwdIsNotProject())) {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: false }))) {
       return;
     }
     console.log('Current project verison: ' + this.project.npmHelpers.version);
@@ -866,7 +913,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
    * TODO move somewhere
    */
   async init() {
-    if (!(await this.preventCwdIsNotProject())) {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: false }))) {
       return;
     }
     await this.project.init();
@@ -879,7 +926,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
    * TODO move somewhere
    */
   async struct() {
-    if (!(await this.preventCwdIsNotProject())) {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: false }))) {
       return;
     }
     await this.project.struct();
@@ -892,7 +939,11 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
    * TODO move somewhere
    */
   async info() {
-    if (!(await this.preventCwdIsNotProject())) {
+    if (
+      !(await this.cwdIsProject({
+        requireProjectWithGitRoot: false,
+      }))
+    ) {
       return;
     }
     Helpers.clearConsole();
@@ -904,7 +955,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
 
   //#region commands / info
   async modified() {
-    if (!(await this.preventCwdIsNotProject())) {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     const proj = this.project;
@@ -956,6 +1007,7 @@ Would you like to update current project configuration?`)
   }
   //#endregion
 
+  //#region commands / changes
   async changes() {
     Helpers.info(await this.project.git.changesSummary());
     Helpers.terminalLine();
@@ -964,6 +1016,7 @@ Would you like to update current project configuration?`)
     }
     this._exit();
   }
+  //#endregion
 
   //#region commands / branch name
   BRANCH_NAME() {
@@ -995,6 +1048,11 @@ Would you like to update current project configuration?`)
   }
 
   origin() {
+    console.log(Helpers.git.getOriginURL(this.cwd));
+    this._exit();
+  }
+
+  remote() {
     console.log(Helpers.git.getOriginURL(this.cwd));
     this._exit();
   }
@@ -1096,7 +1154,7 @@ Would you like to update current project configuration?`)
     await this.INSTALL_PROJ_EXT();
   }
   async INSTALL_PROJ_EXT(): Promise<void> {
-    if (!(await this.preventCwdIsNotProject())) {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: false }))) {
       return;
     }
     this.project.vsCodeHelpers.recreateExtensions();
@@ -1147,7 +1205,7 @@ Would you like to update current project configuration?`)
 
   //#region proj db
   async projdb() {
-    if (!(await this.preventCwdIsNotProject())) {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: false }))) {
       return;
     }
     Helpers.info(`Projects db location:
@@ -1175,17 +1233,45 @@ Would you like to update current project configuration?`)
   //#endregion
 
   //#region select branch from list of branches
-  private async __selectBrach(branches: string[]) {
+  private async __selectBrach(branches: string[], task: 'reset' | 'checkout') {
     const childrenMsg =
       this.project.children.length == 0
         ? '(no children in project)'
         : '(with children)';
     return await Helpers.autocompleteAsk(
-      `Choose branch to reset in this project ${childrenMsg}: `,
+      `Choose branch to ${task} in this project ${childrenMsg}: `,
       branches.map(b => {
         return { name: b, value: b };
       }),
     );
   }
+  //#endregion
+
+  //#region commands / clone
+  async clone() {
+    let url = this.firstArg;
+    const originType: 'ssh' | 'http' = this.params['setOrigin'];
+
+    if (originType) {
+      if (originType === 'ssh') {
+        url = Helpers.git.originHttpToSsh(url);
+      }
+      if (originType === 'http') {
+        url = Helpers.git.originSshToHttp(url);
+      }
+    }
+    Helpers.git.clone({
+      url,
+      cwd: this.cwd,
+    });
+    this._exit();
+  }
+  //#endregion
+
+  //#region commands / mkdocs
+  mkdocs() {}
+
+  mkdocsBuild() {}
+
   //#endregion
 }

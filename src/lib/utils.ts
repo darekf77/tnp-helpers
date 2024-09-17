@@ -1,11 +1,12 @@
 //#region imports
-import { _, chalk, CoreModels, Helpers, Utils } from 'tnp-core/src';
 //#region @backend
+import { fse } from 'tnp-core/src';
 import {
   createPrinter,
   createSourceFile,
   factory,
   getLeadingCommentRanges,
+  isClassDeclaration,
   isSourceFile,
   NodeArray,
   ScriptKind,
@@ -15,8 +16,24 @@ import {
   transform,
   TransformationContext,
   visitEachChild,
+  Node,
+  isFunctionDeclaration,
+  isVariableStatement,
+  isIdentifier,
+  NodeFlags,
+  isEnumDeclaration,
+  isTypeAliasDeclaration,
+  isInterfaceDeclaration,
+  isModuleDeclaration,
+  isExportAssignment,
+  forEachChild,
+  Declaration,
+  getCombinedModifierFlags,
+  ModifierFlags,
+  SyntaxKind,
 } from 'typescript';
 //#endregion
+import { _, chalk, CoreModels, Utils } from 'tnp-core/src';
 //#endregion
 
 //#region utils npm
@@ -387,5 +404,119 @@ export namespace UtilsTypescript {
     //#endregion
   };
   //#endregion
+
+  //#region extract exports from a TypeScript file
+
+  //#region helper function to check if a node is exported
+  const isExported = (node: Node): boolean => {
+    //#region @backendFunc
+    return (
+      (getCombinedModifierFlags(node as Declaration) & ModifierFlags.Export) !==
+        0 || node.parent?.kind === SyntaxKind.SourceFile // For top-level exports
+    );
+    //#endregion
+  };
+  //#endregion
+
+  //#region exports from file
+  /**
+   * Function to extract exports from a TypeScript file
+   */
+  export const exportsFromFile = (
+    filePath: string,
+  ): {
+    type:
+      | 'class'
+      | 'function'
+      | 'const'
+      | 'let'
+      | 'var'
+      | 'enum'
+      | 'type'
+      | 'interface'
+      | 'default'
+      | 'module'
+      | 'namespace';
+    name: string;
+  }[] => {
+    //#region @backendFunc
+    // Read the content of the file
+    const sourceCode = fse.readFileSync(filePath, 'utf-8');
+
+    // Create a SourceFile object using the TypeScript API
+    const sourceFile = createSourceFile(
+      filePath,
+      sourceCode,
+      ScriptTarget.Latest,
+      true,
+    );
+
+    // Array to hold the exports found
+    const exports: {
+      type:
+        | 'class'
+        | 'function'
+        | 'const'
+        | 'let'
+        | 'var'
+        | 'enum'
+        | 'type'
+        | 'interface'
+        | 'default'
+        | 'module'
+        | 'namespace';
+      name: string;
+    }[] = [];
+
+    //#region function to recursively check each node in the AST
+    const checkNode = (node: Node) => {
+      //#region @backendFunc
+      // Determine the type and name of export based on node type
+      if (isClassDeclaration(node) && node.name && isExported(node)) {
+        exports.push({ type: 'class', name: node.name.text });
+      } else if (isFunctionDeclaration(node) && node.name && isExported(node)) {
+        exports.push({ type: 'function', name: node.name.text });
+      } else if (isVariableStatement(node) && isExported(node)) {
+        node.declarationList.declarations.forEach(declaration => {
+          if (isIdentifier(declaration.name)) {
+            exports.push({
+              type:
+                node.declarationList.flags & NodeFlags.Const
+                  ? 'const'
+                  : node.declarationList.flags & NodeFlags.Let
+                    ? 'let'
+                    : 'var',
+              name: declaration.name.text,
+            });
+          }
+        });
+      } else if (isEnumDeclaration(node) && isExported(node)) {
+        exports.push({ type: 'enum', name: node.name.text });
+      } else if (isTypeAliasDeclaration(node) && isExported(node)) {
+        exports.push({ type: 'type', name: node.name.text });
+      } else if (isInterfaceDeclaration(node) && isExported(node)) {
+        exports.push({ type: 'interface', name: node.name.text });
+      } else if (isModuleDeclaration(node) && isExported(node)) {
+        exports.push({ type: 'module', name: node.name.text });
+      } else if (isExportAssignment(node)) {
+        exports.push({ type: 'default', name: 'default' }); // `export default ...`
+      }
+
+      // Recursively check each child node
+      forEachChild(node, checkNode);
+      //#endregion
+    };
+    //#endregion
+
+    // Start checking from the root node
+    checkNode(sourceFile);
+
+    return exports;
+    //#endregion
+  };
+  //#endregion
+
+  //#endregion
 }
+
 //#endregion

@@ -1054,13 +1054,17 @@ ${cwd}
     },
   ) {
     const { onlyStaged } = optinos || {};
+    // console.log({ onlyStaged, cwd });
     try {
       if (onlyStaged) {
         child_process.execSync(`git stash push --keep-index`, { cwd });
       } else {
         child_process.execSync(`git stash`, { cwd });
       }
-    } catch (error) {}
+    } catch (error) {
+      Helpers.info('Not able to stash changes');
+      console.error(error);
+    }
   }
   //#endregion
 

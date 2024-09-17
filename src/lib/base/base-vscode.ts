@@ -82,6 +82,7 @@ export class BaseVscodeHelpers<
       'tomoki1207.pdf',
       'hediet.vscode-drawio',
       'antfu.file-nesting',
+      'streetsidesoftware.code-spell-checker',
       // 'shardulm94.trailing-spaces',
       //#endregion
     ]);

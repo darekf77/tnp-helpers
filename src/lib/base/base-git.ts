@@ -70,9 +70,9 @@ export class BaseGit<
   //#endregion
 
   //#region methods & getters / stash
-  stash(optinos?: { onlyStaged?: boolean }) {
+  stash(options?: { onlyStaged?: boolean }) {
     //#region @backendFunc
-    Helpers.git.stash(this.project.location, optinos);
+    Helpers.git.stash(this.project.location, options);
     //#endregion
   }
   //#endregion
