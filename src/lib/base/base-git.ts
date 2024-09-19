@@ -665,6 +665,7 @@ export class BaseGit<
       setOrigin?: 'ssh' | 'http';
       exitCallBack?: () => void;
       forcePushNoQuestion?: boolean;
+      overrideCommitMessage?: string;
       commitMessageRequired?: boolean;
       /**
        * only needed when push github
@@ -690,6 +691,7 @@ export class BaseGit<
       askToConfirmBranchChange,
       args = [],
       commitMessageRequired,
+      overrideCommitMessage,
       skipChildren,
       setOrigin,
       currentOrigin,
@@ -756,6 +758,11 @@ export class BaseGit<
       skipLint = true;
     }
     // console.log({ skipLint, typeofCommit });
+    const numberOfStagedFiles = this.project.git.stagedFiles.length;
+    if (numberOfStagedFiles === 0) {
+      Helpers.warn(`No staged files...`);
+      skipLint = true;
+    }
     if (!skipLint) {
       while (true) {
         try {
@@ -787,16 +794,19 @@ export class BaseGit<
       PROJECT: ${this.project.genericName}
 
       Current commit:
-      - message to include {${commitData.commitMessage}}
+      - message to include {${overrideCommitMessage ? overrideCommitMessage : commitData.commitMessage}}
       ${
-        this.useGitBranchesAsMetadataForCommits()
+        this.useGitBranchesAsMetadataForCommits() && !overrideCommitMessage
           ? `- branch to checkout {${commitData.branchName}}`
-          : `- using current branch \n
+          : `- using ${chalk.bold('current')} branch {${this.project.git.currentBranchName}} \n
           (generated would be: ${commitData.branchName})
           `
       }`);
 
-      if (commitMesageFromBranch !== commitData.commitMessage) {
+      if (
+        !overrideCommitMessage &&
+        commitMesageFromBranch !== commitData.commitMessage
+      ) {
         Helpers.logWarn(`Commit from args and commit from branch are different
         commit message from args: ${commitData.commitMessage}
         commit message from branch: ${commitMesageFromBranch}
@@ -811,7 +821,13 @@ export class BaseGit<
         );
       }
 
-      if (this.project.git.lastCommitMessage() === commitData.commitMessage) {
+      const lastCommitMessage = this.project.git.lastCommitMessage();
+      if (
+        lastCommitMessage &&
+        [commitData.commitMessage, overrideCommitMessage]
+          .filter(f => !!f)
+          .some(m => m === lastCommitMessage)
+      ) {
         if (
           await Helpers.questionYesNo(
             'Soft reset last commit with same message ?',
@@ -831,7 +847,7 @@ export class BaseGit<
       this.project.git.stageAllFiles();
     }
 
-    if (this.useGitBranchesAsMetadataForCommits()) {
+    if (this.useGitBranchesAsMetadataForCommits() && !overrideCommitMessage) {
       Helpers.info('Checkingout branches (if needed)...');
       if (
         this.project.git.currentBranchName?.trim() !== commitData.branchName
@@ -853,13 +869,23 @@ export class BaseGit<
     }
 
     if (askToConfirmCommit) {
-      Helpers.info(`Commit message: ${commitData.commitMessage}`);
+      Helpers.info(
+        `Commit message: ${
+          overrideCommitMessage
+            ? overrideCommitMessage
+            : commitData.commitMessage
+        }`,
+      );
       if (!(await Helpers.questionYesNo('Confirm commit ?'))) {
         exitCallBack();
       }
     }
     try {
-      this.project.git.commit(commitData.commitMessage);
+      this.project.git.commit(
+        overrideCommitMessage
+          ? overrideCommitMessage
+          : commitData.commitMessage,
+      );
     } catch (error) {
       Helpers.warn(`Not commiting anything... `);
     }
@@ -1061,12 +1087,16 @@ export class BaseGit<
   //#region methods & getters / get changes summary
   async changesSummary() {
     //#region @backendFunc
-    const fillStringWithSpaceUpTo = (str: string, length: number, specialCharacter = ' ') => {
+    const fillStringWithSpaceUpTo = (
+      str: string,
+      length: number,
+      specialCharacter = ' ',
+    ) => {
       return str + specialCharacter.repeat(length - str.length);
     };
     return await Helpers.git.changesSummary(
       this.project.location,
-      `${fillStringWithSpaceUpTo(`[${this.project.name}]`, 40,'.')} `,
+      `${fillStringWithSpaceUpTo(`[${this.project.name}]`, 40, '.')} `,
     );
     //#endregion
   }

@@ -545,6 +545,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
         this._exit();
       },
       skipChildren: true,
+      overrideCommitMessage: this.args.join(' '),
       setOrigin: this.params['setOrigin'],
       currentOrigin: this.project.git.originURL,
     });
