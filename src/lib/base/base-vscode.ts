@@ -5,6 +5,7 @@ import { BaseFeatureForProject } from './base-feature-for-project';
 export class BaseVscodeHelpers<
   PROJCET extends BaseProject = any,
 > extends BaseFeatureForProject {
+  //#region extensions
   private get extensions(): string[] {
     return Helpers.uniqArray([
       //#region @backend
@@ -57,7 +58,8 @@ export class BaseVscodeHelpers<
       'stepanog.angular1-inline',
       'taddison.gitlazy',
       'unifiedjs.vscode-mdx',
-      'vespa-dev-works.jestrunit',
+      // 'vespa-dev-works.jestrunit',
+      'firsttris.vscode-jest-runner', // better for jest
       'waderyan.gitblame',
       'wcwhitehead.bootstrap-3-snippets',
       'wenfangdu.snippet-generator',
@@ -87,13 +89,42 @@ export class BaseVscodeHelpers<
       //#endregion
     ]);
   }
+  //#endregion
 
+  //#region recreate extensions
   recreateExtensions(): void {
+    //#region @backendFunc
     this.project.writeFile(
       '.vscode/extensions.json',
-      JSON.stringify({
-        recommendations: this.extensions,
-      }, null, 2),
+      JSON.stringify(
+        {
+          recommendations: this.extensions,
+        },
+        null,
+        2,
+      ),
     );
+    //#endregion
   }
+  //#endregion
+
+  //#region settings
+  recreateWindowTitle(): void {
+    //#region @backendFunc
+    this.project.setValueToJSONC(
+      '.vscode/settings.json',
+      '["window.title"]',
+      `${this.project.titleBarName}` +
+        ` (\${rootName}) [\${activeEditorShort}]`,
+      // '${activeEditorShort}${separator}${rootName}',
+    );
+    // this.project.writeFile(
+    //   '.vscode/settings.json',
+    //   JSON.stringify({
+    //     recommendations: this.extensions,
+    //   }, null, 2),
+    // );
+    //#endregion
+  }
+  //#region
 }

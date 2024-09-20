@@ -141,5 +141,6 @@
   "search.useIgnoreFiles": false,
   "search.include": [
     "**/src/**"
-  ]
+  ],
+  "window.title": "npm/taon-dev/tnp-helpers (${rootName}) [${activeEditorShort}]"
 }

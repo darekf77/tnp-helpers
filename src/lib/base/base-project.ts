@@ -339,6 +339,14 @@ export abstract class BaseProject<
   //#endregion
 
   //#region methods & getters / generic name
+
+  get titleBarName() {
+    if (this.parent) {
+      return `${path.basename(path.dirname(this.parent.location))}/${this.parent.name}/${this.name}`;
+    }
+    return `${path.basename(path.dirname(this.location))}/${this.name}`;
+  }
+
   get genericName() {
     //#region @websqlFunc
     if (!_.isUndefined(this.cache['genericName'])) {

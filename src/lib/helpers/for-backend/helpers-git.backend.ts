@@ -1264,6 +1264,7 @@ ${cwd}
       Helpers.run(commnad, { cwd }).sync();
     } else {
       while (true) {
+        Helpers.info(`Cloning from url: ${CLI.chalk.bold(url)}..`);
         try {
           Helpers.run(commnad, { cwd, output: false }).sync();
           break;
