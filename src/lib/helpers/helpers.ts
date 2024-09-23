@@ -197,6 +197,10 @@ export class HelpersTaon extends CoreHelpers {
     //#endregion
   }
 
+  /**
+   * @deprecated
+   * use Utils.uniqArray from tnp-core
+   */
   uniqArray<T = any>(array: any[], uniqueProperty?: keyof T): T[] {
     //#region @backendFunc
     // @ts-ignore

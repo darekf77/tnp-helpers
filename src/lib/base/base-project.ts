@@ -33,6 +33,7 @@ import { BaseLinkedProjects } from './base-linked-projects';
 import { BaseGit } from './base-git';
 import { BaseVscodeHelpers } from './base-vscode';
 import { BaseReleaseProcess } from './base-release-process';
+import { BaseDocs } from './base-docs';
 //#endregion
 
 const takenPorts = [];
@@ -73,6 +74,7 @@ export abstract class BaseProject<
   public vsCodeHelpers: BaseVscodeHelpers;
   public releaseProcess: BaseReleaseProcess;
   public git: BaseGit;
+  public docs: BaseDocs;
   //#endregion
 
   private __location: string;
@@ -111,6 +113,11 @@ export abstract class BaseProject<
 
     this.releaseProcess = new (require('./base-release-process')
       .BaseReleaseProcess as typeof BaseReleaseProcess)(this as any);
+
+    this.docs = new (require('./base-docs').BaseDocs as typeof BaseDocs)(
+      this as any,
+    );
+
     //#endregion
   }
   //#endregion
@@ -339,12 +346,25 @@ export abstract class BaseProject<
   //#endregion
 
   //#region methods & getters / generic name
+  get allNpmPackagesNames(): string[] {
+    return [this.name];
+  }
 
   get titleBarName() {
+    const allPackagesNames = !this.allNpmPackagesNames
+      ? ''
+      : `(${this.allNpmPackagesNames.filter(f => f !== this.basename).join(',')})`;
+
     if (this.parent) {
-      return `${path.basename(path.dirname(this.parent.location))}/${this.parent.name}/${this.name}`;
+      return (
+        `${path.basename(path.dirname(this.parent.location))}/${this.parent.name}/` +
+        `${this.basename} ${allPackagesNames} [ \${activeEditorShort} ]`
+      );
     }
-    return `${path.basename(path.dirname(this.location))}/${this.name}`;
+    return (
+      `${path.basename(path.dirname(this.location))}/` +
+      `${this.basename} (${allPackagesNames}) [ \${activeEditorShort}]`
+    );
   }
 
   get genericName() {
@@ -426,6 +446,32 @@ export abstract class BaseProject<
     //#endregion
   }
   //#endregion
+
+  /**
+   *
+   * @param relativePath
+   * @param override it will remove ex
+   */
+  createFolder(
+    relativePath: string | string[],
+    options?: {
+      override?: boolean;
+    },
+  ) {
+    //#region @backendFunc
+    const { override } = options || {};
+    try {
+      fse.unlinkSync(this.pathFor(relativePath));
+    } catch (error) {}
+    if (this.hasFolder(relativePath)) {
+      if (override) {
+        this.remove(relativePath, true);
+      }
+      return;
+    }
+    fse.mkdirSync(this.pathFor(relativePath), { recursive: true });
+    //#endregion
+  }
 
   //#region methods & getters / contains file
   /**
@@ -654,8 +700,11 @@ export abstract class BaseProject<
   //#endregion
 
   //#region methods & getters / remove (fiel or folder)
-  remove(relativePath: string, exactPath = true) {
-    //#region @backend
+  remove(relativePath: string | string[], exactPath = true) {
+    //#region @backendFunc
+    if (Array.isArray(relativePath)) {
+      relativePath = relativePath.join('/');
+    }
     relativePath = relativePath.replace(/^\//, '');
     if (path.basename(relativePath) === config.folder.node_modules) {
       Helpers.info('Removing node_modules folder...');
@@ -812,6 +861,10 @@ export abstract class BaseProject<
     return false;
   }
   //#endregion
+
+  useFeatureInBranchNameForTests() {
+    return false;
+  }
 
   //#region methods & getters / reset process
   async resetProcess(overrideBranch?: string, recrusive = false) {
@@ -1087,11 +1140,12 @@ export abstract class BaseProject<
   }
   //#endregion
 
-  //#region getters & methods / lint
+  //#region getters & methods / info
   /**
    * get info about porject
    */
   async info() {
+    //#region @backendFunc
     const proj = this;
     Helpers.info(
       `
@@ -1124,6 +1178,7 @@ ${(this.linkedProjects.linkedProjects || [])
 
     // linked projects detected (${this.detectedLinkedProjects?.length || 0}):
     // ${(this.detectedLinkedProjects || []).map(c => '- ' + c.relativeClonePath).join('\n')}
+    //#endregion
   }
   //#endregion
 }

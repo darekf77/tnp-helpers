@@ -9,7 +9,8 @@
         "task.js",
         "json10-writer",
         "lowdb",
-        "typescript"
+        "typescript",
+        "incremental-compiler"
       ],
       "dependencies": {},
       "linkedFolders": [],
@@ -45,6 +46,7 @@
   },
   "version": "18.0.11",
   "dependencies": {
+    "incremental-compiler": "~18.0.10",
     "json10-writer": "~18.0.10",
     "lowdb": "7.0.1",
     "task.js": "0.1.5",
@@ -217,7 +219,6 @@
     "image-focus": "1.2.1",
     "immer": "10.0.2",
     "immutable": "4.3.7",
-    "incremental-compiler": "~18.0.10",
     "inquirer": "7.3.3",
     "inquirer-autocomplete-prompt": "1.4.0",
     "inquirer-autocomplete-standalone": "0.8.1",

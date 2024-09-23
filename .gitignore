@@ -13,6 +13,7 @@ yarn-error.log
 testem.log
 /typings
 app.hosts.ts
+/docs-config.schema.json
 /**/*._auto-generated_.ts
 /**/BUILD-INFO.md
 /linked-repos

@@ -60,7 +60,8 @@
     "**/run.*": true,
     "**/package-lock.json": true,
     "**/protractor.conf.js": true,
-    "**/karma.conf.js": true
+    "**/karma.conf.js": true,
+    "**/docs-config.schema.json": true
   },
   "workbench.colorCustomizations": {
     "activityBar.background": "#65519c",
@@ -142,5 +143,5 @@
   "search.include": [
     "**/src/**"
   ],
-  "window.title": "npm/taon-dev/tnp-helpers (${rootName}) [${activeEditorShort}]"
+  "window.title": "npm/taon-dev/tnp-helpers (taon-helpers) [ ${activeEditorShort} ]"
 }

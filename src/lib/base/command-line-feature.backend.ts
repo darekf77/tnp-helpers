@@ -37,6 +37,13 @@ export abstract class CommandLineFeature<
     return _.first(this.args);
   }
 
+  /**
+   * last arg from args
+   */
+  get lastArg() {
+    return _.last(this.args);
+  }
+
   protected async __copytoProjects(): Promise<string[]> {
     //#region @backendFunc
 

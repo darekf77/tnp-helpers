@@ -5,6 +5,12 @@ import { BaseFeatureForProject } from './base-feature-for-project';
 export class BaseVscodeHelpers<
   PROJCET extends BaseProject = any,
 > extends BaseFeatureForProject {
+  /**
+   * settings.json relative path
+   */
+  public readonly settingsJson = '.vscode/settings.json';
+  public readonly extensionsJson = '.vscode/extensions.json';
+
   //#region extensions
   private get extensions(): string[] {
     return Helpers.uniqArray([
@@ -95,7 +101,7 @@ export class BaseVscodeHelpers<
   recreateExtensions(): void {
     //#region @backendFunc
     this.project.writeFile(
-      '.vscode/extensions.json',
+      this.extensionsJson,
       JSON.stringify(
         {
           recommendations: this.extensions,
@@ -108,23 +114,47 @@ export class BaseVscodeHelpers<
   }
   //#endregion
 
-  //#region settings
+  //#region recraete window title
   recreateWindowTitle(): void {
     //#region @backendFunc
     this.project.setValueToJSONC(
-      '.vscode/settings.json',
+      this.settingsJson,
       '["window.title"]',
-      `${this.project.titleBarName}` +
-        ` (\${rootName}) [\${activeEditorShort}]`,
-      // '${activeEditorShort}${separator}${rootName}',
+      this.project.titleBarName,
     );
-    // this.project.writeFile(
-    //   '.vscode/settings.json',
-    //   JSON.stringify({
-    //     recommendations: this.extensions,
-    //   }, null, 2),
-    // );
     //#endregion
   }
-  //#region
+  //#endregion
+
+  //#region recraete jsonc schema for docs
+  recreateJsonSchemaForDocs(): void {
+    //#region @backendFunc
+    const properSchema = {
+      fileMatch: [`/${this.project.docs.docsConfig}`],
+      url: `./${this.project.docs.docsConfigSchema}`,
+    };
+
+    const currentSchemas: {
+      fileMatch: string[];
+      url: string;
+    }[] =
+      this.project.getValueFromJSONC(this.settingsJson, `['json.schemas']`) ||
+      [];
+    const existedIndex = currentSchemas.findIndex(
+      x => x.url === properSchema.url,
+    );
+    if (existedIndex !== -1) {
+      currentSchemas[existedIndex] = properSchema;
+    } else {
+      currentSchemas.push(properSchema);
+    }
+
+    this.project.setValueToJSONC(
+      this.settingsJson,
+      '["json.schemas"]',
+      currentSchemas,
+    );
+    //#endregion
+  }
+  //#endregion
 }

@@ -590,6 +590,8 @@ export class CommitData {
   }
   //#endregion
 
+  useFeatureBranchForTestBranch: boolean = false;
+
   //#region methods & getters / branch prefix
   get branchPrefix(): TypeOfMsgPrefix {
     //#region @backendFunc
@@ -747,13 +749,17 @@ export class CommitData {
   //#region methods & getters / branch name
   get branchName(): string {
     //#region @backendFunc
+    let typeOfCommit = this.typeOfCommit;
+    if (typeOfCommit === 'test' && this.useFeatureBranchForTestBranch) {
+      typeOfCommit = 'feature';
+    }
+
     const teamId = this.teamID ? `${this.teamID}` : '';
     const otherIssues =
-      (this.typeOfCommit === 'release' ? [] : this.issuesFromOtherProjects) ||
-      [];
+      (typeOfCommit === 'release' ? [] : this.issuesFromOtherProjects) || [];
 
     const jiraNumbers = (
-      (this.typeOfCommit === 'release' ? [] : this.jiraNumbers) || []
+      (typeOfCommit === 'release' ? [] : this.jiraNumbers) || []
     ).filter(
       jiraNum => !otherIssues.some(otherIssue => otherIssue.endsWith(jiraNum)),
     );
@@ -771,15 +777,15 @@ export class CommitData {
 
     if (teamId) {
       branchName =
-        `${this.typeOfCommit || 'feature'}/${teamId}${jiraNumbsConneted}` +
+        `${typeOfCommit || 'feature'}/${teamId}${jiraNumbsConneted}` +
         `${_.snakeCase(this.message)}`;
     } else if (this.commitModuleName) {
       branchName =
-        `${this.typeOfCommit || 'feature'}/${jiraNumbsConneted}` +
+        `${typeOfCommit || 'feature'}/${jiraNumbsConneted}` +
         `--${this.commitModuleName.replace(/\,/g, '_')}--${_.kebabCase(this.message)}`;
     } else {
       branchName =
-        `${this.typeOfCommit || 'feature'}/${jiraNumbsConneted}` +
+        `${typeOfCommit || 'feature'}/${jiraNumbsConneted}` +
         `${_.kebabCase(this.message)}`;
     }
 

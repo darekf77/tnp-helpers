@@ -10,6 +10,7 @@
       "json10-writer",
       "lowdb",
       "typescript",
+      "incremental-compiler"
     ],
     "dependencies": {},
     "linkedFolders": [],

@@ -782,6 +782,13 @@ export class BaseGit<
     }
     //#endregion
 
+    if (
+      this.project.useFeatureInBranchNameForTests() &&
+      commitData.typeOfCommit === 'test'
+    ) {
+      commitData.useFeatureBranchForTestBranch = true;
+    }
+
     if (!commitData.isActionCommit) {
       const commitMesageFromBranch = (
         await CommitData.getFromBranch(commitData.branchName, {
