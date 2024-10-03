@@ -443,7 +443,7 @@ export abstract class BaseProject<
 
 
   relative(absoultePath: string) {
-    return path.relative(this.location, absoultePath);
+    return crossPlatformPath(path.relative(this.location, absoultePath));
   }
 
   /**

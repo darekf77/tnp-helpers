@@ -1,6 +1,7 @@
 //#region imports
 //#region @backend
-import { fse } from 'tnp-core/src';
+import { crossPlatformPath, fse } from 'tnp-core/src';
+import * as express from 'express';
 import {
   createPrinter,
   createSourceFile,
@@ -519,4 +520,40 @@ export namespace UtilsTypescript {
   //#endregion
 }
 
+//#endregion
+
+//#region utils http
+export namespace UtilsHttp {
+  //#region utils http / start http server
+  export const startHttpServer = async (cwd: string, port: number) => {
+    //#region @backendFunc
+    const app = express();
+
+    // Serve static files from the provided cwd
+    app.use(express.static(cwd));
+
+    // Catch-all to handle any invalid routes (404 errors)
+    app.use((req, res) => {
+      res.status(404).send('File not found');
+    });
+
+    // Start the server
+    const server = app.listen(port, () => {
+      console.log(
+        `Server started at http://localhost:${port}, serving files from ${cwd}`,
+      );
+    });
+
+    return new Promise<void>((resolve, reject) => {
+      console.log(`Server started at http://localhost:${port}`);
+
+      // Handle Ctrl+C (SIGINT) gracefully
+      process.on('SIGINT', () => {
+        server.close(() => resolve());
+      });
+    });
+    //#endregion
+  };
+  //#endregion
+}
 //#endregion
