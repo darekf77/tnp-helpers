@@ -200,6 +200,9 @@ export class HelpersGit {
           case 'M': // Modified
             modifiedFiles.push(filePath);
             break;
+          case 'A': // Created (goes to added)
+            modifiedFiles.push(filePath);
+            break;
           case 'D': // Deleted
             deletedFiles.push(filePath);
             break;
@@ -211,6 +214,25 @@ export class HelpersGit {
             break;
         }
       });
+
+      const fixFolders = (files: string[]) => {
+        files = files.reduce((acc, curr) => {
+          const newFiles = [curr];
+          const fullPath = crossPlatformPath([cwd, curr]);
+          if (Helpers.isFolder(fullPath)) {
+            newFiles.push(
+              ...Helpers.filesFrom(fullPath, true).map(f =>
+                f.replace(cwd + '/', ''),
+              ),
+            );
+          }
+          return [...acc, ...newFiles];
+        }, []);
+        return files;
+      };
+
+      modifiedFiles = fixFolders(modifiedFiles);
+      createdFiles = fixFolders(createdFiles);
 
       return {
         modified: modifiedFiles,
@@ -767,6 +789,11 @@ export class HelpersGit {
   ) {
     //#region @backendFunc
     const { HEAD } = options || {};
+    Helpers.info(`[taon-helpers] [resetHard] ${_.isNumber(HEAD) ? `HEAD~${HEAD}` : ''}
+
+    ${cwd}
+
+    `);
     try {
       child_process.execSync(
         `git reset --hard ${_.isNumber(HEAD) ? `HEAD~${HEAD}` : ''}`,
@@ -1608,9 +1635,7 @@ ${cwd}
       const git = simpleGit(cwd);
       const changesSummary = (await git.status()).files.map(c => c.path);
       return (
-        changesSummary.length === 0
-          ? [` --- no changes --- `]
-          : changesSummary
+        changesSummary.length === 0 ? [` --- no changes --- `] : changesSummary
       )
         .map(f => `\n${prefix}${f}`)
         .join('');

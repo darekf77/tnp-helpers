@@ -62,11 +62,11 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
       process.cwd(),
     );
     if (!current) {
-      Helpers.warn(`[taon-helpers] Current location is not a ${CLI.chalk.bold(config.frameworkName)} type project.
+      //   Helpers.warn(`[taon-helpers] Current location is not a ${CLI.chalk.bold(config.frameworkName)} type project.
 
-     location: "${process.cwd()}"
+      //  location: "${process.cwd()}"
 
-     }`);
+      //  }`);
       return void 0;
     }
     return current as unknown as PROJECT;

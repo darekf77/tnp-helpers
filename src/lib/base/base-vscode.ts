@@ -4,7 +4,7 @@ import { BaseFeatureForProject } from './base-feature-for-project';
 
 export class BaseVscodeHelpers<
   PROJCET extends BaseProject = any,
-> extends BaseFeatureForProject {
+> extends BaseFeatureForProject<PROJCET> {
   /**
    * settings.json relative path
    */
@@ -126,35 +126,5 @@ export class BaseVscodeHelpers<
   }
   //#endregion
 
-  //#region recraete jsonc schema for docs
-  recreateJsonSchemaForDocs(): void {
-    //#region @backendFunc
-    const properSchema = {
-      fileMatch: [`/${this.project.docs.docsConfig}`],
-      url: `./${this.project.docs.docsConfigSchema}`,
-    };
 
-    const currentSchemas: {
-      fileMatch: string[];
-      url: string;
-    }[] =
-      this.project.getValueFromJSONC(this.settingsJson, `['json.schemas']`) ||
-      [];
-    const existedIndex = currentSchemas.findIndex(
-      x => x.url === properSchema.url,
-    );
-    if (existedIndex !== -1) {
-      currentSchemas[existedIndex] = properSchema;
-    } else {
-      currentSchemas.push(properSchema);
-    }
-
-    this.project.setValueToJSONC(
-      this.settingsJson,
-      '["json.schemas"]',
-      currentSchemas,
-    );
-    //#endregion
-  }
-  //#endregion
 }

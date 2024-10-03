@@ -1,11 +1,12 @@
 import { Helpers, LinkedProject } from '../index';
 import { CommandLineFeature } from './command-line-feature.backend';
 import { BaseProject } from './base-project';
-import { chalk, _, path } from 'tnp-core/src';
+import { chalk, _, path, os } from 'tnp-core/src';
 import { HOST_FILE_PATH } from 'tnp-config/src';
 import { TypeOfCommit, CommitData } from './commit-data';
 import { config } from 'tnp-config/src';
 import { crossPlatformPath } from 'tnp-core/src';
+import { GhTempCode } from './gh-temp-code';
 
 export class BaseCommandLine<
   PARAMS = any,
@@ -255,6 +256,20 @@ export class BaseCommandLine<
   }
   //#endregion
 
+  //#region commands / repulll
+  async repul() {
+    await this.repull();
+  }
+
+  async repull() {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
+      return;
+    }
+    await this.project.git.resetHard({ HEAD: 10 });
+    await this.pull();
+  }
+  //#endregion
+
   //#region commands / pull
   async pull() {
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
@@ -295,6 +310,13 @@ ${
     : ''
 }
       `);
+  }
+
+  async fetch() {
+    try {
+      this.project?.git?.fetch();
+    } catch (error) {}
+    this._exit();
   }
 
   async reset() {
@@ -1048,7 +1070,20 @@ Would you like to update current project configuration?`)
     await this.SET_REMOTE_http();
   }
 
+  protected _resolveChildFromArg() {
+    const { resolved: projFromArg, clearedCommand } =
+      Helpers.cliTool.resolveItemFromArgsBegin<PROJECT>(this.args, arg =>
+        this.ins.From([this.cwd, arg]),
+      );
+    if (!!projFromArg) {
+      this.args = clearedCommand.split(' ');
+      this.cwd = projFromArg.location;
+      this.project = projFromArg;
+    }
+  }
+
   origin() {
+    this._resolveChildFromArg();
     console.log(Helpers.git.getOriginURL(this.cwd));
     this._exit();
   }
@@ -1269,10 +1304,14 @@ Would you like to update current project configuration?`)
   }
   //#endregion
 
-  //#region commands / mkdocs
-  mkdocs() {}
-
-  mkdocsBuild() {}
-
+  //#region commands / ghtemp
+  async ghSave() {
+    await new GhTempCode(this.cwd, this.project).init().save();
+    this._exit();
+  }
+  async ghRestore() {
+    await new GhTempCode(this.cwd, this.project).init().restore();
+    this._exit();
+  }
   //#endregion
 }

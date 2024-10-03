@@ -33,7 +33,6 @@ import { BaseLinkedProjects } from './base-linked-projects';
 import { BaseGit } from './base-git';
 import { BaseVscodeHelpers } from './base-vscode';
 import { BaseReleaseProcess } from './base-release-process';
-import { BaseDocs } from './base-docs';
 //#endregion
 
 const takenPorts = [];
@@ -74,7 +73,6 @@ export abstract class BaseProject<
   public vsCodeHelpers: BaseVscodeHelpers;
   public releaseProcess: BaseReleaseProcess;
   public git: BaseGit;
-  public docs: BaseDocs;
   //#endregion
 
   private __location: string;
@@ -113,11 +111,6 @@ export abstract class BaseProject<
 
     this.releaseProcess = new (require('./base-release-process')
       .BaseReleaseProcess as typeof BaseReleaseProcess)(this as any);
-
-    this.docs = new (require('./base-docs').BaseDocs as typeof BaseDocs)(
-      this as any,
-    );
-
     //#endregion
   }
   //#endregion
@@ -351,9 +344,10 @@ export abstract class BaseProject<
   }
 
   get titleBarName() {
-    const allPackagesNames = !this.allNpmPackagesNames
-      ? ''
-      : `(${this.allNpmPackagesNames.filter(f => f !== this.basename).join(',')})`;
+    const allPackagesNames =
+      this.allNpmPackagesNames.filter(f => f !== this.basename).length === 0
+        ? ''
+        : `(${this.allNpmPackagesNames.filter(f => f !== this.basename).join(',')})`;
 
     if (this.parent) {
       return (
@@ -447,6 +441,11 @@ export abstract class BaseProject<
   }
   //#endregion
 
+
+  relative(absoultePath: string) {
+    return path.relative(this.location, absoultePath);
+  }
+
   /**
    *
    * @param relativePath
@@ -494,12 +493,12 @@ export abstract class BaseProject<
   pathFor(relativePath: string | string[]) {
     //#region @backendFunc
     if (Array.isArray(relativePath)) {
-      relativePath = relativePath.join('/');
+      relativePath = crossPlatformPath(relativePath);
     }
     if (path.isAbsolute(relativePath)) {
       Helpers.error(`Cannot join relative path with absolute: ${relativePath}`);
     }
-    return crossPlatformPath(path.join(this.location, relativePath));
+    return crossPlatformPath([this.location, relativePath]);
     //#endregion
   }
   //#endregion
@@ -703,7 +702,7 @@ export abstract class BaseProject<
   remove(relativePath: string | string[], exactPath = true) {
     //#region @backendFunc
     if (Array.isArray(relativePath)) {
-      relativePath = relativePath.join('/');
+      relativePath = crossPlatformPath(relativePath);
     }
     relativePath = relativePath.replace(/^\//, '');
     if (path.basename(relativePath) === config.folder.node_modules) {
@@ -923,11 +922,14 @@ export abstract class BaseProject<
 
   //#region methods & getters / set value to json
   setValueToJSON(
-    relativePath: string,
+    relativePath: string | string[],
     lodashGetPath: string,
     value: any,
   ): void {
     //#region @backendFunc
+    if (Array.isArray(relativePath)) {
+      relativePath = crossPlatformPath(relativePath);
+    }
     Helpers.setValueToJSON(this.pathFor(relativePath), lodashGetPath, value);
     //#endregion
   }
@@ -935,11 +937,14 @@ export abstract class BaseProject<
 
   //#region methods & getters / set value to json
   setValueToJSONC(
-    relativePath: string,
+    relativePath: string | string[],
     lodashGetPath: string,
     value: any,
   ): void {
     //#region @backendFunc
+    if (Array.isArray(relativePath)) {
+      relativePath = crossPlatformPath(relativePath);
+    }
     Helpers.setValueToJSONC(this.pathFor(relativePath), lodashGetPath, value);
     //#endregion
   }
@@ -947,11 +952,14 @@ export abstract class BaseProject<
 
   //#region methods & getters / set value to json
   setValueToJSON5(
-    relativePath: string,
+    relativePath: string | string[],
     lodashGetPath: string,
     value: any,
   ): void {
     //#region @backendFunc
+    if (Array.isArray(relativePath)) {
+      relativePath = crossPlatformPath(relativePath);
+    }
     Helpers.setValueToJSONC(this.pathFor(relativePath), lodashGetPath, value);
     //#endregion
   }
@@ -959,11 +967,14 @@ export abstract class BaseProject<
 
   //#region methods & getters / get value from json
   getValueFromJSON(
-    relativePath: string,
+    relativePath: string | string[],
     lodashGetPath: string,
     defaultValue: any = void 0,
   ): any {
     //#region @backendFunc
+    if (Array.isArray(relativePath)) {
+      relativePath = crossPlatformPath(relativePath);
+    }
     return Helpers.getValueFromJSON(
       this.pathFor(relativePath),
       lodashGetPath,
@@ -975,11 +986,14 @@ export abstract class BaseProject<
 
   //#region methods & getters / get value from jsonc
   getValueFromJSONC(
-    relativePath: string,
+    relativePath: string | string[],
     lodashGetPath: string,
     defaultValue: any = void 0,
   ): any {
     //#region @backendFunc
+    if (Array.isArray(relativePath)) {
+      relativePath = crossPlatformPath(relativePath);
+    }
     return Helpers.getValueFromJSONC(
       this.pathFor(relativePath),
       lodashGetPath,
@@ -991,8 +1005,11 @@ export abstract class BaseProject<
 
   //#region methods & getters / write file
 
-  writeFile(relativePath: string, content: string) {
+  writeFile(relativePath: string | string[], content: string) {
     //#region @backend
+    if (Array.isArray(relativePath)) {
+      relativePath = crossPlatformPath(relativePath);
+    }
     Helpers.writeFile([this.location, relativePath], content);
     //#endregion
   }

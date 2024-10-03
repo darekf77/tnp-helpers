@@ -49,6 +49,10 @@
     "**/devDependencies.json": true,
     "**/package.json": true,
     "**/logo.svg": true,
+    ".firedev": true,
+    ".taon": true,
+    ".tnp": true,
+    ".": true,
     "**/*.filetemplate": true,
     "**/tsconfig.*": true,
     "**/tslint.*": true,
@@ -88,6 +92,10 @@
     "browser": true,
     "dist": true,
     "package-lock.json": true,
+    ".firedev": true,
+    ".taon": true,
+    ".tnp": true,
+    ".": true,
     "**/docs": true,
     "**/projects": true,
     "**/bin": true,
@@ -97,7 +105,11 @@
     "**/.vscode": true,
     "**/browser": true,
     "**/dist": true,
-    "**/package-lock.json": true
+    "**/package-lock.json": true,
+    "**/.firedev": true,
+    "**/.taon": true,
+    "**/.tnp": true,
+    "**/.": true
   },
   "[typescriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -143,5 +155,13 @@
   "search.include": [
     "**/src/**"
   ],
-  "window.title": "npm/taon-dev/tnp-helpers (taon-helpers) [ ${activeEditorShort} ]"
+  "window.title": "npm/taon-dev/tnp-helpers (taon-helpers) [ ${activeEditorShort} ]",
+  "json.schemas": [
+    {
+      "fileMatch": [
+        "/docs-config.jsonc"
+      ],
+      "url": "./docs-config.schema.json"
+    }
+  ]
 }
