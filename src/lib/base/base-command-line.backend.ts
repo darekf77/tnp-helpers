@@ -697,6 +697,10 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
     await this.pushRelease();
   }
 
+  async pRelease() {
+    await this.pushRelease();
+  }
+
   async pushRelease() {
     await this.meltUpdateCommits();
     await this.push({
