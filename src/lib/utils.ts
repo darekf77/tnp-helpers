@@ -557,3 +557,34 @@ export namespace UtilsHttp {
   //#endregion
 }
 //#endregion
+
+//#region utils md
+export namespace UtilsMd {
+  /**
+   * extract assets pathes from .md file
+   */
+  export const getAssets = (mdfileContent: string): string[] => {
+    //#region @backendFunc
+    // Regular expressions for detecting assets
+    const markdownImgRegex = /!\[.*?\]\((.*?)\)/g; // Markdown image syntax ![alt](src)
+    const htmlImgRegex = /<img.*?src=["'](.*?)["']/g; // HTML image syntax <img src="path">
+
+    const assets: string[] = [];
+
+    let match: RegExpExecArray | null;
+
+    // Extract Markdown image links
+    while ((match = markdownImgRegex.exec(mdfileContent)) !== null) {
+      assets.push(match[1]); // Get the image path
+    }
+
+    // Extract HTML image links
+    while ((match = htmlImgRegex.exec(mdfileContent)) !== null) {
+      assets.push(match[1]); // Get the image path
+    }
+
+    return assets.map(r => r.replace(new RegExp(/^\.\//), ''));
+    //#endregion
+  };
+}
+//#endregion
