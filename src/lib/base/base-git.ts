@@ -4,7 +4,7 @@ import { chalk, fse } from 'tnp-core/src';
 import { translate } from './translate';
 //#endregion
 import { BaseFeatureForProject } from './base-feature-for-project';
-import { CommitData, Helpers, TypeOfCommit } from '../index';
+import { CommitData, Helpers, PushProcessOptions, TypeOfCommit } from '../index';
 import { crossPlatformPath, path, _ } from 'tnp-core/src';
 import type { BaseProject } from './base-project';
 //#endregion
@@ -653,30 +653,7 @@ export class BaseGit<
 
   //#region methods & getters / push process
   async pushProcess(
-    options: {
-      force?: boolean;
-      typeofCommit?: TypeOfCommit;
-      askToConfirmPush?: boolean;
-      askToConfirmCommit?: boolean;
-      skipLint?: boolean;
-      askToConfirmBranchChange?: boolean;
-      origin?: string;
-      args?: string[];
-      setOrigin?: 'ssh' | 'http';
-      exitCallBack?: () => void;
-      forcePushNoQuestion?: boolean;
-      overrideCommitMessage?: string;
-      commitMessageRequired?: boolean;
-      /**
-       * only needed when push github
-       * and I forgot to add my username before issue
-       * taon pfix proper input my-repo#344
-       * that should be
-       * taon pfix proper input my-username/my-repo#344
-       */
-      currentOrigin?: string;
-      skipChildren?: boolean;
-    } = {},
+    options: PushProcessOptions = {},
   ): Promise<void> {
     //#region @backendFunc
     let {

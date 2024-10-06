@@ -26,7 +26,7 @@ export class BaseVscodeHelpers<
       'aeschli.vscode-css-formatter',
       'alefragnani.Bookmarks',
       'alexdima.copy-relative-path',
-      'alexiv.vscode-angular2-files',
+      // 'alexiv.vscode-angular2-files', // taon generator is better
       'amodio.toggle-excluded-files',
       'cg-cnu.vscode-path-tools',
       'chrisdias.vscode-opennewinstance',

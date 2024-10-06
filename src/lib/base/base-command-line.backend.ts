@@ -1,4 +1,4 @@
-import { Helpers, LinkedProject } from '../index';
+import { Helpers, LinkedProject, PushProcessOptions } from '../index';
 import { CommandLineFeature } from './command-line-feature.backend';
 import { BaseProject } from './base-project';
 import { chalk, _, path, os } from 'tnp-core/src';
@@ -625,15 +625,17 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
       return;
     }
   }
+
+  async qPush() {
+    await this.quickPush();
+  }
+
+  async quickPush() {
+    await this.push({ skipLint: true });
+  }
+
   async push(
-    options: {
-      force?: boolean;
-      typeofCommit?: TypeOfCommit;
-      origin?: string;
-      commitMessageRequired?: boolean;
-      noExit?: boolean;
-      overrideCommitMessage?: string;
-    } = {},
+    options: PushProcessOptions = {},
   ): Promise<void> {
     // console.log('args', this.args);
     // console.log(`argsWithParams "${this.argsWithParams}"` );

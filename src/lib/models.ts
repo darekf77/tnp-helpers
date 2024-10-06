@@ -1,5 +1,5 @@
 import * as core from 'tnp-core/src';
-import type { BaseProject } from './base';
+import type { BaseProject, TypeOfCommit } from './base';
 
 export type BaseProjectType = core.CoreModels.BaseProjectType;
 export const BaseProjectTypeArr = core.CoreModels.BaseProjectTypeArr;
@@ -42,7 +42,10 @@ export type LibrariesBuildOptions<PROJECT extends BaseProject = BaseProject> = {
    * @todo
    */
   libraries?: PROJECT[];
-  outputLineReplace?: (libForOutput: PROJECT, useExternalProvidedLibs: boolean) => (line: string) => string;
+  outputLineReplace?: (
+    libForOutput: PROJECT,
+    useExternalProvidedLibs: boolean,
+  ) => (line: string) => string;
   useLastUserConfiguration?: boolean;
 };
 
@@ -55,4 +58,30 @@ export interface ChangelogData {
   changes: string[];
   version: string;
   date: string;
+}
+
+export interface PushProcessOptions {
+  force?: boolean;
+  typeofCommit?: TypeOfCommit;
+  askToConfirmPush?: boolean;
+  askToConfirmCommit?: boolean;
+  skipLint?: boolean;
+  askToConfirmBranchChange?: boolean;
+  origin?: string;
+  args?: string[];
+  setOrigin?: 'ssh' | 'http';
+  exitCallBack?: () => void;
+  forcePushNoQuestion?: boolean;
+  overrideCommitMessage?: string;
+  commitMessageRequired?: boolean;
+  /**
+   * only needed when push github
+   * and I forgot to add my username before issue
+   * taon pfix proper input my-repo#344
+   * that should be
+   * taon pfix proper input my-username/my-repo#344
+   */
+  currentOrigin?: string;
+  skipChildren?: boolean;
+  noExit?: boolean;
 }
