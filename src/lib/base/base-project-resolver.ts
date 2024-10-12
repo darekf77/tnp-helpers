@@ -158,7 +158,7 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
 
   //#region fields & getters / get project nearest to path
   nearestTo(
-    absoluteLocation: string,
+    absoluteLocation: string | string[],
     options?: {
       type?: string | string[];
       findGitRoot?: boolean;
@@ -166,6 +166,9 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
     },
   ): PROJECT {
     //#region @backendFunc
+    if (Array.isArray(absoluteLocation)) {
+      absoluteLocation = crossPlatformPath( absoluteLocation)
+    }
     options = options || {};
     const { type, findGitRoot, onlyOutSideNodeModules } = options;
 

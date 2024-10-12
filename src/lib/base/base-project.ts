@@ -38,7 +38,7 @@ import { BaseReleaseProcess } from './base-release-process';
 const takenPorts = [];
 
 export abstract class BaseProject<
-  PROJCET extends BaseProject<any, any> = BaseProject<any, any>,
+  PROJCET extends BaseProject = BaseProject<any, any>,
   TYPE = BaseProjectType,
 > {
   //#region static
@@ -326,6 +326,25 @@ export abstract class BaseProject<
   }
   //#endregion
 
+  //#region methods & getters / parent
+  get nearestParent(): PROJCET {
+    //#region @websqlFunc
+    if (this.cache['nearestParent']) {
+      return this.cache['nearestParent'];
+    }
+    const nearestParent = this.ins.nearestTo([this.location, '..']) as PROJCET;
+    if (nearestParent) {
+      console.log(`
+        nearest parent for ${this.genericName} is ${nearestParent.genericName}
+
+        `);
+      this.cache['nearestParent'] = nearestParent;
+    }
+    return nearestParent;
+    //#endregion
+  }
+  //#endregion
+
   //#region methods & getters / grandpa
   get grandpa(): PROJCET {
     //#region @websqlFunc
@@ -440,7 +459,6 @@ export abstract class BaseProject<
     //#endregion
   }
   //#endregion
-
 
   relative(absoultePath: string) {
     return crossPlatformPath(path.relative(this.location, absoultePath));
@@ -1061,7 +1079,7 @@ export abstract class BaseProject<
     if (project && project.parent) {
       result.push(project.parent.name);
     }
-    return this.findParentsNames(project.parent, project, result);
+    return this.findParentsNames(project.parent as PROJCET, project, result);
     //#endregion
   }
   //#endregion
@@ -1169,6 +1187,7 @@ export abstract class BaseProject<
 
   name: ${proj?.name}
   type: ${proj?.type}
+  parent: ${proj?.parent?.genericName || '< none >'}
   core project name: '${proj?.core?.name}'
   embedded project: ${proj?.linkedProjects.embeddedProject?.genericName || '< none >'}
   children (${proj?.children.length}): ${!proj || !proj.children.length ? '< none >' : ''}

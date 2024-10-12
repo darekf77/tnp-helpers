@@ -21,7 +21,7 @@ import type { BaseProject } from './base-project';
  * Base library build for standard angular/typescript projects
  */
 export abstract class BaseLibraryBuild<
-  PROJCET extends BaseProject<any, any>,
+  PROJCET extends BaseProject<BaseProject, any>,
 > extends BaseFeatureForProject {
   private cache: any = {};
 
@@ -327,10 +327,9 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
             : locationsForNodeModules,
           strategy,
           buildType,
-          outputLineReplace: outputLineReplace(
-            lib as any,
-            useExternalProvidedLibs,
-          ),
+          outputLineReplace:
+            outputLineReplace &&
+            outputLineReplace(lib as any, useExternalProvidedLibs),
         });
       }
     }
@@ -348,7 +347,8 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
         locationsForNodeModules,
         strategy,
         buildType,
-        outputLineReplace: outputLineReplace(lib, useExternalProvidedLibs),
+        outputLineReplace:
+          outputLineReplace && outputLineReplace(lib, useExternalProvidedLibs),
       });
     }
     //#endregion
@@ -384,16 +384,23 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
 
     //#region debouce copy/link
     const debouncedBuild = _.debounce(() => {
-      const sourceDist = lib.parent.pathFor([config.folder.dist, lib.basename]);
+      const sourceDist = lib.nearestParent.pathFor([
+        config.folder.dist,
+        lib.basename,
+      ]);
+
       for (const node_modules of locationsForNodeModules) {
         const dest = crossPlatformPath([node_modules, lib.name]);
         if (Helpers.isSymlinkFileExitedOrUnexisted(dest)) {
           Helpers.remove(dest);
         }
-        Helpers.copy(sourceDist, dest);
-        // console.log({ sourceDist, dest });
+        Helpers.copy(sourceDist, dest, {
+          recursive: true,
+          overwrite: true,
+        });
+
         console.log(
-          `Sync (watch) done for ${lib.basename} to ${lib.name} (${crossPlatformPath(
+          `Sync (watch|copy) done for ${lib.basename} to ${lib.name} (${crossPlatformPath(
             [
               path.basename(path.dirname(node_modules)),
               config.folder.node_modules,
@@ -405,7 +412,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     //#endregion
 
     //#region watch build process
-    await (lib.parent as BaseProject).execute(
+    await lib.nearestParent.execute(
       lib.libraryBuild.getLibraryBuildComamnd({
         watch: true,
         buildType,
@@ -413,7 +420,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
       {
         outputLineReplace,
         resolvePromiseMsg: {
-          stdout: lib.libraryBuild.getLibraryBuildSuccessComamnd,
+          stdout: lib.libraryBuild.getLibraryBuildSuccessComamnds,
         },
         resolvePromiseMsgCallback: {
           stdout: () => {
@@ -446,7 +453,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
   }) {
     //#region @backendFunc
 
-    const libCompiledInDist = lib.parent.pathFor([
+    const libCompiledInDist = lib.nearestParent.pathFor([
       config.folder.dist,
       lib.basename,
     ]);
@@ -455,14 +462,14 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     const compileProcess = async () => {
       if (!Helpers.exists(libCompiledInDist)) {
         Helpers.info(`Compiling ${lib.name} ...`);
-        await (lib.parent as PROJCET).execute(
+        await lib.nearestParent.execute(
           lib.libraryBuild.getLibraryBuildComamnd({
             watch: false,
             buildType,
           }),
           {
             resolvePromiseMsg: {
-              stdout: lib.libraryBuild.getLibraryBuildSuccessComamnd,
+              stdout: lib.libraryBuild.getLibraryBuildSuccessComamnds,
             },
             outputLineReplace,
           },
@@ -511,12 +518,17 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
         if (Helpers.isSymlinkFileExitedOrUnexisted(libInsideNodeModules)) {
           Helpers.remove(libInsideNodeModules);
         }
-        Helpers.copy(libCompiledInDist, libInsideNodeModules);
+        Helpers.copy(libCompiledInDist, libInsideNodeModules, {
+          recursive: true,
+          overwrite: true,
+        });
         console.log(
-          `Sync done for ${lib.basename} to ${lib.name} (${crossPlatformPath([
-            path.basename(path.dirname(node_modules_abs_path)),
-            config.folder.node_modules,
-          ])})`,
+          `Sync copy done for ${lib.basename} to ${lib.name} (${crossPlatformPath(
+            [
+              path.basename(path.dirname(node_modules_abs_path)),
+              config.folder.node_modules,
+            ],
+          )})`,
         );
       }
       //#endregion
@@ -548,15 +560,18 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
   //#endregion
 
   //#region getters & methods / get library build success command
-  get getLibraryBuildSuccessComamnd(): string {
+  get getLibraryBuildSuccessComamnds(): string[] {
     //#region @backendFunc
     const isAngularLib = Helpers.exists(
       this.project.pathFor('ng-package.json'),
     );
     if (isAngularLib) {
-      return `Trace: Build complete`;
+      return [`Trace: Build complete`, 'Compilation complete'];
     } else {
-      return `Found 0 errors. Watching for file change`;
+      return [
+        `Found 0 errors. Watching for file change`,
+        'Compilation complete',
+      ];
     }
     //#endregion
   }
