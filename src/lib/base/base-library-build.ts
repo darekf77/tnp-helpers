@@ -24,6 +24,7 @@ export abstract class BaseLibraryBuild<
   PROJCET extends BaseProject<BaseProject, any>,
 > extends BaseFeatureForProject {
   private cache: any = {};
+  private tempOrgTsConfigFile = `tmp-original-${config.file.tsconfig_json}`;
 
   //#region getters & methods / sort by deps
   protected sortByDeps(libraries: PROJCET[]): PROJCET[] {
@@ -248,6 +249,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     //#region @backend
 
     await this.project.linkedProjects.saveAllLinkedProjectsToDB();
+    await this.changeTsConfigForLibrariesTypes();
 
     //#region prepare parameters
     if (!Array.isArray(copylink_to_node_modules)) {
@@ -603,6 +605,83 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
       true,
     );
     return locations;
+    //#endregion
+  }
+  //#endregion
+
+  //#region private methods / change tsconfig for libraries typescript proper local types
+  private async changeTsConfigForLibrariesTypes(): Promise<void> {
+    //#region @backendFunc
+    await this.restoreOriginalTsConfig();
+    await this.replaceTsConfigsPathes();
+
+    for (const libChild of this.project.libraryBuild.libraries) {
+      const howMuchBack = this.project
+        .relative(libChild.location)
+        .split('/').length;
+
+      libChild.setValueToJSONC(
+        'tsconfig.lib.json',
+        'extends',
+        `${_.times(howMuchBack, () => `../`).join('')}${this.tempOrgTsConfigFile}`,
+      );
+    }
+    //#endregion
+  }
+  //#endregion
+
+  //#region private methods / replace tsconfig pathes
+  private async replaceTsConfigsPathes() {
+    //#region @backendFunc
+
+    if (!this.project.hasFile(this.tempOrgTsConfigFile)) {
+      Helpers.copyFile(
+        this.project.pathFor(config.file.tsconfig_json),
+        this.project.pathFor(this.tempOrgTsConfigFile),
+      );
+    }
+
+    const paths = this.project.libraryBuild.libraries.reduce((a, b) => {
+      return _.merge(a, {
+        [b.name]: [
+          crossPlatformPath([this.project.relative(b.location), 'src', 'lib']),
+        ],
+        [`${b.name}/*`]: [
+          `${crossPlatformPath([this.project.relative(b.location), 'src', 'lib'])}/*`,
+        ],
+      });
+    }, {});
+
+    // console.log('paths', paths);
+
+    this.project.setValueToJSONC(
+      config.file.tsconfig_json,
+      'compilerOptions.paths',
+      paths,
+    );
+    //#endregion
+  }
+  //#endregion
+
+  //#region private methods  / restore original tsconfig
+  private async restoreOriginalTsConfig() {
+    //#region @backendFunc
+    Helpers.taskStarted('  original tsconfig files');
+    const commands = [
+      `git checkout ${this.tempOrgTsConfigFile}`,
+      `git checkout ${config.file.tsconfig_json}`,
+      ...this.project.libraryBuild.libraries.map(lib => {
+        return `git checkout ${this.project.relative(lib.location)}/${config.file.tsconfig_lib_json}`;
+      }),
+    ];
+    for (const command of commands) {
+      try {
+        this.project
+          .run(command, { output: false, biggerBuffer: false, silence: true })
+          .sync();
+      } catch (err) {}
+    }
+    Helpers.taskDone('Restore original tsconfig files');
     //#endregion
   }
   //#endregion

@@ -334,10 +334,10 @@ export abstract class BaseProject<
     }
     const nearestParent = this.ins.nearestTo([this.location, '..']) as PROJCET;
     if (nearestParent) {
-      console.log(`
-        nearest parent for ${this.genericName} is ${nearestParent.genericName}
+      // console.log(`
+      //   nearest parent for ${this.genericName} is ${nearestParent.genericName}
 
-        `);
+      //   `);
       this.cache['nearestParent'] = nearestParent;
     }
     return nearestParent;
