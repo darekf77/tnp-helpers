@@ -789,11 +789,10 @@ export class HelpersGit {
   ) {
     //#region @backendFunc
     const { HEAD } = options || {};
-    Helpers.info(`[taon-helpers] [resetHard] ${_.isNumber(HEAD) ? `HEAD~${HEAD}` : ''}
-
-    ${cwd}
-
-    `);
+    Helpers.info(
+      `[taon-helpers] [resetHard] ` +
+        `${_.isNumber(HEAD) ? `HEAD~${HEAD}` : ''} ${cwd}`,
+    );
     try {
       child_process.execSync(
         `git reset --hard ${_.isNumber(HEAD) ? `HEAD~${HEAD}` : ''}`,
@@ -921,7 +920,7 @@ export class HelpersGit {
         this.lastCommitMessage(cwd) ===
         Helpers.git.ACTION_MSG_RESET_GIT_HARD_COMMIT
       ) {
-        Helpers.logInfo(`Reseting branch deep ${++i}.. `);
+        // Helpers.logInfo(`Reseting branch deep ${++i}.. `);
         if (soft) {
           Helpers.git.resetSoftHEAD(cwd, 1);
         } else {
