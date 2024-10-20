@@ -23,7 +23,7 @@ export abstract class BaseDebounceCompilerForProject<
     absFilesPathes: string[],
     initalParams: ADDITIONAL_DATA,
   ): Promise<void> {
-    this.initalParams = initalParams;
+    this.initalParams = initalParams || ({} as any);
     return await this.action({
       changeOfFiles: absFilesPathes.map(
         fileAbsolutePath => new ChangeOfFile(fileAbsolutePath, 'change'),
