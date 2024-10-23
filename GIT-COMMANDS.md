@@ -1,4 +1,4 @@
-# Taon git commands
+# Git commands
 
 ## SHORT
 

@@ -51,7 +51,7 @@
     "**/logo.svg": true,
     ".firedev": true,
     ".taon": true,
-    ".tnp": true,
+    // ".tnp": true,
     ".": true,
     "**/*.filetemplate": true,
     "**/tsconfig.*": true,

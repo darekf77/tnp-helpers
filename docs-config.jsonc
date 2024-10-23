@@ -1,10 +1,12 @@
 {
   "site_name": "tnp-helpers",
-  "additionalAssets": [],
   "externalDocs": {
     "mdfiles": [],
-    "projects": []
+    "projects": [],
   },
-  "omitFilesPatters": [],
-  "priorityOrder": []
+  "omitFilesPatters": ["BUILD-INFO.md"],
+  "priorityOrder": ["Introduction"],
+  "mapTitlesNames": {
+    "README.md": "Introduction",
+  },
 }

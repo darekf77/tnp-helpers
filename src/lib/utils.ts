@@ -586,5 +586,38 @@ export namespace UtilsMd {
     return assets.map(r => r.replace(new RegExp(/^\.\//), ''));
     //#endregion
   };
+
+  /**
+   * Move asset paths to a higher directory level by adding "../" before each path.
+   *
+   * @param mdfileContent - The content of the .md file.
+   * @param level - The number of levels to go up (default is 1).
+   * @returns The modified content with updated asset paths.
+   */
+  export const moveAssetsPathesToLevel = (mdfileContent: string, level = 1): string => {
+    //#region @backendFunc
+    // Regular expressions for detecting assets
+    const markdownImgRegex = /(!\[.*?\]\()(\.\/|\.\.\/.*?)(\))/g; // Matches ![alt](./path or ../path)
+    const htmlImgRegex = /(<img.*?src=["'])(\.\/|\.\.\/.*?)(["'])/g; // Matches <img src="./path or ../path">
+
+    // Calculate how many "../" segments to prepend based on the level
+    const prefix = '../'.repeat(level);
+
+    // Replace the paths in Markdown images
+    const updatedMarkdown = mdfileContent.replace(markdownImgRegex, (_, prefixText, path, suffix) => {
+      // Add the "../" prefix and normalize the path
+      return `${prefixText}${prefix}${path.replace(/^\.\//, '').replace(/^\.\.\//, '')}${suffix}`;
+    });
+
+    // Replace the paths in HTML images
+    const updatedHtml = updatedMarkdown.replace(htmlImgRegex, (_, prefixText, path, suffix) => {
+      // Add the "../" prefix and normalize the path
+      return `${prefixText}${prefix}${path.replace(/^\.\//, '').replace(/^\.\.\//, '')}${suffix}`;
+    });
+
+    return updatedHtml;
+    //#endregion
+  };
+
 }
 //#endregion
