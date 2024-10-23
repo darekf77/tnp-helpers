@@ -1,4 +1,4 @@
-# Git commands
+# Git
 
 ## SHORT
 
