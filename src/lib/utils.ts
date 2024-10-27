@@ -588,6 +588,34 @@ export namespace UtilsMd {
   };
 
   /**
+   * Extract links to other Markdown files from a given Markdown content.
+   * @param mdfileContent
+   */
+  export const getLinksToOtherMdFiles = (mdfileContent: string): string[] => {
+    //#region @backendFunc
+    // Regex pattern to match Markdown and HTML links to .md files
+    const mdLinkPattern = /\[.*?\]\(([^)]+\.md)\)/g; // Matches [text](link.md)
+    // const htmlLinkPattern = /<a\s+href=["']([^"']+\.md)["'].*?>/g; // Matches <a href="link.md">
+
+    const links = new Set<string>(); // Use a Set to avoid duplicate links
+
+    // Find all Markdown-style links
+    let match;
+    while ((match = mdLinkPattern.exec(mdfileContent)) !== null) {
+      links.add(match[1]);
+    }
+
+    // Find all HTML-style links
+    // while ((match = htmlLinkPattern.exec(mdfileContent)) !== null) {
+    //   links.add(match[1]);
+    // }
+
+    return Array.from(links); // Convert Set to Array and return
+    //#endregion
+  };
+
+
+  /**
    * Move asset paths to a higher directory level by adding "../" before each path.
    *
    * @param mdfileContent - The content of the .md file.

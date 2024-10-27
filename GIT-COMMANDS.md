@@ -1,6 +1,6 @@
 # Git
 
-## SHORT
+## Handy shortcuts
 
 `taon soft`  => quivalent: git reset --soft HEAD~1
 
@@ -30,7 +30,7 @@
 
 `taon rebase branch-rebase-from` => rebase current branch with provided in arg
 
-## PULL
+## Pull
 
 `taon pull`  => pull current branch or current workspace projects one after another
 
@@ -39,7 +39,7 @@
 `taon reset`  => reset hard and pull (recrusively)
 
 
-## PUSH
+## Push
 
 `taon pushall` => push code to all remotes(origins) defined in .git/config
 
