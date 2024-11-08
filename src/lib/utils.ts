@@ -614,7 +614,6 @@ export namespace UtilsMd {
     //#endregion
   };
 
-
   /**
    * Move asset paths to a higher directory level by adding "../" before each path.
    *
@@ -622,7 +621,10 @@ export namespace UtilsMd {
    * @param level - The number of levels to go up (default is 1).
    * @returns The modified content with updated asset paths.
    */
-  export const moveAssetsPathesToLevel = (mdfileContent: string, level = 1): string => {
+  export const moveAssetsPathesToLevel = (
+    mdfileContent: string,
+    level = 1,
+  ): string => {
     //#region @backendFunc
     // Regular expressions for detecting assets
     const markdownImgRegex = /(!\[.*?\]\()(\.\/|\.\.\/.*?)(\))/g; // Matches ![alt](./path or ../path)
@@ -632,20 +634,53 @@ export namespace UtilsMd {
     const prefix = '../'.repeat(level);
 
     // Replace the paths in Markdown images
-    const updatedMarkdown = mdfileContent.replace(markdownImgRegex, (_, prefixText, path, suffix) => {
-      // Add the "../" prefix and normalize the path
-      return `${prefixText}${prefix}${path.replace(/^\.\//, '').replace(/^\.\.\//, '')}${suffix}`;
-    });
+    const updatedMarkdown = mdfileContent.replace(
+      markdownImgRegex,
+      (_, prefixText, path, suffix) => {
+        // Add the "../" prefix and normalize the path
+        return `${prefixText}${prefix}${path.replace(/^\.\//, '').replace(/^\.\.\//, '')}${suffix}`;
+      },
+    );
 
     // Replace the paths in HTML images
-    const updatedHtml = updatedMarkdown.replace(htmlImgRegex, (_, prefixText, path, suffix) => {
-      // Add the "../" prefix and normalize the path
-      return `${prefixText}${prefix}${path.replace(/^\.\//, '').replace(/^\.\.\//, '')}${suffix}`;
-    });
+    const updatedHtml = updatedMarkdown.replace(
+      htmlImgRegex,
+      (_, prefixText, path, suffix) => {
+        // Add the "../" prefix and normalize the path
+        return `${prefixText}${prefix}${path.replace(/^\.\//, '').replace(/^\.\.\//, '')}${suffix}`;
+      },
+    );
 
     return updatedHtml;
     //#endregion
   };
+}
+//#endregion
 
+//#region utils quickfixes
+export namespace UtilsQuickFixes {
+  //#region replace sql-wasm.js faulty code content
+  /**
+   *
+   * @param node_modules/sql.js/dist/sql-wasm.js
+   */
+  export function replaceSQLliteFaultyCode(contentofSQLWasmJS: string): string {
+    //#region @backendFunc
+    const replace = [
+      [
+        `var packageJson = JSON.parse(fs.readFileSync(__nccwpck_require__.ab ` +
+          `+ "package.json").toString());`,
+        `var packageJson = JSON.parse(fs.existsSync(__nccwpck_require__.ab + ` +
+          `"package.json") && fs.readFileSync(__nccwpck_require__.ab + "package.json").toString());`,
+      ],
+      ['module = undefined;', '/* module = undefined ; */'],
+    ];
+    replace.forEach(r => {
+      contentofSQLWasmJS = contentofSQLWasmJS.replace(r[0], r[1]);
+    });
+    return contentofSQLWasmJS;
+    //#endregion
+  }
+  //#endregion
 }
 //#endregion

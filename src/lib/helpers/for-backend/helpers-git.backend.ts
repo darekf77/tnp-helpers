@@ -819,7 +819,7 @@ export class HelpersGit {
     if (_.isNumber(defaultHardResetCommits)) {
       this.resetHard(cwd, { HEAD: defaultHardResetCommits });
     } else {
-      this.meltActionCommits(cwd);
+      this.resetHard(cwd);
     }
     child_process.execSync(`git pull --tags --rebase origin ${branchName}`, {
       cwd,
@@ -913,19 +913,15 @@ export class HelpersGit {
   /**
    * Return number of melted action commits
    */
-  meltActionCommits(cwd, soft = false) {
+  meltActionCommits(cwd: string): number {
     let i = 0;
     while (true) {
       if (
         this.lastCommitMessage(cwd) ===
         Helpers.git.ACTION_MSG_RESET_GIT_HARD_COMMIT
       ) {
-        // Helpers.logInfo(`Reseting branch deep ${++i}.. `);
-        if (soft) {
-          Helpers.git.resetSoftHEAD(cwd, 1);
-        } else {
-          Helpers.git.resetHard(cwd, { HEAD: 1 });
-        }
+        Helpers.git.resetSoftHEAD(cwd, 1);
+        ++i;
       } else {
         return i;
       }
@@ -1000,6 +996,9 @@ ${cwd}
           force: {
             name: 'Try again with force push ?',
           },
+          openInVscode: {
+            name: 'Open in vscode window',
+          },
           exit: {
             name: 'Exit process',
           },
@@ -1009,6 +1008,14 @@ ${cwd}
           question: 'What to do ?',
           choices: pushOptions,
         });
+
+        if (whatToDo === 'openInVscode') {
+          try {
+            Helpers.run(`code .`, { cwd }).sync();
+          } catch (error) {}
+
+          continue;
+        }
 
         if (whatToDo === 'exit') {
           process.exit(0);

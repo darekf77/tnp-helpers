@@ -9,6 +9,7 @@ export * from './base-vscode';
 export * from './base-release-process';
 export * from './base-compiler-for-project';
 export * from './base-debounce-compiler-for-project';
+export * from './base-quick-fixes';
 export * from './commit-data';
 export * from './core-project';
 export * from './linked-project';

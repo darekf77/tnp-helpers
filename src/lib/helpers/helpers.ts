@@ -25,7 +25,7 @@ import { CLI } from 'tnp-core/src';
 import { HelpersVscode } from './for-backend/helpers-vscode.backend';
 //#endregion
 import { config } from 'tnp-config/src';
-import { Helpers, Validators } from '../index';
+import { Helpers, UtilsQuickFixes, Validators } from '../index';
 import { CLASS } from 'typescript-class-helpers/src';
 import { CoreHelpers, CoreModels } from 'tnp-core/src';
 import { HelpersNumber } from './helpers-numbers';
@@ -128,15 +128,7 @@ export class HelpersTaon extends CoreHelpers {
 
     //#region quick fixes for output
     // existsSync()
-    const replace = [
-      [
-        `var packageJson = JSON.parse(fs.readFileSync(__nccwpck_require__.ab ` +
-          `+ "package.json").toString());`,
-        `var packageJson = JSON.parse(fs.existsSync(__nccwpck_require__.ab + ` +
-          `"package.json") && fs.readFileSync(__nccwpck_require__.ab + "package.json").toString());`,
-      ],
-      ['module = undefined;', '/* module = undefined; */'],
-    ];
+
 
     //#endregion
 
@@ -166,9 +158,7 @@ export class HelpersTaon extends CoreHelpers {
       //#endregion
     });
     let output = data.code;
-    replace.forEach(r => {
-      output = output.replace(r[0], r[1]);
-    });
+    output = UtilsQuickFixes.replaceSQLliteFaultyCode(output);
 
     if (_.isFunction(beforeWrite)) {
       output = await Helpers.runSyncOrAsync({

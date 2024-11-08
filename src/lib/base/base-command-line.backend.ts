@@ -558,7 +558,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
-    await this.project.git.meltActionCommits(true);
+    await this.project.git.meltActionCommits();
     await this.project.git.pushProcess({
       ...options,
       forcePushNoQuestion: options.force,
@@ -634,9 +634,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
     await this.push({ skipLint: true });
   }
 
-  async push(
-    options: PushProcessOptions = {},
-  ): Promise<void> {
+  async push(options: PushProcessOptions = {}): Promise<void> {
     // console.log('args', this.args);
     // console.log(`argsWithParams "${this.argsWithParams}"` );
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
@@ -675,7 +673,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
 
   //#region commands / melt updat ecommits
   private async meltUpdateCommits(hideInfo = false) {
-    if (this.project.git.meltActionCommits(true) > 0) {
+    if (this.project.git.meltActionCommits() > 0) {
       if (!hideInfo) {
         this.project.git.stageAllFiles();
         if (
@@ -711,6 +709,38 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
       overrideCommitMessage:
         `${_.first(this.project.releaseProcess.getReleaseWords())} ` +
         `version ${this.project.npmHelpers.version}`,
+    });
+  }
+
+  async mPush() {
+    await this.meltPush();
+  }
+
+  async fmPush() {
+    await this.forceMeltPush();
+  }
+
+  async mfPush() {
+    await this.forceMeltPush();
+  }
+
+  async mforcePush() {
+    await this.forceMeltPush();
+  }
+
+  async meltforcePush() {
+    await this.forceMeltPush();
+  }
+
+  async forceMeltPush() {
+    await this.meltPush(true);
+  }
+
+  async meltPush(force = false) {
+    await this.meltUpdateCommits();
+    await this.push({
+      mergeUpdateCommits: true,
+      force,
     });
   }
 

@@ -63,6 +63,7 @@ export interface ChangelogData {
 export interface PushProcessOptions {
   force?: boolean;
   typeofCommit?: TypeOfCommit;
+  mergeUpdateCommits?: boolean;
   askToConfirmPush?: boolean;
   askToConfirmCommit?: boolean;
   skipLint?: boolean;

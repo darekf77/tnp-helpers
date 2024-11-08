@@ -4,7 +4,13 @@ import { chalk, fse } from 'tnp-core/src';
 import { translate } from './translate';
 //#endregion
 import { BaseFeatureForProject } from './base-feature-for-project';
-import { CommitData, Helpers, PushProcessOptions, TypeOfCommit } from '../index';
+import {
+  CommitData,
+  Helpers,
+  PushProcessOptions,
+  TypeOfCommit,
+  UtilsTerminal,
+} from '../index';
 import { crossPlatformPath, path, _ } from 'tnp-core/src';
 import type { BaseProject } from './base-project';
 //#endregion
@@ -211,9 +217,9 @@ export class BaseGit<
   //#endregion
 
   //#region methods & getters / melt action commits
-  meltActionCommits(soft = false) {
+  meltActionCommits() {
     //#region @backend
-    return Helpers.git.meltActionCommits(this.project.location, soft);
+    return Helpers.git.meltActionCommits(this.project.location);
     //#endregion
   }
   //#endregion
@@ -652,9 +658,7 @@ export class BaseGit<
   //#endregion
 
   //#region methods & getters / push process
-  async pushProcess(
-    options: PushProcessOptions = {},
-  ): Promise<void> {
+  async pushProcess(options: PushProcessOptions = {}): Promise<void> {
     //#region @backendFunc
     let {
       force = false,
@@ -672,6 +676,7 @@ export class BaseGit<
       skipChildren,
       setOrigin,
       currentOrigin,
+      mergeUpdateCommits,
     } = options;
 
     await this._beforePushProcessAction();
@@ -685,6 +690,78 @@ export class BaseGit<
       commitMessageRequired,
       currentOrigin,
     );
+
+    if (mergeUpdateCommits && this.project.git.stagedFiles.length > 0) {
+      //#region merge update commits
+      Helpers.logInfo(
+        `Pushing detailed changes to project: ${this.project.genericName}`,
+      );
+      Helpers.logInfo(`Modified files... `);
+      Helpers.logInfo(
+        [...this.project.git.stagedFiles]
+          .map(f => ` - ${chalk.underline(f)}`)
+          .join('\n'),
+      );
+      while (true) {
+        const mergeAction = {
+          useUpdateCommit: {
+            name:
+              `Use temporary update commit ` +
+              `"${Helpers.git.ACTION_MSG_RESET_GIT_HARD_COMMIT}" and force push`,
+          },
+          provideCommitMessage: {
+            name: 'Provide commit message and force push',
+          },
+          resetRemoveChanges: {
+            name: 'Reset/remove changes and force push',
+          },
+          openInVscode: {
+            name: 'Open project in vscode',
+          },
+        };
+
+        const action = force
+          ? ('useUpdateCommit' as keyof typeof mergeAction)
+          : await UtilsTerminal.select<keyof typeof mergeAction>({
+              choices: mergeAction,
+              question: 'What to do ?',
+            });
+
+        if (action === 'openInVscode') {
+          Helpers.run(`code .`, { cwd: this.project.location }).sync();
+          continue;
+        }
+
+        if (action === 'resetRemoveChanges') {
+          force = true;
+          forcePushNoQuestion = true;
+          this.project.git.resetHard();
+          break;
+        }
+
+        if (action === 'useUpdateCommit') {
+          force = true;
+          forcePushNoQuestion = true;
+          overrideCommitMessage = Helpers.git.ACTION_MSG_RESET_GIT_HARD_COMMIT;
+        }
+
+        if (action === 'provideCommitMessage') {
+          force = true;
+          forcePushNoQuestion = true;
+          try {
+            overrideCommitMessage = await Helpers.input({
+              question: `Please provide commit message for current changes:`,
+              defaultValue: 'update',
+            });
+          } catch (error) {}
+        }
+
+        if (overrideCommitMessage) {
+          break;
+        }
+        //#endregion
+      }
+    }
 
     // #region warning about missing sub-issue
     if (
@@ -898,6 +975,9 @@ export class BaseGit<
       }
 
       for (const child of this.gitChildren) {
+        if (mergeUpdateCommits) {
+          await child.git.meltActionCommits();
+        }
         await child.git.pushProcess(options);
       }
     }

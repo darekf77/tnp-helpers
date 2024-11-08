@@ -33,6 +33,7 @@ import { BaseLinkedProjects } from './base-linked-projects';
 import { BaseGit } from './base-git';
 import { BaseVscodeHelpers } from './base-vscode';
 import { BaseReleaseProcess } from './base-release-process';
+import { BaseQuickFixes } from './base-quick-fixes';
 //#endregion
 
 const takenPorts = [];
@@ -73,6 +74,7 @@ export abstract class BaseProject<
   public vsCodeHelpers: BaseVscodeHelpers;
   public releaseProcess: BaseReleaseProcess;
   public git: BaseGit;
+  public quickFixes: BaseQuickFixes;
   //#endregion
 
   private __location: string;
