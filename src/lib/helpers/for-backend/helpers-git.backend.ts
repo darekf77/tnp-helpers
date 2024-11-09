@@ -850,8 +850,12 @@ export class HelpersGit {
     Helpers.info(
       `[taon-helpers][${dateformat(new Date(), 'dd-mm-yyyy HH:MM:ss')}] Pulling git changes in "${cwd}", origin=${Helpers.git.getOriginURL(cwd)}  `,
     );
+    let acknowledgeBeforePull = false;
     while (true) {
       try {
+        if (acknowledgeBeforePull) {
+          Helpers.pressKeyAndContinue('Press any key to continue pulling...');
+        }
         let currentLocalBranch = child_process
           .execSync(`git branch | sed -n '/\* /s///p'`, { cwd })
           .toString()
@@ -880,6 +884,12 @@ export class HelpersGit {
             skip: {
               name: 'Skip pulling',
             },
+            resetHardLast5Commits: {
+              name: 'Reset hard last 5 commits and pull again',
+            },
+            openInVscode: {
+              name: 'Open project in VSCode',
+            },
             exit: {
               name: 'Exit process',
             },
@@ -891,6 +901,21 @@ export class HelpersGit {
               choices: pullOptions,
             },
           );
+          acknowledgeBeforePull = whatToDo === 'openInVscode';
+
+          if (whatToDo === 'resetHardLast5Commits') {
+            try {
+              Helpers.git.resetHard(cwd, { HEAD: 5 });
+            } catch (error) {}
+            continue;
+          }
+
+          if (whatToDo === 'openInVscode') {
+            try {
+              Helpers.run(`code .`, { cwd }).sync();
+            } catch (error) {}
+            continue;
+          }
 
           if (whatToDo === 'skip') {
             break;
