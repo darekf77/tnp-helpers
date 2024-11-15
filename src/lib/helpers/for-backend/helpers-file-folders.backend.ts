@@ -572,6 +572,10 @@ to: ${to}
       .filter(c => !!c);
   }
 
+  /**
+   * get all files from folder
+   * absolute paths
+   */
   getRecrusiveFilesFrom(
     dir: string,
     ommitFolders: string[] = [],
@@ -584,8 +588,8 @@ to: ${to}
       ? fse.readdirSync(dir)
       : [];
     const readed = readedFilesAndFolders
-      .map(f => {
-        const fullPath = path.join(dir, f);
+      .map(relativePathToFile => {
+        const fullPath = crossPlatformPath([dir, relativePathToFile]);
         // console.log(`is direcotry ${fse.lstatSync(fullPath).isDirectory()} `, fullPath)
         if (fse.lstatSync(fullPath).isDirectory()) {
           if (
