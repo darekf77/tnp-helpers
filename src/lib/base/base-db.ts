@@ -23,7 +23,7 @@ export class BaseDb<DB extends object> {
   private lowDB: Low<DB>;
   //#endregion
 
-  public get isUnsingDB(): boolean {
+  public get isUsingDB(): boolean {
     //#region @backendFunc
     return !!this.lowDB;
     //#endregion
