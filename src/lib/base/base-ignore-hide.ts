@@ -5,7 +5,7 @@ import { _ } from 'tnp-core/src';
 
 // TODO
 export class BaseIgnoreHideHelpers<
-  PROJCET extends BaseProject = any,
+  PROJECT extends BaseProject = any,
 > extends BaseFeatureForProject {
   //#region files to ignore
   protected filesToGitIgnore() {

@@ -16,9 +16,9 @@ import type { BaseProject } from './base-project';
 //#endregion
 
 export class BaseGit<
-  PROJCET extends BaseProject = any,
+  PROJECT extends BaseProject = any,
 > extends BaseFeatureForProject {
-  project: PROJCET;
+  project: PROJECT;
   //#region methods & getters / unstage all files
   unstageAllFiles() {
     //#region @backendFunc
@@ -574,7 +574,7 @@ export class BaseGit<
    * projects that are children of this project (with its own git repo)
    */
   get gitChildren() {
-    let childrenRepos: PROJCET[] = [];
+    let childrenRepos: PROJECT[] = [];
 
     if (this.project.linkedProjects.linkedProjects.length > 0) {
       childrenRepos = this.project.linkedProjects.linkedProjects
@@ -582,16 +582,16 @@ export class BaseGit<
           return this.project.ins.From([
             this.project.location,
             c.relativeClonePath,
-          ]) as PROJCET;
+          ]) as PROJECT;
         })
         .filter(f => !!f);
     } else {
-      childrenRepos = this.project.children as PROJCET[];
+      childrenRepos = this.project.children as PROJECT[];
     }
 
     childrenRepos = childrenRepos.filter(
       f => f.git.isInsideGitRepo && f.git.isGitRoot,
-    ) as PROJCET[];
+    ) as PROJECT[];
     return childrenRepos;
   }
   //#endregion

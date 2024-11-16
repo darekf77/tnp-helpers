@@ -3,8 +3,8 @@ import type { BaseProject } from './base-project';
 import { BaseFeatureForProject } from './base-feature-for-project';
 
 export class BaseVscodeHelpers<
-  PROJCET extends BaseProject = any,
-> extends BaseFeatureForProject<PROJCET> {
+  PROJECT extends BaseProject = any,
+> extends BaseFeatureForProject<PROJECT> {
   /**
    * settings.json relative path
    */

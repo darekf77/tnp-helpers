@@ -12,13 +12,13 @@ import { config } from 'tnp-config/src';
 //#endregion
 
 export class BaseLinkedProjects<
-  PROJCET extends BaseProject = any,
+  PROJECT extends BaseProject = any,
 > extends BaseFeatureForProject {
   private cache: any = {};
-  project: PROJCET;
+  project: PROJECT;
 
   //#region methods & getters / embedded project
-  get embeddedProject(): PROJCET {
+  get embeddedProject(): PROJECT {
     const cacheKey = 'embeddedProject' + _.kebabCase(this.project.location);
     if (!_.isUndefined(this.cache[cacheKey])) {
       return this.cache[cacheKey];
@@ -26,7 +26,7 @@ export class BaseLinkedProjects<
     // Helpers.taskStarted(`Detecting embedded project for ${this.location}`); // TODO it is slow
     const nearsetProj = this.project.ins.nearestTo(
       crossPlatformPath([this.project.location, '..']),
-    ) as PROJCET;
+    ) as PROJECT;
     const linkedPorj = nearsetProj?.linkedProjects?.linkedProjects.find(l => {
       const copareTo = crossPlatformPath([
         nearsetProj.location,
@@ -48,7 +48,7 @@ export class BaseLinkedProjects<
       linkedPorj.relativeClonePath,
       linkedPorj.internalRealtiveProjectPath || '',
     ]);
-    const embdedresult = this.project.ins.From(pathToEmbededProj) as PROJCET;
+    const embdedresult = this.project.ins.From(pathToEmbededProj) as PROJECT;
     // Helpers.taskDone(`Embedded project detected for ${this.location}`);
     this.cache[cacheKey] = embdedresult;
     return this.cache[cacheKey];
@@ -100,7 +100,7 @@ export class BaseLinkedProjects<
         proj.location,
         link.relativeClonePath,
         link.internalRealtiveProjectPath || '',
-      ]) as PROJCET;
+      ]) as PROJECT;
       // console.log({ linkedPorj })
       if (linkedPorj) {
         await linkedPorj.linkedProjects.saveLocationToDB();
@@ -346,7 +346,7 @@ ${projectsThatShouldBeLinked
             ]);
             const childProj = this.project.ins.From(
               childProjLocaiton,
-            ) as PROJCET;
+            ) as PROJECT;
             if (childProj) {
               await childProj.linkedProjects.saveLocationToDB();
             }

@@ -21,17 +21,17 @@ import type { BaseProject } from './base-project';
  * Base library build for standard angular/typescript projects
  */
 export abstract class BaseLibraryBuild<
-  PROJCET extends BaseProject<BaseProject, any>,
+  PROJECT extends BaseProject<BaseProject, any>,
 > extends BaseFeatureForProject {
   private cache: any = {};
   private tempOrgTsConfigFile = `tmp-original-${config.file.tsconfig_json}`;
 
   //#region getters & methods / sort by deps
-  protected sortByDeps(libraries: PROJCET[]): PROJCET[] {
+  protected sortByDeps(libraries: PROJECT[]): PROJECT[] {
     //#region @backendFunc
     const libs = libraries;
 
-    const sorted = this.project.ins.sortGroupOfProject<PROJCET>(
+    const sorted = this.project.ins.sortGroupOfProject<PROJECT>(
       libs,
       proj => {
         // resolve dependencies names
@@ -79,13 +79,13 @@ export abstract class BaseLibraryBuild<
       skipAllLibsQuestion,
       useLastUserConfiguration,
     }: {
-      selectedLibs: PROJCET[];
+      selectedLibs: PROJECT[];
       watch: boolean;
       watchBuildSupported?: boolean;
       skipAllLibsQuestion?: boolean;
       useLastUserConfiguration?: boolean;
     },
-  ): Promise<{ selectedLibs: PROJCET[]; skipRebuildingAllForWatch: boolean }> {
+  ): Promise<{ selectedLibs: PROJECT[]; skipRebuildingAllForWatch: boolean }> {
     //#region @backendFunc
     let buildAll = false;
     let skipRebuildingAllForWatch = false;
@@ -200,7 +200,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
   /**
    * angular libraries from angular.json
    */
-  get libraries(): PROJCET[] {
+  get libraries(): PROJECT[] {
     //#region @backendFunc
     if (!_.isUndefined(this.cache['libraries'])) {
       return this.cache['libraries'];
@@ -221,7 +221,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
 
     let libraries = projects.map(c =>
       this.project.ins.From(path.join(this.project.location, c.root)),
-    ) as PROJCET[];
+    ) as PROJECT[];
 
     libraries = this.sortByDeps(libraries);
     return libraries;
@@ -244,7 +244,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
       outputLineReplace,
       libraries,
       useLastUserConfiguration,
-    }: LibrariesBuildOptions<PROJCET> & { watch?: boolean } = {} as any,
+    }: LibrariesBuildOptions<PROJECT> & { watch?: boolean } = {} as any,
   ): Promise<void> {
     //#region @backend
 
@@ -290,8 +290,8 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     //#endregion
 
     //#region normal build
-    const allParenProjsForExtenalLibsBuild: PROJCET[] = useExternalProvidedLibs
-      ? Helpers.uniqArray<PROJCET>(
+    const allParenProjsForExtenalLibsBuild: PROJECT[] = useExternalProvidedLibs
+      ? Helpers.uniqArray<PROJECT>(
           libraries.map(c => c.parent),
           'location',
         )
@@ -376,7 +376,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     buildType,
     outputLineReplace,
   }: {
-    lib: PROJCET;
+    lib: PROJECT;
     locationsForNodeModules: string[];
     strategy: 'link' | 'copy';
     buildType: CoreModels.LibraryType;
@@ -447,7 +447,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     buildType,
     outputLineReplace,
   }: {
-    lib: PROJCET;
+    lib: PROJECT;
     locationsForNodeModules: string[];
     strategy: 'link' | 'copy';
     buildType: CoreModels.LibraryType;

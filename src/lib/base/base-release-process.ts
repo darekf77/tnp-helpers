@@ -13,10 +13,10 @@ import { config } from 'tnp-config/src';
 //#endregion
 
 export class BaseReleaseProcess<
-  PROJCET extends BaseProject = any,
+  PROJECT extends BaseProject = any,
 > extends BaseFeatureForProject {
   //#region fields
-  project: PROJCET;
+  project: PROJECT;
   /**
    * Automatic release process of patch plus one version
    */
@@ -38,7 +38,7 @@ export class BaseReleaseProcess<
   public async startRelease(
     options?: Partial<
       Pick<
-        BaseReleaseProcess<PROJCET>,
+        BaseReleaseProcess<PROJECT>,
         'automaticRelease' | 'type' | 'newVersion'
       >
     >,
@@ -297,7 +297,7 @@ export class BaseReleaseProcess<
     const toBumpProjects = [
       this.project,
       ...this.project.libraryBuild.libraries,
-    ] as PROJCET[];
+    ] as PROJECT[];
 
     return toBumpProjects;
   }

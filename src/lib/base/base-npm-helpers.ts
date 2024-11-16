@@ -18,10 +18,10 @@ import { CoreModels } from 'tnp-core/src';
 //#endregion
 
 export class BaseNpmHelpers<
-  PROJCET extends BaseProject = any,
+  PROJECT extends BaseProject = any,
 > extends BaseFeatureForProject {
   private packageJSON: PackageJson;
-  constructor(project: PROJCET) {
+  constructor(project: PROJECT) {
     super(project);
     this.project = project;
     this.reloadPackageJsonInMemory();

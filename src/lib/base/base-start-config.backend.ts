@@ -10,6 +10,7 @@ import { CLASS } from 'typescript-class-helpers/src';
 export type BaseStartConfigOptions = Partial<BaseStartConfig>;
 
 export class BaseStartConfig {
+  //#region prepareArgs
   /**
    * @deprecated
    * use standard import / not default
@@ -41,7 +42,9 @@ export class BaseStartConfig {
     });
     return result;
   }
+  //#endregion
 
+  //#region prepareFromFiles
   public static prepareFromFiles(cliClassArr: string[]) {
     return this.prepareArgs(
       cliClassArr
@@ -49,7 +52,9 @@ export class BaseStartConfig {
         .filter(f => _.isObject(f)) as any,
     );
   }
+  //#endregion
 
+  //#region fields
   public readonly argsv: string[] = process.argv;
   public readonly shortArgsReplaceConfig: { [shortCommand in string]: string } =
     {};
@@ -66,6 +71,9 @@ export class BaseStartConfig {
    * @deprecated
    */
   public readonly useStringArrForArgsFunctions: boolean;
+  //#endregion
+
+  //#region constructor
   constructor(options: BaseStartConfigOptions) {
     if (!Helpers.isSupportedTaonTerminal) {
       Helpers.error(
@@ -204,8 +212,5 @@ export class BaseStartConfig {
       }
     }
   }
-
-  quickFixes() {}
-
-  handleGLobalArguments() {}
+  //#endregion
 }

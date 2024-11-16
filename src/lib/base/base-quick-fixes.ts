@@ -7,9 +7,9 @@ import { config } from 'tnp-config/src';
 //#endregion
 
 export class BaseQuickFixes<
-  PROJCET extends BaseProject = any,
+  PROJECT extends BaseProject = any,
 > extends BaseFeatureForProject {
-  constructor(project: PROJCET) {
+  constructor(project: PROJECT) {
     super(project);
     this.project = project;
   }

@@ -39,7 +39,7 @@ import { BaseQuickFixes } from './base-quick-fixes';
 const takenPorts = [];
 
 export abstract class BaseProject<
-  PROJCET extends BaseProject = BaseProject<any, any>,
+  PROJECT extends BaseProject = BaseProject<any, any>,
   TYPE = BaseProjectType,
 > {
   //#region static
@@ -61,7 +61,7 @@ export abstract class BaseProject<
   /**
    * resolve instance
    */
-  abstract readonly ins: BaseProjectResolver<PROJCET>;
+  abstract readonly ins: BaseProjectResolver<PROJECT>;
   /**
    * Unique free port for project instance
    * only available after executing *this.assignFreePort()*
@@ -184,7 +184,7 @@ export abstract class BaseProject<
   //#endregion
 
   //#region getters & methods / link project exited
-  get linkedProjectsExisted(): PROJCET[] {
+  get linkedProjectsExisted(): PROJECT[] {
     //#region @backendFunc
     return this.linkedProjects.linkedProjects
       .map(f => {
@@ -294,7 +294,7 @@ export abstract class BaseProject<
   /**
    * alias to getAllChildren
    */
-  get children(): PROJCET[] {
+  get children(): PROJECT[] {
     //#region @websqlFunc
     return this.getAllChildren();
     //#endregion
@@ -302,7 +302,7 @@ export abstract class BaseProject<
   //#endregion
 
   //#region methods & getters / get child
-  getChildBy(nameOrBasename: string, errors = true): PROJCET {
+  getChildBy(nameOrBasename: string, errors = true): PROJECT {
     //#region @websqlFunc
     const c = this.children.find(
       c => c.name === nameOrBasename || c.basename === nameOrBasename,
@@ -318,7 +318,7 @@ export abstract class BaseProject<
   //#endregion
 
   //#region methods & getters / parent
-  get parent(): PROJCET {
+  get parent(): PROJECT {
     //#region @websqlFunc
     if (!_.isString(this.location) || this.location.trim() === '') {
       return void 0;
@@ -329,12 +329,12 @@ export abstract class BaseProject<
   //#endregion
 
   //#region methods & getters / parent
-  get nearestParent(): PROJCET {
+  get nearestParent(): PROJECT {
     //#region @websqlFunc
     if (this.cache['nearestParent']) {
       return this.cache['nearestParent'];
     }
-    const nearestParent = this.ins.nearestTo([this.location, '..']) as PROJCET;
+    const nearestParent = this.ins.nearestTo([this.location, '..']) as PROJECT;
     if (nearestParent) {
       // console.log(`
       //   nearest parent for ${this.genericName} is ${nearestParent.genericName}
@@ -348,7 +348,7 @@ export abstract class BaseProject<
   //#endregion
 
   //#region methods & getters / grandpa
-  get grandpa(): PROJCET {
+  get grandpa(): PROJECT {
     //#region @websqlFunc
     if (!_.isString(this.location) || this.location.trim() === '') {
       return void 0;
@@ -1067,8 +1067,8 @@ export abstract class BaseProject<
   //#endregion
 
   private findParentsNames(
-    project?: PROJCET,
-    parent?: PROJCET,
+    project?: PROJECT,
+    parent?: PROJECT,
     result = [],
   ): string[] {
     //#region @backendFunc
@@ -1081,7 +1081,7 @@ export abstract class BaseProject<
     if (project && project.parent) {
       result.push(project.parent.name);
     }
-    return this.findParentsNames(project.parent as PROJCET, project, result);
+    return this.findParentsNames(project.parent as PROJECT, project, result);
     //#endregion
   }
   //#endregion
