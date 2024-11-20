@@ -9,7 +9,7 @@ import {
   crossPlatformPath,
   chalk,
 } from 'tnp-core';
-import { CLI } from 'tnp-core/src';
+import { CLI, UtilsProcess } from 'tnp-core/src';
 import * as dateformat from 'dateformat';
 import { exec } from 'child_process';
 import type { BaseProject } from '../../index';
@@ -147,14 +147,28 @@ export class HelpersProcess {
 
   //#region press key and continue
   /**
-   * @deprecated use questions instead
+   * use questions instead
    */
   pressKeyAndContinue(message = 'Press enter to continue..') {
-    console.log(chalk.bold(message));
     if (process.platform === 'win32') {
-      spawn.sync('pause', '', { shell: true, stdio: [0, 1, 2] });
+      const terminal = UtilsProcess.getBashOrShellName();
+      // console.log({ terminal });
+      if (terminal === 'gitbash') {
+        const getGitBashPath = UtilsProcess.getGitBashPath();
+        // console.log({ getGitBashPath });
+        const gitbashCommand = `read -p "${chalk.bold(message)}"`;
+        child_process.execSync(gitbashCommand, {
+          stdio: 'inherit',
+          shell: getGitBashPath,
+        });
+      } else {
+        console.log(chalk.bold(message));
+        spawn.sync('pause', '', { shell: true, stdio: [0, 1, 2] });
+      }
       return;
     }
+
+    console.log(chalk.bold(message));
     require('child_process').spawnSync('read _ ', {
       shell: true,
       stdio: [0, 1, 2],

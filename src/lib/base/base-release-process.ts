@@ -13,7 +13,7 @@ import { config } from 'tnp-config/src';
 //#endregion
 
 export class BaseReleaseProcess<
-  PROJECT extends BaseProject = any,
+  PROJECT extends BaseProject<any,any> = any,
 > extends BaseFeatureForProject {
   //#region fields
   project: PROJECT;

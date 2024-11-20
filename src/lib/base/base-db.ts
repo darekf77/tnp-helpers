@@ -40,7 +40,7 @@ export class BaseDb<DB extends object> {
   }
 
   //#region @backend
-  async useDB(): Promise<Low<DB>> {
+  async getConnection(): Promise<Low<DB>> {
     //#region @backendFunc
     const dbLocation = this.projectsDbLocation;
     // console.log({ dbLocation })

@@ -19,7 +19,7 @@ export class ProjectDatabase extends BaseDb<typeof defaultDb>{
 
   async getAllProjectsFromDB() {
     //#region @backendFunc
-    const db = await this.useDB();
+    const db = await this.getConnection();
     return db.data.projects;
     //#endregion
   }

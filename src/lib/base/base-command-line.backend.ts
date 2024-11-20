@@ -1350,4 +1350,9 @@ Would you like to update current project configuration?`)
     this._exit();
   }
   //#endregion
+
+  pauseTerminal() {
+    Helpers.pressKeyAndContinue();
+    this._exit();
+  }
 }

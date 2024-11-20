@@ -39,7 +39,7 @@ import { BaseQuickFixes } from './base-quick-fixes';
 const takenPorts = [];
 
 export abstract class BaseProject<
-  PROJECT extends BaseProject = BaseProject<any, any>,
+PROJECT extends BaseProject = BaseProject<any,any>,
   TYPE = BaseProjectType,
 > {
   //#region static
@@ -68,13 +68,13 @@ export abstract class BaseProject<
    */
   readonly port: string;
 
-  public libraryBuild: BaseLibraryBuild<BaseProject>;
-  public npmHelpers: BaseNpmHelpers;
-  public linkedProjects: BaseLinkedProjects;
-  public vsCodeHelpers: BaseVscodeHelpers;
-  public releaseProcess: BaseReleaseProcess;
-  public git: BaseGit;
-  public quickFixes: BaseQuickFixes;
+  public libraryBuild?: BaseLibraryBuild<BaseProject>;
+  public npmHelpers?: BaseNpmHelpers;
+  public linkedProjects?: BaseLinkedProjects;
+  public vsCodeHelpers?: BaseVscodeHelpers;
+  public releaseProcess?: BaseReleaseProcess;
+  public git?: BaseGit;
+  public quickFixes?: BaseQuickFixes;
   //#endregion
 
   private __location: string;

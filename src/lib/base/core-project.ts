@@ -23,7 +23,7 @@ const defaultDb = {
 //#endregion
 
 //#region core project command args options
-export type CoreCommandArgOptions<PROJECT extends BaseProject> = {
+export type CoreCommandArgOptions<PROJECT extends BaseProject<any,any>> = {
   project?: PROJECT;
   /**
    * watch mode
@@ -66,7 +66,7 @@ export class CoreProject<PROJECT extends BaseProject = BaseProject> {
   //#endregion
 
   //#region static / from
-  static from<Proj extends BaseProject = BaseProject>(
+  static from<Proj extends BaseProject = BaseProject<any,any>>(
     options: Omit<CoreProject<Proj>, 'name' | 'url' | 'branch'>,
   ): CoreProject<Proj> {
     //#region @backendFunc

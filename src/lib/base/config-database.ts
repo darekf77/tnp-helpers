@@ -26,7 +26,7 @@ export class ConfigDatabase extends BaseDb<typeof defaultDb> {
 
   public async selectCodeEditor(): Promise<'code' | 'idea' | 'idea64' | string> {
     //#region @backendFunc
-    const db = await this.useDB();
+    const db = await this.getConnection();
     let editor = await Helpers.consoleGui.select('Select default code editor', [
       'code', 'idea', 'idea64']
       .map((name => {
@@ -42,7 +42,7 @@ export class ConfigDatabase extends BaseDb<typeof defaultDb> {
 
   public async getCodeEditor(): Promise<'code' | 'idea' | 'idea64' | string> {
     //#region @backendFunc
-    const db = await this.useDB();
+    const db = await this.getConnection();
     let editor = db.data.config[this.selectedCodeEditorKey] as any;
     if (!editor) {
       editor = await this.selectCodeEditor();

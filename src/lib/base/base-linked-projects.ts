@@ -66,7 +66,7 @@ export class BaseLinkedProjects<
   //#region methods & getters / save location to db
   async saveLocationToDB() {
     //#region @backendFunc
-    const db = await this.project.ins.projectsDb.useDB();
+    const db = await this.project.ins.projectsDb.getConnection();
 
     const existed = db.data.projects.find(
       f => f.location === this.project.location,
