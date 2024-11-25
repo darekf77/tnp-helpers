@@ -550,7 +550,7 @@ export class BaseGit<
 
     Helpers.info(`Cloning ${this.project.name}...`);
 
-    // @LAST copy instead cloning
+    // copy instead cloning
     await Helpers.git.clone({
       cwd,
       url: this.project.git.remoteOriginUrl,

@@ -154,5 +154,8 @@
       ],
       "url": "./docs-config.schema.json"
     }
+  ],
+  "cSpell.words": [
+    "columnify"
   ]
 }

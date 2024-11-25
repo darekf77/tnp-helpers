@@ -224,7 +224,7 @@ export class HelpersCliTool {
     let isMatch = false;
     let methodNameToCall: string;
     let counter = 0;
-    // console.log({ restOfArgs }) // TODO @LASTS
+
     isMatch = !_.isUndefined(
       [_.first(restOfArgs)]
         .filter(a => !a.startsWith('--')) // TODO fix this also for other special paramters

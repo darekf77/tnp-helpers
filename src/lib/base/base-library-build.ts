@@ -302,7 +302,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     //   additionalLibsProjs.map(c => c.name),
     // );
 
-    // TODO @LAST sort additionalLibsProjs thing before ric
+    // TODO sort additionalLibsProjs thing before ric
     for (const libProj of allParenProjsForExtenalLibsBuild) {
       await libProj.init();
 

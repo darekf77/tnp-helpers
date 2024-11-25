@@ -9,25 +9,23 @@ import { Helpers } from '../index';
 import { path, crossPlatformPath } from 'tnp-core/src';
 import { config } from 'tnp-config/src';
 import { _ } from 'tnp-core/src';
-import type { BaseProject } from './base-project';
-import { Low } from 'lowdb';
+// import { Low } from 'lowdb';
 import { ConfigDatabase } from './config-database';
 import { ProjectDatabase } from './project-database';
+import { BaseProject } from './base-project';
+import { PortsWorker } from './ports-worker';
 //#region @backend
-import { os } from 'tnp-core/src';
-import { JSONFilePreset } from '../lowdb/node';
+// import { os } from 'tnp-core/src';
+// import { JSONFilePreset } from '../lowdb/node';
+// import { CLI } from 'tnp-core/src';
 export { ChildProcess } from 'child_process';
-import { CLI } from 'tnp-core/src';
 //#endregion
 //#endregion
 
 export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
-  /**
-   * general name for project company
-   */
-  public orgName: string = 'taon';
   configDb: ConfigDatabase = new ConfigDatabase(this);
   projectsDb: ProjectDatabase = new ProjectDatabase(this);
+  readonly portsWorker: PortsWorker;
 
   //#region fields
   protected readonly NPM_PROJECT_KEY = 'npm';
@@ -40,7 +38,20 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
   //#endregion
 
   //#region constructor
-  constructor(protected classFn: any) {}
+  constructor(
+    protected classFn: any,
+    public cliToolName: string,
+  ) {
+    this.cliToolName = cliToolName;
+    // console.log("global.frameworkName",global.frameworkName)
+    if(!this.cliToolName) {
+      Helpers.throw(`cliToolName is not provided`)
+    }
+    this.portsWorker = new PortsWorker(
+      'ports-worker',
+      `${this.cliToolName} startCliServicePortsWorker --skipCoreCheck`,
+    );
+  }
   //#endregion
 
   //#region fields & getters / allowed types
@@ -167,7 +178,7 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
   ): PROJECT {
     //#region @backendFunc
     if (Array.isArray(absoluteLocation)) {
-      absoluteLocation = crossPlatformPath( absoluteLocation)
+      absoluteLocation = crossPlatformPath(absoluteLocation);
     }
     options = options || {};
     const { type, findGitRoot, onlyOutSideNodeModules } = options;

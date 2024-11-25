@@ -7,6 +7,7 @@ import type { BaseProjectResolver } from "./base-project-resolver";
 import { Low } from "../lowdb";
 import { os } from "tnp-core/src";
 import { JSONFilePreset } from "../lowdb/node";
+import { config } from "tnp-config/src";
 //#endregion
 //#endregion
 
@@ -31,7 +32,7 @@ export class BaseDb<DB extends object> {
 
   get projectsDbLocation() {
     //#region @backendFunc
-    const userFolder = crossPlatformPath([os.homedir(), `.taon/apps/${this.dbName}-db/${this.ins.orgName}`]);
+    const userFolder = crossPlatformPath([os.homedir(), `.taon/apps/${this.dbName}-db/${this.ins.cliToolName}`]);
     try {
       Helpers.mkdirp(userFolder);
     } catch (error) { }

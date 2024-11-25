@@ -173,12 +173,6 @@ export class HelpersProcess {
       shell: true,
       stdio: [0, 1, 2],
     });
-    // return new Promise((resovle) => {
-    //   Helpers.log(message);
-    //   process.stdin.once('data', function () {
-    //     resovle()
-    //   });
-    // })
   }
   //#endregion
 
@@ -397,7 +391,8 @@ export class HelpersProcess {
 
   //#region kill all node except current process
   /**
-   * TOOD @LAST
+   * THIS DEOS NOT WORK !
+   * ! TOOD FIX THIS
    */
   async killAllNodeExceptCurrentProcess() {
     return new Promise<void>((resolve, reject) => {

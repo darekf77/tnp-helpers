@@ -39,13 +39,16 @@ import { BaseQuickFixes } from './base-quick-fixes';
 const takenPorts = [];
 
 export abstract class BaseProject<
-PROJECT extends BaseProject = BaseProject<any,any>,
+  PROJECT extends BaseProject = BaseProject<any, any>,
   TYPE = BaseProjectType,
 > {
   //#region static
 
   //#region static / instance of resovle
-  static ins = new BaseProjectResolver<BaseProject>(BaseProject);
+  static ins = new BaseProjectResolver<BaseProject>(
+    BaseProject,
+    'taon',
+  );
   //#endregion
 
   //#endregion

@@ -82,7 +82,7 @@ export class BaseLinkedProjects<
             location: this.project.location,
           });
         });
-        // Helpers.info(`Location saved to db for ${this.genericName}, db: ${this.ins.projectsDbLocation(_.kebabCase(this.orgName))}`);
+        // Helpers.info(`Location saved to db for ${this.genericName}, db: ${this.ins.projectsDbLocation(_.kebabCase(this.cliToolName))}`);
       } catch (error) {
         Helpers.warn(`Cannot save location to db`);
       }
