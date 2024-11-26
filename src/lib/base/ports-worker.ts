@@ -95,10 +95,13 @@ class PortsController extends BaseCliWorkerController<Port> {
   //#endregion
 }
 //#endregion
+
+//#region ports context
+
 //#region @backend
 const portsWorkerDatabaseLocation = crossPlatformPath([
   os.userInfo().homedir,
-  `.taon/databases-for-services/ports-worker.sqljs`,
+  `.taon/databases-for-services/ports-worker.sqlite`,
 ]);
 if (!Helpers.exists(path.dirname(portsWorkerDatabaseLocation))) {
   Helpers.mkdirp(path.dirname(portsWorkerDatabaseLocation));
@@ -106,7 +109,6 @@ if (!Helpers.exists(path.dirname(portsWorkerDatabaseLocation))) {
 // console.log('portsWorkerDatabaseLocation', portsWorkerDatabaseLocation);
 //#endregion
 
-//#region ports context
 var PortsContext = Taon.createContext(() => ({
   contextName: 'PortsContext',
   contexts: { BaseContext },
@@ -125,14 +127,19 @@ var PortsContext = Taon.createContext(() => ({
 
 export class PortsWorker extends BaseCliWorker {
   //#region methods / get controller for remote connection
+  private portsController: PortsController | undefined;
   protected async getControllerForRemoteConnection(): Promise<
     BaseCliWorkerController<any>
   > {
+    if (this.portsController) {
+      return this.portsController;
+    }
     await this.waitForProcessPortSavedToDisk();
     const refRemote = await PortsContext.initialize({
       overrideRemoteHost: `http://localhost:${this.processLocalInfoObj.port}`,
     });
-    return refRemote.getInstanceBy(PortsController);
+    this.portsController = refRemote.getInstanceBy(PortsController);
+    return this.portsController;
   }
   //#endregion
 

@@ -14,7 +14,7 @@ export class GhTempCode {
     //#region @backendFunc
     return crossPlatformPath([
       os.userInfo().homedir,
-      `.${config.frameworkName}`,
+      `.taon`,
     ]);
     //#endregion
   }

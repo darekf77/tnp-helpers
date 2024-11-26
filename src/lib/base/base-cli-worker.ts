@@ -20,6 +20,22 @@ const WORKER_INIT_START_TIME_LIMIT = 15; // 15 seconds max to start worker
 const START_PORT_FOR_SERVICES = 3600;
 //#endregion
 
+export type CfontStyle =
+  | 'block'
+  | 'slick'
+  | 'tiny'
+  | 'grid'
+  | 'pallet'
+  | 'shade'
+  | 'chrome'
+  | 'simple'
+  | 'simpleBlock'
+  | '3d'
+  | 'simple3d'
+  | 'huge';
+
+export type CfontAlign = 'left' | 'center' | 'right' | 'block';
+
 export abstract class BaseCliWorker {
   //#region constructor
   constructor(
@@ -49,9 +65,9 @@ export abstract class BaseCliWorker {
     // console.log('os.userInfo()', os.userInfo());
     return crossPlatformPath([
       os.userInfo().homedir,
-      `.${config.frameworkName}`,
+      `.taon`,
       '__workers-service-process-info__',
-      this.serviceID,
+      `${this.serviceID}.json`,
     ]);
     //#endregion
   }
@@ -228,26 +244,43 @@ export abstract class BaseCliWorker {
   }
   //#endregion
 
+  protected async headerText(): Promise<string> {
+    return _.startCase(this.serviceID);
+  }
+
+  protected headerStyle(): CfontStyle {
+    return 'block';
+  }
+
+  protected headerAlign(): CfontAlign {
+    return 'left';
+  }
+
+  protected async header(): Promise<void> {
+    const cfonts = require('cfonts');
+    const output = cfonts.render(await this.headerText(), {
+      font: this.headerStyle(),
+      align: this.headerAlign(),
+      colors: ['system'],
+      background: 'transparent',
+      letterSpacing: 1,
+      lineHeight: 1,
+      space: true,
+      maxLength: '0',
+      gradient: false,
+      independentGradient: false,
+      transitionGradient: false,
+      env: 'node',
+    });
+    console.log(output.string);
+  }
+
   //#region protected methods / info screen
   protected async _infoScreen() {
     while (true) {
       Helpers.clearConsole();
-      const cfonts = require('cfonts');
-      const output = cfonts.render(`TAON.DEV`, {
-        font: 'block',
-        align: 'left',
-        colors: ['system'],
-        background: 'transparent',
-        letterSpacing: 1,
-        lineHeight: 1,
-        space: true,
-        maxLength: '0',
-        gradient: false,
-        independentGradient: false,
-        transitionGradient: false,
-        env: 'node',
-      });
-      console.log(output.string);
+
+      await this.header();
 
       Helpers.info(`
 
