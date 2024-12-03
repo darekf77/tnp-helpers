@@ -64,6 +64,8 @@ export abstract class BaseCliWorkerController<ENTITY> extends Taon.Base
         serviceID: this.cliWorkerServiceId,
         port: Number(this.ctx.uri.port),
       });
+      // console.log('configWorker', configWorker);
+      // console.log('currentConfig', currentConfig);
       return configWorker.isEquals(currentConfig);
     };
     //#endregion

@@ -5,6 +5,7 @@ import {
   crossPlatformPath,
   //#region @backend
   os,
+  chokidar,
   path,
   Utils,
   //#endregion
@@ -148,8 +149,12 @@ export class PortsWorker extends BaseCliWorker {
    * start normally process
    * this will crash if process already started
    */
-  async startNormallyInCurrentProcess() {
+  async startNormallyInCurrentProcess(options?: {
+    healthCheckRequestTrys?: number;
+  }) {
     //#region @backendFunc
+    options = options || {};
+    await this.preventStartIfAlreadyStarted(options);
     const port = await this.getServicePort();
 
     await PortsContext.initialize({
@@ -159,6 +164,8 @@ export class PortsWorker extends BaseCliWorker {
     await this.initializeWorkerMetadata();
 
     Helpers.info(`Service started !`);
+
+    this.preventExternalConfigChange();
     await this._infoScreen();
     //#endregion
   }

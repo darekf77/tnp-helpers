@@ -1351,28 +1351,16 @@ Would you like to update current project configuration?`)
   }
   //#endregion
 
+  //#region commands / start cli service ports worker
   async startCliServicePortsWorker() {
-    if(this.params['restart']) {
-      await this.ins.portsWorker.restart();
-      this._exit();
-    }
-
-    if(this.params['kill']) {
-      await this.ins.portsWorker.kill();
-      this._exit();
-    }
-
-    if (!!this.params['detached'] || !!this.params['detach']) {
-
-      await this.ins.portsWorker.startDetachedIfNeedsToBeStarted();
-      this._exit();
-    } else {
-      await this.ins.portsWorker.startNormallyInCurrentProcess();
-    }
+    await this.ins.portsWorker.cliStartProcedure(this.params);
   }
+  //#endregion
 
+  //#region commands / pause terminal
   pauseTerminal() {
     Helpers.pressKeyAndContinue();
     this._exit();
   }
+  //#endregion
 }

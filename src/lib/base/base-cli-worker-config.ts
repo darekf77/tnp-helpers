@@ -42,15 +42,5 @@ export class BaseCliWorkerConfig {
     return !this.serviceID && !this.port && !this.pid;
   }
 
-  toString() {
-    //#region @backendFunc
-    return columnify({
-      // status: this.status,
-      serviceID: this.serviceID,
-      port: this.port,
-      pid: this.pid,
-    });
-    //#endregion
-  }
 }
 //#endregion

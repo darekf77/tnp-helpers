@@ -5,6 +5,7 @@ import {
   _,
   //#region @backend
   os,
+  chokidar,
   UtilsProcess,
   Utils,
   //#endregion
@@ -51,7 +52,9 @@ export abstract class BaseCliWorker {
   //#endregion
 
   //#region abstract
-  protected abstract startNormallyInCurrentProcess();
+  protected abstract startNormallyInCurrentProcess(options?: {
+    healthCheckRequestTrys?: number;
+  });
   protected abstract getControllerForRemoteConnection(): Promise<
     BaseCliWorkerController<any>
   >;
@@ -60,7 +63,7 @@ export abstract class BaseCliWorker {
   //#region fields & getters
 
   //#region fields & getters / path to process local info
-  private get pathToProcessLocalInfoJson(): string {
+  protected get pathToProcessLocalInfoJson(): string {
     //#region @backendFunc
     // console.log('os.userInfo()', os.userInfo());
     return crossPlatformPath([
@@ -136,16 +139,109 @@ export abstract class BaseCliWorker {
   //#region public methods / restart
   /**
    * kill detached process and start again
+   * @param options.detached - default true
    */
-  async restart() {
+  async restart(options?: { detached?: boolean }) {
+    options = options || {};
+    options.detached = _.isUndefined(options.detached) ? true : false;
     await this.kill();
-    await this.startDetached();
+    //longer because os is disposing process previous process
+    const healthCheckRequestTrys = 20;
+    if (options.detached) {
+      Helpers.info(
+        `Restarting service "${this.serviceID}" in detached mode...`,
+      );
+      await this.startDetached({
+        healthCheckRequestTrys,
+      });
+    } else {
+      Helpers.info(
+        `Restarting service "${this.serviceID}" in current process...`,
+      );
+      await this.startNormallyInCurrentProcess({
+        healthCheckRequestTrys,
+      });
+    }
+  }
+  //#endregion
+
+  //#region public methods / cli start
+  /**
+   * only for cli start
+   * @param cliParams on from cli
+   */
+  async cliStartProcedure(cliParams: any) {
+    const instance: BaseCliWorker = this;
+    //#region @backendFunc
+    if (cliParams['restart']) {
+      await instance.restart({
+        detached: !!cliParams['sync'],
+      });
+      process.exit(0);
+    }
+
+    if (cliParams['kill']) {
+      await instance.kill();
+      process.exit(0);
+    }
+
+    if (
+      !cliParams['sync'] &&
+      (!!cliParams['detached'] || !!cliParams['detach'])
+    ) {
+      await instance.startDetachedIfNeedsToBeStarted();
+      process.exit(0);
+    } else {
+      await instance.startNormallyInCurrentProcess();
+    }
+    //#endregion
   }
   //#endregion
 
   //#endregion
 
   //#region protected methods
+
+  //#region protected methods / prevent external config change
+  protected preventExternalConfigChange() {
+    //#region @backendFunc
+    Helpers.info(`watching: ${this.pathToProcessLocalInfoJson}`);
+    const currentConfig = this.processLocalInfoObj;
+    chokidar.watch(this.pathToProcessLocalInfoJson).on('change', () => {
+      Helpers.log(`Service data changed...`);
+      if (!this.processLocalInfoObj.isEquals(currentConfig)) {
+        Helpers.error(
+          `Service config data externally changed... killing service`,
+          false,
+          true,
+        );
+      }
+    });
+    //#endregion
+  }
+  //#endregion
+
+  //#region protected methods / prevent start if already started
+  protected async preventStartIfAlreadyStarted(options?: {
+    healthCheckRequestTrys?: number;
+  }) {
+    //#region @backendFunc
+    options = options || {};
+    try {
+      const isHealthy = await this.isServiceHealthy({
+        healthCheckRequestTrys: options.healthCheckRequestTrys,
+      });
+      if (isHealthy) {
+        Helpers.error(
+          `Service already started on port ${this.processLocalInfoObj.port} !`,
+          false,
+          true,
+        );
+      }
+    } catch (error) {}
+    //#endregion
+  }
+  //#endregion
 
   //#region protected methods / is service healthy
   protected async isServiceHealthy(options?: {
@@ -201,6 +297,7 @@ export abstract class BaseCliWorker {
           continue;
         }
       } catch (error) {
+        // Helpers.tryCatchError(error);
         Helpers.log(
           `Service "${this.serviceID}" is not healthy (can't check health)...`,
         );
@@ -221,8 +318,9 @@ export abstract class BaseCliWorker {
   /**
    * start if not started detached process
    */
-  protected async startDetached() {
+  protected async startDetached(options?: { healthCheckRequestTrys?: number }) {
     //#region @backendFunc
+    options = options || {};
     Helpers.log(
       `Starting detached command in new terminal "${chalk.bold(this.startCommand)}"...`,
     );
@@ -231,7 +329,7 @@ export abstract class BaseCliWorker {
       `Starting detached service "${chalk.bold(this.serviceID)}" - waiting until healthy...`,
     );
     const isServiceHealthy = await this.isServiceHealthy({
-      healthCheckRequestTrys: 5,
+      healthCheckRequestTrys: options.healthCheckRequestTrys || 5,
     });
     if (!isServiceHealthy) {
       Helpers.throw(`Not able to start service "${this.serviceID}"...`);
@@ -244,23 +342,34 @@ export abstract class BaseCliWorker {
   }
   //#endregion
 
+  //#region protected methods / text for header
   protected async headerText(): Promise<string> {
     return _.startCase(this.serviceID);
   }
+  //#endregion
 
-  protected headerStyle(): CfontStyle {
+  //#region protected methods / text header style
+  protected textHeaderStyle(): CfontStyle {
     return 'block';
   }
+  //#endregion
 
-  protected headerAlign(): CfontAlign {
+  //#region protected methods / header text align
+  protected headerTextAlign(): CfontAlign {
     return 'left';
   }
+  //#endregion
 
+  //#region protected methods / header
+  /**
+   * override whole terminal header
+   */
   protected async header(): Promise<void> {
+    //#region @backendFunc
     const cfonts = require('cfonts');
     const output = cfonts.render(await this.headerText(), {
-      font: this.headerStyle(),
-      align: this.headerAlign(),
+      font: this.textHeaderStyle(),
+      align: this.headerTextAlign(),
       colors: ['system'],
       background: 'transparent',
       letterSpacing: 1,
@@ -273,7 +382,9 @@ export abstract class BaseCliWorker {
       env: 'node',
     });
     console.log(output.string);
+    //#endregion
   }
+  //#endregion
 
   //#region protected methods / info screen
   protected async _infoScreen() {
@@ -331,11 +442,11 @@ export abstract class BaseCliWorker {
         processConfig = _.merge(jsonConfig, processConfig);
       }
     }
+
     Helpers.log(
-      `Saving process info to "${this.pathToProcessLocalInfoJson}"...
-      ${processConfig?.toString()}
-      `,
+      `Saving process info to "${this.pathToProcessLocalInfoJson}"...`,
     );
+    Helpers.log(processConfig);
 
     Helpers.writeJson(this.pathToProcessLocalInfoJson, processConfig);
     //#endregion
