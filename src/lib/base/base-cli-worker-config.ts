@@ -1,5 +1,6 @@
 import { _ } from 'tnp-core/src';
 //#region @backend
+import * as semver from 'semver';
 // import * as columnify from 'columnify';
 //#endregion
 
@@ -26,6 +27,28 @@ export class BaseCliWorkerConfig {
    * (in other cases = null)
    */
   startTimestamp: number;
+  /**
+   * version
+   */
+  version: string;
+
+  hasBiggerOrEqualWorkerVersionThan(other: BaseCliWorkerConfig) {
+    //#region @backendFunc
+    other = BaseCliWorkerConfig.from(other);
+    if (this.serviceID !== other.serviceID) {
+      return false;
+    }
+    if (!this.version || !other.version) {
+      false;
+    }
+    try {
+      return semver.gte(this.version, other.version);
+    } catch (error) {
+      return false;
+    }
+    //#endregion
+  }
+
   isEquals(other: BaseCliWorkerConfig) {
     other = BaseCliWorkerConfig.from(other);
     return (
@@ -41,6 +64,5 @@ export class BaseCliWorkerConfig {
   get isEmpty() {
     return !this.serviceID && !this.port && !this.pid;
   }
-
 }
 //#endregion

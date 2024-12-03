@@ -154,6 +154,7 @@ export class PortsWorker extends BaseCliWorker {
   }) {
     //#region @backendFunc
     options = options || {};
+    await this.killWorkerWithLowerVersion();
     await this.preventStartIfAlreadyStarted(options);
     const port = await this.getServicePort();
 

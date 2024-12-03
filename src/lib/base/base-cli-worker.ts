@@ -48,6 +48,10 @@ export abstract class BaseCliWorker {
      * external command that will start service
      */
     protected readonly startCommand: string,
+    /**
+     * unique id for service
+     */
+    protected readonly serviceVersion: string,
   ) {}
   //#endregion
 
@@ -116,7 +120,9 @@ export abstract class BaseCliWorker {
   /**
    * stop if started
    */
-  async kill() {
+  async kill(options?: { dontRemoveConfigFile?: boolean }) {
+    //#region @backendFunc
+    options = options || {};
     Helpers.log(`Killing service "${this.serviceID}"...`);
     if (this.processLocalInfoObj.isEmpty) {
       Helpers.log(
@@ -126,13 +132,16 @@ export abstract class BaseCliWorker {
     }
     const ctrl = await this.getControllerForRemoteConnection();
     try {
-      Helpers.removeFileIfExists(this.pathToProcessLocalInfoJson);
+      if (!options.dontRemoveConfigFile) {
+        Helpers.removeFileIfExists(this.pathToProcessLocalInfoJson);
+      }
       await ctrl.baseCLiWorkerCommand_kill().received;
       Helpers.log(`Service "${this.serviceID}" killed...`);
     } catch (error) {
       Helpers.log(error);
       Helpers.log(`Service "${this.serviceID}" not killed...   `);
     }
+    //#endregion
   }
   //#endregion
 
@@ -237,6 +246,31 @@ export abstract class BaseCliWorker {
           false,
           true,
         );
+      }
+    } catch (error) {}
+    //#endregion
+  }
+  //#endregion
+
+  //#region protected methods / prevent start if already started
+  protected async killWorkerWithLowerVersion() {
+    //#region @backendFunc
+    try {
+      const ctrl = await this.getControllerForRemoteConnection();
+      Helpers.log(`Checking if current working version is up to date...`);
+      // console.log('this.processLocalInfoObj', this.processLocalInfoObj);
+      const req = await ctrl.baseCLiWorkerCommand_hasUpToDateVersion(
+        _.merge(this.processLocalInfoObj, {
+          version: this.serviceVersion,
+        }),
+      ).received;
+      const isUpToDate = req.body.booleanValue;
+      if (!isUpToDate) {
+        Helpers.info(`Killing service with lower version...`);
+        await this.kill({
+          dontRemoveConfigFile: true,
+        });
+        await Helpers.wait(1);
       }
     } catch (error) {}
     //#endregion
@@ -386,6 +420,24 @@ export abstract class BaseCliWorker {
   }
   //#endregion
 
+  //#region protected methods / info message below header
+  async infoMessageBelowHeader(): Promise<void> {
+    //#region @backendFunc
+    Helpers.info(
+      `
+
+      Service ${chalk.bold.red(this.serviceID)}` +
+        ` (version: ${this.serviceVersion}) started..
+      Check info here http://localhost:${chalk.bold(
+        this.processLocalInfoObj?.port?.toString(),
+      )}/${'info' as keyof BaseCliWorkerController<any>}
+
+        `,
+    );
+    //#endregion
+  }
+  //#endregion
+
   //#region protected methods / info screen
   protected async _infoScreen() {
     while (true) {
@@ -393,14 +445,7 @@ export abstract class BaseCliWorker {
 
       await this.header();
 
-      Helpers.info(`
-
-        Service ${chalk.bold.red(this.serviceID)} started..
-        Check info here http://localhost:${chalk.bold(
-          this.processLocalInfoObj?.port?.toString(),
-        )}/${'info' as keyof BaseCliWorkerController<any>}
-
-          `);
+      await this.infoMessageBelowHeader();
       const choices = {
         openBrowser: {
           name: 'Open browser with service info',
@@ -462,6 +507,7 @@ export abstract class BaseCliWorker {
 
       await portControllerInstance.baseCLiWorkerCommand_initializeMetadata(
         this.serviceID,
+        this.serviceVersion,
       ).received;
       this.saveProcessInfo({
         startTimestamp: null,
@@ -519,6 +565,7 @@ export abstract class BaseCliWorker {
       serviceID: this.serviceID,
       pid: process.pid,
       startTimestamp: Date.now(),
+      version: this.serviceVersion,
     });
     return port;
     //#endregion
