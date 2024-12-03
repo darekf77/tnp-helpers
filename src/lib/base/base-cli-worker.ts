@@ -329,7 +329,7 @@ export abstract class BaseCliWorker {
       `Starting detached service "${chalk.bold(this.serviceID)}" - waiting until healthy...`,
     );
     const isServiceHealthy = await this.isServiceHealthy({
-      healthCheckRequestTrys: options.healthCheckRequestTrys || 5,
+      healthCheckRequestTrys: options.healthCheckRequestTrys || 15,
     });
     if (!isServiceHealthy) {
       Helpers.throw(`Not able to start service "${this.serviceID}"...`);

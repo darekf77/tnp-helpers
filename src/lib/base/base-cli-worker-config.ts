@@ -1,6 +1,6 @@
 import { _ } from 'tnp-core/src';
 //#region @backend
-import * as columnify from 'columnify';
+// import * as columnify from 'columnify';
 //#endregion
 
 //#region base worker config
