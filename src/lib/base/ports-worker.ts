@@ -159,6 +159,10 @@ export class PortsWorker extends BaseCliWorker<PortsController> {
   }
   //#endregion
 
+  protected async headerText(): Promise<string> {
+    return 'Ports';
+  }
+
   //#region methods / start normally in current process
   /**
    * start normally process
