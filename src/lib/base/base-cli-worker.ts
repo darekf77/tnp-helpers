@@ -37,7 +37,10 @@ export type CfontStyle =
 
 export type CfontAlign = 'left' | 'center' | 'right' | 'block';
 
-export abstract class BaseCliWorker {
+export abstract class BaseCliWorker<
+  REMOTE_CTRL extends
+    BaseCliWorkerController<any> = BaseCliWorkerController<any>,
+> {
   //#region constructor
   constructor(
     /**
@@ -59,9 +62,7 @@ export abstract class BaseCliWorker {
   protected abstract startNormallyInCurrentProcess(options?: {
     healthCheckRequestTrys?: number;
   });
-  protected abstract getControllerForRemoteConnection(): Promise<
-    BaseCliWorkerController<any>
-  >;
+  public abstract getControllerForRemoteConnection(): Promise<REMOTE_CTRL>;
   //#endregion
 
   //#region fields & getters

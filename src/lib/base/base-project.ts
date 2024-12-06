@@ -45,10 +45,7 @@ export abstract class BaseProject<
   //#region static
 
   //#region static / instance of resovle
-  static ins = new BaseProjectResolver<BaseProject>(
-    BaseProject,
-    'taon',
-  );
+  static ins = new BaseProjectResolver<BaseProject>(BaseProject, 'taon');
   //#endregion
 
   //#endregion
@@ -747,7 +744,19 @@ export abstract class BaseProject<
   }
   //#endregion
 
+  async registerAndAssignPort(): Promise<number> {
+    //#region @backendFunc
+    const ctrl = await this.ins.portsWorker.getControllerForRemoteConnection();
+    ctrl.registerAndAssignPort(this.location);
+
+    return 1;
+    //#endregion
+  }
+
   //#region methods & getters / assign free port to project instance
+  /**
+   * @deprecated
+   */
   async assignFreePort(
     startFrom: number = 4200,
     howManyFreePortsAfterThatPort: number = 0,

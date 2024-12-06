@@ -8,6 +8,7 @@ import {
   chokidar,
   path,
   Utils,
+  portfinder,
   //#endregion
 } from 'tnp-core/src';
 import { BaseContext, Taon } from 'taon/src';
@@ -22,15 +23,16 @@ import { config } from 'tnp-config/src';
 //#region port entity
 @Taon.Entity({
   className: 'Port',
+  uniqueKeyProp: 'port',
 })
-class Port extends Taon.Base.AbstractEntity {
-  static from(opt: Omit<Port, 'id' | 'version' | '_' | 'clone'>) {
+class Port extends Taon.Base.Entity {
+  static from(opt: Omit<Port, 'version' | '_' | 'clone'>) {
     return _.merge(new Port(), opt);
   }
 
   //#region port entity / columns / port
   //#region @websql
-  @Taon.Orm.Column.Custom({
+  @Taon.Orm.Column.Primary({
     type: 'int',
     unique: true,
   })
@@ -38,15 +40,12 @@ class Port extends Taon.Base.AbstractEntity {
   port: number;
   //#endregion
 
+  // TODO @LAST implement this thing
   //#region port entity / columns / type
   //#region @websql
   @Taon.Orm.Column.String()
   //#endregion
-  type:
-    | 'in-use-by-os-or-other-apps'
-    | 'taon-process-alive'
-    | 'taon-process-unknown-state'
-    | 'free-to-use';
+  type: 'in-use-by-os-or-other-apps' | 'taon-process' | 'free-to-use-by-taon'; // TODO add worker that will gather free ports
   //#endregion
 
   //#region port entity / columns /  serviceId
@@ -67,6 +66,24 @@ class Port extends Taon.Base.AbstractEntity {
 })
 class PortsController extends BaseCliWorkerController<Port> {
   entityClassResolveFn = () => Port;
+
+  @Taon.Http.PUT()
+  registerAndAssignPort(
+    @Taon.Http.Param.Query('uniqueServiceName') uniqueServiceName: string,
+  ): Taon.Response<number> {
+    //#region @backendFunc
+    return async () => {
+      const port = await Port.from({
+        serviceId: uniqueServiceName,
+        port: await portfinder.getPortPromise({
+          startPort: 3000,
+        }),
+        type: 'taon-process',
+      });
+      return 1;
+    };
+    //#endregion
+  }
 
   //#region methods / init example db data
   async initExampleDbData() {
@@ -126,12 +143,10 @@ var PortsContext = Taon.createContext(() => ({
 }));
 //#endregion
 
-export class PortsWorker extends BaseCliWorker {
+export class PortsWorker extends BaseCliWorker<PortsController> {
   //#region methods / get controller for remote connection
   private portsController: PortsController | undefined;
-  protected async getControllerForRemoteConnection(): Promise<
-    BaseCliWorkerController<any>
-  > {
+  async getControllerForRemoteConnection(): Promise<PortsController> {
     if (this.portsController) {
       return this.portsController;
     }
