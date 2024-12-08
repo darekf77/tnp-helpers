@@ -1,5 +1,5 @@
 //#region imports
-import { BaseCliWorker } from './base-cli-worker';
+import { BaseCliWorker, CfontStyle } from './base-cli-worker';
 import {
   _,
   crossPlatformPath,
@@ -160,7 +160,11 @@ export class PortsWorker extends BaseCliWorker<PortsController> {
   //#endregion
 
   protected async headerText(): Promise<string> {
-    return 'Ports';
+    return 'TCP/UDP|Ports DB';
+  }
+
+  protected textHeaderStyle(): CfontStyle {
+    return 'block';
   }
 
   //#region methods / start normally in current process

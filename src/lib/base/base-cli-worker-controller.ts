@@ -1,5 +1,6 @@
 import { Taon } from 'taon/src';
 import { BaseCliWorkerConfig } from './base-cli-worker-config';
+import { Helpers } from 'tnp-core/src';
 
 @Taon.Controller({
   className: 'BaseCliWorkerController',
@@ -34,6 +35,7 @@ export abstract class BaseCliWorkerController<ENTITY> extends Taon.Base
     return async () => {
       console.log('Killing worker...');
       setTimeout(() => {
+        Helpers.clearConsole();
         process.exit(0);
       }, 1000); // TODO may be change to 0
     };
