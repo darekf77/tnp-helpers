@@ -5,10 +5,7 @@ import {
   crossPlatformPath,
   //#region @backend
   os,
-  chokidar,
   path,
-  Utils,
-  portfinder,
   //#endregion
 } from 'tnp-core/src';
 import { BaseContext, Taon } from 'taon/src';
@@ -43,9 +40,9 @@ class Port extends Taon.Base.Entity {
   // TODO @LAST implement this thing
   //#region port entity / columns / type
   //#region @websql
-  @Taon.Orm.Column.String()
+  @Taon.Orm.Column.Boolean(false)
   //#endregion
-  type: 'in-use-by-os-or-other-apps' | 'taon-process' | 'free-to-use-by-taon'; // TODO add worker that will gather free ports
+  assigned: boolean;
   //#endregion
 
   //#region port entity / columns /  serviceId
@@ -66,21 +63,27 @@ class Port extends Taon.Base.Entity {
 })
 class PortsController extends BaseCliWorkerController<Port> {
   entityClassResolveFn = () => Port;
+  private portsCacheByServiceId = new Map<string, Port>();
 
+  /**
+   * @param uniqueServiceName unique service name
+   * @param startFrom start searching for free port from this number
+   * @returns
+   */
   @Taon.Http.PUT()
   registerAndAssignPort(
     @Taon.Http.Param.Query('uniqueServiceName') uniqueServiceName: string,
-  ): Taon.Response<number> {
+    @Taon.Http.Param.Query('startFrom') startFrom?: string,
+  ): Taon.Response<Port> {
     //#region @backendFunc
     return async () => {
-      const port = await Port.from({
-        serviceId: uniqueServiceName,
-        port: await portfinder.getPortPromise({
-          startPort: 3000,
-        }),
-        type: 'taon-process',
-      });
-      return 1;
+      if (this.portsCacheByServiceId.has(uniqueServiceName)) {
+        return this.portsCacheByServiceId.get(uniqueServiceName);
+      }
+      // TODO
+      return void 0;
+      // this.portsCacheByServiceId.set(uniqueServiceName, portObj);
+      // return portObj.port;
     };
     //#endregion
   }
@@ -88,26 +91,39 @@ class PortsController extends BaseCliWorkerController<Port> {
   //#region methods / init example db data
   async initExampleDbData() {
     //#region @websql
-    await this.db.save(
-      Port.from({
-        port: 4200,
-        type: 'in-use-by-os-or-other-apps',
-        serviceId: 'angular dev server',
-      }),
-    );
-    await this.db.save(
-      Port.from({
-        port: 3000,
-        type: 'in-use-by-os-or-other-apps',
-        serviceId: 'standard nodejs server',
-      }),
-    );
-    // await this.db.save(
-    //   Port.from({
-    //     port: 4200,
-    //     serviceId: 'angular dev server',
-    //   }),
-    // );
+    const commonPortsFrom3000to6000: number[] = [
+      3000, // Commonly used for development servers (e.g., React, Node.js)
+      3001, // Alternate development server port
+      3306, // MySQL
+      3389, // Remote Desktop Protocol (RDP)
+      3478, // STUN (Session Traversal Utilities for NAT)
+      4000, // Alternative development server port
+      4200, // Angular CLI Development Server
+      4500, // IPSec NAT traversal
+      4567, // Sinatra Default Port
+      5000, // Flask, Python development server, or Node.js apps
+      5432, // PostgreSQL
+      5500, // Live Server (VS Code Extension)
+      5672, // RabbitMQ
+      5800, // VNC Remote Desktop
+      5900, // VNC Remote Desktop
+      5984, // CouchDB
+      6000, // in use by something in macos
+    ];
+
+    // TODO @LAST
+    // add all free ports
+    // add all ports in use by os
+
+    // for (const commonPort of commonPortsFrom3000to6000) {
+    //   const portObj = Port.from({
+    //     port: commonPort,
+    //     type: 'in-use-by-os-or-other-apps',
+    //     serviceId: 'commonly-used-by-os-or-other-apps' + commonPort,
+    //   });
+    //   portObj;
+    //   await this.db.save(portObj);
+    // }
     //#endregion
   }
   //#endregion
@@ -135,6 +151,7 @@ var PortsContext = Taon.createContext(() => ({
   //#region @backend
   database: {
     location: portsWorkerDatabaseLocation,
+    dropSchema: true,
   },
   //#endregion
   logs: {
@@ -159,13 +176,17 @@ export class PortsWorker extends BaseCliWorker<PortsController> {
   }
   //#endregion
 
+  //#region methods / header text
   protected async headerText(): Promise<string> {
     return 'TCP/UDP|Ports DB';
   }
+  //#endregion
 
+  //#region methods / header text style
   protected textHeaderStyle(): CfontStyle {
     return 'block';
   }
+  //#endregion
 
   //#region methods / start normally in current process
   /**
