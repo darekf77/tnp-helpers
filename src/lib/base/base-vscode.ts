@@ -90,6 +90,12 @@ export class BaseVscodeHelpers<
       'tomoki1207.pdf',
       'hediet.vscode-drawio',
       'antfu.file-nesting',
+      // SQL templates extensions
+      'thebearingedge.vscode-sql-lit',
+      // 'frigus02.vscode-sql-tagged-template-literals', TODO CHECK
+      // 'frigus02.vscode-sql-tagged-template-literals-syntax-only', TODO CHECK
+      // -------
+      // 'mihelcic.colored-regions', TODO I need modified version for taon
       // 'shardulm94.trailing-spaces',
       //#endregion
     ]);
@@ -124,6 +130,4 @@ export class BaseVscodeHelpers<
     //#endregion
   }
   //#endregion
-
-
 }
