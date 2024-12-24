@@ -17,7 +17,7 @@ import { BaseCliWorkerConfig } from './base-cli-worker-config';
 //#endregion
 
 //#region constants
-const WORKER_INIT_START_TIME_LIMIT = 15; // 15 seconds max to start worker
+const WORKER_INIT_START_TIME_LIMIT = 25; // 15 seconds max to start worker
 const START_PORT_FOR_SERVICES = 3600;
 //#endregion
 
@@ -37,7 +37,10 @@ export type CfontStyle =
 
 export type CfontAlign = 'left' | 'center' | 'right' | 'block';
 
-export abstract class BaseCliWorker {
+export abstract class BaseCliWorker<
+  REMOTE_CTRL extends
+    BaseCliWorkerController<any> = BaseCliWorkerController<any>,
+> {
   //#region constructor
   constructor(
     /**
@@ -59,9 +62,7 @@ export abstract class BaseCliWorker {
   protected abstract startNormallyInCurrentProcess(options?: {
     healthCheckRequestTrys?: number;
   });
-  protected abstract getControllerForRemoteConnection(): Promise<
-    BaseCliWorkerController<any>
-  >;
+  public abstract getControllerForRemoteConnection(): Promise<REMOTE_CTRL>;
   //#endregion
 
   //#region fields & getters
@@ -155,7 +156,7 @@ export abstract class BaseCliWorker {
     options.detached = _.isUndefined(options.detached) ? true : false;
     await this.kill();
     //longer because os is disposing process previous process
-    const healthCheckRequestTrys = 20;
+    const healthCheckRequestTrys = 30;
     if (options.detached) {
       Helpers.info(
         `Restarting service "${this.serviceID}" in detached mode...`,
@@ -181,10 +182,11 @@ export abstract class BaseCliWorker {
    */
   async cliStartProcedure(cliParams: any) {
     const instance: BaseCliWorker = this;
+    const detached = (!!cliParams['detached'] || !!cliParams['detach'])
     //#region @backendFunc
     if (cliParams['restart']) {
       await instance.restart({
-        detached: !!cliParams['sync'],
+        detached,
       });
       process.exit(0);
     }
@@ -194,10 +196,7 @@ export abstract class BaseCliWorker {
       process.exit(0);
     }
 
-    if (
-      !cliParams['sync'] &&
-      (!!cliParams['detached'] || !!cliParams['detach'])
-    ) {
+    if (detached) {
       await instance.startDetachedIfNeedsToBeStarted();
       process.exit(0);
     } else {
