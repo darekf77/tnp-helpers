@@ -34,6 +34,7 @@ import { BaseGit } from './base-git';
 import { BaseVscodeHelpers } from './base-vscode';
 import { BaseReleaseProcess } from './base-release-process';
 import { BaseQuickFixes } from './base-quick-fixes';
+import { BaseGithubPages } from './base-github-pages';
 //#endregion
 
 const takenPorts = [];
@@ -45,10 +46,7 @@ export abstract class BaseProject<
   //#region static
 
   //#region static / instance of resovle
-  static ins = new BaseProjectResolver<BaseProject>(
-    BaseProject,
-    'taon',
-  );
+  static ins = new BaseProjectResolver<BaseProject>(BaseProject, 'taon');
   //#endregion
 
   //#endregion
@@ -78,6 +76,7 @@ export abstract class BaseProject<
   public releaseProcess?: BaseReleaseProcess;
   public git?: BaseGit;
   public quickFixes?: BaseQuickFixes;
+  public githubPages?: BaseGithubPages;
   //#endregion
 
   private __location: string;
@@ -113,6 +112,9 @@ export abstract class BaseProject<
     );
     this.vsCodeHelpers = new (require('./base-vscode')
       .BaseVscodeHelpers as typeof BaseVscodeHelpers)(this as any);
+
+    this.githubPages = new (require('./base-github-pages')
+      .BaseGithubPages as typeof BaseGithubPages)(this as any);
 
     this.releaseProcess = new (require('./base-release-process')
       .BaseReleaseProcess as typeof BaseReleaseProcess)(this as any);
@@ -748,6 +750,9 @@ export abstract class BaseProject<
   //#endregion
 
   //#region methods & getters / assign free port to project instance
+  /**
+   * @deprecated
+   */
   async assignFreePort(
     startFrom: number = 4200,
     howManyFreePortsAfterThatPort: number = 0,

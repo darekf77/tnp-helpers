@@ -1363,4 +1363,18 @@ Would you like to update current project configuration?`)
     this._exit();
   }
   //#endregion
+
+  //#region commands / gh pages init
+  async ghPagesInit() {
+    await this.project.init();
+    await this.project.githubPages.init(
+      this.params['provider'] || 'github',
+      !!this.params['full'],
+    );
+    Helpers.run('code .', {
+      cwd: this.project.githubPages.mainFolderAbsPath,
+    }).sync();
+    this._exit();
+  }
+  //#endregion
 }
