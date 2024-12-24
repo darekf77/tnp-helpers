@@ -280,7 +280,7 @@ export class BaseLinkedProjects<
     //#region @backendFunc
     if (
       actionType === 'push' &&
-      this.project.git.automaticallyAddAllChnagesWhenPushingToGit()
+      this.project.git.automaticallyAddAllChangesWhenPushingToGit()
     ) {
       return;
     }

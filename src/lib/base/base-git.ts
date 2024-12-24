@@ -514,7 +514,7 @@ export class BaseGit<
   /**
    * usefull when pushing in project with childrens as git repos
    */
-  automaticallyAddAllChnagesWhenPushingToGit() {
+  automaticallyAddAllChangesWhenPushingToGit() {
     return false;
   }
   //#endregion
@@ -647,7 +647,7 @@ export class BaseGit<
     this.project.ins.add(this.project.ins.From(location) as any);
     await this.project.linkedProjects.saveLocationToDB();
 
-    if (this.automaticallyAddAllChnagesWhenPushingToGit() || cloneChildren) {
+    if (this.automaticallyAddAllChangesWhenPushingToGit() || cloneChildren) {
       for (const child of this.gitChildren) {
         await child.git.pullProcess(options);
       }
@@ -784,7 +784,7 @@ export class BaseGit<
     //#endregion
 
     //#region automatic push to git
-    if (!this.automaticallyAddAllChnagesWhenPushingToGit()) {
+    if (!this.automaticallyAddAllChangesWhenPushingToGit()) {
       if (
         commitData.commitMessage
           ?.split(':')
@@ -844,7 +844,7 @@ export class BaseGit<
     }
 
     if (!commitData.isActionCommit) {
-      const commitMesageFromBranch = (
+      const commitMessageFromBranch = (
         await CommitData.getFromBranch(commitData.branchName, {
           currentOrigin,
         })
@@ -866,11 +866,11 @@ export class BaseGit<
 
       if (
         !overrideCommitMessage &&
-        commitMesageFromBranch !== commitData.commitMessage
+        commitMessageFromBranch !== commitData.commitMessage
       ) {
         Helpers.logWarn(`Commit from args and commit from branch are different
         commit message from args: ${commitData.commitMessage}
-        commit message from branch: ${commitMesageFromBranch}
+        commit message from branch: ${commitMessageFromBranch}
 
         ADVICE: Is is better to use words instead characters to describe multiple
         commit changes in one commit message
@@ -903,7 +903,7 @@ export class BaseGit<
       }
     }
 
-    if (this.automaticallyAddAllChnagesWhenPushingToGit()) {
+    if (this.automaticallyAddAllChangesWhenPushingToGit()) {
       // my project
       this.project.git.stageAllFiles();
     }
@@ -964,7 +964,7 @@ export class BaseGit<
       askToRetry: true,
     });
 
-    if (this.automaticallyAddAllChnagesWhenPushingToGit() && !skipChildren) {
+    if (this.automaticallyAddAllChangesWhenPushingToGit() && !skipChildren) {
       if (
         this.project.linkedProjects.getLinkedProjectsConfig().skipRecrusivePush
       ) {
