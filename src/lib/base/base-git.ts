@@ -624,7 +624,8 @@ export class BaseGit<
     options = options || {};
     options.cloneChildren = !!options.cloneChildren;
     let { cloneChildren, setOrigin } = options;
-    await this._beforePullProcessAction(cloneChildren);
+    
+    await this._beforePullProcessAction(setOrigin, cloneChildren);
 
     await this.setRemoteOriginType(setOrigin);
 
@@ -679,7 +680,7 @@ export class BaseGit<
       mergeUpdateCommits,
     } = options;
 
-    await this._beforePushProcessAction();
+    await this._beforePushProcessAction(setOrigin);
 
     await this.setRemoteOriginType(setOrigin);
 
@@ -1010,7 +1011,7 @@ export class BaseGit<
   //#endregion
 
   //#region methods & getters / before push action
-  protected async _beforePushProcessAction() {
+  protected async _beforePushProcessAction(setOrigin: 'ssh' | 'http') {
     //#region @backendFunc
     this._beforeAnyActionOnGitRoot();
 
@@ -1030,17 +1031,24 @@ export class BaseGit<
         this.project.git.commit('first commit ');
       }
     }
-    await this.project.linkedProjects.cloneUnexistedLinkedProjects('push');
+    await this.project.linkedProjects.cloneUnexistedLinkedProjects(
+      'push',
+      setOrigin,
+    );
     //#endregion
   }
   //#endregion
 
   //#region methods & getters / before push action
-  protected async _beforePullProcessAction(cloneChildren = false) {
+  protected async _beforePullProcessAction(
+    setOrigin: 'ssh' | 'http',
+    cloneChildren = false,
+  ) {
     //#region @backendFunc
     this._beforeAnyActionOnGitRoot();
     await this.project.linkedProjects.cloneUnexistedLinkedProjects(
       'pull',
+      setOrigin,
       cloneChildren,
     );
     //#endregion

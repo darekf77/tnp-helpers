@@ -99,6 +99,25 @@ export class LinkedProject {
     }
     return this.repoUrlSsh;
   }
+
+  public remoteUrlTransformed(setOrigin: 'ssh' | 'http'): string {
+    //#region @backendFunc
+    let url = this.remoteUrl();
+    if (setOrigin === 'ssh') {
+      if (this.repoUrlSsh) {
+        return this.repoUrlSsh;
+      }
+      url = Helpers.git.originHttpToSsh(url);
+    } else if (setOrigin === 'http') {
+      if (this.repoUrlHttp) {
+        return this.repoUrlHttp;
+      }
+      url = Helpers.git.originSshToHttp(url);
+    }
+    return url;
+    //#endregion
+  }
+
   deafultBranch?: string;
   purpose?: string;
   relativeClonePath?: string;

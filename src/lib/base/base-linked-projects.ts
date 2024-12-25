@@ -275,6 +275,7 @@ export class BaseLinkedProjects<
   //#region getters & methods / get unexisted projects
   async cloneUnexistedLinkedProjects(
     actionType: 'pull' | 'push',
+    setOrigin: 'ssh' | 'http',
     cloneChildren = false,
   ) {
     //#region @backendFunc
@@ -317,7 +318,9 @@ export class BaseLinkedProjects<
 ${projectsThatShouldBeLinked
   .map(
     (p, index) =>
-      `- ${index + 1}. ${chalk.bold(p.relativeClonePath)} ${p.remoteUrl()} {${p.purpose ? ` purpose: ${p.purpose} }` : ''}`,
+      `- ${index + 1}. ${chalk.bold(p.relativeClonePath)} ` +
+      `${p.remoteUrlTransformed(setOrigin)} ` +
+      `{${p.purpose ? ` purpose: ${p.purpose} }` : ''}`,
   )
   .join('\n')}
 
@@ -333,10 +336,12 @@ ${projectsThatShouldBeLinked
           for (const linkedProj of projectsThatShouldBeLinked) {
             // console.log({linkedProj})
             Helpers.info(
-              `Cloning unexisted project from url ${chalk.bold(linkedProj.remoteUrl())} to ${linkedProj.relativeClonePath}`,
+              `Cloning unexisted project from url ` +
+                `${chalk.bold(linkedProj.remoteUrlTransformed(setOrigin))} ` +
+                `to ${linkedProj.relativeClonePath}`,
             );
             await this.project.git.clone(
-              linkedProj.remoteUrl(),
+              linkedProj.remoteUrlTransformed(setOrigin),
               linkedProj.relativeClonePath,
               linkedProj.deafultBranch,
             );
