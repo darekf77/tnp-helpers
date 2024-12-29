@@ -19,6 +19,7 @@ import {
   LinkedPorjectsConfig,
   LinkedProject,
   TypeOfCommit,
+  UtilsTypescript,
 } from '../index';
 import { BaseProjectResolver } from './base-project-resolver';
 import {
@@ -467,10 +468,16 @@ export abstract class BaseProject<
   }
   //#endregion
 
+  //#region methods & getters / relative
+  /**
+   * Function will return relative path from project location
+   */
   relative(absoultePath: string) {
     return crossPlatformPath(path.relative(this.location, absoultePath));
   }
+  //#endregion
 
+  //#region methods & getters / create folder
   /**
    *
    * @param relativePath
@@ -496,6 +503,24 @@ export abstract class BaseProject<
     fse.mkdirSync(this.pathFor(relativePath), { recursive: true });
     //#endregion
   }
+  //#endregion
+
+  //#region methods & getters / format file(s) with prettier
+  formatFile(specificRelativePath: string | string[]) {
+    //#region @backendFunc
+    const absPathToFile = this.pathFor(specificRelativePath);
+    UtilsTypescript.formatFile(absPathToFile);
+
+    //#endregion
+  }
+
+  formatAllFiles() {
+    //#region @backendFunc
+    Helpers.info(`Formatting all files in ${this.genericName}`);
+    UtilsTypescript.formatAllFilesInsideFolder(this.location);
+    //#endregion
+  }
+  //#endregion
 
   //#region methods & getters / contains file
   /**
@@ -749,6 +774,16 @@ export abstract class BaseProject<
   }
   //#endregion
 
+  async registerAndAssignPort(): Promise<number> {
+    //#region @backendFunc
+    throw '[registerAndAssignPort] Not implemented';
+    // const ctrl = await this.ins.portsWorker.getControllerForRemoteConnection();
+    // ctrl.registerAndAssignPort(this.location);
+
+    // return 1;
+    //#endregion
+  }
+
   //#region methods & getters / assign free port to project instance
   /**
    * @deprecated
@@ -883,15 +918,17 @@ export abstract class BaseProject<
   }
   //#endregion
 
-  //#region methods & getters / is using aciton commit
+  //#region methods & getters / is using action commit
   isUnsingActionCommit(): boolean {
     return false;
   }
   //#endregion
 
+  //#region methods & getters / use feature in branch name for tests
   useFeatureInBranchNameForTests() {
     return false;
   }
+  //#endregion
 
   //#region methods & getters / reset process
   async resetProcess(overrideBranch?: string, recrusive = false) {

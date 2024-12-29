@@ -1,6 +1,6 @@
 //#region imports
 //#region @backend
-import { crossPlatformPath, fse } from 'tnp-core/src';
+import { crossPlatformPath, fse, Helpers, path } from 'tnp-core/src';
 import * as express from 'express';
 import {
   createPrinter,
@@ -35,6 +35,7 @@ import {
 } from 'typescript';
 //#endregion
 import { _, chalk, CoreModels, Utils } from 'tnp-core/src';
+import { cwd } from 'process';
 //#endregion
 
 //#region utils npm
@@ -517,6 +518,97 @@ export namespace UtilsTypescript {
   };
   //#endregion
 
+  //#endregion
+
+  //#region extract class names from ts file or source code
+
+  export const extractDefaultClassNameFromString = (
+    sourceCode: string,
+  ): string | undefined => {
+    //#region @backendFunc
+    const sourceFile = createSourceFile(
+      'temp.ts',
+      sourceCode,
+      ScriptTarget.Latest,
+      true,
+      ScriptKind.TS,
+    );
+
+    let defaultClassName = '';
+    const checkNode = (node: Node) => {
+      if (
+        isClassDeclaration(node) &&
+        node.modifiers?.find(m => m.kind === SyntaxKind.DefaultKeyword)
+      ) {
+        defaultClassName = node.name?.text || '';
+      }
+      forEachChild(node, checkNode);
+    };
+    checkNode(sourceFile);
+    return defaultClassName;
+    //#endregion
+  };
+
+  export const extractClassNameFromString = (sourceCode: string): string[] => {
+    //#region @backendFunc
+    const sourceFile = createSourceFile(
+      'temp.ts',
+      sourceCode,
+      ScriptTarget.Latest,
+      true,
+      ScriptKind.TS,
+    );
+
+    const classNames: string[] = [];
+    const checkNode = (node: Node) => {
+      if (isClassDeclaration(node)) {
+        classNames.push(node.name?.text || '');
+      }
+      forEachChild(node, checkNode);
+    };
+    checkNode(sourceFile);
+    return classNames;
+    //#endregion
+  };
+
+  export const extractClassNamesFromFile = (
+    absoluteFilePath: string,
+  ): string[] => {
+    //#region @backendFunc
+    const sourceCode = Helpers.readFile(absoluteFilePath);
+    return extractClassNameFromString(sourceCode);
+    //#endregion
+  };
+
+  export const extractDefaultClassNameFromFile = (absoluteFilePath: string) => {
+    //#region @backendFunc
+    const sourceCode = Helpers.readFile(absoluteFilePath);
+    return extractDefaultClassNameFromString(sourceCode);
+    //#endregion
+  };
+  //#endregion
+
+  //#region format file(s) with prettier
+  export const formatFile = (absPathToFile: string): void => {
+    //#region @backendFunc
+    if (Helpers.exists(absPathToFile)) {
+      const { execSync } = require('child_process');
+      Helpers.logInfo(`Formatting file: ${absPathToFile}`);
+      execSync(`prettier --write ${path.basename(absPathToFile)}`, {
+        cwd: path.dirname(absPathToFile),
+      });
+    }
+    //#endregion
+  };
+
+  export const formatAllFilesInsideFolder = (absPathToFolder: string): void => {
+    //#region @backendFunc
+    if (Helpers.exists(absPathToFolder)) {
+      const { execSync } = require('child_process');
+      execSync(`prettier --write .`, { cwd: absPathToFolder });
+    }
+    //#endregion
+  };
   //#endregion
 }
 

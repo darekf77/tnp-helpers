@@ -9,6 +9,10 @@ export abstract class BaseDebounceCompilerForProject<
   PROJECT extends BaseProject = BaseProject,
 > extends BaseCompilerForProject<ADDITIONAL_DATA, PROJECT> {
   protected initalParams: ADDITIONAL_DATA;
+  /**
+   * default debounce time is 1s
+   */
+  protected debounceTime = 1000;
   abstract action({
     changeOfFiles,
     asyncEvent,
@@ -47,7 +51,7 @@ export abstract class BaseDebounceCompilerForProject<
       changeOfFiles,
       asyncEvent: true,
     });
-  }, 1000);
+  }, this.debounceTime);
 
   /**
    * @deprecated use action() instead

@@ -12,7 +12,7 @@ import { URL } from 'url';
 import { HelpersGit } from './for-backend/helpers-git.backend';
 import { HelpersCliTool } from './for-backend/helpers-cli-tool.backend';
 import { HelpersProcess } from './for-backend/helpers-process.backend';
-import { TsCodeModifer } from './for-backend/ts-code';
+
 import { HelpersNpm } from './for-backend/helpers-npm.backend';
 import { HelpersTerminal } from './for-backend/helpers-system-terminal.backend';
 import { HelpersFileFolders } from './for-backend/helpers-file-folders.backend';
@@ -20,7 +20,6 @@ import { HelpersDependencies } from './for-backend/helpers-dependencies.backend'
 import { HelpersPath } from './for-backend/helpers-path.backend';
 import { HelpersNetwork } from './for-backend/helpers-network.backend';
 import { HelpersJSON5 } from './helpers-json5.backend';
-import { TsCodeExtractor } from './for-backend/ts-code/ts-code-extractor';
 import { CLI } from 'tnp-core/src';
 import { HelpersVscode } from './for-backend/helpers-vscode.backend';
 //#endregion
@@ -77,8 +76,6 @@ export class HelpersTaon extends CoreHelpers {
   //#region constructor
   private constructor(
     //#region @backend
-    public tsCodeModifier = new TsCodeModifer(),
-    public tsCodeExtractor = new TsCodeExtractor(),
     public cliTool = new HelpersCliTool(),
     public terminal = new HelpersTerminal(),
     public git = new HelpersGit(),

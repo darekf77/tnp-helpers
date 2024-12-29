@@ -61,13 +61,14 @@ export abstract class BaseCompilerForProject<
   //#endregion
 
   //#region constructor
-  //#region @backend
+
   constructor(
     public project: PROJECT,
     options?: IncCompiler.Models.BaseClientCompilerOptions,
     allowFolderOutSideProject = false,
   ) {
     super();
+    //#region @backend
     options = this.checkFolderCompiler(
       project,
       options,
@@ -76,7 +77,8 @@ export abstract class BaseCompilerForProject<
     if (options) {
       this.initOptions(options);
     }
+    //#endregion
   }
-  //#endregion
+
   //#endregion
 }

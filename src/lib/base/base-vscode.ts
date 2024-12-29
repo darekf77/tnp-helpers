@@ -89,7 +89,10 @@ export class BaseVscodeHelpers<
       'ms-vscode-remote.remote-ssh',
       'tomoki1207.pdf',
       'hediet.vscode-drawio',
-      'antfu.file-nesting',
+      // TODO nesting is so nice.. but I nee to modify it for taon
+      // 'antfu.file-nesting',
+      // TODO CHECK asset pathes autocomplete
+      'christian-kohler.path-intellisense',
       // SQL templates extensions
       'thebearingedge.vscode-sql-lit',
       // 'frigus02.vscode-sql-tagged-template-literals', TODO CHECK
@@ -97,6 +100,23 @@ export class BaseVscodeHelpers<
       // -------
       // 'mihelcic.colored-regions', TODO I need modified version for taon
       // 'shardulm94.trailing-spaces',
+      ...(process.platform === 'win32'
+        ? [
+            // wsl
+            'ms-vscode-remote.remote-wsl',
+            'kgrzywocz.wsl-path',
+            // ---
+            // 'skacekachna.win-opacity',
+            // 'electrotype.windows-explorer-context-menu',
+            // escape win path on paset TODO CHECK THIS
+            // 'coalaura.win-path',
+          ]
+        : []),
+
+      // nice extension but not use for now in taon
+      // csv thing
+      // 'mechatroner.rainbow-csv',
+
       //#endregion
     ]);
   }

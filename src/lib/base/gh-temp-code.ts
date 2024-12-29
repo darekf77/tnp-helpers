@@ -3,6 +3,9 @@ import { BaseProject } from './base-project';
 import { config } from 'tnp-config/src';
 import { Helpers } from '../index';
 
+/**
+ * TODO fix removing files from repo
+ */
 export class GhTempCode {
   constructor(
     private cwd: string,

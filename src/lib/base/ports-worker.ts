@@ -1,13 +1,11 @@
 //#region imports
-import { BaseCliWorker } from './base-cli-worker';
+import { BaseCliWorker, CfontStyle } from './base-cli-worker';
 import {
   _,
   crossPlatformPath,
   //#region @backend
   os,
-  chokidar,
   path,
-  Utils,
   //#endregion
 } from 'tnp-core/src';
 import { BaseContext, Taon } from 'taon/src';
@@ -22,15 +20,16 @@ import { config } from 'tnp-config/src';
 //#region port entity
 @Taon.Entity({
   className: 'Port',
+  uniqueKeyProp: 'port',
 })
-class Port extends Taon.Base.AbstractEntity {
-  static from(opt: Omit<Port, 'id' | 'version' | '_' | 'clone'>) {
+class Port extends Taon.Base.Entity {
+  static from(opt: Omit<Port, 'version' | '_' | 'clone'>) {
     return _.merge(new Port(), opt);
   }
 
   //#region port entity / columns / port
   //#region @websql
-  @Taon.Orm.Column.Custom({
+  @Taon.Orm.Column.Primary({
     type: 'int',
     unique: true,
   })
@@ -40,13 +39,9 @@ class Port extends Taon.Base.AbstractEntity {
 
   //#region port entity / columns / type
   //#region @websql
-  @Taon.Orm.Column.String()
+  @Taon.Orm.Column.Boolean(false)
   //#endregion
-  type:
-    | 'in-use-by-os-or-other-apps'
-    | 'taon-process-alive'
-    | 'taon-process-unknown-state'
-    | 'free-to-use';
+  assigned: boolean;
   //#endregion
 
   //#region port entity / columns /  serviceId
@@ -67,30 +62,67 @@ class Port extends Taon.Base.AbstractEntity {
 })
 class PortsController extends BaseCliWorkerController<Port> {
   entityClassResolveFn = () => Port;
+  private portsCacheByServiceId = new Map<string, Port>();
+
+  /**
+   * @param uniqueServiceName unique service name
+   * @param startFrom start searching for free port from this number
+   * @returns
+   */
+  @Taon.Http.PUT()
+  registerAndAssignPort(
+    @Taon.Http.Param.Query('uniqueServiceName') uniqueServiceName: string,
+    @Taon.Http.Param.Query('startFrom') startFrom?: string,
+  ): Taon.Response<Port> {
+    //#region @backendFunc
+    return async () => {
+      if (this.portsCacheByServiceId.has(uniqueServiceName)) {
+        return this.portsCacheByServiceId.get(uniqueServiceName);
+      }
+      // TODO
+      return void 0;
+      // this.portsCacheByServiceId.set(uniqueServiceName, portObj);
+      // return portObj.port;
+    };
+    //#endregion
+  }
 
   //#region methods / init example db data
   async initExampleDbData() {
     //#region @websql
-    await this.db.save(
-      Port.from({
-        port: 4200,
-        type: 'in-use-by-os-or-other-apps',
-        serviceId: 'angular dev server',
-      }),
-    );
-    await this.db.save(
-      Port.from({
-        port: 3000,
-        type: 'in-use-by-os-or-other-apps',
-        serviceId: 'standard nodejs server',
-      }),
-    );
-    // await this.db.save(
-    //   Port.from({
-    //     port: 4200,
-    //     serviceId: 'angular dev server',
-    //   }),
-    // );
+    const commonPortsFrom3000to6000: number[] = [
+      3000, // Commonly used for development servers (e.g., React, Node.js)
+      3001, // Alternate development server port
+      3306, // MySQL
+      3389, // Remote Desktop Protocol (RDP)
+      3478, // STUN (Session Traversal Utilities for NAT)
+      4000, // Alternative development server port
+      4200, // Angular CLI Development Server
+      4500, // IPSec NAT traversal
+      4567, // Sinatra Default Port
+      5000, // Flask, Python development server, or Node.js apps
+      5432, // PostgreSQL
+      5500, // Live Server (VS Code Extension)
+      5672, // RabbitMQ
+      5800, // VNC Remote Desktop
+      5900, // VNC Remote Desktop
+      5984, // CouchDB
+      6000, // in use by something in macos
+    ];
+
+    // TODO @LAST implement this
+    // add all free ports
+    // add all ports in use by os
+
+    // for (const commonPort of commonPortsFrom3000to6000) {
+    //   const portObj = Port.from({
+    //     port: commonPort,
+    //     type: 'in-use-by-os-or-other-apps',
+    //     serviceId: 'commonly-used-by-os-or-other-apps' + commonPort,
+    //   });
+    //   portObj;
+    //   await this.db.save(portObj);
+    // }
     //#endregion
   }
   //#endregion
@@ -118,6 +150,7 @@ var PortsContext = Taon.createContext(() => ({
   //#region @backend
   database: {
     location: portsWorkerDatabaseLocation,
+    dropSchema: true,
   },
   //#endregion
   logs: {
@@ -126,12 +159,10 @@ var PortsContext = Taon.createContext(() => ({
 }));
 //#endregion
 
-export class PortsWorker extends BaseCliWorker {
+export class PortsWorker extends BaseCliWorker<PortsController> {
   //#region methods / get controller for remote connection
   private portsController: PortsController | undefined;
-  protected async getControllerForRemoteConnection(): Promise<
-    BaseCliWorkerController<any>
-  > {
+  async getControllerForRemoteConnection(): Promise<PortsController> {
     if (this.portsController) {
       return this.portsController;
     }
@@ -141,6 +172,18 @@ export class PortsWorker extends BaseCliWorker {
     });
     this.portsController = refRemote.getInstanceBy(PortsController);
     return this.portsController;
+  }
+  //#endregion
+
+  //#region methods / header text
+  protected async headerText(): Promise<string> {
+    return 'TCP/UDP|Ports DB';
+  }
+  //#endregion
+
+  //#region methods / header text style
+  protected textHeaderStyle(): CfontStyle {
+    return 'block';
   }
   //#endregion
 
