@@ -4,7 +4,12 @@ export { ChildProcess } from 'child_process';
 import * as tsfmt from 'typescript-formatter';
 //#endregion
 import { _, chalk, crossPlatformPath, path } from 'tnp-core/src';
-import { Helpers, LinkedPorjectsConfig, LinkedProject } from '../index';
+import {
+  Helpers,
+  LinkedPorjectsConfig,
+  LinkedProject,
+  UtilsTypescript,
+} from '../index';
 import { BaseFeatureForProject } from './base-feature-for-project';
 import type { BaseProject } from './base-project';
 import * as json5Write from 'json10-writer/src';
@@ -151,20 +156,7 @@ export class BaseLinkedProjects<
       quotaKey: true,
     });
     Helpers.writeFile(this.linkedProjectsConfigPath, newContent);
-
-    try {
-      tsfmt.processFiles([this.linkedProjectsConfigPath], {
-        verbose: false,
-        replace: true,
-        verify: false,
-        // tsconfig: true,
-        // tslint: true,
-        editorconfig: true,
-        tsfmt: true,
-      } as any);
-    } catch (error) {
-      // console.log('ts formatting error',error)
-    }
+    UtilsTypescript.formatFile(this.linkedProjectsConfigPath);
     //#endregion
   }
   //#endregion
