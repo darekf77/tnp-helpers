@@ -229,34 +229,16 @@ export class HelpersProcess {
   //#endregion
 
   //#region input
-  async input({
-    defaultValue,
-    question,
-    // required, // TODO something is werid with required
-  }: {
+  /**
+   * @deprecated use UtilsTerminal.input
+   */
+  async input(options: {
     defaultValue?: string;
     question: string;
     // required?: boolean;
     validate?: (value: string) => boolean;
   }): Promise<string> {
-    //#region @backendFunc
-    const initial = defaultValue || '';
-    try {
-      // Create an input prompt
-      const response = await inquirer.prompt({
-        type: 'input',
-        name: 'name',
-        message: question,
-        default: initial,
-        // required: _.isNil(required) ? true : required,
-      });
-
-      return response.name;
-    } catch (error) {
-      console.error(error);
-      return void 0;
-    }
-    //#endregion
+    return await UtilsTerminal.input(options);
   }
   //#endregion
 

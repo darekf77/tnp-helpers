@@ -35,7 +35,6 @@ import {
 } from 'typescript';
 //#endregion
 import { _, chalk, CoreModels, Utils } from 'tnp-core/src';
-import { cwd } from 'process';
 //#endregion
 
 //#region utils npm
@@ -270,6 +269,49 @@ export namespace UtilsTerminal {
   };
 
   //#endregion
+
+  export const input = async ({
+    defaultValue,
+    question,
+    required, // TODO something is werid with required
+  }: {
+    defaultValue?: string;
+    question: string;
+    required?: boolean;
+    validate?: (value: string) => boolean;
+  }): Promise<string> => {
+    //#region @backendFunc
+    const initial = defaultValue || '';
+    const inquirer = await import('inquirer');
+    while(true) {
+      try {
+        // Create an input prompt
+        const response = await inquirer.prompt({
+          type: 'input',
+          name: 'name',
+          message: question,
+          default: initial,
+          // required: _.isNil(required) ? true : required,
+        });
+        const anwser = response.name;
+        if(required && !anwser) {
+          console.warn(`Answer is required...`);
+          continue;
+        }
+        return anwser;
+      } catch (error) {
+        console.error(error);
+        if(required) {
+          console.warn(`Something went wrong, please try again...`);
+          continue;
+        } else {
+          return '';
+        }
+      }
+    }
+
+    //#endregion
+  };
 }
 //#endregion
 
