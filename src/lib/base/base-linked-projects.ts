@@ -146,7 +146,25 @@ export class BaseLinkedProjects<
       return;
     }
     const orgContent = Helpers.readFile(this.linkedProjectsConfigPath);
+    const tmpJson = Helpers.readJson(this.linkedProjectsConfigTempPath);
     linkedPorjectsConfig = LinkedPorjectsConfig.from(linkedPorjectsConfig);
+
+    if (!Helpers.exists(this.linkedProjectsConfigTempPath)) {
+      Helpers.writeJson(
+        this.linkedProjectsConfigTempPath,
+        linkedPorjectsConfig,
+      );
+    }
+
+    const jsonsAreEqual = _.isEqual(
+      tmpJson,
+      JSON.parse(JSON.stringify(linkedPorjectsConfig)),
+    );
+    if (jsonsAreEqual) {
+      // linked projects.json only save/formatted when changed
+      return;
+    }
+
     const writer = json5Write.load(orgContent);
     writer.write(linkedPorjectsConfig);
 
@@ -155,7 +173,10 @@ export class BaseLinkedProjects<
       trailingComma: true,
       quotaKey: true,
     });
+
+    Helpers.writeJson(this.linkedProjectsConfigTempPath, linkedPorjectsConfig);
     Helpers.writeFile(this.linkedProjectsConfigPath, newContent);
+    // TODO to many formatting request because of jsonc
     UtilsTypescript.formatFile(this.linkedProjectsConfigPath);
     //#endregion
   }
@@ -164,6 +185,10 @@ export class BaseLinkedProjects<
   //#region methods & getters  / get linked projects config path
   private get linkedProjectsConfigPath() {
     return this.project.pathFor(config.file.linked_projects_json);
+  }
+
+  private get linkedProjectsConfigTempPath() {
+    return this.project.pathFor([`tmp-${config.file.linked_projects_json}`]);
   }
   //#endregion
 
