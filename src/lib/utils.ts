@@ -283,7 +283,7 @@ export namespace UtilsTerminal {
     //#region @backendFunc
     const initial = defaultValue || '';
     const inquirer = await import('inquirer');
-    while(true) {
+    while (true) {
       try {
         // Create an input prompt
         const response = await inquirer.prompt({
@@ -294,14 +294,14 @@ export namespace UtilsTerminal {
           // required: _.isNil(required) ? true : required,
         });
         const anwser = response.name;
-        if(required && !anwser) {
+        if (required && !anwser) {
           console.warn(`Answer is required...`);
           continue;
         }
         return anwser;
       } catch (error) {
         console.error(error);
-        if(required) {
+        if (required) {
           console.warn(`Something went wrong, please try again...`);
           continue;
         } else {
@@ -636,9 +636,13 @@ export namespace UtilsTypescript {
     if (Helpers.exists(absPathToFile)) {
       const { execSync } = require('child_process');
       Helpers.logInfo(`Formatting file: ${absPathToFile}`);
-      execSync(`prettier --write ${path.basename(absPathToFile)}`, {
-        cwd: path.dirname(absPathToFile),
-      });
+      try {
+        execSync(`prettier --write ${path.basename(absPathToFile)}`, {
+          cwd: path.dirname(absPathToFile),
+        });
+      } catch (error) {
+        console.warn(`Not able to format file: ${absPathToFile}`);
+      }
     }
     //#endregion
   };
@@ -647,7 +651,11 @@ export namespace UtilsTypescript {
     //#region @backendFunc
     if (Helpers.exists(absPathToFolder)) {
       const { execSync } = require('child_process');
-      execSync(`prettier --write .`, { cwd: absPathToFolder });
+      try {
+        execSync(`prettier --write .`, { cwd: absPathToFolder });
+      } catch (error) {
+        console.warn(`Not able to files in: ${absPathToFolder}`);
+      }
     }
     //#endregion
   };
