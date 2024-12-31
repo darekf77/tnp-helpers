@@ -21,6 +21,7 @@ const WORKER_INIT_START_TIME_LIMIT = 25; // 15 seconds max to start worker
 const START_PORT_FOR_SERVICES = 3600;
 //#endregion
 
+//#region models
 export type CfontStyle =
   | 'block'
   | 'slick'
@@ -36,6 +37,7 @@ export type CfontStyle =
   | 'huge';
 
 export type CfontAlign = 'left' | 'center' | 'right' | 'block';
+//#endregion
 
 export abstract class BaseCliWorker<
   REMOTE_CTRL extends
@@ -59,9 +61,8 @@ export abstract class BaseCliWorker<
   //#endregion
 
   //#region abstract
-  protected abstract startNormallyInCurrentProcess(options?: {
-    healthCheckRequestTrys?: number;
-  });
+  protected abstract startNormallyInCurrentProcess(options?: {});
+
   public abstract getControllerForRemoteConnection(): Promise<REMOTE_CTRL>;
   //#endregion
 
@@ -107,7 +108,9 @@ export abstract class BaseCliWorker<
       return;
     }
 
-    const serviceIsHealthy = await this.isServiceHealthy();
+    const serviceIsHealthy = await this.isServiceHealthy({
+      healthCheckRequestTrys: 1, // just quick check
+    });
     if (!serviceIsHealthy) {
       await this.startDetached();
       return;
@@ -156,21 +159,17 @@ export abstract class BaseCliWorker<
     options.detached = _.isUndefined(options.detached) ? true : false;
     await this.kill();
     //longer because os is disposing process previous process
-    const healthCheckRequestTrys = 30;
+
     if (options.detached) {
       Helpers.info(
         `Restarting service "${this.serviceID}" in detached mode...`,
       );
-      await this.startDetached({
-        healthCheckRequestTrys,
-      });
+      await this.startDetached();
     } else {
       Helpers.info(
         `Restarting service "${this.serviceID}" in current process...`,
       );
-      await this.startNormallyInCurrentProcess({
-        healthCheckRequestTrys,
-      });
+      await this.startNormallyInCurrentProcess();
     }
   }
   //#endregion
@@ -182,7 +181,7 @@ export abstract class BaseCliWorker<
    */
   async cliStartProcedure(cliParams: any) {
     const instance: BaseCliWorker = this;
-    const detached = (!!cliParams['detached'] || !!cliParams['detach'])
+    const detached = !!cliParams['detached'] || !!cliParams['detach'];
     //#region @backendFunc
     if (cliParams['restart']) {
       await instance.restart({
@@ -230,14 +229,11 @@ export abstract class BaseCliWorker<
   //#endregion
 
   //#region protected methods / prevent start if already started
-  protected async preventStartIfAlreadyStarted(options?: {
-    healthCheckRequestTrys?: number;
-  }) {
+  protected async preventStartIfAlreadyStarted() {
     //#region @backendFunc
-    options = options || {};
     try {
       const isHealthy = await this.isServiceHealthy({
-        healthCheckRequestTrys: options.healthCheckRequestTrys,
+        healthCheckRequestTrys: 2, // check only twice
       });
       if (isHealthy) {
         Helpers.error(
@@ -277,11 +273,17 @@ export abstract class BaseCliWorker<
   //#endregion
 
   //#region protected methods / is service healthy
-  protected async isServiceHealthy(options?: {
+  /**
+   * This has 2 purposes:
+   * - infinite check when when detached process finished starting
+   * - quick check if service is healthy / already started
+   */
+  protected async isServiceHealthy(options: {
     healthCheckRequestTrys?: number;
   }): Promise<boolean> {
     //#region @backendFunc
     options = options || {};
+    const healthCheckRequestTrys = options.healthCheckRequestTrys || 1;
     let i = 0; // 15 seconds to start worker
     while (true) {
       i++;
@@ -299,12 +301,17 @@ export abstract class BaseCliWorker<
     }
 
     i = 0;
-    const healthCheckRequestTrys = options.healthCheckRequestTrys || 1;
+
+    const isWaitingNotCheckingWhen = 10;
 
     while (true) {
       i++;
       try {
-        Helpers.log(`Checking if service "${this.serviceID}" is healthy...`);
+        if (isWaitingNotCheckingWhen === i) {
+          Helpers.info(`Waiting for service "${this.serviceID}" to start...`);
+        } else {
+          Helpers.log(`Checking if service "${this.serviceID}" is healthy...`);
+        }
         const ctrl = await this.getControllerForRemoteConnection();
         Helpers.log(`Sending is healthy request...`);
         // console.log('this.processLocalInfoObj', this.processLocalInfoObj);
@@ -351,9 +358,9 @@ export abstract class BaseCliWorker<
   /**
    * start if not started detached process
    */
-  protected async startDetached(options?: { healthCheckRequestTrys?: number }) {
+  protected async startDetached() {
     //#region @backendFunc
-    options = options || {};
+
     Helpers.log(
       `Starting detached command in new terminal "${chalk.bold(this.startCommand)}"...`,
     );
@@ -362,7 +369,7 @@ export abstract class BaseCliWorker<
       `Starting detached service "${chalk.bold(this.serviceID)}" - waiting until healthy...`,
     );
     const isServiceHealthy = await this.isServiceHealthy({
-      healthCheckRequestTrys: options.healthCheckRequestTrys || 15,
+      healthCheckRequestTrys: Infinity, // wait infinity until started
     });
     if (!isServiceHealthy) {
       Helpers.throw(`Not able to start service "${this.serviceID}"...`);

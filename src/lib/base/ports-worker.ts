@@ -192,13 +192,10 @@ export class PortsWorker extends BaseCliWorker<PortsController> {
    * start normally process
    * this will crash if process already started
    */
-  async startNormallyInCurrentProcess(options?: {
-    healthCheckRequestTrys?: number;
-  }) {
+  async startNormallyInCurrentProcess() {
     //#region @backendFunc
-    options = options || {};
     await this.killWorkerWithLowerVersion();
-    await this.preventStartIfAlreadyStarted(options);
+    await this.preventStartIfAlreadyStarted();
     const port = await this.getServicePort();
 
     await PortsContext.initialize({
