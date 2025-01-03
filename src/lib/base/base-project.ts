@@ -232,6 +232,17 @@ export abstract class BaseProject<
   }
   //#endregion
 
+  //#region methods & getters / parent basename
+  /**
+   * project folder parent basename
+   */
+  get parentBasename(): string {
+    //#region @websqlFunc
+    return path.basename(path.dirname(this.location));
+    //#endregion
+  }
+  //#endregion
+
   //#region methods & getters / name
   /**
    * name from package.json
