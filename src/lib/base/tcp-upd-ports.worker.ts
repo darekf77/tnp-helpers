@@ -10,11 +10,7 @@ import {
 } from 'tnp-core/src';
 import { BaseContext, Taon } from 'taon/src';
 import { Helpers } from '../index';
-// import type { BaseProject } from './base-project';
-// import { config } from 'tnp-config/src';
 import { BaseCliWorkerController } from './base-cli-worker-controller';
-import { config } from 'tnp-config/src';
-
 //#endregion
 
 //#region port entity

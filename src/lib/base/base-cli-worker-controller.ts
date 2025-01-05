@@ -13,7 +13,7 @@ export abstract class BaseCliWorkerController<ENTITY> extends Taon.Base
   private cliWorkerServiceId: string = null;
   private cliWorkerServiceVersion: string = null;
 
-  //#region api methods / kill
+  //#region api methods / initialize metadata
   @Taon.Http.PUT()
   baseCLiWorkerCommand_initializeMetadata(
     @Taon.Http.Param.Body('serviceId') serviceId: string,
@@ -86,7 +86,7 @@ export abstract class BaseCliWorkerController<ENTITY> extends Taon.Base
   }
   //#endregion
 
-  //#region api methods / is healthy
+  //#region api methods / has up to date version
   @Taon.Http.POST()
   baseCLiWorkerCommand_hasUpToDateVersion(
     @Taon.Http.Param.Body() checkingProcessConfig: BaseCliWorkerConfig,

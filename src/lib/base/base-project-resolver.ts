@@ -13,7 +13,7 @@ import { _ } from 'tnp-core/src';
 import { ConfigDatabase } from './config-database';
 import { ProjectDatabase } from './project-database';
 import { BaseProject } from './base-project';
-import { PortsWorker } from './ports-worker';
+import { PortsWorker } from './tcp-upd-ports.worker';
 //#region @backend
 // import { os } from 'tnp-core/src';
 // import { JSONFilePreset } from '../lowdb/node';
@@ -31,7 +31,7 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
   protected readonly NPM_PROJECT_KEY = 'npm';
   protected projects: PROJECT[] = [];
   /**
-   * To speed up checking folder I am keeping pathes for alterdy checked folder
+   * To speed up checking folder I am keeping paths for already checked folder
    * This may break things that are creating new projects
    */
   protected emptyLocations: string[] = [];
