@@ -271,7 +271,7 @@ export class HelpersCliTool {
    */
   globalArgumentsParserTnp<Project extends BaseProject = BaseProject>(
     argsv: string[],
-    ProjectClass?: Project,
+    ProjectClass: Partial<typeof BaseProject>,
   ) {
     Helpers.log(`[${config.frameworkName}] Fixing global arguments started...`);
     let options = require('minimist')(argsv);

@@ -158,7 +158,10 @@ export class BaseStartConfig {
         // console.log('USING FROM CLASS')
         const obj: CommandLineFeature =
           new (recognizedClassFnOrFunction as any)(
-            Helpers.cliTool.globalArgumentsParserTnp(restOfArgs),
+            Helpers.cliTool.globalArgumentsParserTnp(
+              restOfArgs,
+              this.ProjectClass,
+            ),
             methodNameToCall,
             this.ProjectClass.ins.nearestTo(process.cwd()),
             process.cwd(),
@@ -169,14 +172,14 @@ export class BaseStartConfig {
         if (this.useStringArrForArgsFunctions) {
           recognizedClassFnOrFunction.apply({}, [
             Helpers.cliTool
-              .globalArgumentsParserTnp(restOfArgs, this.ProjectClass as any)
+              .globalArgumentsParserTnp(restOfArgs, this.ProjectClass)
               .split(' '),
           ]);
         } else {
           recognizedClassFnOrFunction.apply({}, [
             Helpers.cliTool.globalArgumentsParserTnp(
               restOfArgs,
-              this.ProjectClass as any,
+              this.ProjectClass,
             ),
           ]);
         }
@@ -192,7 +195,10 @@ export class BaseStartConfig {
             if (globalClassForGlobalCommands) {
               const obj: CommandLineFeature =
                 new (globalClassForGlobalCommands as any)(
-                  Helpers.cliTool.globalArgumentsParserTnp(this.argsv),
+                  Helpers.cliTool.globalArgumentsParserTnp(
+                    this.argsv,
+                    this.ProjectClass,
+                  ),
                   commandName,
                   this.ProjectClass.ins.nearestTo(process.cwd()),
                   process.cwd(),
