@@ -165,7 +165,17 @@ export class BaseCommandLine<
     this._exit();
   }
 
+  /**
+   * Push update
+   */
   async up() {
+    await this.update();
+  }
+
+  /**
+   * Push update
+   */
+  async pu() {
     await this.update();
   }
   //#endregion
@@ -976,6 +986,20 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
       return;
     }
     await this.project.init();
+    this._exit();
+  }
+
+  /**
+   * init parent and first level children
+   */
+  async initAll() {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: false }))) {
+      return;
+    }
+    await this.project.init();
+    for (const child of this.project.children) {
+      await child.init();
+    }
     this._exit();
   }
   //#endregion
