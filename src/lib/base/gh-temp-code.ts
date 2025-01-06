@@ -1,5 +1,5 @@
 import { crossPlatformPath, os, path } from 'tnp-core/src';
-import { BaseProject } from './base-project';
+import { BaseProject } from './classes/base-project';
 import { config } from 'tnp-config/src';
 import { Helpers } from '../index';
 

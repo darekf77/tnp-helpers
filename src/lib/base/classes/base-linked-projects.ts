@@ -1,7 +1,6 @@
 //#region import
 //#region @backend
 export { ChildProcess } from 'child_process';
-import * as tsfmt from 'typescript-formatter';
 //#endregion
 import { _, chalk, crossPlatformPath, path } from 'tnp-core/src';
 import {
@@ -9,7 +8,7 @@ import {
   LinkedPorjectsConfig,
   LinkedProject,
   UtilsTypescript,
-} from '../index';
+} from '../../index';
 import { BaseFeatureForProject } from './base-feature-for-project';
 import type { BaseProject } from './base-project';
 import * as json5Write from 'json10-writer/src';

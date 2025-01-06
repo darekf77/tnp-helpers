@@ -1,4 +1,4 @@
-import { Helpers } from '../index';
+import { Helpers } from '../../index';
 import type { BaseProject } from './base-project';
 import { BaseFeatureForProject } from './base-feature-for-project';
 import { _ } from 'tnp-core/src';

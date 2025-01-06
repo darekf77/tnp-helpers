@@ -1,13 +1,13 @@
 //#region imports
 //#region @backend
-import { translate } from './translate';
+import { translate } from '../translate';
 //#endregion
-import { Helpers } from '../index';
+import { Helpers } from '../../index';
 import { BaseFeatureForProject } from './base-feature-for-project';
 import type { BaseProject } from './base-project';
 import { CoreModels, chalk, dateformat, _ } from 'tnp-core/src';
-import type { ChangelogData } from '.././models';
-import { CommitData } from './commit-data';
+import type { ChangelogData } from '../../models';
+import { CommitData } from '../commit-data';
 import { config } from 'tnp-config/src';
 
 //#endregion

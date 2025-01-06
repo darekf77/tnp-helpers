@@ -2,7 +2,7 @@
 import { _ } from 'tnp-core/src';
 import { BaseFeatureForProject } from './base-feature-for-project';
 import type { BaseProject } from './base-project';
-import { Helpers, UtilsQuickFixes } from '../index';
+import { Helpers, UtilsQuickFixes } from '../../index';
 import { config } from 'tnp-config/src';
 //#endregion
 

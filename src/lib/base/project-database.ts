@@ -1,7 +1,7 @@
 //#region imports
 import { Helpers, crossPlatformPath } from "tnp-core/src";
-import type { BaseProjectResolver } from "./base-project-resolver";
-import { BaseDb } from "./base-db";
+import type { BaseProjectResolver } from "./classes/base-project-resolver";
+import { BaseDb } from "./classes/base-db";
 //#endregion
 
 const defaultDb = {

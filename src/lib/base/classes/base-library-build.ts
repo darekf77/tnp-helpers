@@ -8,12 +8,12 @@ import { path, crossPlatformPath } from 'tnp-core/src';
 import { config, FilesNames } from 'tnp-config/src';
 import { _ } from 'tnp-core/src';
 import { BaseFeatureForProject } from './base-feature-for-project';
-import { Helpers, UtilsTerminal } from '../index';
+import { Helpers, UtilsTerminal } from '../../index';
 import {
   LibrariesBuildOptions,
   LibraryBuildCommandOptions,
   NgProject,
-} from '../models';
+} from '../../models';
 import type { BaseProject } from './base-project';
 //#endregion
 

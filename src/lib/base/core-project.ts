@@ -1,6 +1,6 @@
 //#region imports
 import { _, path, crossPlatformPath } from 'tnp-core/src';
-import type { BaseProject } from './base-project';
+import type { BaseProject } from './classes/base-project';
 import { CLASS } from 'typescript-class-helpers/src';
 import { Helpers, LibrariesBuildOptions, TestBuildOptions } from '../index';
 //#endregion

@@ -3,7 +3,7 @@ import { config } from 'tnp-config/src';
 import { BaseFeatureForProject } from './base-feature-for-project';
 import type { BaseProject } from './base-project';
 import { path } from 'tnp-core/src';
-import { Helpers } from '../index';
+import { Helpers } from '../../index';
 //#endregion
 
 /**

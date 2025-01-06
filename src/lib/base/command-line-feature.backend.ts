@@ -1,8 +1,8 @@
 //#region imports
 import { Helpers } from '../index';
-import type { BaseProjectResolver } from './base-project-resolver';
+import type { BaseProjectResolver } from './classes/base-project-resolver';
 import { _, crossPlatformPath, path } from 'tnp-core/src';
-import { BaseProject } from './base-project';
+import { BaseProject } from './classes/base-project';
 import { CLASS } from 'typescript-class-helpers/src';
 import { config } from 'tnp-config/src';
 //#endregion

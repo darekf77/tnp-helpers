@@ -1,12 +1,12 @@
-import { Helpers, LinkedProject, PushProcessOptions } from '../index';
-import { CommandLineFeature } from './command-line-feature.backend';
+import { Helpers, LinkedProject, PushProcessOptions } from '../../index';
+import { CommandLineFeature } from './../command-line-feature.backend';
 import { BaseProject } from './base-project';
 import { chalk, _, path, os } from 'tnp-core/src';
 import { HOST_FILE_PATH } from 'tnp-config/src';
-import { TypeOfCommit, CommitData } from './commit-data';
+import { TypeOfCommit, CommitData } from '../commit-data';
 import { config } from 'tnp-config/src';
 import { crossPlatformPath } from 'tnp-core/src';
-import { GhTempCode } from './gh-temp-code';
+import { GhTempCode } from '../gh-temp-code';
 
 export class BaseCommandLine<
   PARAMS = any,

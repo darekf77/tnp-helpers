@@ -11,7 +11,7 @@ import {
   //#endregion
 } from 'tnp-core/src';
 import { config } from 'tnp-config/src';
-import { Helpers, UtilsTerminal } from '../index';
+import { Helpers, UtilsTerminal } from '../../index';
 import type { BaseCliWorkerController } from './base-cli-worker-controller';
 import { BaseCliWorkerConfig } from './base-cli-worker-config';
 //#endregion
@@ -354,7 +354,7 @@ export abstract class BaseCliWorker<
   }
   //#endregion
 
-  //#region protected methods / start
+  //#region protected methods / start detached
   /**
    * start if not started detached process
    */

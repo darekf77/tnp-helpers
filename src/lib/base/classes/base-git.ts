@@ -1,7 +1,7 @@
 //#region imports
 //#region @backend
 import { chalk, fse } from 'tnp-core/src';
-import { translate } from './translate';
+import { translate } from '../translate';
 //#endregion
 import { BaseFeatureForProject } from './base-feature-for-project';
 import {
@@ -10,7 +10,7 @@ import {
   PushProcessOptions,
   TypeOfCommit,
   UtilsTerminal,
-} from '../index';
+} from '../../index';
 import { crossPlatformPath, path, _ } from 'tnp-core/src';
 import type { BaseProject } from './base-project';
 //#endregion

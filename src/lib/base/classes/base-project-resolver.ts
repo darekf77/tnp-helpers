@@ -5,15 +5,15 @@ import {
   child_process,
   //#endregion
 } from 'tnp-core';
-import { Helpers } from '../index';
+import { Helpers } from '../../index';
 import { path, crossPlatformPath } from 'tnp-core/src';
 import { config } from 'tnp-config/src';
 import { _ } from 'tnp-core/src';
 // import { Low } from 'lowdb';
-import { ConfigDatabase } from './config-database';
-import { ProjectDatabase } from './project-database';
+import { ConfigDatabase } from '../config-database';
+import { ProjectDatabase } from '../project-database';
 import { BaseProject } from './base-project';
-import { PortsWorker } from './tcp-upd-ports.worker';
+import { PortsWorker } from '../tcp-upd-ports.worker';
 //#region @backend
 // import { os } from 'tnp-core/src';
 // import { JSONFilePreset } from '../lowdb/node';

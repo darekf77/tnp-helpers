@@ -2,7 +2,6 @@ import { BaseProject } from './base-project';
 import { BaseCompilerForProject } from './base-compiler-for-project';
 import { ChangeOfFile } from 'incremental-compiler/src';
 import { _, Utils } from 'tnp-core/src';
-import { Helpers } from '../index';
 
 export abstract class BaseDebounceCompilerForProject<
   ADDITIONAL_DATA = any,

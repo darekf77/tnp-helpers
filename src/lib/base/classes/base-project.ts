@@ -1,6 +1,6 @@
 //#region import
 //#region @backend
-import { translate } from './translate';
+import { translate } from '../translate';
 
 import { fse, portfinder, chalk } from 'tnp-core/src';
 export { ChildProcess } from 'child_process';
@@ -20,14 +20,14 @@ import {
   LinkedProject,
   TypeOfCommit,
   UtilsTypescript,
-} from '../index';
+} from '../../index';
 import { BaseProjectResolver } from './base-project-resolver';
 import {
   BaseProjectType,
   LibrariesBuildOptions,
   LibraryBuildCommandOptions,
   NgProject,
-} from '../models';
+} from '../../models';
 import type { BaseLibraryBuild } from './base-library-build';
 import { BaseNpmHelpers } from './base-npm-helpers';
 import { BaseLinkedProjects } from './base-linked-projects';

@@ -6,7 +6,6 @@ import {
   //#endregion
 } from 'tnp-core';
 import { Helpers } from '../index';
-import type { BaseProject } from './base-project';
 import { path } from 'tnp-core/src';
 //#endregion
 

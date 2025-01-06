@@ -4,9 +4,9 @@ import { Helpers, crossPlatformPath } from "tnp-core/src";
 import type { BaseProjectResolver } from "./base-project-resolver";
 
 //#region @backend
-import { Low } from "../lowdb";
+import { Low } from "../../lowdb";
 import { os } from "tnp-core/src";
-import { JSONFilePreset } from "../lowdb/node";
+import { JSONFilePreset } from "../../lowdb/node";
 import { config } from "tnp-config/src";
 //#endregion
 //#endregion
