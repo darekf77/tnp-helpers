@@ -89,6 +89,7 @@ export class BaseVscodeHelpers<
       'ms-vscode-remote.remote-ssh',
       'tomoki1207.pdf',
       'hediet.vscode-drawio',
+      'humao.rest-client',
       // TODO nesting is so nice.. but I nee to modify it for taon
       // 'antfu.file-nesting',
       // TODO CHECK asset pathes autocomplete
