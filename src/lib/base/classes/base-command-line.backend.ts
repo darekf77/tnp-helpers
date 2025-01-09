@@ -305,6 +305,17 @@ export class BaseCommandLine<
   }
   //#endregion
 
+  async pp() {
+    const currentBranch = this.project.git.currentBranchName;
+    this.project
+      .run(
+        `git push origin ${currentBranch} && git pull origin ${currentBranch}`,
+      )
+      .sync();
+    console.log('Done push and pull');
+    this._exit();
+  }
+
   //#region commands / reset
   private __resetInfo(branchToReset: string) {
     Helpers.info(`
