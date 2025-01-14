@@ -1,5 +1,6 @@
 import { _ } from 'tnp-core/src';
-import { Helpers, UtilsTerminal } from '../../index';
+import { Helpers } from '../../index';
+import { UtilsTerminal } from 'tnp-core/src'
 
 export class HelpersConsoleGuiQuestion {
   //#region qestion yes / no

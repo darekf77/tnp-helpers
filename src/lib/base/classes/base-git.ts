@@ -9,9 +9,8 @@ import {
   Helpers,
   PushProcessOptions,
   TypeOfCommit,
-  UtilsTerminal,
 } from '../../index';
-import { crossPlatformPath, path, _ } from 'tnp-core/src';
+import { crossPlatformPath, path, _, UtilsTerminal } from 'tnp-core/src';
 import type { BaseProject } from './base-project';
 //#endregion
 
@@ -624,7 +623,7 @@ export class BaseGit<
     options = options || {};
     options.cloneChildren = !!options.cloneChildren;
     let { cloneChildren, setOrigin } = options;
-    
+
     await this._beforePullProcessAction(setOrigin, cloneChildren);
 
     await this.setRemoteOriginType(setOrigin);

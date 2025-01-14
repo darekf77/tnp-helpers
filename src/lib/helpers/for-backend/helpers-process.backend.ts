@@ -9,11 +9,11 @@ import {
   crossPlatformPath,
   chalk,
 } from 'tnp-core';
-import { CLI, UtilsProcess } from 'tnp-core/src';
+import { CLI, UtilsProcess, UtilsTerminal } from 'tnp-core/src';
 import * as dateformat from 'dateformat';
 import { exec } from 'child_process';
 import type { BaseProject } from '../../index';
-import { Helpers, UtilsTerminal } from '../../index';
+import { Helpers } from '../../index';
 import { CLASS } from 'typescript-class-helpers/src';
 import { config } from 'tnp-config/src';
 import { Log, Level } from 'ng2-logger/src';
@@ -147,32 +147,10 @@ export class HelpersProcess {
 
   //#region press key and continue
   /**
-   * use questions instead
+   * @deprecated use UtilsTerminal.pressAnyKey
    */
   pressKeyAndContinue(message = 'Press enter to continue..') {
-    if (process.platform === 'win32') {
-      const terminal = UtilsProcess.getBashOrShellName();
-      // console.log({ terminal });
-      if (terminal === 'gitbash') {
-        const getGitBashPath = UtilsProcess.getGitBashPath();
-        // console.log({ getGitBashPath });
-        const gitbashCommand = `read -p "${chalk.bold(message)}"`;
-        child_process.execSync(gitbashCommand, {
-          stdio: 'inherit',
-          shell: getGitBashPath,
-        });
-      } else {
-        console.log(chalk.bold(message));
-        spawn.sync('pause', '', { shell: true, stdio: [0, 1, 2] });
-      }
-      return;
-    }
-
-    console.log(chalk.bold(message));
-    require('child_process').spawnSync('read _ ', {
-      shell: true,
-      stdio: [0, 1, 2],
-    });
+    return UtilsTerminal.pressAnyKey({ message });
   }
   //#endregion
 

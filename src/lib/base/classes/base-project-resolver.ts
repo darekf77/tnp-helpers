@@ -13,7 +13,7 @@ import { _ } from 'tnp-core/src';
 import { ConfigDatabase } from '../config-database';
 import { ProjectDatabase } from '../project-database';
 import { BaseProject } from './base-project';
-import { PortsWorker } from '../tcp-upd-ports.worker';
+import { PortsWorker } from '../tcp-udp-ports';
 //#region @backend
 // import { os } from 'tnp-core/src';
 // import { JSONFilePreset } from '../lowdb/node';

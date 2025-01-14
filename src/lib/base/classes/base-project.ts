@@ -785,13 +785,17 @@ export abstract class BaseProject<
   }
   //#endregion
 
-  async registerAndAssignPort(): Promise<number> {
-    //#region @backendFunc
-    throw '[registerAndAssignPort] Not implemented';
-    // const ctrl = await this.ins.portsWorker.getControllerForRemoteConnection();
-    // ctrl.registerAndAssignPort(this.location);
+  protected getUniqueForTask(task: string): string {
+    return `${task}-in-${this.genericName}`;
+  }
 
-    // return 1;
+  protected async registerAndAssignPort(taskName: string): Promise<number> {
+    //#region @backendFunc
+    taskName = this.getUniqueForTask(taskName);
+    const ctrl = await this.ins.portsWorker.getControllerForRemoteConnection();
+    const data = await ctrl.registerAndAssignPort(encodeURIComponent(taskName))
+      .received;
+    return data.body.numericValue;
     //#endregion
   }
 

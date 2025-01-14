@@ -1,9 +1,10 @@
 //#region imports
-import { BaseCliWorker, CfontStyle } from './classes/base-cli-worker';
+import { BaseCliWorker, CfontStyle } from '../classes/base-cli-worker';
 import { _ } from 'tnp-core/src';
-import { Helpers } from '../index';
-import { PortsController } from './tcp-udp-ports/ports.controller';
-import { PortsContext } from './tcp-udp-ports/tcp-udp-ports.context';
+import { Helpers } from '../../index';
+import { PortsController } from '../tcp-udp-ports/ports.controller';
+import { PortsContext } from '../tcp-udp-ports/tcp-udp-ports.context';
+import { UtilsTerminal } from 'tnp-core/src';
 //#endregion
 
 export class PortsWorker extends BaseCliWorker<PortsController> {
@@ -56,6 +57,26 @@ export class PortsWorker extends BaseCliWorker<PortsController> {
     this.preventExternalConfigChange();
     // await Helpers.pressKeyAndContinue('Press any key to enter menu');
     await this._infoScreen();
+    //#endregion
+  }
+  //#endregion
+
+  //#region methods / get worker terminal actions
+  getWorkerTerminalActions() {
+    //#region @backendFunc
+    return {
+      showTakenPorts: {
+        name: 'Show all taken ports by os',
+        action: async () => {
+          const controller = await this.getControllerForRemoteConnection();
+          const ports = await controller.getAllAssignedPorts().received;
+          await UtilsTerminal.previewLongList(
+            ports.body.json.map(c => `- ${c.port} ${c.serviceId}`).join('\n'),
+          );
+        },
+      },
+      ...super.getWorkerTerminalActions(),
+    };
     //#endregion
   }
   //#endregion

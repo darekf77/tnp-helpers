@@ -2,7 +2,7 @@
 import { config } from 'tnp-config/src';
 import { _, path } from 'tnp-core/src';
 import { Helpers } from '../../index';
-import type { CommandLineFeature } from '../../index';
+import type { BaseCommandLineFeature } from '../../index';
 import { BaseProject } from './base-project';
 import { CLASS } from 'typescript-class-helpers/src';
 //#endregion
@@ -156,7 +156,7 @@ export class BaseStartConfig {
 
       if (Helpers.isClass(recognizedClassFnOrFunction)) {
         // console.log('USING FROM CLASS')
-        const obj: CommandLineFeature =
+        const obj: BaseCommandLineFeature =
           new (recognizedClassFnOrFunction as any)(
             Helpers.cliTool.globalArgumentsParserTnp(
               restOfArgs,
@@ -193,7 +193,7 @@ export class BaseStartConfig {
           firstArg: _.first(this.argsv),
           runGlobalCommandByName: (commandName: string) => {
             if (globalClassForGlobalCommands) {
-              const obj: CommandLineFeature =
+              const obj: BaseCommandLineFeature =
                 new (globalClassForGlobalCommands as any)(
                   Helpers.cliTool.globalArgumentsParserTnp(
                     this.argsv,

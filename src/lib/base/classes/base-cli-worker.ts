@@ -9,9 +9,10 @@ import {
   UtilsProcess,
   Utils,
   //#endregion
+  UtilsTerminal,
 } from 'tnp-core/src';
 import { config } from 'tnp-config/src';
-import { Helpers, UtilsTerminal } from '../../index';
+import { Helpers } from '../../index';
 import type { BaseCliWorkerController } from './base-cli-worker-controller';
 import { BaseCliWorkerConfig } from './base-cli-worker-config';
 //#endregion
@@ -40,8 +41,7 @@ export type CfontAlign = 'left' | 'center' | 'right' | 'block';
 //#endregion
 
 export abstract class BaseCliWorker<
-  REMOTE_CTRL extends
-    BaseCliWorkerController<any> = BaseCliWorkerController<any>,
+  REMOTE_CTRL extends BaseCliWorkerController = BaseCliWorkerController,
 > {
   //#region constructor
   constructor(
@@ -307,6 +307,8 @@ export abstract class BaseCliWorker<
     while (true) {
       i++;
       try {
+        // const isWaitingNotChecking = i >= isWaitingNotCheckingWhen;
+        // TODO: check why this is may not work
         if (isWaitingNotCheckingWhen === i) {
           Helpers.info(`Waiting for service "${this.serviceID}" to start...`);
         } else {
@@ -436,13 +438,46 @@ export abstract class BaseCliWorker<
         ` (version: ${this.serviceVersion}) started..
       Check info here http://localhost:${chalk.bold(
         this.processLocalInfoObj?.port?.toString(),
-      )}/${'info' as keyof BaseCliWorkerController<any>}
+      )}/${'info' as keyof BaseCliWorkerController}
 
         `,
     );
     //#endregion
   }
   //#endregion
+
+  protected getWorkerTerminalActions(): {
+    [uniqeActionName: string]: {
+      name: string;
+      action: () => void | Promise<void>;
+    };
+  } {
+    //#region @backendFunc
+    return {
+      openBrowser: {
+        name: 'Open browser with service info',
+        action: async () => {
+          const openInBrowser = require('open');
+          openInBrowser(
+            `http://localhost:${this.processLocalInfoObj.port}/info`,
+          );
+        },
+      },
+      exit: {
+        name: `Shut down service`,
+        action: async () => {
+          if (
+            await UtilsTerminal.confirm({
+              defaultValue: false,
+            })
+          ) {
+            process.exit(0);
+          }
+        },
+      },
+    };
+    //#endregion
+  }
 
   //#region protected methods / info screen
   protected async _infoScreen() {
@@ -452,33 +487,13 @@ export abstract class BaseCliWorker<
       await this.header();
 
       await this.infoMessageBelowHeader();
-      const choices = {
-        openBrowser: {
-          name: 'Open browser with service info',
-        },
-        // showAllProcesses: {
-        //   name: 'Show all processes',
-        // },
-        // showLogo: {
-        //   name: 'Show logo',
-        // },
-        exit: {
-          name: `Shut down service`,
-        },
-      };
+      const choices = this.getWorkerTerminalActions();
       const choice = await UtilsTerminal.select<keyof typeof choices>({
         choices,
         question: 'Choose action',
       });
-      if (choice === 'openBrowser') {
-        const openInBrowser = require('open');
-        openInBrowser(`http://localhost:${this.processLocalInfoObj.port}/info`);
-      }
-      if (choice === 'exit') {
-        process.exit(0);
-      }
-      switch (choice) {
-      }
+      const action = choices[choice].action;
+      await action();
     }
   }
   //#endregion

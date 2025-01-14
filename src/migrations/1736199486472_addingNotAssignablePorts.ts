@@ -1,20 +1,15 @@
 import { Taon } from 'taon/src';
+import { _ } from 'tnp-core/src';
 import { QueryRunner } from 'taon-typeorm/src';
-import { NotAssignablePort, Port, PortsController } from 'tnp-helpers/src';
+import { NotAssignablePort, Port, PortsController } from '../lib';
 
 @Taon.Migration({
   className: 'PortsContext_1736199486472_addingNotAssignablePorts',
 })
 export class PortsContext_1736199486472_addingNotAssignablePorts extends Taon
   .Base.Migration {
-  portsController: PortsController = this.injectController(PortsController);
-  /**
-   * IMPORTANT !!!
-   * remove this method if you are ready to run this migration
-   */
-  public isReadyToRun(): boolean {
-    return true;
-  }
+  protected portsController: PortsController =
+    this.injectController(PortsController);
 
   private readonly commonPortsFrom3000to6000: number[] = [
     3000, // Commonly used for development servers (e.g., React, Node.js)
@@ -37,33 +32,23 @@ export class PortsContext_1736199486472_addingNotAssignablePorts extends Taon
   ];
 
   async up(queryRunner: QueryRunner): Promise<any> {
-    console.log('is controller accessible ', !!this.portsController);
-
     const db = await queryRunner.manager.getRepository(NotAssignablePort);
 
-    for (const commonPort of this.commonPortsFrom3000to6000) {
-      const portObj = NotAssignablePort.from({
-        port: commonPort,
-        serviceId: 'not-assignable-used-by-os-or-other-apps' + commonPort,
-      });
-      portObj;
-      await db.save(portObj);
-      this.portsController.assignedPorts.set(commonPort, portObj);
+    const allPorts = this.commonPortsFrom3000to6000.map(port =>
+      NotAssignablePort.from({
+        port,
+        serviceId: 'not-assignable-used-by-os-or-other-apps' + port,
+      }),
+    );
+    await db.save(allPorts);
+    for (const commonPortObj of allPorts) {
+      this.portsController.takenByOsPorts.set(commonPortObj.port, commonPortObj);
     }
   }
 
   async down(queryRunner: QueryRunner): Promise<any> {
     const db = await queryRunner.manager.getRepository(NotAssignablePort);
-    for (const commonPort of this.commonPortsFrom3000to6000) {
-      const portObj = await db.findOne({
-        where: {
-          port: commonPort,
-        },
-      });
-      if (portObj) {
-        await db.remove(portObj);
-        this.portsController.assignedPorts.delete(commonPort);
-      }
-    }
+    db.clear();
+    this.portsController.takenByOsPorts.clear();
   }
 }

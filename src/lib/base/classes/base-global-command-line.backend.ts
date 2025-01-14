@@ -1,5 +1,5 @@
 import { Helpers, LinkedProject, PushProcessOptions } from '../../index';
-import { CommandLineFeature } from './../command-line-feature.backend';
+import { BaseCommandLineFeature } from './base-command-line-feature.backend';
 import { BaseProject } from './base-project';
 import { chalk, _, path, os } from 'tnp-core/src';
 import { HOST_FILE_PATH } from 'tnp-config/src';
@@ -8,10 +8,10 @@ import { config } from 'tnp-config/src';
 import { crossPlatformPath } from 'tnp-core/src';
 import { GhTempCode } from '../gh-temp-code';
 
-export class BaseCommandLine<
+export class BaseGlobalCommandLine<
   PARAMS = any,
   PROJECT extends BaseProject<any, any> = BaseProject,
-> extends CommandLineFeature<PARAMS, PROJECT> {
+> extends BaseCommandLineFeature<PARAMS, PROJECT> {
   public _() {
     Helpers.error('Please select git command');
   }
@@ -1271,41 +1271,11 @@ Would you like to update current project configuration?`)
       { recommendations: [] },
       true,
     );
-    const menuItems = extensions.recommendations.map(r => {
-      return { name: r, value: r, enabled: true, selected: true };
-    });
-
-    // console.log(
-    //   `Extensions to install: ${extensions.recommendations.join(', ')}`,
-    // );
-    let extensionsToInstall = [];
-    while (true) {
-      Helpers.clearConsole();
-      extensionsToInstall = await Helpers.consoleGui.multiselect(
-        'Select extensions to install',
-        menuItems,
-        true,
-        menuItems,
-      );
-      Helpers.info(extensionsToInstall.join(', '));
-      if (!(await Helpers.questionYesNo(`Install extensions ?`))) {
-        continue;
-      }
-      break;
-    }
-
-    for (let index = 0; index < extensionsToInstall.length; index++) {
-      const extname = extensionsToInstall[index];
-      try {
-        Helpers.taskStarted(`Installing: ${extname}`);
-        Helpers.run(`code --install-extension ${extname}`).sync();
-        Helpers.taskDone(`Installed: ${extname}`);
-      } catch (error) {
-        Helpers.warn(`Not able to install ${extname}`);
-        Helpers.pressKeyOrWait('Press any key to continue...');
-      }
-    }
-    Helpers.info('Done installing');
+    Helpers.clearConsole();
+    await this.project.vsCodeHelpers.installExtensions(
+      extensions.recommendations,
+      true
+    );
     this._exit();
   }
   //#endregion

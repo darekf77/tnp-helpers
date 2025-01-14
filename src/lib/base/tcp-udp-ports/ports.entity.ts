@@ -17,4 +17,11 @@ export class Port extends NotAssignablePort {
   //#endregion
   assigned: boolean;
   //#endregion
+
+  //#region port entity / columns / assigned
+  //#region @websql
+  @Taon.Orm.Column.Number()
+  //#endregion
+  whenAssignedTimestamp?: Number;
+  //#endregion
 }

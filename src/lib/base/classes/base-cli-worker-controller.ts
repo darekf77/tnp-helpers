@@ -5,8 +5,8 @@ import { Helpers } from 'tnp-core/src';
 @Taon.Controller({
   className: 'BaseCliWorkerController',
 })
-export abstract class BaseCliWorkerController<ENTITY> extends Taon.Base
-  .CrudController<ENTITY> {
+export abstract class BaseCliWorkerController extends Taon.Base
+  .Controller {
   /**
    * service id
    */

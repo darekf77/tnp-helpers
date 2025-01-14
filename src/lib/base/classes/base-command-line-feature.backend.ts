@@ -1,13 +1,13 @@
 //#region imports
-import { Helpers } from '../index';
-import type { BaseProjectResolver } from './classes/base-project-resolver';
+import { Helpers } from '../../index';
+import type { BaseProjectResolver } from './base-project-resolver';
 import { _, crossPlatformPath, path } from 'tnp-core/src';
-import { BaseProject } from './classes/base-project';
+import { BaseProject } from './base-project';
 import { CLASS } from 'typescript-class-helpers/src';
 import { config } from 'tnp-config/src';
 //#endregion
 
-export abstract class CommandLineFeature<
+export abstract class BaseCommandLineFeature<
   PARAMS extends { copyto?: string[]; copytoall?: boolean } = any,
   PROJECT extends BaseProject<any, any> = BaseProject,
 > {

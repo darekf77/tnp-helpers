@@ -25,6 +25,7 @@ export class NotAssignablePort extends Taon.Base.Entity {
   @Taon.Orm.Column.Custom({
     type: 'varchar',
     length: 1000,
+    unique: true,
   })
   //#endregion
   serviceId: string;

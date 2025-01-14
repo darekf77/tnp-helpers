@@ -6,9 +6,9 @@ export { ChildProcess } from 'child_process';
 import { CoreModels } from 'tnp-core/src';
 import { path, crossPlatformPath } from 'tnp-core/src';
 import { config, FilesNames } from 'tnp-config/src';
-import { _ } from 'tnp-core/src';
+import { _, UtilsTerminal } from 'tnp-core/src';
 import { BaseFeatureForProject } from './base-feature-for-project';
-import { Helpers, UtilsTerminal } from '../../index';
+import { Helpers } from '../../index';
 import {
   LibrariesBuildOptions,
   LibraryBuildCommandOptions,

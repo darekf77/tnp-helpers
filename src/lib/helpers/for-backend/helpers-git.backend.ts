@@ -8,9 +8,8 @@ import {
   crossPlatformPath,
   dateformat,
 } from 'tnp-core';
-import { CLI } from 'tnp-core/src';
-import { Helpers, UtilsTerminal } from '../../index';
-import type { BaseProject } from '../../index';
+import { CLI, UtilsTerminal } from 'tnp-core/src';
+import { Helpers } from '../../index';
 import { config } from 'tnp-config/src';
 import * as ini from 'ini';
 

@@ -15,5 +15,6 @@ export * from './base-cli-worker';
 export * from './base-cli-worker-config';
 //#region @backend
 export * from './base-start-config.backend';
-export * from './base-command-line.backend';
+export * from './base-command-line-feature.backend';
+export * from './base-global-command-line.backend';
 //#endregion
