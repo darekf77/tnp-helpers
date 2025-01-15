@@ -786,22 +786,29 @@ export abstract class BaseProject<
   //#endregion
 
   protected getUniqueForTask(task: string): string {
-    return `${task}-in-${this.genericName}`;
+    return `task(${task}) in ${this.genericName}`;
   }
 
-  protected async registerAndAssignPort(taskName: string): Promise<number> {
+  public async registerAndAssignPort(
+    taskName: string,
+    options?: { startFrom?: number },
+  ): Promise<number> {
     //#region @backendFunc
     taskName = this.getUniqueForTask(taskName);
+    options = options || {};
+
     const ctrl = await this.ins.portsWorker.getControllerForRemoteConnection();
-    const data = await ctrl.registerAndAssignPort(encodeURIComponent(taskName))
-      .received;
-    return data.body.numericValue;
+    const data = await ctrl.registerAndAssignPort(
+      encodeURIComponent(taskName),
+      _.isNumber(options.startFrom) ? options.startFrom : void 0,
+    ).received;
+    return data.body.json.port;
     //#endregion
   }
 
   //#region methods & getters / assign free port to project instance
   /**
-   * @deprecated
+   * @deprecated use registerAndAssignPort() instead
    */
   async assignFreePort(
     startFrom: number = 4200,

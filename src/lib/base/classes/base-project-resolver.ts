@@ -50,7 +50,7 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
     this.portsWorker = new PortsWorker(
       'ports-worker',
       `${this.cliToolName} startCliServicePortsWorker --skipCoreCheck`,
-      '0.0.0',
+      '0.0.1',
     );
   }
   //#endregion

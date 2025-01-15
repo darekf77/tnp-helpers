@@ -1,7 +1,7 @@
 import { Helpers, LinkedProject, PushProcessOptions } from '../../index';
 import { BaseCommandLineFeature } from './base-command-line-feature.backend';
 import { BaseProject } from './base-project';
-import { chalk, _, path, os } from 'tnp-core/src';
+import { chalk, _, path, os, UtilsOs } from 'tnp-core/src';
 import { HOST_FILE_PATH } from 'tnp-config/src';
 import { TypeOfCommit, CommitData } from '../commit-data';
 import { config } from 'tnp-config/src';
@@ -305,6 +305,7 @@ export class BaseGlobalCommandLine<
   }
   //#endregion
 
+  //#region commands / push and pull
   async pp() {
     const currentBranch = this.project.git.currentBranchName;
     this.project
@@ -315,6 +316,7 @@ export class BaseGlobalCommandLine<
     console.log('Done push and pull');
     this._exit();
   }
+  //#endregion
 
   //#region commands / reset
   private __resetInfo(branchToReset: string) {
@@ -1274,7 +1276,7 @@ Would you like to update current project configuration?`)
     Helpers.clearConsole();
     await this.project.vsCodeHelpers.installExtensions(
       extensions.recommendations,
-      true
+      true,
     );
     this._exit();
   }
@@ -1382,4 +1384,10 @@ Would you like to update current project configuration?`)
     this._exit();
   }
   //#endregion
+
+  async isPortInUse() {
+    const port = parseInt(this.firstArg);
+    console.log(`Port ${port} is in use: ${await UtilsOs.isPortInUse(port)}`);
+    this._exit();
+  }
 }

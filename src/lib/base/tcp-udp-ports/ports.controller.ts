@@ -1,6 +1,7 @@
 import { Taon } from 'taon/src';
+import { _, UtilsOs } from 'tnp-core/src';
 import { BaseCliWorkerController } from '../classes/base-cli-worker-controller';
-import { Port } from './ports.entity';
+import { Port, PortStatus } from './ports.entity';
 import { NotAssignablePort } from './not-assignable-port.entity';
 
 @Taon.Controller({
@@ -9,23 +10,39 @@ import { NotAssignablePort } from './not-assignable-port.entity';
 export class PortsController extends BaseCliWorkerController {
   public START_PORT = 3000;
   public END_PORT = 6000;
-  public takenByOsPorts = new Map<number, NotAssignablePort>();
-  public portsCacheByServiceId = new Map<string, Port>();
+  public readonly takenByOsPorts = new Map<number, NotAssignablePort>();
+  public readonly assignedPorts = new Map<string, Port>();
 
   get firstFreePort() {
-    if (!this.portsCacheByServiceId) {
+    if (!this.assignedPorts) {
       return null;
     }
-    return Array.from(this.portsCacheByServiceId.values()).find(
-      p => !p.assigned,
+    return Array.from(this.assignedPorts.values()).find(
+      p => p.status === 'unassigned',
+    );
+  }
+
+  protected firstUnassignedPortMoreThan(port: number) {
+    if (!this.assignedPorts) {
+      return null;
+    }
+    return Array.from(this.assignedPorts.values()).find(
+      p => p.status === 'unassigned' && p.port > port,
     );
   }
 
   //#region public methods / get all assigned ports
   @Taon.Http.GET()
-  getAllAssignedPorts(): Taon.Response<NotAssignablePort[]> {
+  getPortByStatus(
+    @Taon.Http.Param.Query('status') status: PortStatus,
+  ): Taon.Response<Port[]> {
     return async () => {
-      return Array.from(this.takenByOsPorts.values());
+      if (status === 'assigned-taken-by-os') {
+        return Array.from(this.takenByOsPorts.values());
+      }
+      return Array.from(this.assignedPorts.values()).filter(
+        f => f.status === status,
+      );
     };
   }
   //#endregion
@@ -44,25 +61,43 @@ export class PortsController extends BaseCliWorkerController {
     //#region @backendFunc
     return async () => {
       uniqueServiceName = decodeURIComponent(uniqueServiceName);
-      if (this.portsCacheByServiceId.has(uniqueServiceName)) {
-        return this.portsCacheByServiceId.get(uniqueServiceName);
+      if (this.assignedPorts.has(uniqueServiceName)) {
+        return this.assignedPorts.get(uniqueServiceName);
       }
       const repo = this.ctx.connection.getRepository(Port);
-      startFrom = Number.isInteger(startFrom) ? startFrom : 3000;
+      startFrom = Number(startFrom);
+      const searchingWithStartPort =
+        _.isInteger(startFrom) &&
+        startFrom >= this.START_PORT &&
+        startFrom <= this.END_PORT;
+
       while (true) {
-        const firstFreePort = this.firstFreePort;
+        const firstFreePort =
+          (searchingWithStartPort &&
+            this.firstUnassignedPortMoreThan(startFrom)) ||
+          this.firstFreePort;
+
         if (!firstFreePort) {
+          // TODO wait and free up some ports
           throw new Error('[taon] No free ports available');
         }
         if (this.takenByOsPorts.has(firstFreePort.port)) {
-          this.portsCacheByServiceId.delete(firstFreePort.serviceId);
+          this.assignedPorts.delete(firstFreePort.serviceId);
           continue;
         }
-        firstFreePort.assigned = true;
+        if (await UtilsOs.isPortInUse(firstFreePort.port)) {
+          firstFreePort.status = 'assigned-not-registered';
+          firstFreePort.serviceId = `taken by unregistered process (port: ${firstFreePort.port})`;
+          await repo.update(firstFreePort.port, firstFreePort);
+          continue;
+        }
+
+        firstFreePort.status = 'assigned';
         const oldServiceId = firstFreePort.serviceId;
         firstFreePort.serviceId = uniqueServiceName;
-        this.portsCacheByServiceId.set(uniqueServiceName, firstFreePort);
-        this.portsCacheByServiceId.delete(oldServiceId);
+        firstFreePort.whenAssignedTimestamp = Date.now();
+        this.assignedPorts.set(uniqueServiceName, firstFreePort);
+        this.assignedPorts.delete(oldServiceId);
         await repo.update(firstFreePort.port, firstFreePort);
         return firstFreePort;
       }

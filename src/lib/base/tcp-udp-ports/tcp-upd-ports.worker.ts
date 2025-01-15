@@ -1,10 +1,11 @@
 //#region imports
 import { BaseCliWorker, CfontStyle } from '../classes/base-cli-worker';
 import { _ } from 'tnp-core/src';
-import { Helpers } from '../../index';
+import { Helpers, PortStatus, PortStatusArr } from '../../index';
 import { PortsController } from '../tcp-udp-ports/ports.controller';
 import { PortsContext } from '../tcp-udp-ports/tcp-udp-ports.context';
 import { UtilsTerminal } from 'tnp-core/src';
+import { chalk } from 'tnp-core/src';
 //#endregion
 
 export class PortsWorker extends BaseCliWorker<PortsController> {
@@ -61,18 +62,79 @@ export class PortsWorker extends BaseCliWorker<PortsController> {
   }
   //#endregion
 
+  //#region methods / display menu with items
+  protected async displayItemsForPortsStatus(status: PortStatus) {
+    //#region @backendFunc
+    const controller = await this.getControllerForRemoteConnection();
+    const portsData = await controller.getPortByStatus(status).received;
+    const ports = portsData.body.json.map(
+      c => `- ${c.port} <${chalk.gray(c.serviceId)}>`,
+    );
+    if (ports.length === 0) {
+      Helpers.info(`
+
+        No ports with status "${status}" as taken by os yet...
+
+        `);
+
+      await UtilsTerminal.pressAnyKeyToContinueAsync({
+        message: 'Press any key to continue',
+      });
+    } else {
+      await UtilsTerminal.previewLongList(ports.join('\n'));
+    }
+    //#endregion
+  }
+  //#endregion
+
+  get backAction() {
+    return {
+      back: {
+        name: 'Back',
+        action: async () => {
+          return true;
+        },
+      },
+    };
+  }
+
   //#region methods / get worker terminal actions
   getWorkerTerminalActions() {
     //#region @backendFunc
-    return {
-      showTakenPorts: {
-        name: 'Show all taken ports by os',
+    const additionalActions = {};
+
+    for (const portStatus of PortStatusArr) {
+      additionalActions[`show${_.capitalize(portStatus)}Ports`] = {
+        name: `Show all "${portStatus}" ports`,
         action: async () => {
-          const controller = await this.getControllerForRemoteConnection();
-          const ports = await controller.getAllAssignedPorts().received;
-          await UtilsTerminal.previewLongList(
-            ports.body.json.map(c => `- ${c.port} ${c.serviceId}`).join('\n'),
-          );
+          await this.displayItemsForPortsStatus(portStatus);
+        },
+      };
+    }
+
+    return {
+      emptyAction: {
+        name: ' -- choose any action below --',
+        action: async () => {},
+      },
+      previewPorts: {
+        name: 'Preview all ports',
+        action: async () => {
+          while (true) {
+            const { selected } = await UtilsTerminal.selectActionAndExecute(
+              {
+                ...this.backAction,
+                ...additionalActions,
+              },
+              {
+                autocomplete: false,
+                question: 'Select ports to preview',
+              },
+            );
+            if (selected === 'back') {
+              break;
+            }
+          }
         },
       },
       ...super.getWorkerTerminalActions(),

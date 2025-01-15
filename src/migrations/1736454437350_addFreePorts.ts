@@ -21,7 +21,6 @@ export class PortsContext_1736454437350_addFreePorts extends Taon.Base
     const freePortsInRange = addFreePortsInRange.map(port =>
       Port.from({
         port: port,
-        assigned: false,
         serviceId: `free port ${port}`,
       }),
     );
@@ -29,13 +28,13 @@ export class PortsContext_1736454437350_addFreePorts extends Taon.Base
     await portsTableRepo.save(freePortsInRange);
 
     for (const port of freePortsInRange) {
-      this.portsController.portsCacheByServiceId.set(port.serviceId, port);
+      this.portsController.assignedPorts.set(port.serviceId, port);
     }
   }
 
   async down(queryRunner: QueryRunner): Promise<any> {
     // revert this "something" in db
-    this.portsController.portsCacheByServiceId.clear();
+    this.portsController.assignedPorts.clear();
     const portsTableRepo = await queryRunner.manager.getRepository(Port);
     portsTableRepo.clear();
   }

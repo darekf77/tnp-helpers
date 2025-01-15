@@ -26,13 +26,14 @@ export class BaseVscodeHelpers<
   private get extensions(): string[] {
     return Helpers.uniqArray([
       //#region @backend
-      'Angular.ng-template', // high cpu usage ??
+      // 'Angular.ng-template', // high cpu usage
       'EditorConfig.EditorConfig',
       'GitHub.copilot',
       'IBM.output-colorizer',
       'Mikael.Angular-BeastCode',
       'SimonSiefke.svg-preview',
       'Zaczero.bootstrap-v4-snippets',
+      'wcwhitehead.bootstrap-3-snippets',
       // 'abumalick.vscode-nvm', // test this before
       'aeschli.vscode-css-formatter',
       'alefragnani.Bookmarks',
@@ -78,10 +79,10 @@ export class BaseVscodeHelpers<
       // 'vespa-dev-works.jestrunit',
       'firsttris.vscode-jest-runner', // better for jest
       'waderyan.gitblame',
-      'wcwhitehead.bootstrap-3-snippets',
+
       'wenfangdu.snippet-generator',
       'xabikos.javascriptsnippets',
-      'wmaurer.vscode-jumpy',
+      // 'wmaurer.vscode-jumpy', // nice but I am not using it
       'nidu.copy-json-path',
       'aaron-bond.better-comments',
       'mikestead.dotenv',
