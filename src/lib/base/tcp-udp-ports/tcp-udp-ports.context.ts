@@ -25,6 +25,7 @@ export const PortsContext = Taon.createContext(() => ({
   controllers: { PortsController },
   entities: { Port, NotAssignablePort },
   migrations: { ...MIGRATIONS_CLASSES_FOR_PortsContext },
+  skipWritingServerRoutes: true,
   //#region @backend
   database: {
     recreateMode: 'DROP_DB+MIGRATIONS',
