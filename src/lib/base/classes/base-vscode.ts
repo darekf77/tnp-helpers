@@ -278,10 +278,26 @@ export class BaseVscodeHelpers<
       crossPlatformPath(os.userInfo().homedir),
       '.config/Code/User/keybindings.json',
     );
-    const keybindingPath = path.join(
+    const keybindingPathMacOS = path.join(
       crossPlatformPath(os.userInfo().homedir),
       `Library/Application Support/Code/User/keybindings.json`,
     );
+    const keybindingPathWindows = path.join(
+      crossPlatformPath(os.userInfo().homedir),
+      'AppData/Roaming/Code/User/keybindings.json',
+    );
+
+    const taonBuildTask = [
+      {
+        key: 'shift+cmd+c',
+        command: 'extension.taonstopdefaultbuild',
+      },
+      {
+        key: 'shift+cmd+b',
+        command: 'extension.taonrundefaultbuild',
+      },
+    ];
+
     //#region global / keybindings macos
     const keysMac = [
       {
@@ -293,26 +309,24 @@ export class BaseVscodeHelpers<
         command: '-workbench.action.files.saveAll',
       },
       {
-        key: 'shift+cmd+c',
-        command: 'extension.taonstopdefaultbuild',
-      },
-      {
-        key: 'shift+cmd+b',
-        command: 'extension.taonrundefaultbuild',
-      },
-      {
-        key: 'ctrl+cmd+p',
-        command: 'extension.vscode-git-automator.pushLocalCommits',
-      },
-      {
         key: 'shift+cmd+z',
         command: 'default:redo',
+      },
+      {
+        key: 'alt+d',
+        command: 'workbench.action.debug.start',
+        when: "debuggersAvailable && debugState == 'inactive'",
+      },
+      {
+        key: 'f5',
+        command: '-workbench.action.debug.start',
+        when: "debuggersAvailable && debugState == 'inactive'",
       },
     ];
     //#endregion
 
-    //#region global / keybindings linux
-    const keysLinux = [
+    //#region global / keybindings windows
+    const keysWindows = [
       {
         key: 'shift+ctrl+s',
         command: 'workbench.action.files.saveAll',
@@ -322,13 +336,25 @@ export class BaseVscodeHelpers<
         command: '-workbench.action.files.saveAll',
       },
       {
+        key: 'alt+d',
+        command: 'workbench.action.debug.start',
+        when: "debuggersAvailable && debugState == 'inactive'",
+      },
+      {
+        key: 'f5',
+        command: '-workbench.action.debug.start',
+        when: "debuggersAvailable && debugState == 'inactive'",
+      },
+      {
         key: 'shift+ctrl+z',
         command: 'default:redo',
       },
-      {
-        key: 'ctrl+shift+z',
-        command: '-extension.vscode-git-automator.addAndCommitCurrentFile',
-      },
+    ];
+    //#endregion
+
+    //#region global / keybindings linux
+    const keysLinux = [
+      ...keysWindows,
       {
         key: 'shift+alt+f',
         command: '-filesExplorer.findInFolder',
@@ -347,13 +373,12 @@ export class BaseVscodeHelpers<
     ];
     //#endregion
 
-    if (process.platform !== 'win32') {
-      if (process.platform === 'linux') {
-        Helpers.writeFile(keybindingPathLinux, keysLinux);
-      }
-      if (process.platform === 'darwin') {
-        Helpers.writeFile(keybindingPath, keysMac);
-      }
+    if (process.platform === 'win32') {
+      Helpers.writeFile(keybindingPathWindows, keysWindows);
+    } else if (process.platform === 'linux') {
+      Helpers.writeFile(keybindingPathLinux, keysLinux);
+    } else if (process.platform === 'darwin') {
+      Helpers.writeFile(keybindingPathMacOS, keysMac);
     }
 
     //#region global / windows only settings
