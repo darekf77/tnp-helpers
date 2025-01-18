@@ -1,7 +1,7 @@
 import { Taon } from 'taon/src';
 import { _ } from 'tnp-core/src';
 import { QueryRunner } from 'taon-typeorm/src';
-import { NotAssignablePort, Port, PortsController } from '../lib';
+import { Port, PortsController } from '../lib';
 
 const portsWithDescription = {
   3000: 'Commonly used for development servers',
@@ -35,26 +35,38 @@ export class PortsContext_1736199486472_addingNotAssignablePorts extends Taon
     Object.keys(portsWithDescription).map(Number);
 
   async up(queryRunner: QueryRunner): Promise<any> {
-    const db = await queryRunner.manager.getRepository(NotAssignablePort);
+    const db = await queryRunner.manager.getRepository(Port);
 
     const allPorts = this.commonPortsFrom3000to6000.map(port =>
-      NotAssignablePort.from({
+      Port.from({
         port,
         serviceId: `not assignable (${portsWithDescription[port]})`,
+        status: 'assigned-taken-by-os',
       }),
     );
     await db.save(allPorts);
     for (const commonPortObj of allPorts) {
-      this.portsController.takenByOsPorts.set(
-        commonPortObj.port,
+      this.portsController.portsCache.set(
+        commonPortObj.serviceId,
         commonPortObj,
       );
     }
   }
 
   async down(queryRunner: QueryRunner): Promise<any> {
-    const db = await queryRunner.manager.getRepository(NotAssignablePort);
-    db.clear();
-    this.portsController.takenByOsPorts.clear();
+    const db = await queryRunner.manager.getRepository(Port);
+    await db.remove(
+      await db.find({
+        where: {
+          status: 'assigned-taken-by-os',
+        },
+      }),
+    );
+    const allPorts = Array.from(
+      this.portsController.portsCache.values(),
+    ).filter(f => f.status === 'assigned-taken-by-os');
+    for (const port of allPorts) {
+      this.portsController.portsCache.delete(port.serviceId);
+    }
   }
 }

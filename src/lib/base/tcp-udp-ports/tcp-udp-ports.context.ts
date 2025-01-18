@@ -5,7 +5,6 @@ import { BaseContext, Taon } from 'taon/src';
 import { crossPlatformPath, path, Helpers } from 'tnp-core/src';
 import { PortsController } from './ports.controller';
 import { Port } from './ports.entity';
-import { NotAssignablePort } from './not-assignable-port.entity';
 import { MIGRATIONS_CLASSES_FOR_PortsContext } from '../../../migrations';
 
 //#region @backend
@@ -23,7 +22,7 @@ export const PortsContext = Taon.createContext(() => ({
   contextName: 'PortsContext',
   contexts: { BaseContext },
   controllers: { PortsController },
-  entities: { Port, NotAssignablePort },
+  entities: { Port },
   migrations: { ...MIGRATIONS_CLASSES_FOR_PortsContext },
   skipWritingServerRoutes: true,
   //#region @backend
