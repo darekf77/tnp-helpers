@@ -1359,6 +1359,11 @@ Would you like to update current project configuration?`)
   //#endregion
 
   //#region commands / start cli service ports worker
+
+  async ports() {
+    await this.ins.portsWorker.infoScreen();
+  }
+
   async startCliServicePortsWorker() {
     await this.ins.portsWorker.cliStartProcedure(this.params);
   }

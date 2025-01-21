@@ -43,6 +43,8 @@ export type CfontAlign = 'left' | 'center' | 'right' | 'block';
 export abstract class BaseCliWorker<
   REMOTE_CTRL extends BaseCliWorkerController = BaseCliWorkerController,
 > {
+  protected SPECIAL_WORKER_READY_MESSAGE = '$$$ WORKER_READY $$$';
+
   //#region constructor
   constructor(
     /**
@@ -99,12 +101,14 @@ export abstract class BaseCliWorker<
   //#region public methods
 
   //#region public methods / start if needs to be started
-  public async startDetachedIfNeedsToBeStarted() {
+  public async startDetachedIfNeedsToBeStarted(options?: {
+    useCurrentWindowForDetach?: boolean;
+  }) {
     //#region @backendFunc
 
     if (this.processLocalInfoObj.isEmpty) {
       // not started ever yet
-      await this.startDetached();
+      await this.startDetached(options);
       return;
     }
 
@@ -112,7 +116,7 @@ export abstract class BaseCliWorker<
       healthCheckRequestTrys: 1, // just quick check
     });
     if (!serviceIsHealthy) {
-      await this.startDetached();
+      await this.startDetached(options);
       return;
     }
     Helpers.log(`Service "${this.serviceID}" is already started/healthy...`);
@@ -154,7 +158,10 @@ export abstract class BaseCliWorker<
    * kill detached process and start again
    * @param options.detached - default true
    */
-  async restart(options?: { detached?: boolean }) {
+  async restart(options?: {
+    detached?: boolean;
+    useCurrentWindowForDetach?: boolean;
+  }) {
     options = options || {};
     options.detached = _.isUndefined(options.detached) ? true : false;
     await this.kill();
@@ -164,7 +171,7 @@ export abstract class BaseCliWorker<
       Helpers.info(
         `Restarting service "${this.serviceID}" in detached mode...`,
       );
-      await this.startDetached();
+      await this.startDetached(options);
     } else {
       Helpers.info(
         `Restarting service "${this.serviceID}" in current process...`,
@@ -339,7 +346,10 @@ export abstract class BaseCliWorker<
           continue;
         }
       } catch (error) {
-        // Helpers.tryCatchError(error);
+        if (i >= isWaitingNotCheckingWhen && error?.message) {
+          console.error(error.message);
+        }
+
         Helpers.log(
           `Service "${this.serviceID}" is not healthy (can't check health)...`,
         );
@@ -360,13 +370,25 @@ export abstract class BaseCliWorker<
   /**
    * start if not started detached process
    */
-  protected async startDetached() {
+  protected async startDetached(options?: {
+    useCurrentWindowForDetach?: boolean;
+  }) {
     //#region @backendFunc
-
+    options = options || {};
     Helpers.log(
       `Starting detached command in new terminal "${chalk.bold(this.startCommand)}"...`,
     );
-    await UtilsProcess.startInNewTerminalWindow(this.startCommand);
+    if (options.useCurrentWindowForDetach) {
+      await UtilsProcess.startAsyncChildProcessCommandUntil(this.startCommand, {
+        untilOptions: {
+          stdout: [this.SPECIAL_WORKER_READY_MESSAGE],
+          stderr: [this.SPECIAL_WORKER_READY_MESSAGE],
+        },
+      });
+    } else {
+      await UtilsProcess.startInNewTerminalWindow(this.startCommand);
+    }
+
     Helpers.log(
       `Starting detached service "${chalk.bold(this.serviceID)}" - waiting until healthy...`,
     );
@@ -446,14 +468,51 @@ export abstract class BaseCliWorker<
   }
   //#endregion
 
-  protected getWorkerTerminalActions(): {
+  //#region protected methods / get back action
+  protected get backAction() {
+    return {
+      back: {
+        name: 'Back',
+      },
+    };
+  }
+  //#endregion
+
+  //#region protected methods / choose action
+  protected get chooseAction() {
+    return {
+      emptyAction: {
+        name: ' -- choose any action below --',
+        action: async () => {},
+      },
+    };
+  }
+  //#endregion
+
+  //#region protected methods / display special worker ready message
+  protected displaySpecialWorkerReadyMessage() {
+    console.log(this.SPECIAL_WORKER_READY_MESSAGE);
+  }
+  //#endregion
+
+  //#region protected methods / worker terminal actions
+  protected getWorkerTerminalActions(options?: {
+    exitIsOnlyReturn?: boolean;
+    chooseAction?: boolean;
+  }): {
     [uniqeActionName: string]: {
       name: string;
       action: () => void | Promise<void>;
     };
   } {
     //#region @backendFunc
+    options = options || {};
+    options.chooseAction = _.isBoolean(options.chooseAction)
+      ? options.chooseAction
+      : true;
+
     return {
+      ...(options.chooseAction ? this.chooseAction : {}),
       openBrowser: {
         name: 'Open browser with service info',
         action: async () => {
@@ -464,8 +523,13 @@ export abstract class BaseCliWorker<
         },
       },
       exit: {
-        name: `Shut down service`,
+        name: options.exitIsOnlyReturn
+          ? '< Return to previous menu'
+          : `Shut down service`,
         action: async () => {
+          if (options.exitIsOnlyReturn) {
+            return;
+          }
           if (
             await UtilsTerminal.confirm({
               defaultValue: false,
@@ -478,22 +542,27 @@ export abstract class BaseCliWorker<
     };
     //#endregion
   }
+  //#endregion
 
   //#region protected methods / info screen
-  protected async _infoScreen() {
+  public async infoScreen(options?: { exitIsOnlyReturn?: boolean }) {
+    options = options || {};
     while (true) {
       Helpers.clearConsole();
 
       await this.header();
 
       await this.infoMessageBelowHeader();
-      const choices = this.getWorkerTerminalActions();
+      const choices = this.getWorkerTerminalActions(options);
       const choice = await UtilsTerminal.select<keyof typeof choices>({
         choices,
         question: 'Choose action',
       });
       const action = choices[choice].action;
       await action();
+      if (choice === 'exit') {
+        break;
+      }
     }
   }
   //#endregion

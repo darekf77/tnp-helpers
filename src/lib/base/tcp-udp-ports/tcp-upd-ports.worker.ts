@@ -56,8 +56,9 @@ export class PortsWorker extends BaseCliWorker<PortsController> {
     Helpers.info(`Service started !`);
 
     this.preventExternalConfigChange();
+    this.displaySpecialWorkerReadyMessage();
     // await Helpers.pressKeyAndContinue('Press any key to enter menu');
-    await this._infoScreen();
+    await this.infoScreen();
     //#endregion
   }
   //#endregion
@@ -85,22 +86,10 @@ export class PortsWorker extends BaseCliWorker<PortsController> {
   }
   //#endregion
 
-  //#region methods / get back action
-  get backAction() {
-    return {
-      back: {
-        name: 'Back',
-        action: async () => {
-          return true;
-        },
-      },
-    };
-  }
-  //#endregion
-
   //#region methods / get worker terminal actions
-  getWorkerTerminalActions() {
+  getWorkerTerminalActions(options?: { exitIsOnlyReturn?: boolean }) {
     //#region @backendFunc
+    options = options || {};
     const additionalActions = {};
 
     for (const portStatus of PortStatusArr) {
@@ -113,10 +102,7 @@ export class PortsWorker extends BaseCliWorker<PortsController> {
     }
 
     return {
-      emptyAction: {
-        name: ' -- choose any action below --',
-        action: async () => {},
-      },
+      ...this.chooseAction,
       previewPorts: {
         name: 'Preview all ports',
         action: async () => {
@@ -143,7 +129,7 @@ export class PortsWorker extends BaseCliWorker<PortsController> {
           await this.crudMenuForTakeByOsPorts();
         },
       },
-      ...super.getWorkerTerminalActions(),
+      ...super.getWorkerTerminalActions({ chooseAction: false, ...options }),
     };
     //#endregion
   }
