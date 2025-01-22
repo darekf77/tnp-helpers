@@ -502,7 +502,7 @@ export abstract class BaseCliWorker<
   }): {
     [uniqeActionName: string]: {
       name: string;
-      action: () => void | Promise<void>;
+      action: () => unknown | Promise<unknown>;
     };
   } {
     //#region @backendFunc
@@ -528,7 +528,7 @@ export abstract class BaseCliWorker<
           : `Shut down service`,
         action: async () => {
           if (options.exitIsOnlyReturn) {
-            return;
+            return true; // false will keep loop running
           }
           if (
             await UtilsTerminal.confirm({
@@ -561,8 +561,8 @@ export abstract class BaseCliWorker<
         question: 'Choose action',
       });
       const action = choices[choice].action;
-      await action();
-      if (choice === 'exit') {
+      const result = await action();
+      if (choice === 'exit' && result) {
         break;
       }
     }
