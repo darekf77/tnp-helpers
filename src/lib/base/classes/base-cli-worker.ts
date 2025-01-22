@@ -533,8 +533,10 @@ export abstract class BaseCliWorker<
           if (
             await UtilsTerminal.confirm({
               defaultValue: false,
+              message: 'Are you sure you want to shut down service?',
             })
           ) {
+            await this.kill();
             process.exit(0);
           }
         },

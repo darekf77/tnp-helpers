@@ -33,7 +33,7 @@ export abstract class BaseCliWorkerController extends Taon.Base
   baseCLiWorkerCommand_kill(): Taon.Response<void> {
     //#region @backendFunc
     return async () => {
-      console.log('Killing worker...');
+      console.log(`Killing worker "${this.cliWorkerServiceId}"...`);
       setTimeout(() => {
         Helpers.clearConsole();
         process.exit(0);

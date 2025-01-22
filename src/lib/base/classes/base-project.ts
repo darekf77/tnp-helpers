@@ -2,7 +2,7 @@
 //#region @backend
 import { translate } from '../translate';
 
-import { fse, portfinder, chalk } from 'tnp-core/src';
+import { fse, chalk } from 'tnp-core/src';
 export { ChildProcess } from 'child_process';
 import { CommandOutputOptions } from 'tnp-core/src';
 
@@ -36,6 +36,7 @@ import { BaseVscodeHelpers } from './base-vscode';
 import { BaseReleaseProcess } from './base-release-process';
 import { BaseQuickFixes } from './base-quick-fixes';
 import { BaseGithubPages } from './base-github-pages';
+import { Utils } from 'tnp-core/src';
 //#endregion
 
 const takenPorts = [];
@@ -808,42 +809,13 @@ export abstract class BaseProject<
 
   //#region methods & getters / assign free port to project instance
   /**
-   * @deprecated use registerAndAssignPort() instead
+   * @deprecated use this.registerAndAssignPort() or Utils.getFreePort() instead
    */
   async assignFreePort(
-    startFrom: number = 4200,
-    howManyFreePortsAfterThatPort: number = 0,
+    startFrom: number = 4200
   ): Promise<number> {
     //#region @backendFunc
-    if (_.isNumber(this.port) && this.port >= startFrom) {
-      return startFrom;
-    }
-    const max = 2000;
-    let i = 0;
-    while (takenPorts.includes(startFrom)) {
-      startFrom += 1 + howManyFreePortsAfterThatPort;
-    }
-    while (true) {
-      try {
-        const port = await portfinder.getPortPromise({ port: startFrom });
-        takenPorts.push(port);
-        // @ts-ignore
-        this.port = port;
-        return port;
-      } catch (err) {
-        console.log(err);
-        Helpers.warn(
-          `Trying to assign port  :${startFrom} but already in use.`,
-          false,
-        );
-      }
-      startFrom += 1;
-      if (i++ === max) {
-        Helpers.error(
-          `[taon-helpers]] failed to assign free port after ${max} trys...`,
-        );
-      }
-    }
+    return Utils.getFreePort({ startFrom });
     //#endregion
   }
   //#endregion
