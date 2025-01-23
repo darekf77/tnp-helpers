@@ -137,7 +137,7 @@ export class CoreProject<PROJECT extends BaseProject = BaseProject> {
 
   //#region methods & getters
   startCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
-  relaseCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
+  releaseCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
   publishCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
   deployCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
   testCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;

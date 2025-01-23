@@ -13,7 +13,7 @@ import { config } from 'tnp-config/src';
 //#endregion
 
 export class BaseReleaseProcess<
-  PROJECT extends BaseProject<any,any> = any,
+  PROJECT extends BaseProject<any, any> = any,
 > extends BaseFeatureForProject {
   //#region fields
   project: PROJECT;
@@ -21,7 +21,9 @@ export class BaseReleaseProcess<
    * Automatic release process of patch plus one version
    */
   automaticRelease: boolean = false;
-  type: CoreModels.ReleaseType;
+  versionType: CoreModels.ReleaseVersionType;
+  processType: CoreModels.ReleaseProcessType;
+  preReleaseVersionTag: CoreModels.PreReleaseVersionTag;
   lastChangesSummary: string;
   newVersion: string;
   commitsForChangelog: {
@@ -30,60 +32,20 @@ export class BaseReleaseProcess<
   }[] = [];
   //#endregion
 
+  //#region methods & getters / start release
+  startRelease(options?: Partial<BaseReleaseProcess<PROJECT>>): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
+  //#endregion
+
+  //#region methods & getters / get release words
   getReleaseWords(): string[] {
     return ['release'];
-  }
-
-  //#region methods & getters / start release
-  public async startRelease(
-    options?: Partial<
-      Pick<
-        BaseReleaseProcess<PROJECT>,
-        'automaticRelease' | 'type' | 'newVersion'
-      >
-    >,
-  ): Promise<void> {
-    //#region @backendFunc
-    while (true) {
-      Helpers.clearConsole();
-      this.newVersion = options?.newVersion;
-      this.automaticRelease = options?.automaticRelease || false;
-      await this.resetReleaseFiles();
-      this.project.npmHelpers.reloadPackageJsonInMemory();
-      this.lastChangesSummary = await this.generateLastChangesSummary();
-      console.log(
-        `${chalk.bold.underline(`Release process for ${this.project.name}`)}:\n` +
-          (await this.lastChangesSummary),
-      );
-      this.type = await this.selectReleaseType();
-      await this.confirmNewVersion();
-      this.commitsForChangelog = await this.selectChangelogCommits();
-      await this.updateChangeLogFromCommits();
-      await this.bumpNewVersionEverywhere();
-      await this.buildAllLibraries();
-      if (!(await this.testBeforePublish())) {
-        continue;
-      }
-      if (!(await this.publishToNpm())) {
-        continue;
-      }
-
-      await this.reinstallNodeModules();
-      if (!(await this.testAfterPublish())) {
-        continue;
-      }
-
-      await this.project.git.stageAllFiles();
-      await this.project.git.restoreLastVersion(config.file._gitignore);
-      await this.commitAndPush();
-      break;
-    }
-    //#endregion
   }
   //#endregion
 
   //#region methods & getters / reinstall node modules
-  private async reinstallNodeModules(): Promise<void> {
+  protected async reinstallNodeModules(): Promise<void> {
     Helpers.taskStarted(
       `Reinstalling node_modules to recreate package-lock.json`,
     );
@@ -153,7 +115,7 @@ export class BaseReleaseProcess<
   //#endregion
 
   //#region methods & getters / publish to npm
-  private async publishToNpm(): Promise<boolean> {
+  protected async publishToNpm(): Promise<boolean> {
     //#region   @backendFunc
     if (!this.automaticRelease) {
       if (
@@ -185,7 +147,7 @@ export class BaseReleaseProcess<
   //#endregion
 
   //#region methods & getters / test after publish
-  private async testAfterPublish(): Promise<boolean> {
+  protected async testAfterPublish(): Promise<boolean> {
     //#region @backendFunc
     if (!this.automaticRelease) {
       if (
@@ -207,7 +169,7 @@ export class BaseReleaseProcess<
   //#endregion
 
   //#region methods & getters / test before publish
-  private async testBeforePublish(): Promise<boolean> {
+  protected async testBeforePublish(): Promise<boolean> {
     //#region @backendFunc
     if (!this.automaticRelease) {
       if (
@@ -229,7 +191,7 @@ export class BaseReleaseProcess<
   //#endregion
 
   //#region methods & getters / commit and push
-  private async commitAndPush(): Promise<void> {
+  protected async commitAndPush(): Promise<void> {
     //#region @backendFunc
     const releaseCommitMessage = this.releaseCommitTemplate();
     const lastCommitMessage = await this.project.git.penultimateCommitMessage();
@@ -334,11 +296,11 @@ export class BaseReleaseProcess<
     let newVersion = this.newVersion;
     if (!this.newVersion) {
       newVersion = this.project.npmHelpers.versionWithPatchPlusOne;
-      if (this.type === 'minor') {
+      if (this.versionType === 'minor') {
         newVersion =
           this.project.npmHelpers.versionWithMinorPlusOneAndPatchZero;
       }
-      if (this.type === 'major') {
+      if (this.versionType === 'major') {
         newVersion =
           this.project.npmHelpers
             .versionWithMajorPlusOneAndMinorZeroAndPatchZero;
@@ -374,7 +336,7 @@ export class BaseReleaseProcess<
   //#endregion
 
   //#region methods & getters / select release type
-  private async selectReleaseType(): Promise<CoreModels.ReleaseType> {
+  protected async selectReleaseType(): Promise<CoreModels.ReleaseVersionType> {
     //#region @backendFunc
     if (this.automaticRelease) {
       return 'patch';
@@ -382,21 +344,22 @@ export class BaseReleaseProcess<
     const options = [
       {
         name: `Patch release (v${this.project.npmHelpers.versionWithPatchPlusOne})`,
-        value: 'patch' as CoreModels.ReleaseType,
+        value: 'patch' as CoreModels.ReleaseVersionType,
       },
       {
         name: `Minor release (v${this.project.npmHelpers.versionWithMinorPlusOneAndPatchZero})`,
-        value: 'minor' as CoreModels.ReleaseType,
+        value: 'minor' as CoreModels.ReleaseVersionType,
       },
       {
         name: `Major release (v${this.project.npmHelpers.versionWithMajorPlusOneAndMinorZeroAndPatchZero})`,
-        value: 'major' as CoreModels.ReleaseType,
+        value: 'major' as CoreModels.ReleaseVersionType,
       },
     ];
-    const selected = await Helpers.consoleGui.select<CoreModels.ReleaseType>(
-      'Select release type',
-      options,
-    );
+    const selected =
+      await Helpers.consoleGui.select<CoreModels.ReleaseVersionType>(
+        'Select release type',
+        options,
+      );
     return selected;
     //#endregion
   }
@@ -410,7 +373,7 @@ export class BaseReleaseProcess<
   }
   //#endregion
 
-  //#region methods & getters / caclulate item
+  //#region methods & getters / calculate item
   async getChangelogContentToAppend(askForEveryItem: boolean): Promise<string> {
     //#region @backendFunc
     let newChangeLogContentToAdd = '';
@@ -554,18 +517,18 @@ export class BaseReleaseProcess<
     const hasLastReleaseCommit = lastReleaseCommitData.index !== -1;
     const lastReleaseCommitMsg = !hasLastReleaseCommit
       ? '< nothing release yet >'
-      : lastReleaseCommitData.lastRelaseCommitMsg;
+      : lastReleaseCommitData.lastReleaseCommitMsg;
 
     return `${chalk.bold.gray('Last changelog.md notes summary')}:
 ${await this.getLastPackageVersionChangesFromChnagelog()}
 
 ${chalk.bold.gray(
-  hasLastReleaseCommit ? 'Last commits up to relase commit' : 'Last 3 commits',
+  hasLastReleaseCommit ? 'Last commits up to release commit' : 'Last 3 commits',
 )}:
 ${await this.getLastChangesFromCommits({
   maxMessagesToCheck: hasLastReleaseCommit ? Number.POSITIVE_INFINITY : 3,
   stopOnCommitMessage: hasLastReleaseCommit
-    ? lastReleaseCommitData.lastRelaseCommitMsg
+    ? lastReleaseCommitData.lastReleaseCommitMsg
     : '',
 })}
     `;
@@ -612,9 +575,9 @@ ${await this.getLastChangesFromCommits({
   }
   //#endregion
 
-  //#region methods & getters / get last relase commit data
+  //#region methods & getters / get last release commit data
   async getLastReleaseCommitData(): Promise<{
-    lastRelaseCommitMsg: string;
+    lastReleaseCommitMsg: string;
     /**
      * -1 if not found
      */
@@ -638,7 +601,7 @@ ${await this.getLastChangesFromCommits({
         const match = commitMessage.match(npmVersionRegex);
         if (match) {
           2;
-          return { lastRelaseCommitMsg: commitMessage, index };
+          return { lastReleaseCommitMsg: commitMessage, index };
         }
       }
       ++index;
@@ -646,7 +609,7 @@ ${await this.getLastChangesFromCommits({
         break;
       }
     }
-    return { lastRelaseCommitMsg: '', index: -1 };
+    return { lastReleaseCommitMsg: '', index: -1 };
     //#endregion
   }
   //#endregion
