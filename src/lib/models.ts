@@ -22,16 +22,10 @@ export type NgProject = {
 
 export type LibraryBuildCommandOptions = {
   watch?: boolean;
-  buildType: core.CoreModels.LibraryType;
 };
 
 export type LibrariesBuildOptions<PROJECT extends BaseProject = BaseProject> = {
   strategy?: 'link' | 'copy';
-  /**
-   * @deprecated
-   * this will be detected in future
-   */
-  buildType: core.CoreModels.LibraryType;
   /**
    * by default we are copying all libraries to node_modules of itself
    */
@@ -86,5 +80,3 @@ export interface PushProcessOptions {
   skipChildren?: boolean;
   noExit?: boolean;
 }
-
-

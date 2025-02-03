@@ -499,6 +499,7 @@ export class BaseVscodeHelpers<
         'port' + 'finder',
         'ngrx',
         'nocheck',
+        'mkdocs',
       ],
     };
     //#endregion

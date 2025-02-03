@@ -14,6 +14,8 @@ import { config } from 'tnp-config/src';
 
 export class BaseReleaseProcess<
   PROJECT extends BaseProject<any, any> = any,
+  ARTIFACT = string
+
 > extends BaseFeatureForProject {
   //#region fields
   project: PROJECT;
@@ -23,6 +25,7 @@ export class BaseReleaseProcess<
   automaticRelease: boolean = false;
   versionType: CoreModels.ReleaseVersionType;
   processType: CoreModels.ReleaseProcessType;
+  releaseArtifactName: ARTIFACT
   preReleaseVersionTag: CoreModels.PreReleaseVersionTag;
   lastChangesSummary: string;
   newVersion: string;
@@ -237,7 +240,6 @@ export class BaseReleaseProcess<
     await this.project.libraryBuild.buildLibraries({
       watch: false,
       releaseBuild: true,
-      buildType: 'angular',
     });
   }
   //#endregion

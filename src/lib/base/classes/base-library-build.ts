@@ -121,11 +121,18 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
         selectedLibs = selected as any;
         // TODO maybe safe about skip
         if ((watchBuildSupported && watch) || useLastUserConfiguration) {
-          skipRebuildingAllForWatch =
-            useLastUserConfiguration ||
-            (await Helpers.consoleGui.question.yesNo(
-              `Skip rebuilding all libraries for watch mode ?`,
-            ));
+          // if(this.project)
+
+          if (this.project.hasFolder(config.folder.dist)) {
+            skipRebuildingAllForWatch =
+              useLastUserConfiguration ||
+              (await Helpers.consoleGui.question.yesNo(
+                `Skip rebuilding all libraries for watch mode ?`,
+              ));
+          } else {
+            // no dist -> rebuild all
+            skipRebuildingAllForWatch = false;
+          }
         }
         return { selectedLibs, skipRebuildingAllForWatch };
       }
@@ -239,7 +246,6 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
       watch = false,
       strategy,
       releaseBuild = false,
-      buildType,
       copylink_to_node_modules,
       outputLineReplace,
       libraries,
@@ -328,7 +334,6 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
               ]
             : locationsForNodeModules,
           strategy,
-          buildType,
           outputLineReplace:
             outputLineReplace &&
             outputLineReplace(lib as any, useExternalProvidedLibs),
@@ -348,7 +353,6 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
         lib,
         locationsForNodeModules,
         strategy,
-        buildType,
         outputLineReplace:
           outputLineReplace && outputLineReplace(lib, useExternalProvidedLibs),
       });
@@ -373,13 +377,11 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     lib,
     locationsForNodeModules,
     strategy,
-    buildType,
     outputLineReplace,
   }: {
     lib: PROJECT;
     locationsForNodeModules: string[];
     strategy: 'link' | 'copy';
-    buildType: CoreModels.LibraryType;
     outputLineReplace?: (outputLine: string) => string;
   }) {
     //#region @backendFunc
@@ -417,7 +419,6 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     await lib.nearestParent.execute(
       lib.libraryBuild.getLibraryBuildComamnd({
         watch: true,
-        buildType,
       }),
       {
         outputLineReplace,
@@ -444,13 +445,11 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     lib,
     locationsForNodeModules,
     strategy,
-    buildType,
     outputLineReplace,
   }: {
     lib: PROJECT;
     locationsForNodeModules: string[];
     strategy: 'link' | 'copy';
-    buildType: CoreModels.LibraryType;
     outputLineReplace?: (outputLine: string) => string;
   }) {
     //#region @backendFunc
@@ -467,7 +466,6 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
         await lib.nearestParent.execute(
           lib.libraryBuild.getLibraryBuildComamnd({
             watch: false,
-            buildType,
           }),
           {
             resolvePromiseMsg: {
@@ -497,6 +495,27 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
         Helpers.createSymLink(libCompiledInDist, libInsideNodeModules, {
           continueWhenExistedFolderDoesntExists: true,
         });
+
+        if (lib.isAngularLib) {
+          // recreate index d.ts
+        } else {
+          // create index.ts from index.d.ts
+          // QUICK_FIX for typescript
+          if (lib.hasFile('src/index.d.ts') && !lib.hasFile('src/index.ts')) {
+            Helpers.createSymLink(
+              lib.pathFor('src/index.d.ts'),
+              // crossPlatformPath([libCompiledInDist, 'index.d.ts']),
+              lib.pathFor('src/index.ts'),
+              {
+                continueWhenExistedFolderDoesntExists: true,
+              },
+            );
+            try {
+              lib.removeFile('src/index.d.ts');
+            } catch (error) {}
+          }
+        }
+
         console.log(
           `Sync (link) done for ${lib.basename} to ${lib.name} (${crossPlatformPath(
             [
@@ -546,10 +565,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     //#region @backendFunc
     const { watch } = options;
 
-    const isAngularLib =
-      Helpers.exists(this.project.pathFor('ng-package.json')) ||
-      Helpers.exists(this.project.pathFor('tsconfig.app.json'));
-    if (isAngularLib) {
+    if (this.project.isAngularLib) {
       return `npm-run ng build ${this.project.basename} ${watch ? '--watch' : ''}`;
     } else {
       return (

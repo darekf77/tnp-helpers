@@ -786,6 +786,16 @@ export abstract class BaseProject<
   }
   //#endregion
 
+  get isAngularLib() {
+    //#region @backendFunc
+    const res =
+      Helpers.exists(this.pathFor('ng-package.json')) ||
+      Helpers.exists(this.pathFor('tsconfig.app.json'));
+
+    return res;
+    //#endregion
+  }
+
   protected getUniqueForTask(task: string): string {
     return `task(${task}) in ${this.genericName}`;
   }
@@ -811,9 +821,7 @@ export abstract class BaseProject<
   /**
    * @deprecated use this.registerAndAssignPort() or Utils.getFreePort() instead
    */
-  async assignFreePort(
-    startFrom: number = 4200
-  ): Promise<number> {
+  async assignFreePort(startFrom: number = 4200): Promise<number> {
     //#region @backendFunc
     return Utils.getFreePort({ startFrom });
     //#endregion
