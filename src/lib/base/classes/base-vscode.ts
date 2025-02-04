@@ -76,6 +76,7 @@ export class BaseVscodeHelpers<
       'stepanog.angular1-inline',
       'taddison.gitlazy',
       'unifiedjs.vscode-mdx',
+      'tommasov.hosts',
       // 'vespa-dev-works.jestrunit',
       'firsttris.vscode-jest-runner', // better for jest
       'waderyan.gitblame',
