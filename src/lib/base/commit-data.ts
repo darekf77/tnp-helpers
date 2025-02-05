@@ -707,19 +707,17 @@ export class CommitData {
       } else {
         if (this.commitModuleName) {
           commitMsg =
-            `${
-              jirasExists
-                ? '[' +
-                  [_.first(jiras)].join(',') +
-                  issuesFromOtherProjectsConnected +
-                  '] '
-                : ''
-            }${this.branchPrefix}${'(' + this.commitModuleName + ')'}:` +
+            `${this.branchPrefix}${'(' + this.commitModuleName + ')'}:` +
             ` ${(this.message || '')
               .split('\n')
               .map(c => c.replace(/\-/g, ' '))
               .join('\n-')
-              .trim()}`;
+              .trim()} ` +
+            `${
+              jirasExists
+                ? [_.first(jiras)].join(',') + issuesFromOtherProjectsConnected
+                : ''
+            }`;
         } else {
           commitMsg =
             `${this.branchPrefix}${
