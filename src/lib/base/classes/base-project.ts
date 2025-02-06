@@ -1126,7 +1126,7 @@ export abstract class BaseProject<
       return result.reverse();
     }
     if (project && project.parent) {
-      result.push(project.parent.name);
+      result.push(project.parent.basename, project.parent.name);
     }
     return this.findParentsNames(project.parent as PROJECT, project, result);
     //#endregion

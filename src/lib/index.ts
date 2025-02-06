@@ -5,9 +5,6 @@ export { HelpersAngular } from './helpers/for-browser/angular.helper';
 
 export * from './utils';
 import { HelpersTaon as Base } from './helpers/helpers';
-/**
- * Taon helpers
- */ // @ts-ignore
 export const Helpers: Base = Base.Instance as Base;
 export * from './base';
 export * from './models';
