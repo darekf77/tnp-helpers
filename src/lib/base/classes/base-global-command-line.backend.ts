@@ -1364,6 +1364,9 @@ Would you like to update current project configuration?`)
     await this.ins.portsWorker.infoScreen();
   }
 
+  /**
+   * tnp startCliServicePortsWorker --restart
+   */
   async startCliServicePortsWorker() {
     await this.ins.portsWorker.cliStartProcedure(this.params);
   }
