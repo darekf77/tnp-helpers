@@ -157,6 +157,28 @@ export class BaseGit<
   }
   //#endregion
 
+  async getUserInfo(
+    global = false,
+  ): Promise<{ name?: string; email?: string }> {
+    //#region @backendFunc
+    return await Helpers.git.getUserInfo(this.project.location, global);
+    //#endregion
+  }
+
+  async setUserInfo(
+    { name, email }: { name?: string; email?: string },
+    global = false,
+  ): Promise<void> {
+    //#region @backendFunc
+    return await Helpers.git.setUserInfos({
+      cwd: this.project.location,
+      name,
+      email,
+      global,
+    });
+    //#endregion
+  }
+
   //#region methods & getters / stage all and commit
   stageAllAndCommit(commitMessage: string) {
     //#region @backendFunc

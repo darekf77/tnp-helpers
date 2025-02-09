@@ -1676,4 +1676,58 @@ ${cwd}
     //#endregion
   }
   //#endregion
+
+  //#region get user info
+  async getUserInfo(
+    cwd: string,
+    global = false,
+  ): Promise<{ name?: string; email?: string }> {
+    try {
+      const name = child_process
+        .execSync(`git config ${global ? '--global' : ''} user.name`, {
+          encoding: 'utf-8',
+          cwd: cwd || process.cwd(),
+        })
+        .trim();
+      const email = child_process
+        .execSync(`git config ${global ? '--global' : ''} user.email`, {
+          encoding: 'utf-8',
+          cwd: cwd || process.cwd(),
+        })
+        .trim();
+
+      return { name, email };
+    } catch (error) {
+      console.error('Error fetching Git user info:', error.message);
+      return {};
+    }
+  }
+
+  async setUserInfos(optinos: {
+    cwd: string;
+    name: string;
+    email: string;
+    global?: boolean;
+  }): Promise<void> {
+    const { cwd, name, email, global } = optinos;
+    if (!global && !this.isInsideGitRepo(cwd)) {
+      console.error('Not a Git repository:', cwd);
+      return;
+    }
+    try {
+      child_process.execSync(
+        `git config ${global ? '--global' : ''} user.name "${name}"`,
+        { cwd },
+      );
+      child_process.execSync(
+        `git config ${global ? '--global' : ''} user.email "${email}"`,
+        { cwd },
+      );
+    } catch (error) {
+      console.error('Error setting Git user info:', error.message);
+      await UtilsTerminal.pressAnyKeyToContinueAsync();
+    }
+  }
+
+  //#endregion
 }
