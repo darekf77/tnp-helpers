@@ -883,6 +883,10 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
     } else {
       Helpers.error(`No branch found by name "${branchName}"`, false, true);
     }
+    try {
+      this.project.git.stageAllFiles();
+      this.project.git.stash();
+    } catch (error) {}
     this.project.git.checkout(branchName);
     this._exit();
   }
@@ -1393,9 +1397,11 @@ Would you like to update current project configuration?`)
   }
   //#endregion
 
+  //#region commands / is port in use
   async isPortInUse() {
     const port = parseInt(this.firstArg);
     console.log(`Port ${port} is in use: ${await UtilsOs.isPortInUse(port)}`);
     this._exit();
   }
+  //#endregion
 }
