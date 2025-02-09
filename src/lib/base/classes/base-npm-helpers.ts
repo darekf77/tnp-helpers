@@ -21,6 +21,7 @@ export class BaseNpmHelpers<
   PROJECT extends BaseProject = any,
 > extends BaseFeatureForProject {
   private packageJSON: PackageJson;
+  private bowerJson: PackageJson;
   constructor(project: PROJECT) {
     super(project);
     this.project = project;
@@ -52,6 +53,7 @@ export class BaseNpmHelpers<
    */
   reloadPackageJsonInMemory(): void {
     this.packageJSON = this.project.readJson(config.file.package_json);
+    this.bowerJson = this.project.readJson(config.file.bower_json);
   }
   //#endregion
 
@@ -99,8 +101,7 @@ export class BaseNpmHelpers<
   }): void {
     //#region @backendFunc
     if (updateTaonJsonFirst) {
-      const taonJson =
-        this.project.readJson<any>(config.file.taon_jsonc) || {};
+      const taonJson = this.project.readJson<any>(config.file.taon_jsonc) || {};
 
       if (!taonJson) {
         Helpers.error(`Taon json is not valid in ${this.project.location}`);
@@ -162,13 +163,9 @@ export class BaseNpmHelpers<
     // if(contirmUpdateArr.includes(packageName)) {
     //   await Helpers.questionYesNo(`Do you want to update ${packageName} to ${version} ?`);
     // }
-    if (
-      updateTaonJsonFirst &&
-      this.project.hasFile(config.file.taon_jsonc)
-    ) {
-      const taonJson = (this.project.readJson<any>(
-        config.file.taon_jsonc,
-      ) || {}) as CoreModels.TaonJson;
+    if (updateTaonJsonFirst && this.project.hasFile(config.file.taon_jsonc)) {
+      const taonJson = (this.project.readJson<any>(config.file.taon_jsonc) ||
+        {}) as CoreModels.TaonJson;
 
       if (!taonJson) {
         Helpers.error(`Taon json is not valid in ${this.project.location}`);
@@ -337,6 +334,10 @@ export class BaseNpmHelpers<
   get dependencies() {
     return (this.packageJSON ? this.packageJSON.dependencies : {}) || {};
   }
+
+  get bowerDependencies() {
+    return (this.bowerJson ? this.bowerJson.dependencies : {}) || {};
+  }
   //#endregion
 
   //#region methods & getters / peer dependencies
@@ -409,7 +410,7 @@ export class BaseNpmHelpers<
     options?: Omit<CoreModels.NpmInstallOptions, 'pkg'>,
   ) {
     if (this.emptyNodeModules) {
-     await this.reinstallNodeModules(options);
+      await this.reinstallNodeModules(options);
     }
   }
   //#endregion
@@ -435,16 +436,16 @@ export class BaseNpmHelpers<
     Helpers.taskStarted(
       `Reinstalling node modules for ${this.project.genericName} with ${options.useYarn ? 'yarn' : 'npm'}`,
     );
-    while(true) {
+    while (true) {
       this.deleteNodeModules();
 
       try {
         this.project
-        .run(await this.prepareCommand(options), {
-          output: true,
-          silence: false,
-        })
-        .sync();
+          .run(await this.prepareCommand(options), {
+            output: true,
+            silence: false,
+          })
+          .sync();
         break;
       } catch (error) {
         console.log(error);
