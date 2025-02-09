@@ -285,10 +285,13 @@ export class CommitData {
     if (!!teamID.trim()) {
       message = message.replace(/\_/g, ' ');
     }
+
     if (!!commitModuleName.trim()) {
-      message = message.replace(commitModuleName.replace(/\-/g, ' '), ' ');
-      message = message.replace(commitModuleName.replace(/\,/g, ' '), ' ');
-      message = message.replace(commitModuleName.replace(/\,/g, '_'), ' ');
+      const cleanedModuleName = commitModuleName
+        .replace(/\-/g, ' ')
+        .replace(/\,/g, '_');
+
+      message = message.replace(cleanedModuleName, ' ');
     }
     return message
       .replace(/\ \ /g, ' ')
