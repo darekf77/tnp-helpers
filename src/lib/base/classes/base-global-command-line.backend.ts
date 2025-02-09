@@ -875,6 +875,9 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
       return;
     }
     await this.project.struct();
+    try {
+      this.project.git.fetch();
+    } catch (error) {}
     let branchName = this.firstArg;
     const branches = this.__filterBranchesByPattern(branchName);
 
