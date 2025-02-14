@@ -109,7 +109,7 @@ export class BaseStartConfig {
     }
     const commandArgIndex = 0;
     const commandArg = this.argsv[commandArgIndex];
-    if (commandArg && !commandArg.startsWith('-')) {
+    if (commandArg) {
       const longerCommandVersion = this.shortArgsReplaceConfig[commandArg];
       if (longerCommandVersion) {
         this.argsv[commandArgIndex] = longerCommandVersion;
