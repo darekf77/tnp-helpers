@@ -278,6 +278,11 @@ export namespace UtilsTypescript {
     name: string;
   }[] => {
     //#region @backendFunc
+
+    if(!filePath.endsWith('.ts') ) {
+      return [];
+    }
+
     // Read the content of the file
     const sourceCode = fse.readFileSync(filePath, 'utf-8');
 
@@ -411,6 +416,9 @@ export namespace UtilsTypescript {
     absoluteFilePath: string,
   ): string[] => {
     //#region @backendFunc
+    if(!absoluteFilePath.endsWith('.ts') ) {
+      return [];
+    }
     const sourceCode = Helpers.readFile(absoluteFilePath);
     return extractClassNameFromString(sourceCode);
     //#endregion
