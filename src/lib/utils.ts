@@ -35,6 +35,11 @@ import {
   isVariableDeclaration,
   isCallExpression,
   isPropertyAccessExpression,
+  isObjectLiteralExpression,
+  isPropertyAssignment,
+  isStringLiteral,
+  canHaveDecorators,
+  getDecorators,
 } from 'typescript';
 //#endregion
 import { _, chalk, CoreModels, Utils } from 'tnp-core/src';
@@ -515,6 +520,61 @@ export namespace UtilsTypescript {
     //#endregion
   };
 
+  //#endregion
+
+  //#region extract selectors from Angular components class files
+  export const extractAngularComponentSelectors = (
+    fileAbsPath: string,
+  ): { className: string; selector: string }[] => {
+    //#region @backendFunc
+    const sourceFile = createSourceFile(
+      fileAbsPath,
+      require('fs').readFileSync(fileAbsPath, 'utf8'),
+      ScriptTarget.Latest,
+      true,
+    );
+
+    const selectors: { className: string; selector: string }[] = [];
+
+    const visit = (node: any) => {
+      if (isClassDeclaration(node) && node.name) {
+        const decorators = canHaveDecorators(node)
+          ? getDecorators(node)
+          : undefined;
+        if (decorators) {
+          for (const decorator of decorators) {
+            if (
+              isCallExpression(decorator.expression) &&
+              isIdentifier(decorator.expression.expression) &&
+              decorator.expression.expression.text === 'Component'
+            ) {
+              const args = decorator.expression.arguments;
+              if (args.length > 0 && isObjectLiteralExpression(args[0])) {
+                for (const property of args[0].properties) {
+                  if (
+                    isPropertyAssignment(property) &&
+                    isIdentifier(property.name) &&
+                    property.name.text === 'selector' &&
+                    isStringLiteral(property.initializer)
+                  ) {
+                    selectors.push({
+                      className: node.name.text,
+                      selector: property.initializer.text,
+                    });
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      forEachChild(node, visit);
+    };
+
+    visit(sourceFile);
+    return selectors;
+    //#endregion
+  };
   //#endregion
 }
 
