@@ -6,15 +6,11 @@
 
 `taon hosts`  => open hosts files
 
-`taon stash`  => stash only staged files
-
-`taon stashall`  => stash all files
-
-`taon rebase branch-to-rebase`  => rebase current branch with changes from branch-to-rebase
-
 `taon count:commits`  => show origin of project
 
 `taon remove:submodules my-not-wanted-git-submodules`  => remove unwanted git submodules
+
+## Remotes
 
 `taon origin`  => show origin of project
 
@@ -24,19 +20,33 @@
 
 `taon remotes`  => - || -
 
-`taon reset`  => reset project to default branch
+## Rebase 
 
 `taon rebase`  => rebase current branch with default branch
 
-`taon rebase branch-rebase-from` => rebase current branch with provided in arg
+`taon rebase branch-to-rebase`  => rebase current branch with changes from branch-to-rebase
+
+## Stash
+
+`taon stash`  => stash only staged files
+
+`taon stashall`  => stash all files
+
+## Reset + change branch
+
+`taon branch`  => git fetch / display menu with branches to select / select branch
+
+`taon reset`  => remove tmp files for project + `taon branch` (include children)
+
+`taon reset my-branch`  => same as `taon reset` but specific branch
+
+`taon reset`  => reset hard and pull (recrusively)
 
 ## Pull
 
 `taon pull`  => pull current branch or current workspace projects one after another
 
 `taon repull`  => deep reset hard and pull
-
-`taon reset`  => reset hard and pull (recrusively)
 
 
 ## Push
