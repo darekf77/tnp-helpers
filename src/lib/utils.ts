@@ -279,7 +279,7 @@ export namespace UtilsTypescript {
   }[] => {
     //#region @backendFunc
 
-    if(!filePath.endsWith('.ts') ) {
+    if (!filePath.endsWith('.ts')) {
       return [];
     }
 
@@ -416,7 +416,7 @@ export namespace UtilsTypescript {
     absoluteFilePath: string,
   ): string[] => {
     //#region @backendFunc
-    if(!absoluteFilePath.endsWith('.ts') ) {
+    if (!absoluteFilePath.endsWith('.ts')) {
       return [];
     }
     const sourceCode = Helpers.readFile(absoluteFilePath);
@@ -581,6 +581,39 @@ export namespace UtilsTypescript {
 
     visit(sourceFile);
     return selectors;
+    //#endregion
+  };
+  //#endregion
+
+  //#region wrap one line with comment
+  export const wrapWithComment = (
+    oneLineComment: string,
+    absDestFilePath: string,
+  ) => {
+    //#region @backendFunc
+    const ext = path.extname(absDestFilePath).toLowerCase();
+    let commentSyntax;
+
+    switch (ext) {
+      case '.ts':
+      case '.js':
+      case '.jsonc':
+      case '.sh':
+        commentSyntax = `// ${oneLineComment}`;
+        break;
+      case '.html':
+        commentSyntax = `<!-- ${oneLineComment} -->`;
+        break;
+      case '.css':
+      case '.scss':
+      case '.sass':
+        commentSyntax = `/* ${oneLineComment} */`;
+        break;
+      default:
+        console.warn(`Unknown file extension: ${ext}`);
+        commentSyntax = oneLineComment;
+    }
+    return commentSyntax;
     //#endregion
   };
   //#endregion
