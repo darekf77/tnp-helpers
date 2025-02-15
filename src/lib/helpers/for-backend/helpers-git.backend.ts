@@ -768,7 +768,7 @@ export class HelpersGit {
   //#endregion
 
   //#region reset soft HEAD
-  resetSoftHEAD(cwd, HEAD = 1) {
+  resetSoftHEAD(cwd: string, HEAD = 1): void {
     try {
       child_process.execSync(`git reset --soft HEAD~${HEAD}`, { cwd });
     } catch (error) {
@@ -785,7 +785,7 @@ export class HelpersGit {
     options?: {
       HEAD?: number;
     },
-  ) {
+  ): void {
     //#region @backendFunc
     const { HEAD } = options || {};
     Helpers.info(
@@ -1109,7 +1109,7 @@ ${cwd}
     optinos?: {
       onlyStaged?: boolean;
     },
-  ) {
+  ): void {
     const { onlyStaged } = optinos || {};
     // console.log({ onlyStaged, cwd });
     try {
@@ -1125,8 +1125,25 @@ ${cwd}
   }
   //#endregion
 
+  //#region rebase
+  /**
+   *
+   * @param cwd
+   * @param optinos
+   */
+  rebase(cwd: string, toBranch: string): void {
+    // console.log({ onlyStaged, cwd });
+    try {
+      child_process.execSync(`git rebase ${toBranch}`, { cwd });
+    } catch (error) {
+      Helpers.info('Not able to rebase');
+      console.error(error);
+    }
+  }
+  //#endregion
+
   //#region stash apply
-  stashApply(cwd: string) {
+  stashApply(cwd: string): void {
     try {
       child_process.execSync(`git stash apply`, { cwd });
     } catch (error) {}
@@ -1154,7 +1171,7 @@ ${cwd}
       fetchBeforeCheckout?: boolean;
       switchBranchWhenExists?: boolean;
     },
-  ) {
+  ): void {
     let {
       createBranchIfNotExists,
       fetchBeforeCheckout,

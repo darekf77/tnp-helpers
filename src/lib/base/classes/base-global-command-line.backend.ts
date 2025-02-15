@@ -7,6 +7,7 @@ import { TypeOfCommit, CommitData } from '../commit-data';
 import { config } from 'tnp-config/src';
 import { crossPlatformPath } from 'tnp-core/src';
 import { GhTempCode } from '../gh-temp-code';
+import { UtilsTerminal } from 'tnp-core/src';
 
 export class BaseGlobalCommandLine<
   PARAMS = any,
@@ -453,25 +454,65 @@ ${
 
     const branches = this.__filterBranchesByPattern(rebaseBranch);
 
-    if (branches.length > 0) {
-      rebaseBranch = await this.__selectBrach(branches, 'reset');
+    if (branches.length > 1) {
+      rebaseBranch = await this.__selectBrach(branches, 'rebase');
+    } else if (branches.length === 1) {
+      rebaseBranch = _.first(branches);
     } else {
-      Helpers.error(`No branch found by name "${rebaseBranch}"`, false, true);
+      Helpers.error(
+        `No rebase branch found by name "${rebaseBranch}"`,
+        false,
+        true,
+      );
+    }
+
+    Helpers.info(`
+      You are rebasing current branch (${currentBranch}) to ${rebaseBranch}
+
+      Files from last commit:
+
+      "${chalk.gray(
+        await this.project.git.getCommitMessageByHash(
+          this.project.git.lastCommitHash(),
+        ),
+      )}"
+      (hash: ${chalk.gray(this.project.git.lastCommitHash())})
+
+      are going to be applied after rebase.
+
+
+      `);
+    if (
+      !(await UtilsTerminal.confirm({
+        message: `Do you want to continue ?`,
+        defaultValue: true,
+      }))
+    ) {
+      this._exit();
     }
 
     try {
-      this.project
-        .run(
-          `git reset--hard && git checkout ${rebaseBranch} && git reset--hard HEAD~${safeReset} && git pull origin ${rebaseBranch} ` +
-            `&& git checkout ${currentBranch} && git reset--soft HEAD~1 && git stash && git reset--hard HEAD~${safeReset} && git rebase ${rebaseBranch} && git stash apply`,
-          { output: false, silence: true },
-        )
-        .sync();
+      this.project.git.resetHard();
+      this.project.git.checkout(rebaseBranch);
+      this.project.git.resetHard({ HEAD: safeReset });
+      await this.project.git.pullCurrentBranch();
+      this.project.git.checkout(currentBranch);
+      this.project.git.resetSoftHEAD(1);
+      this.project.git.stageAllFiles();
+      this.project.git.stash();
+      this.project.git.resetHard({ HEAD: safeReset });
+      this.project.git.rebase(rebaseBranch);
+      this.project.git.stashApply();
       await this.project.init();
       Helpers.info('REBASE DONE');
     } catch (error) {
-      await this.project.init();
-      Helpers.warn('PLEASE MERGE YOUR CHANGES');
+      Helpers.renderError(error);
+      try {
+        // dummy init to get back to previous vscode settings
+        await this.project.init();
+      } catch (error) {}
+
+      Helpers.error('Not able to rebase', true, true);
     }
     this._exit();
   }
@@ -1308,7 +1349,9 @@ Would you like to update current project configuration?`)
   //#endregion
 
   //#region filter all project branches by pattern
-  private __filterBranchesByPattern(branchPatternOrBranchName: string) {
+  private __filterBranchesByPattern(
+    branchPatternOrBranchName: string,
+  ): string[] {
     const branches = Helpers.arrays.uniqArray(
       this.project.git.getBranchesNamesBy(branchPatternOrBranchName) ||
         this.project.getMainBranches(),
@@ -1319,7 +1362,10 @@ Would you like to update current project configuration?`)
   //#endregion
 
   //#region select branch from list of branches
-  private async __selectBrach(branches: string[], task: 'reset' | 'checkout') {
+  private async __selectBrach(
+    branches: string[],
+    task: 'rebase' | 'reset' | 'checkout',
+  ) {
     const childrenMsg =
       this.project.children.length == 0
         ? '(no children in project)'

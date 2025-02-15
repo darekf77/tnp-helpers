@@ -77,13 +77,21 @@ export class BaseGit<
   //#region methods & getters / stash
   stash(options?: { onlyStaged?: boolean }) {
     //#region @backendFunc
-    Helpers.git.stash(this.project.location, options);
+    return Helpers.git.stash(this.project.location, options);
+    //#endregion
+  }
+  //#endregion
+
+  //#region methods & getters / stash
+  rebase(toBranch: string) {
+    //#region @backendFunc
+    return Helpers.git.rebase(this.project.location, toBranch);
     //#endregion
   }
   //#endregion
 
   //#region methods & getters / stash apply
-  stashApply() {
+  stashApply(): void {
     //#region @backendFunc
     Helpers.git.stashApply(this.project.location);
     //#endregion

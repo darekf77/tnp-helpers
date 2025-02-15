@@ -906,7 +906,7 @@ export abstract class BaseProject<
   /**
    * general default development branch for all kinds of projects
    */
-  getDefaultDevelopmentBranch() {
+  getDefaultDevelopmentBranch(): string {
     return 'develop';
   }
   //#endregion
