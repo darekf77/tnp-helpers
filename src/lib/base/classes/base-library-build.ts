@@ -286,7 +286,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     //#endregion
 
     //#region select libs to build
-    const { selectedLibs, skipRebuildingAllForWatch } =
+    let { selectedLibs, skipRebuildingAllForWatch } =
       await this.selectAndSaveLibraries({
         selectedLibs: libraries ? libraries : allLibs,
         watch,
@@ -343,6 +343,8 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     //#endregion
 
     //#region watch build
+
+    selectedLibs = this.sortByDeps(selectedLibs);
     for (const [index, lib] of selectedLibs.entries()) {
       Helpers.info(
         `Building for watch (${index + 1}/${selectedLibs.length}) ` +
@@ -417,7 +419,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
 
     //#region watch build process
     await lib.nearestParent.execute(
-      lib.libraryBuild.getLibraryBuildComamnd({
+      lib.libraryBuild.getLibraryBuildCommand({
         watch: true,
       }),
       {
@@ -461,20 +463,18 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
 
     //#region compile process
     const compileProcess = async () => {
-      if (!Helpers.exists(libCompiledInDist)) {
-        Helpers.info(`Compiling ${lib.name} ...`);
-        await lib.nearestParent.execute(
-          lib.libraryBuild.getLibraryBuildComamnd({
-            watch: false,
-          }),
-          {
-            resolvePromiseMsg: {
-              stdout: lib.libraryBuild.getLibraryBuildSuccessComamnds,
-            },
-            outputLineReplace,
+      Helpers.info(`Compiling ${lib.name} ...`);
+      await lib.nearestParent.execute(
+        lib.libraryBuild.getLibraryBuildCommand({
+          watch: false,
+        }),
+        {
+          resolvePromiseMsg: {
+            stdout: lib.libraryBuild.getLibraryBuildSuccessComamnds,
           },
-        );
-      }
+          outputLineReplace,
+        },
+      );
     };
     //#endregion
 
@@ -559,7 +559,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
   //#endregion
 
   //#region getters & methods / get library build success command
-  getLibraryBuildComamnd(
+  getLibraryBuildCommand(
     options?: LibraryBuildCommandOptions,
   ): string | undefined {
     //#region @backendFunc
