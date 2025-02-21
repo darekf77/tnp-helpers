@@ -335,6 +335,7 @@ export class CommitData {
        * taon pfix proper input my-username/my-repo#344
        */
       currentOrigin?: string;
+      jiraIssuesAreOutsideBrackets?: boolean;
     },
   ): Promise<CommitData> {
     //#region @backendFunc
@@ -401,6 +402,7 @@ export class CommitData {
       issuesFromOtherProjects,
       commitModuleName: moduleNameData.commitModuleName,
       teamID: teamIdData.teamID,
+      jiraIssuesAreOutsideBrackets: !!options.jiraIssuesAreOutsideBrackets,
     });
     //#endregion
   }
@@ -419,6 +421,7 @@ export class CommitData {
        * taon pfix proper input my-username/my-repo#344
        */
       currentOrigin?: string;
+      jiraIssuesAreOutsideBrackets?: boolean;
     },
   ): Promise<CommitData> {
     //#region @backendFunc
@@ -528,6 +531,7 @@ export class CommitData {
       issuesFromOtherProjects,
       commitModuleName: moduleNameData.commitModuleName,
       teamID: teamIdData.teamID,
+      jiraIssuesAreOutsideBrackets: !!options.jiraIssuesAreOutsideBrackets,
     });
 
     return result;
@@ -545,6 +549,7 @@ export class CommitData {
       | 'commitModuleName'
       | 'teamID'
       | 'issuesFromOtherProjects'
+      | 'jiraIssuesAreOutsideBrackets'
     >,
   ): CommitData {
     options = (options ? options : {}) as any;
@@ -564,6 +569,18 @@ export class CommitData {
    */
   jiraNumbers: string[];
 
+  /**
+   * if true then jira issues are outside brackets
+   * feat: proper git commands JIRA-1234
+   *
+   * by default is false
+   * feat(JIRA-1234): proper git commands
+   */
+  jiraIssuesAreOutsideBrackets: boolean;
+
+  /**
+   * when set -> jiraIssuesAreOutsideBrackets is true
+   */
   readonly commitModuleName: string;
   readonly teamID: string;
   //#endregion
@@ -722,20 +739,36 @@ export class CommitData {
                 : ''
             }`;
         } else {
-          commitMsg =
-            `${this.branchPrefix}${
-              jirasExists
-                ? '(' +
-                  [_.first(jiras)].join(',') +
-                  issuesFromOtherProjectsConnected +
-                  ')'
-                : ''
-            }:` +
-            ` ${(this.message || '')
-              .split('\n')
-              .map(c => c.replace(/\-/g, ' '))
-              .join('\n-')
-              .trim()}`;
+          if (this.jiraIssuesAreOutsideBrackets) {
+            commitMsg =
+              `${this.branchPrefix}:` +
+              ` ${(this.message || '')
+                .split('\n')
+                .map(c => c.replace(/\-/g, ' '))
+                .join('\n-')
+                .trim()} ` +
+              `${
+                jirasExists
+                  ? [_.first(jiras)].join(',') +
+                    issuesFromOtherProjectsConnected
+                  : ''
+              }`;
+          } else {
+            commitMsg =
+              `${this.branchPrefix}${
+                jirasExists
+                  ? '(' +
+                    [_.first(jiras)].join(',') +
+                    issuesFromOtherProjectsConnected +
+                    ')'
+                  : ''
+              }:` +
+              ` ${(this.message || '')
+                .split('\n')
+                .map(c => c.replace(/\-/g, ' '))
+                .join('\n-')
+                .trim()}`;
+          }
         }
       }
     }

@@ -877,6 +877,7 @@ export class BaseGit<
       const commitMessageFromBranch = (
         await CommitData.getFromBranch(commitData.branchName, {
           currentOrigin,
+          jiraIssuesAreOutsideBrackets: this.project.jiraIssuesAreOutsideBrackets(),
         })
       ).commitMessage;
 
@@ -1104,6 +1105,7 @@ export class BaseGit<
       let argsCommitData = await CommitData.getFromArgs(args, {
         typeOfCommit,
         currentOrigin,
+        jiraIssuesAreOutsideBrackets: this.project.jiraIssuesAreOutsideBrackets(),
       });
       // console.log({ argsCommitData })
       if (argsCommitData.message) {
@@ -1114,6 +1116,7 @@ export class BaseGit<
           {
             releaseWords: this.project.releaseProcess.getReleaseWords(),
             currentOrigin,
+            jiraIssuesAreOutsideBrackets: this.project.jiraIssuesAreOutsideBrackets(),
           },
         );
         commitData = commitDataBranch;
@@ -1123,6 +1126,7 @@ export class BaseGit<
       let argsCommitData = await CommitData.getFromArgs(args, {
         typeOfCommit,
         currentOrigin,
+        jiraIssuesAreOutsideBrackets: this.project.jiraIssuesAreOutsideBrackets(),
       });
       // console.log({ argsCommitData })
       // console.log(argsCommitData)

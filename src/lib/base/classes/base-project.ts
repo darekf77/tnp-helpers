@@ -1266,4 +1266,8 @@ ${(this.linkedProjects.linkedProjects || [])
     //#endregion
   }
   //#endregion
+
+  jiraIssuesAreOutsideBrackets() {
+    return false;
+  }
 }
