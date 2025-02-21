@@ -308,16 +308,21 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     //   additionalLibsProjs.map(c => c.name),
     // );
 
+    selectedLibs = this.sortByDeps(selectedLibs);
+
     // TODO sort additionalLibsProjs thing before ric
     for (const libProj of allParenProjsForExtenalLibsBuild) {
       await libProj.init();
 
       for (const [index, lib] of libProj.libraryBuild.libraries.entries()) {
         if (watch && skipRebuildingAllForWatch) {
-          Helpers.info(
-            `Skipping build for watch mode (${index + 1}/${allLibs.length})` +
-              ` ${lib.basename} (${chalk.bold(lib.name)})`,
-          );
+          const selectedNames = selectedLibs.map(c => c.name);
+          if (!selectedNames.includes(lib.name)) {
+            Helpers.info(
+              `Skipping build for watch mode (${index + 1}/${allLibs.length})` +
+                ` ${lib.basename} (${chalk.bold(lib.name)})`,
+            );
+          }
           continue;
         }
         Helpers.info(
@@ -344,7 +349,6 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
 
     //#region watch build
 
-    selectedLibs = this.sortByDeps(selectedLibs);
     for (const [index, lib] of selectedLibs.entries()) {
       Helpers.info(
         `Building for watch (${index + 1}/${selectedLibs.length}) ` +
