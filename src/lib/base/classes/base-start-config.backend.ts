@@ -97,8 +97,18 @@ export class BaseStartConfig {
       }
     }
 
+    for (let index = 0; index < this.argsv.length; index++) {
+      const arg = this.argsv[index];
+      if (arg.endsWith('-debug-brk')) {
+        this.argsv[index] = arg.replace(/\-debug\-brk$/, '');
+      }
+      if (arg.endsWith('-debug')) {
+        this.argsv[index] = arg.replace(/\-debug$/, '');
+      }
+    }
+
     if (
-      this.argsv?.length >= 3 &&
+      this.argsv?.length >= 2 &&
       (this.argsv[0].endsWith('bin/node') ||
         this.argsv[0].endsWith('bin\\node') ||
         this.argsv[0].endsWith('bin\\\\node') ||
@@ -131,16 +141,21 @@ export class BaseStartConfig {
           globalClassForGlobalCommands = funcOrClass;
         }
 
+        if (this.argsv.length === 0 && classOrFnName === '') {
+          recognizedClassFnOrFunction = funcOrClass;
+          restOfArgs = [];
+          methodNameToCall = '';
+          methodsOfRecognizedClass = classMethodsNames;
+          break;
+        }
+
         const check = Helpers.cliTool.match({
           functionOrClassName: classOrFnName,
           restOfArgs: _.cloneDeep(this.argsv),
           argsReplacements: this.shortArgsReplaceConfig,
           classMethodsNames,
         });
-        if (
-          check.isMatch ||
-          (this.argsv.length === 0 && classOrFnName === '')
-        ) {
+        if (check.isMatch) {
           recognizedClassFnOrFunction = funcOrClass;
           restOfArgs = _.cloneDeep(check.restOfArgs);
           methodNameToCall = check.methodNameToCall;
@@ -152,7 +167,12 @@ export class BaseStartConfig {
 
     if (recognizedClassFnOrFunction) {
       global?.spinner?.stop();
-      // console.log('--- recognized command ---', { recognizedClassFnOrFunction, methodNameToCall, restOfArgs, methodsOfRecognizedClass })
+      // console.log('--- recognized command ---', {
+      //   recognizedClassFnOrFunction,
+      //   methodNameToCall,
+      //   restOfArgs,
+      //   methodsOfRecognizedClass,
+      // });
 
       if (Helpers.isClass(recognizedClassFnOrFunction)) {
         // console.log('USING FROM CLASS')
@@ -214,7 +234,11 @@ export class BaseStartConfig {
           },
         });
       } else {
-        Helpers.error('Command not recognized', false, true);
+        Helpers.error(
+          `[${config.frameworkName}] Command not recognized`,
+          false,
+          true,
+        );
       }
     }
   }
