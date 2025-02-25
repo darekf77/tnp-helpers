@@ -299,6 +299,13 @@ export class BaseVscodeHelpers<
       },
     ];
 
+    const commonKeybindings = [
+      {
+        key: 'shift+alt+d',
+        command: 'eslint.executeAutofix',
+      },
+    ];
+
     //#region global / keybindings macos
     const keysMac = [
       {
@@ -323,6 +330,7 @@ export class BaseVscodeHelpers<
         command: '-workbench.action.debug.start',
         when: "debuggersAvailable && debugState == 'inactive'",
       },
+      ...commonKeybindings,
     ];
     //#endregion
 
@@ -350,6 +358,11 @@ export class BaseVscodeHelpers<
         key: 'shift+ctrl+z',
         command: 'default:redo',
       },
+      {
+        key: 'shift+alt+d',
+        command: 'eslint.executeAutofix',
+      },
+      ...commonKeybindings,
     ];
     //#endregion
 
