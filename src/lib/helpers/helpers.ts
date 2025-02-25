@@ -113,16 +113,20 @@ export class HelpersTaon extends CoreHelpers {
   async ncc(
     pathToJsFile: string,
     outputFilePath: string,
-    /**
-     * ! beforeWrite needs to return output
-     */
-    beforeWrite?: (options: {
-      output?: string;
-      copyToDestination?: (fileOrFolderAbsPath: string) => void;
-    }) => string,
+    options?: {
+      /**
+           * ! beforeWrite needs to return output
+           */
+      beforeWrite?: (options: {
+        output?: string;
+        copyToDestination?: (fileOrFolderAbsPath: string) => void;
+      }) => string,
+      additionalExternals?: string[];
+    }
+
   ): Promise<void> {
     //#region @backendFunc
-
+    const { beforeWrite, additionalExternals } = options || {};
     //#region quick fixes for output
     // existsSync()
 
@@ -136,7 +140,7 @@ export class HelpersTaon extends CoreHelpers {
       cache: false,
       // out:'',
       // externals to leave as requires of the build
-      externals: ['electron'],
+      externals: ['electron','vscode', ...(additionalExternals || [])],
       // directory outside of which never to emit assets
       // filterAssetBase: process.cwd(), // default
       minify: false, // default
