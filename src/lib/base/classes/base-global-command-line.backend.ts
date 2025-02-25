@@ -1453,4 +1453,26 @@ Would you like to update current project configuration?`)
     this._exit();
   }
   //#endregion
+
+  procInfo() {
+    this.processInfo();
+  }
+
+  processInfo() {
+    Helpers.info(`
+
+    Is running in CLI mode: ${UtilsOs.isRunningInCliMode()}
+    Is running in Mocha test: ${UtilsOs.isRunningInMochaTest()}
+    Is running in VSCode extension: ${UtilsOs.isRunningInVscodeExtension()}
+    Is running in Electron: ${UtilsOs.isRunningInElectron()}
+    Is running in Docker: ${UtilsOs.isRunningInDocker()}
+    Is running in WebSQL: ${UtilsOs.isRunningInWebSQL()}
+    Is running in WSL: ${UtilsOs.isRunningInWsl()}
+    Is running in Linux graphics capable environment: ${UtilsOs.isRunningInLinuxGraphicsCapableEnvironment()}
+    Is running in Node: ${UtilsOs.isRunningInNode()}
+    Is running in Browser: ${UtilsOs.isRunningInBrowser()}
+
+      `);
+    this._exit();
+  }
 }
