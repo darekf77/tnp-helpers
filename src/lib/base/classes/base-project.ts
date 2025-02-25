@@ -485,7 +485,12 @@ export abstract class BaseProject<
    * Function will return relative path from project location
    */
   relative(absoultePath: string) {
-    return crossPlatformPath(path.relative(this.location, absoultePath));
+    return crossPlatformPath(
+      path.relative(
+        crossPlatformPath(this.location),
+        crossPlatformPath(absoultePath),
+      ),
+    );
   }
   //#endregion
 
