@@ -24,7 +24,6 @@ export class BaseReleaseProcess<
    */
   automaticRelease: boolean = false;
   versionType: CoreModels.ReleaseVersionType;
-  processType: CoreModels.ReleaseProcessType;
   releaseArtifactName: ARTIFACT
   preReleaseVersionTag: CoreModels.PreReleaseVersionTag;
   lastChangesSummary: string;
