@@ -165,6 +165,21 @@ export class BaseGit<
   }
   //#endregion
 
+  //#region methods & getters / get default develop Branch
+  /**
+   * general default development branch for all kinds of projects
+   */
+  getDefaultDevelopmentBranch(): string {
+    return 'develop';
+  }
+  //#endregion
+
+  //#region methods & getters / is using action commit
+  isUsingActionCommit(): boolean {
+    return false;
+  }
+  //#endregion
+
   async getUserInfo(
     global = false,
   ): Promise<{ name?: string; email?: string }> {
@@ -877,7 +892,8 @@ export class BaseGit<
       const commitMessageFromBranch = (
         await CommitData.getFromBranch(commitData.branchName, {
           currentOrigin,
-          jiraIssuesAreOutsideBrackets: this.project.jiraIssuesAreOutsideBrackets(),
+          jiraIssuesAreOutsideBrackets:
+            this.project.jiraIssuesAreOutsideBrackets(),
         })
       ).commitMessage;
 
@@ -1105,7 +1121,8 @@ export class BaseGit<
       let argsCommitData = await CommitData.getFromArgs(args, {
         typeOfCommit,
         currentOrigin,
-        jiraIssuesAreOutsideBrackets: this.project.jiraIssuesAreOutsideBrackets(),
+        jiraIssuesAreOutsideBrackets:
+          this.project.jiraIssuesAreOutsideBrackets(),
       });
       // console.log({ argsCommitData })
       if (argsCommitData.message) {
@@ -1116,7 +1133,8 @@ export class BaseGit<
           {
             releaseWords: this.project.releaseProcess.getReleaseWords(),
             currentOrigin,
-            jiraIssuesAreOutsideBrackets: this.project.jiraIssuesAreOutsideBrackets(),
+            jiraIssuesAreOutsideBrackets:
+              this.project.jiraIssuesAreOutsideBrackets(),
           },
         );
         commitData = commitDataBranch;
@@ -1126,7 +1144,8 @@ export class BaseGit<
       let argsCommitData = await CommitData.getFromArgs(args, {
         typeOfCommit,
         currentOrigin,
-        jiraIssuesAreOutsideBrackets: this.project.jiraIssuesAreOutsideBrackets(),
+        jiraIssuesAreOutsideBrackets:
+          this.project.jiraIssuesAreOutsideBrackets(),
       });
       // console.log({ argsCommitData })
       // console.log(argsCommitData)

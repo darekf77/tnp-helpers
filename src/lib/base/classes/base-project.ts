@@ -907,14 +907,7 @@ export abstract class BaseProject<
   }
   //#endregion
 
-  //#region methods & getters / get default develop Branch
-  /**
-   * general default development branch for all kinds of projects
-   */
-  getDefaultDevelopmentBranch(): string {
-    return 'develop';
-  }
-  //#endregion
+
 
   //#region methods & getters / get main branches
   /**
@@ -922,12 +915,6 @@ export abstract class BaseProject<
    */
   getMainBranches(): string[] {
     return ['master', 'develop', 'stage', 'prod', 'test'];
-  }
-  //#endregion
-
-  //#region methods & getters / is using action commit
-  isUnsingActionCommit(): boolean {
-    return false;
   }
   //#endregion
 
