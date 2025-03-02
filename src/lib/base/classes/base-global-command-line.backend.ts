@@ -361,7 +361,7 @@ ${
       this.firstArg ||
       branchFromLinkedProjectConfig ||
       this.project.core?.branch ||
-      this.project.getDefaultDevelopmentBranch() ||
+      this.project.git.getDefaultDevelopmentBranch() ||
       this.project.git.currentBranchName;
 
     if (this.project.core?.branch) {
@@ -398,7 +398,7 @@ ${
     this.__resetInfo(
       overrideBranchToReset
         ? overrideBranchToReset
-        : this.project.getDefaultDevelopmentBranch(),
+        : this.project.git.getDefaultDevelopmentBranch(),
     );
 
     let resetProject = this.project;
@@ -450,7 +450,7 @@ ${
     const currentBranch = this.project.git.currentBranchName;
     let safeReset = 10;
     let rebaseBranch =
-      this.firstArg || this.project.getDefaultDevelopmentBranch();
+      this.firstArg || this.project.git.getDefaultDevelopmentBranch();
 
     const branches = this.__filterBranchesByPattern(rebaseBranch);
 

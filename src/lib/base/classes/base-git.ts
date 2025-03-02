@@ -180,6 +180,10 @@ export class BaseGit<
   }
   //#endregion
 
+  jiraIssuesAreOutsideBrackets() {
+    return false;
+  }
+
   async getUserInfo(
     global = false,
   ): Promise<{ name?: string; email?: string }> {
@@ -893,7 +897,7 @@ export class BaseGit<
         await CommitData.getFromBranch(commitData.branchName, {
           currentOrigin,
           jiraIssuesAreOutsideBrackets:
-            this.project.jiraIssuesAreOutsideBrackets(),
+            this.project.git.jiraIssuesAreOutsideBrackets(),
         })
       ).commitMessage;
 
@@ -1122,7 +1126,7 @@ export class BaseGit<
         typeOfCommit,
         currentOrigin,
         jiraIssuesAreOutsideBrackets:
-          this.project.jiraIssuesAreOutsideBrackets(),
+          this.project.git.jiraIssuesAreOutsideBrackets(),
       });
       // console.log({ argsCommitData })
       if (argsCommitData.message) {
@@ -1134,7 +1138,7 @@ export class BaseGit<
             releaseWords: this.project.releaseProcess.getReleaseWords(),
             currentOrigin,
             jiraIssuesAreOutsideBrackets:
-              this.project.jiraIssuesAreOutsideBrackets(),
+              this.project.git.jiraIssuesAreOutsideBrackets(),
           },
         );
         commitData = commitDataBranch;
@@ -1145,7 +1149,7 @@ export class BaseGit<
         typeOfCommit,
         currentOrigin,
         jiraIssuesAreOutsideBrackets:
-          this.project.jiraIssuesAreOutsideBrackets(),
+          this.project.git.jiraIssuesAreOutsideBrackets(),
       });
       // console.log({ argsCommitData })
       // console.log(argsCommitData)

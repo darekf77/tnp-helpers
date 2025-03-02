@@ -936,7 +936,7 @@ export abstract class BaseProject<
     `);
     this.git._beforeAnyActionOnGitRoot();
     let branchToReset =
-      overrideBranch || this.core?.branch || this.getDefaultDevelopmentBranch();
+      overrideBranch || this.core?.branch || this.git.getDefaultDevelopmentBranch();
 
     Helpers.info(`fetch data in ${this.genericName}`);
     this.git.fetch();
@@ -1259,7 +1259,5 @@ ${(this.linkedProjects.linkedProjects || [])
   }
   //#endregion
 
-  jiraIssuesAreOutsideBrackets() {
-    return false;
-  }
+
 }
