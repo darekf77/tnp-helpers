@@ -12,7 +12,7 @@ import * as glob from 'glob';
 import { JSON10 } from 'json10/src';
 import * as crypto from 'crypto';
 declare const global: any;
-
+import type { CopyOptionsSync } from 'fs-extra';
 
 import { Helpers } from '../../index';
 import { config, extAllowedToReplace } from 'tnp-config/src';
@@ -741,7 +741,7 @@ to: ${to}
       copySymlinksAsFilesDeleteUnexistedLinksFromSourceFirst?: boolean;
       useTempFolder?: boolean;
       dontAskOnError?: boolean;
-    } & fse.CopyOptionsSync,
+    } & CopyOptionsSync,
   ): void {
     Helpers.log(
       `Copying from:

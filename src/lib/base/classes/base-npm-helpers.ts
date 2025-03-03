@@ -777,4 +777,20 @@ export class BaseNpmHelpers<
     //#endregion
   }
   //#endregion
+
+  //#region getters & methods / get version for
+  getVersionFor(releaseType: CoreModels.ReleaseVersionType): string {
+    //#region @backendFunc
+    if (releaseType === 'patch') {
+      return this.versionWithPatchPlusOne;
+    }
+    if (releaseType === 'minor') {
+      return this.versionWithMinorPlusOneAndPatchZero;
+    }
+    if (releaseType === 'major') {
+      return this.versionWithMajorPlusOneAndMinorZeroAndPatchZero;
+    }
+    //#endregion
+  }
+  //#endregion
 }

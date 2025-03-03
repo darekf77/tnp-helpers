@@ -8,8 +8,8 @@ import {
   fkill,
   crossPlatformPath,
   chalk,
-} from 'tnp-core';
-import { child_process, CLI, UtilsProcess, UtilsTerminal } from 'tnp-core/src';
+} from 'tnp-core/src';
+import { CLI, UtilsProcess, UtilsTerminal } from 'tnp-core/src';
 import * as dateformat from 'dateformat';
 import { exec } from 'child_process';
 import type { BaseProject } from '../../index';
@@ -17,6 +17,7 @@ import { Helpers } from '../../index';
 import { CLASS } from 'typescript-class-helpers/src';
 import { config } from 'tnp-config/src';
 import { Log, Level } from 'ng2-logger/src';
+import type { ChildProcess } from 'child_process';
 declare const global: any;
 const prompts = require('prompts');
 import * as fuzzy from 'fuzzy';
@@ -534,7 +535,7 @@ ${Helpers.terminalLine()}\n`;
 
   //#region wait for message in stdout
   async waitForMessegeInStdout(
-    proc: child_process.ChildProcess,
+    proc: ChildProcess,
     message: string,
   ) {
     return new Promise((resolve, reject) => {
