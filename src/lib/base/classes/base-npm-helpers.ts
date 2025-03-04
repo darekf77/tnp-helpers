@@ -19,7 +19,7 @@ import { CoreModels } from 'tnp-core/src';
 
 export class BaseNpmHelpers<
   PROJECT extends BaseProject = any,
-> extends BaseFeatureForProject {
+> extends BaseFeatureForProject<PROJECT> {
   private packageJSON: PackageJson;
   private bowerJson: PackageJson;
   constructor(project: PROJECT) {
@@ -134,81 +134,7 @@ export class BaseNpmHelpers<
     }
     this.project.writeJson(config.file.package_json, this.packageJSON);
     // Helpers.pressKeyAndContinue();
-    //#endregion
-  }
-  //#endregion
-
-  //#region methods & getters / update dependency
-  /**
-   * Update dependency in package.json
-   */
-  async updateDep({
-    packageName,
-    version,
-    updateTaonJsonFirst,
-    addIfNotExists,
-  }: {
-    packageName: string;
-    version: string | null;
-    updateTaonJsonFirst?: boolean;
-    addIfNotExists?: boolean;
-  }): Promise<void> {
-    //#region @backendFunc
-    // const contirmUpdateArr= [
-    //   'chai',
-    //   'bootstrap',
-    //   '@types/mocha',
-    //   '@types/node-notifier'
-    // ];
-    // if(contirmUpdateArr.includes(packageName)) {
-    //   await Helpers.questionYesNo(`Do you want to update ${packageName} to ${version} ?`);
-    // }
-    if (updateTaonJsonFirst && this.project.hasFile(config.file.taon_jsonc)) {
-      const taonJson = (this.project.readJson<any>(config.file.taon_jsonc) ||
-        {}) as CoreModels.TaonJson;
-
-      if (!taonJson) {
-        Helpers.error(`Taon json is not valid in ${this.project.location}`);
-      }
-
-      const taonJsonDeps = taonJson?.overrided?.dependencies || {};
-
-      if (addIfNotExists && !_.isUndefined(taonJsonDeps[packageName])) {
-        if (_.isUndefined(version)) {
-          delete taonJsonDeps[packageName];
-        } else {
-          taonJsonDeps[packageName] = version;
-        }
-      }
-
-      // console.log('taonJson', taonJson);
-      this.project.writeJsonC(config.file.taon_jsonc, taonJson);
-    }
-    for (const depsName of CoreModels.PackageJsonDependencyObjArr) {
-      if (
-        this.packageJSON[depsName] &&
-        (addIfNotExists ||
-          !_.isUndefined(this.packageJSON[depsName][packageName]))
-      ) {
-        if (_.isUndefined(version)) {
-          delete this.packageJSON[depsName][packageName];
-        } else {
-          this.packageJSON[depsName][packageName] = version;
-        }
-      }
-    }
-    if (
-      updateTaonJsonFirst &&
-      this.packageJSON[config.packageJsonFrameworkKey]
-    ) {
-      // QUICK_FIX
-      this.packageJSON[config.packageJsonFrameworkKey] = this.project.readJson(
-        // QUICK_FIX
-        config.file.taon_jsonc,
-      );
-    }
-    this.project.writeJson(config.file.package_json, this.packageJSON);
-    // Helpers.pressKeyAndContinue();
+    this.reloadPackageJsonInMemory();
     //#endregion
   }
   //#endregion
@@ -313,6 +239,7 @@ export class BaseNpmHelpers<
 
     // Write the updated package.json back to disk
     this.project.writeJson(config.file.package_json, packageJson);
+    this.reloadPackageJsonInMemory();
     //#endregion
   }
   //#endregion
@@ -412,6 +339,7 @@ export class BaseNpmHelpers<
     if (this.emptyNodeModules) {
       await this.reinstallNodeModules(options);
     }
+    this.reloadPackageJsonInMemory();
   }
   //#endregion
 
@@ -486,6 +414,7 @@ export class BaseNpmHelpers<
     Helpers.taskDone(
       `Reinstalled node modules for ${this.project.genericName}`,
     );
+    this.reloadPackageJsonInMemory();
     //#endregion
   }
   //#endregion
