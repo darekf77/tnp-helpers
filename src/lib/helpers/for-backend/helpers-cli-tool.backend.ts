@@ -134,6 +134,7 @@ export class HelpersCliTool {
    * get minimist params from args
    */
   public getPramsFromArgs<T = object>(args: string | string[]): T {
+    //#region @backendFunc
     if (_.isArray(args)) {
       args = Helpers.cliTool
         .fixUnexpectedCommandCharacters(args.join(' '))
@@ -154,6 +155,7 @@ export class HelpersCliTool {
       }
     });
     return (_.isObject(obj) ? obj : {}) as T;
+    //#endregion
   }
   //#endregion
 
@@ -273,6 +275,7 @@ export class HelpersCliTool {
     argsv: string[],
     ProjectClass: Partial<typeof BaseProject>,
   ) {
+    //#region @backendFunc
     Helpers.log(`[${config.frameworkName}] Fixing global arguments started...`);
     let options = require('minimist')(argsv);
     const toCheck = {
@@ -393,6 +396,7 @@ export class HelpersCliTool {
     // process.exit(0)
     Helpers.log(`Fixing global arguments finish.`);
     return argsv.join(' ');
+    //#endregion
   }
 
   //#endregion
@@ -427,6 +431,7 @@ export class HelpersCliTool {
   }
 
   public removeArgsFromCommand(commadWithArgs: string, argsToClear: string[]) {
+    //#region @backendFunc
     const argsObj = require('minimist')(commadWithArgs.split(' '));
     // console.log({ argsObj, argv: process.argv });
     for (let index = 0; index < argsToClear.length; index++) {
@@ -469,6 +474,7 @@ export class HelpersCliTool {
       commadWithArgs = commadWithArgs.replace(`-${element}`, '');
     }
     return commadWithArgs;
+    //#endregion
   }
   //#endregion
 }

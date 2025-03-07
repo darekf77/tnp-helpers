@@ -12,6 +12,7 @@ import * as glob from 'glob';
 import { JSON10 } from 'json10/src';
 import * as crypto from 'crypto';
 declare const global: any;
+import type { CopyOptionsSync } from 'fs-extra';
 
 import { Helpers } from '../../index';
 import { config, extAllowedToReplace } from 'tnp-config/src';
@@ -236,6 +237,7 @@ export class HelpersFileFolders {
    * @param jsFilePath
    */
   require(jsFilePath: string) {
+    //#region @backendFunc
     const orgPath = jsFilePath;
     if (!fse.existsSync(jsFilePath)) {
       jsFilePath = `${jsFilePath}.js`;
@@ -317,6 +319,7 @@ export class HelpersFileFolders {
     })();
 
     return eval(fileContent);
+    //#endregion
   }
 
   tryRecreateDir(dirpath: string): void {
@@ -740,7 +743,7 @@ to: ${to}
       copySymlinksAsFilesDeleteUnexistedLinksFromSourceFirst?: boolean;
       useTempFolder?: boolean;
       dontAskOnError?: boolean;
-    } & fse.CopyOptionsSync,
+    } & CopyOptionsSync,
   ): void {
     Helpers.log(
       `Copying from:

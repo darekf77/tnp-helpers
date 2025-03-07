@@ -59,7 +59,6 @@ Thumbs.db
 /webpack.backend-dist-build.js
 /run.js
 /run-org.js
-/update-vscode-package-json.js
 /projects/tmp*
 !tsconfig*
 !webpack.*

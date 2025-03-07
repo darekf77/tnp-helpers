@@ -2,6 +2,8 @@ export * from './base-project';
 export * from './base-project-resolver';
 export * from './base-feature-for-project';
 export * from './base-library-build';
+export * from './base-package-json';
+export * from './base-node-modules';
 export * from './base-npm-helpers';
 export * from './base-linked-projects';
 export * from './base-git';
@@ -13,6 +15,7 @@ export * from './base-quick-fixes';
 export * from './base-cli-worker-controller';
 export * from './base-cli-worker';
 export * from './base-cli-worker-config';
+
 //#region @backend
 export * from './base-start-config.backend';
 export * from './base-command-line-feature.backend';

@@ -6,11 +6,13 @@ import type * as vscodeType from 'vscode';
 import { UtilsOs } from 'tnp-core/src';
 
 export const getVscode = () => {
+  //#region @backendFunc
   if (!UtilsOs.isRunningInVscodeExtension()) {
     return {} as typeof vscodeType;
   }
   const vscode = require('vsc' + 'ode');
   return vscode as typeof vscodeType;
+  //#endregion
 };
 
 /**

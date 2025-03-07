@@ -11,7 +11,7 @@ import { UtilsTerminal } from 'tnp-core/src';
 
 export class BaseGlobalCommandLine<
   PARAMS = any,
-  PROJECT extends BaseProject<any, any> = BaseProject,
+  PROJECT extends BaseProject<any, any> = BaseProject<any, any>,
 > extends BaseCommandLineFeature<PARAMS, PROJECT> {
   public _() {
     Helpers.error('Please select git command');
@@ -139,7 +139,7 @@ export class BaseGlobalCommandLine<
     Helpers.info('Deep updating & pushing project with children...');
     const updateProject = async (project: PROJECT): Promise<void> => {
       try {
-        await project.npmHelpers.bumpPatchVersion();
+        await project.packageJson.bumpPatchVersion();
       } catch (error) {}
       try {
         project.git.addAndCommit(
@@ -361,7 +361,7 @@ ${
       this.firstArg ||
       branchFromLinkedProjectConfig ||
       this.project.core?.branch ||
-      this.project.getDefaultDevelopmentBranch() ||
+      this.project.git.getDefaultDevelopmentBranch() ||
       this.project.git.currentBranchName;
 
     if (this.project.core?.branch) {
@@ -398,7 +398,7 @@ ${
     this.__resetInfo(
       overrideBranchToReset
         ? overrideBranchToReset
-        : this.project.getDefaultDevelopmentBranch(),
+        : this.project.git.getDefaultDevelopmentBranch(),
     );
 
     let resetProject = this.project;
@@ -450,7 +450,7 @@ ${
     const currentBranch = this.project.git.currentBranchName;
     let safeReset = 10;
     let rebaseBranch =
-      this.firstArg || this.project.getDefaultDevelopmentBranch();
+      this.firstArg || this.project.git.getDefaultDevelopmentBranch();
 
     const branches = this.__filterBranchesByPattern(rebaseBranch);
 
@@ -772,7 +772,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
       commitMessageRequired: true,
       overrideCommitMessage:
         `${_.first(this.project.releaseProcess.getReleaseWords())} ` +
-        `version ${this.project.npmHelpers.version}`,
+        `version ${this.project.packageJson.version}`,
     });
   }
 
@@ -1033,7 +1033,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: false }))) {
       return;
     }
-    console.log('Current project verison: ' + this.project.npmHelpers.version);
+    console.log('Current project verison: ' + this.project.packageJson.version);
     this._exit();
   }
   //#endregion
@@ -1287,7 +1287,7 @@ Would you like to update current project configuration?`)
         return path.resolve(path.join(this.cwd, l));
       });
     }
-    this.project.npmHelpers.updateDepsFrom(locations);
+    this.project.packageJson.updateDepsFrom(locations);
 
     this._exit();
   }

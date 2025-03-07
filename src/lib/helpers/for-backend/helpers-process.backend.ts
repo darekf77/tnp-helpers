@@ -8,7 +8,7 @@ import {
   fkill,
   crossPlatformPath,
   chalk,
-} from 'tnp-core';
+} from 'tnp-core/src';
 import { CLI, UtilsProcess, UtilsTerminal } from 'tnp-core/src';
 import * as dateformat from 'dateformat';
 import { exec } from 'child_process';
@@ -17,13 +17,9 @@ import { Helpers } from '../../index';
 import { CLASS } from 'typescript-class-helpers/src';
 import { config } from 'tnp-config/src';
 import { Log, Level } from 'ng2-logger/src';
-declare const global: any;
-const prompts = require('prompts');
+import type { ChildProcess } from 'child_process';
 import * as fuzzy from 'fuzzy';
-import * as inquirer from 'inquirer';
-import * as inquirerAutocomplete from 'inquirer-autocomplete-prompt';
-inquirer.registerPrompt('autocomplete', inquirerAutocomplete);
-const { AutoComplete } = require('enquirer');
+
 import * as spawn from 'cross-spawn';
 //#endregion
 
@@ -164,6 +160,7 @@ export class HelpersProcess {
       | { name: string; value: T }[]
       | { [choice: string]: { name: string } },
   ) {
+    //#region @backendFunc
     if (!_.isArray(choices) && _.isObject(choices)) {
       choices = Object.keys(choices)
         .map(key => {
@@ -175,6 +172,7 @@ export class HelpersProcess {
         .reduce((a, b) => a.concat(b), []);
     }
 
+    const inquirer = await import('inquirer');
     const res = (await inquirer.prompt({
       type: 'list',
       name: 'value',
@@ -184,6 +182,7 @@ export class HelpersProcess {
       loop: true,
     } as any)) as any;
     return res.value as T;
+    //#endregion
   }
   //#endregion
 
@@ -231,6 +230,7 @@ export class HelpersProcess {
       | { name: string; value: T }[]
       | { [choice: string]: { name: string } },
   ): Promise<T> {
+    //#region @backendFunc
     // console.log({ choices })
     // Helpers.pressKeyAndContinue()
 
@@ -245,6 +245,7 @@ export class HelpersProcess {
         .reduce((a, b) => a.concat(b), []);
     }
 
+    const { AutoComplete } = require('enquirer');
     const prompt = new AutoComplete({
       name: 'value',
       message: question,
@@ -260,6 +261,7 @@ export class HelpersProcess {
 
     const res = await prompt.run();
     return res;
+    //#endregion
   }
   //#endregion
 
@@ -269,7 +271,8 @@ export class HelpersProcess {
     choices: { name: string; value: T }[],
     pageSize = 10,
   ): Promise<T> {
-    function source(__, input) {
+    //#region @backendFunc
+    const source = (__, input) => {
       input = input || '';
       return new Promise(resolve => {
         const fuzzyResult = fuzzy.filter(
@@ -285,7 +288,11 @@ export class HelpersProcess {
           }),
         );
       });
-    }
+    };
+
+    const inquirer = await import('inquirer');
+    const inquirerAutocomplete = await import('inquirer-autocomplete-prompt');
+    inquirer.registerPrompt('autocomplete', inquirerAutocomplete);
 
     const res: { command: T } = (await inquirer.prompt({
       type: 'autocomplete',
@@ -297,6 +304,7 @@ export class HelpersProcess {
     } as any)) as any;
 
     return res.command;
+    //#endregion
   }
   //#endregion
 
@@ -533,10 +541,7 @@ ${Helpers.terminalLine()}\n`;
   //#endregion
 
   //#region wait for message in stdout
-  async waitForMessegeInStdout(
-    proc: child_process.ChildProcess,
-    message: string,
-  ) {
+  async waitForMessegeInStdout(proc: ChildProcess, message: string) {
     return new Promise((resolve, reject) => {
       let resolved = false;
       proc.stdout.on('data', data => {

@@ -38,7 +38,7 @@ export abstract class BaseLibraryBuild<
         if (!_.isUndefined(proj.cache['deps'])) {
           return proj.cache['deps'];
         }
-        const allLibs = Object.keys(proj.npmHelpers.allDependencies);
+        const allLibs = Object.keys(proj.packageJson.allDependencies);
         proj.cache['deps'] = allLibs.filter(
           f => !_.isUndefined(libs.find(c => c.name === f)),
         );

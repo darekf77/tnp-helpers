@@ -88,7 +88,7 @@ export abstract class BaseCommandLineFeature<
     //#endregion
   }
 
-  protected __project: PROJECT;
+  private __project: PROJECT;
   protected get project(): PROJECT {
     return this.__project;
   }
@@ -103,6 +103,7 @@ export abstract class BaseCommandLineFeature<
     this.__project = v;
   }
 
+  //#region @backend
   constructor(
     protected readonly argsWithParams: string,
     protected readonly methodNameToCall: string,
@@ -189,6 +190,7 @@ export abstract class BaseCommandLineFeature<
     });
     //#endregion
   }
+  //#endregion
 
   protected _exit(code = 0): void {
     process.exit(code);

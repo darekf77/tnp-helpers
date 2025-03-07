@@ -48,7 +48,7 @@ export class BaseReleaseProcess<
     Helpers.taskStarted(
       `Reinstalling node_modules to recreate package-lock.json`,
     );
-    await this.project.npmHelpers.reinstallNodeModules();
+    await this.project.nodeModules.reinstall();
     Helpers.taskDone(`Reinstalling node_modules to recreate package-lock.json`);
   }
   //#endregion
@@ -102,8 +102,9 @@ export class BaseReleaseProcess<
     if (lastReleaseCommitData.index !== -1) {
       const commits = [];
       for (let index = 0; index < lastReleaseCommitData.index; index++) {
-        const commitMessages =
-          await this.project.git.getCommitMessageByIndex(index);
+        const commitMessages = await this.project.git.getCommitMessageByIndex(
+          index,
+        );
         commits.push({ commitMessages, index });
       }
       return commits;
@@ -271,9 +272,9 @@ export class BaseReleaseProcess<
     );
 
     for (const projToBump of this.toBumpProjects) {
-      projToBump.npmHelpers.version = this.newVersion;
+      projToBump.packageJson.setVersion(this.newVersion);
       for (const libName of allLibrariesNames) {
-        projToBump.npmHelpers.updateDependency({
+        projToBump.packageJson.updateDependency({
           packageName: libName,
           version:
             (this.project.location === projToBump.location ? '' : '^') +
@@ -293,14 +294,14 @@ export class BaseReleaseProcess<
     }
     let newVersion = this.newVersion;
     if (!this.newVersion) {
-      newVersion = this.project.npmHelpers.versionWithPatchPlusOne;
+      newVersion = this.project.packageJson.versionWithPatchPlusOne;
       if (this.versionType === 'minor') {
         newVersion =
-          this.project.npmHelpers.versionWithMinorPlusOneAndPatchZero;
+          this.project.packageJson.versionWithMinorPlusOneAndPatchZero;
       }
       if (this.versionType === 'major') {
         newVersion =
-          this.project.npmHelpers
+          this.project.packageJson
             .versionWithMajorPlusOneAndMinorZeroAndPatchZero;
       }
     }
@@ -341,15 +342,15 @@ export class BaseReleaseProcess<
     }
     const options = [
       {
-        name: `Patch release (v${this.project.npmHelpers.versionWithPatchPlusOne})`,
+        name: `Patch release (v${this.project.packageJson.versionWithPatchPlusOne})`,
         value: 'patch' as CoreModels.ReleaseVersionType,
       },
       {
-        name: `Minor release (v${this.project.npmHelpers.versionWithMinorPlusOneAndPatchZero})`,
+        name: `Minor release (v${this.project.packageJson.versionWithMinorPlusOneAndPatchZero})`,
         value: 'minor' as CoreModels.ReleaseVersionType,
       },
       {
-        name: `Major release (v${this.project.npmHelpers.versionWithMajorPlusOneAndMinorZeroAndPatchZero})`,
+        name: `Major release (v${this.project.packageJson.versionWithMajorPlusOneAndMinorZeroAndPatchZero})`,
         value: 'major' as CoreModels.ReleaseVersionType,
       },
     ];
@@ -403,11 +404,14 @@ export class BaseReleaseProcess<
     //#region @backendFunc
     let askForEveryItem = false;
     while (true) {
-      let thingsToAddToChangeLog =
-        await this.getChangelogContentToAppend(askForEveryItem);
+      let thingsToAddToChangeLog = await this.getChangelogContentToAppend(
+        askForEveryItem,
+      );
 
       console.log(
-        `New things for changelog.md:\n${chalk.gray.bold(thingsToAddToChangeLog)}`,
+        `New things for changelog.md:\n${chalk.gray.bold(
+          thingsToAddToChangeLog,
+        )}`,
       );
 
       if (
@@ -468,8 +472,9 @@ export class BaseReleaseProcess<
     const jiraNumbers = CommitData.extractAndOrderJiraNumbers(commitMessage);
     const message = CommitData.cleanMessageFromJiraNumTeamIdEtc(commitMessage);
     // console.log({ data, commit });
-    const extractedLibraries =
-      await this.extractChangedLibrariesInCommit(hashOrIndex);
+    const extractedLibraries = await this.extractChangedLibrariesInCommit(
+      hashOrIndex,
+    );
     const translatedMessage = _.upperFirst(
       await this.commitMessageInChangelogTransformFn(
         message.replace(/\-/g, '').replace(/\:/g, ''),
@@ -486,8 +491,9 @@ export class BaseReleaseProcess<
 
     if (confirmEveryItem) {
       console.log(
-        `Confirm changelog new item ${chalk.gray(`(from "${commitMessage}")`)}:\n` +
-          `\n${chalk.italic(result)}\n`,
+        `Confirm changelog new item ${chalk.gray(
+          `(from "${commitMessage}")`,
+        )}:\n` + `\n${chalk.italic(result)}\n`,
       );
       const itemIsOK = await Helpers.questionYesNo('Is this item OK ?');
       if (!itemIsOK) {
@@ -551,8 +557,9 @@ ${await this.getLastChangesFromCommits({
     let index = 0;
     const commits = [] as string[];
     while (true) {
-      const commitMessage =
-        await this.project.git.getCommitMessageByIndex(index);
+      const commitMessage = await this.project.git.getCommitMessageByIndex(
+        index,
+      );
       commits.push(commitMessage);
       ++index;
       if (
@@ -585,8 +592,9 @@ ${await this.getLastChangesFromCommits({
     let index = 0;
     const maxMessages = 50;
     while (true) {
-      const commitMessage =
-        await this.project.git.getCommitMessageByIndex(index);
+      const commitMessage = await this.project.git.getCommitMessageByIndex(
+        index,
+      );
 
       const npmVersionRegex = /\d+\.\d+\.\d+/;
       // console.log('commitMessage', { index, commitMessage });
@@ -625,7 +633,7 @@ ${await this.getLastChangesFromCommits({
     const validToShow: ChangelogData[] = [];
     while (true) {
       const lastRelease = changelogData.shift();
-      if (lastRelease.version === this.project.npmHelpers.version) {
+      if (lastRelease.version === this.project.packageJson.version) {
         validToShow.push(lastRelease);
       } else {
         break;

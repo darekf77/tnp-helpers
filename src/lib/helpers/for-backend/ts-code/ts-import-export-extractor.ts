@@ -1,4 +1,3 @@
-//#region @backend
 import {
   isExportDeclaration,
   isImportDeclaration,
@@ -76,6 +75,7 @@ const getQuoteType = (text: string): 'single' | 'double' | 'tics' => {
 export const recognizeImportsFromFile = (
   fileContent: string,
 ): TsImportExport[] => {
+  //#region @backendFunc
   const sourceFile = createSourceFile(
     'file.ts', // a name for the file
     fileContent,
@@ -153,5 +153,5 @@ export const recognizeImportsFromFile = (
   forEachChild(sourceFile, visit);
 
   return results;
+  //#endregion
 };
-//#endregion

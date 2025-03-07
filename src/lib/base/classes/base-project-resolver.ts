@@ -325,7 +325,7 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
   //#endregion
 
   //#region fields & getters / sort group of projects
-  public sortGroupOfProject<T extends BaseProject = BaseProject>(
+  public sortGroupOfProject<T extends BaseProject<any,any> = BaseProject<any,any>>(
     projects: T[],
     resoveDepsArray: (proj: T) => string[],
     projNameToCompare: (proj: T) => string,

@@ -42,7 +42,7 @@ import { Utils } from 'tnp-core/src';
 const takenPorts = [];
 
 export abstract class BaseProject<
-  PROJECT extends BaseProject = BaseProject<any, any>,
+  PROJECT extends BaseProject<any,any> = BaseProject<any, any>,
   TYPE = BaseProjectType,
 > {
   //#region static
@@ -73,6 +73,15 @@ export abstract class BaseProject<
 
   public libraryBuild?: BaseLibraryBuild<BaseProject>;
   public npmHelpers?: BaseNpmHelpers;
+
+  get packageJson() {
+    return this.npmHelpers.packageJson;
+  }
+
+  get nodeModules() {
+    return this.npmHelpers.nodeModules;
+  }
+
   public linkedProjects?: BaseLinkedProjects;
   public vsCodeHelpers?: BaseVscodeHelpers;
   public releaseProcess?: BaseReleaseProcess;
@@ -90,6 +99,7 @@ export abstract class BaseProject<
   }
 
   //#region constructor
+  //#region @backend
   // @ts-ignore
   constructor(
     /**
@@ -122,6 +132,7 @@ export abstract class BaseProject<
       .BaseReleaseProcess as typeof BaseReleaseProcess)(this as any);
     //#endregion
   }
+  //#endregion
   //#endregion
 
   //#region methods & getters / is monorepo
@@ -249,7 +260,7 @@ export abstract class BaseProject<
    * name from package.json
    */
   get name(): string {
-    return this.npmHelpers?.name || this.nameFromPomXML;
+    return this.packageJson?.name || this.nameFromPomXML;
   }
 
   get nameForCli(): string {
@@ -907,27 +918,12 @@ export abstract class BaseProject<
   }
   //#endregion
 
-  //#region methods & getters / get default develop Branch
-  /**
-   * general default development branch for all kinds of projects
-   */
-  getDefaultDevelopmentBranch(): string {
-    return 'develop';
-  }
-  //#endregion
-
   //#region methods & getters / get main branches
   /**
    * main/default hardcoded branches
    */
   getMainBranches(): string[] {
     return ['master', 'develop', 'stage', 'prod', 'test'];
-  }
-  //#endregion
-
-  //#region methods & getters / is using action commit
-  isUnsingActionCommit(): boolean {
-    return false;
   }
   //#endregion
 
@@ -949,7 +945,9 @@ export abstract class BaseProject<
     `);
     this.git._beforeAnyActionOnGitRoot();
     let branchToReset =
-      overrideBranch || this.core?.branch || this.getDefaultDevelopmentBranch();
+      overrideBranch ||
+      this.core?.branch ||
+      this.git.getDefaultDevelopmentBranch();
 
     Helpers.info(`fetch data in ${this.genericName}`);
     this.git.fetch();
@@ -1271,8 +1269,4 @@ ${(this.linkedProjects.linkedProjects || [])
     //#endregion
   }
   //#endregion
-
-  jiraIssuesAreOutsideBrackets() {
-    return false;
-  }
 }

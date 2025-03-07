@@ -13,6 +13,10 @@ import type { BaseProject } from './base-project';
 import { BaseFeatureForProject } from './base-feature-for-project';
 import { _ } from 'tnp-core/src';
 
+export interface ISettingsVscode {
+  'workbench.colorTheme': string;
+}
+
 export class BaseVscodeHelpers<
   PROJECT extends BaseProject = any,
 > extends BaseFeatureForProject<PROJECT> {
@@ -94,7 +98,8 @@ export class BaseVscodeHelpers<
       'DavidAnson.vscode-markdownlint',
       'bibhasdn.unique-lines',
       'streetsidesoftware.code-spell-checker',
-      'pranaygp.vscode-css-peek',
+
+      // 'pranaygp.vscode-css-peek', // high cpu usage
       // 'bengreenier.vscode-node-readme',
       // 'kisstkondoros.vscode-codemetrics', // TOO MUCH CPU USAGE
       // 'vscode-icons-team.vscode-icons',
@@ -547,6 +552,16 @@ export class BaseVscodeHelpers<
     const dest = crossPlatformPath(settingspath);
     Helpers.writeFile(dest, settings);
     Helpers.info(`Vscode configured !`);
+    //#endregion
+  }
+  //#endregion
+
+  //#region fields & getters / vscode settings
+  public get vscodeSettingsJson(): ISettingsVscode {
+    //#region @backendFunc
+    const vscodeDir = path.join(this.project.location, '.vscode');
+    const p = crossPlatformPath([vscodeDir, 'settings.json']);
+    return fse.existsSync(p) && fse.readJSONSync(p, { encoding: 'utf8' });
     //#endregion
   }
   //#endregion
