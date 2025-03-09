@@ -109,7 +109,12 @@ export class BaseLinkedProjects<
       if (linkedPorj) {
         await linkedPorj.linkedProjects.saveLocationToDB();
       } else {
-        Helpers.warn(`Folder ${link.relativeClonePath} is missing projects...`);
+        Helpers.warn(`
+          In project ${proj.genericName}
+
+          Folder ${link.relativeClonePath} is missing projects...
+
+          `);
       }
     }
   }

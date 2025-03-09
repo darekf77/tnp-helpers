@@ -34,6 +34,11 @@ export class BasePackageJson extends BaseJsonFileReader<PackageJson> {
   }
 
   //#region name
+
+  get dependenciesTypesArray(): PackageJsonDependencyObj[] {
+    return PackageJsonDependencyObjArr;
+  }
+
   get name(): string {
     return this.data?.name || '';
   }

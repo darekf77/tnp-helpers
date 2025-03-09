@@ -214,9 +214,11 @@ export class BaseNodeModules<
   }
   //#endregion
 
+  //#region empty
   get empty() {
     return this.isEmpty();
   }
+  //#endregion
 
   //#region fields & getters / empty node_modules
   /**
@@ -369,10 +371,10 @@ export class BaseNodeModules<
 
     packagesNames = (packagesNames || []).reduce((a, current, i, arr) => {
       // @ts-ignore
-      return a.concat([ 
+      return a.concat([
         ...(Array.isArray(current)
           ? ((depsArr: string[]) => {
-            // @ts-ignore
+              // @ts-ignore
               const first: string = _.first(depsArr);
               depsArr = depsArr.slice(1);
               rules[first] = {

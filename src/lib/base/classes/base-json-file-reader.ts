@@ -47,7 +47,7 @@ export class BaseJsonFileReader<DATA> {
   /**
    * null when package.json not exist
    */
-  data: DATA | null;
+  protected data: DATA | null;
 
   /**
    * use json with comments reader to read package.json
@@ -74,7 +74,7 @@ export class BaseJsonFileReader<DATA> {
       readJsonAsJsonWithComments,
       defaultValue,
     } = options;
-    if(cwd) {
+    if (cwd) {
       cwd = crossPlatformPath(cwd);
       if (cwd.endsWith(`/${config.file.package_json}`)) {
         cwd = cwd.replace(`/${config.file.package_json}`, '');
@@ -85,9 +85,11 @@ export class BaseJsonFileReader<DATA> {
     this.defaultValue = defaultValue;
     this.fileName = fileName;
     if (cwd && jsonContent) {
-      throw new Error(`You can't provide cwd and jsonContent at the same time. Choose one.`);
+      throw new Error(
+        `You can't provide cwd and jsonContent at the same time. Choose one.`,
+      );
     }
-    if(!cwd && !jsonContent) {
+    if (!cwd && !jsonContent) {
       throw new Error(`You need to provide cwd or jsonContent`);
     }
     this.readJsonAsJsonWithComments = !!readJsonAsJsonWithComments;
@@ -174,6 +176,13 @@ export class BaseJsonFileReader<DATA> {
   //#region get all data
   getAllData(): DATA {
     return _.cloneDeep(this.data);
+  }
+  //#endregion
+
+  //#region set all data
+  setAllData(data: DATA): void {
+    this.data = _.cloneDeep(data);
+    this.saveToDisk();
   }
   //#endregion
 }

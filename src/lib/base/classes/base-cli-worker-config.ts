@@ -1,8 +1,5 @@
+import { gte } from 'semver';
 import { _ } from 'tnp-core/src';
-//#region @backend
-import * as semver from 'semver';
-// import * as columnify from 'columnify';
-//#endregion
 
 //#region base worker config
 export class BaseCliWorkerConfig {
@@ -42,7 +39,7 @@ export class BaseCliWorkerConfig {
       false;
     }
     try {
-      return semver.gte(this.version, other.version);
+      return gte(this.version, other.version);
     } catch (error) {
       return false;
     }

@@ -1,4 +1,5 @@
 import { config } from 'tnp-config/src';
+
 import { BaseJsonFileReader } from './base-json-file-reader';
 
 //#region bower.json interface

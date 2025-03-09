@@ -46,4 +46,5 @@
   "homepage": "https://github.com/darekf77/tnp-helpers#readme",
   "workerPlugins": {},
   "additionalNpmNames": ["taon-helpers"],
+  "packageJsonOverride": {}
 }

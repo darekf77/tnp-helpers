@@ -105,18 +105,11 @@ export class HelpersArrayObj {
     return Utils.uniqArray(array, uniqueProperty);
   }
 
+  /**
+   * @deprecated use Utils.uniqArray from tnp-core
+   */
   sortKeys(obj) {
-    if (_.isArray(obj)) {
-      return obj.map(this.sortKeys);
-    }
-    if (_.isObject(obj)) {
-      return _.fromPairs(
-        _.keys(obj)
-          .sort()
-          .map(key => [key, this.sortKeys(obj[key])]),
-      );
-    }
-    return obj;
+    return Utils.sortKeys(obj);
   }
 
   /**

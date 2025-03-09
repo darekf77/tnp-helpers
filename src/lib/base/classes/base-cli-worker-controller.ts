@@ -1,6 +1,7 @@
 import { Taon } from 'taon/src';
-import { BaseCliWorkerConfig } from './base-cli-worker-config';
 import { Helpers } from 'tnp-core/src';
+
+import { BaseCliWorkerConfig } from './base-cli-worker-config';
 
 @Taon.Controller({
   className: 'BaseCliWorkerController',
