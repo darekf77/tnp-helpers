@@ -1,7 +1,8 @@
 // @ts-nocheck
-//#region @backend
+
 // @ts-ignore
 var iso = {
+    //#region @backend
     aar: 'aa',
     abk: 'ab',
     afr: 'af',
@@ -407,6 +408,7 @@ var iso = {
     zhuang: 'za',
     chuang: 'za',
     zulu: 'zu',
+    //#endregion
   } as const;
 // @ts-ignore
 const isoKeys = Object.values(iso).sort();
@@ -570,6 +572,5 @@ export const translate = exp as (
   options: { to: LangType; from: LangType },
 ) => string;
 // export { exp as default };
-//#endregion
 
 // translate('Hello', { to: 'pl', from: 'en' });
