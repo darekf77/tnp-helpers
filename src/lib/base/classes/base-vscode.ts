@@ -98,6 +98,7 @@ export class BaseVscodeHelpers<
       'DavidAnson.vscode-markdownlint',
       'bibhasdn.unique-lines',
       'streetsidesoftware.code-spell-checker',
+      // 'usernamehw.errorlens', nice extension.. but to much input at once
 
       // 'pranaygp.vscode-css-peek', // high cpu usage
       // 'bengreenier.vscode-node-readme',
@@ -519,7 +520,9 @@ export class BaseVscodeHelpers<
         'ngrx',
         'nocheck',
         'mkdocs',
+        'Initing',
       ],
+      "cSpell.diagnosticLevel": "Hint"
     };
     //#endregion
 

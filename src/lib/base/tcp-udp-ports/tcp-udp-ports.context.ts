@@ -1,11 +1,11 @@
-//#region @backend
-import { os } from 'tnp-core/src';
-//#endregion
 import { BaseContext, Taon } from 'taon/src';
+import { os } from 'tnp-core/src';
 import { crossPlatformPath, path, Helpers } from 'tnp-core/src';
+
+import { MIGRATIONS_CLASSES_FOR_PortsContext } from '../../../migrations';
+
 import { PortsController } from './ports.controller';
 import { Port } from './ports.entity';
-import { MIGRATIONS_CLASSES_FOR_PortsContext } from '../../../migrations';
 
 //#region @backend
 const portsWorkerDatabaseLocation = crossPlatformPath([

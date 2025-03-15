@@ -1,49 +1,29 @@
 {
   "resources": [],
-
-  "overrided": {
-    "ignoreDepsPattern": [],
-    "includeAsDev": [],
-    "includeOnly": [
-      "tnp-models",
-      "task.js",
-      "json10-writer",
-      "lowdb",
-      "typescript",
-      "incremental-compiler"
-    ],
-    "dependencies": {},
-    "linkedFolders": [],
-    "npmFixes": [],
-  },
-
-  "smartContainerBuildTarget": "",
-  "linkedRepos": [],
-
-  "libReleaseOptions": {
-    "nodts": false,
-    "obscure": false,
-    "ugly": false,
-    "includeNodeModules": false,
-    "cliBuildNoDts": false,
-    "cliBuildObscure": false,
-    "cliBuildIncludeNodeModules": false,
-    "cliBuildUglify": false,
-  },
-
-  "smartContainerTarget": "",
   "type": "isomorphic-lib",
+
   "version": "v18",
 
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-  },
-
-  "description": "",
-  "license": "MIT",
-  "private": false,
-  "author": "",
-  "homepage": "https://github.com/darekf77/tnp-helpers#readme",
-  "workerPlugins": {},
+  "dependenciesNamesForNpmLib": [
+    "tnp-models",
+    "task.js",
+    "json10-writer",
+    "lowdb",
+    "typescript",
+    "incremental-compiler"
+  ],
   "additionalNpmNames": ["taon-helpers"],
+
+  "packageJsonOverride": {
+    "author": "",
+    "description": "",
+    "homepage": "https://github.com/darekf77/tnp-helpers#readme",
+    "license": "MIT",
+    "private": false,
+
+    "scripts": {
+      "docs": "python3 -m mkdocs",
+      "mkdocs": "python3 -m mkdocs",
+    }
+  }
 }

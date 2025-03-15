@@ -1,19 +1,21 @@
+import { HOST_FILE_PATH } from 'tnp-config/src';
+import { config } from 'tnp-config/src';
+import { chalk, _, path, os, UtilsOs } from 'tnp-core/src';
+import { crossPlatformPath } from 'tnp-core/src';
+import { UtilsTerminal } from 'tnp-core/src';
+
 import { Helpers, LinkedProject, PushProcessOptions } from '../../index';
+import { TypeOfCommit, CommitData } from '../commit-data';
+import { GhTempCode } from '../gh-temp-code';
+
 import { BaseCommandLineFeature } from './base-command-line-feature.backend';
 import { BaseProject } from './base-project';
-import { chalk, _, path, os, UtilsOs } from 'tnp-core/src';
-import { HOST_FILE_PATH } from 'tnp-config/src';
-import { TypeOfCommit, CommitData } from '../commit-data';
-import { config } from 'tnp-config/src';
-import { crossPlatformPath } from 'tnp-core/src';
-import { GhTempCode } from '../gh-temp-code';
-import { UtilsTerminal } from 'tnp-core/src';
 
 export class BaseGlobalCommandLine<
   PARAMS = any,
   PROJECT extends BaseProject<any, any> = BaseProject<any, any>,
 > extends BaseCommandLineFeature<PARAMS, PROJECT> {
-  public _() {
+  public _(): void {
     Helpers.error('Please select git command');
   }
 
@@ -320,20 +322,25 @@ export class BaseGlobalCommandLine<
   //#endregion
 
   //#region commands / reset
-  private __resetInfo(branchToReset: string) {
-    Helpers.info(`
+  private __resetInfo(branchToReset: string, withChildren: boolean) {
+    Helpers.info(
+      `
 
-    YOU ARE RESETING EVERYTHING TO BRANCH: ${chalk.bold(branchToReset)}
+    YOU ARE RESETING ${withChildren ? 'EVERYTHING' : 'PROJECT'} ` +
+        `TO BRANCH: ${chalk.bold(branchToReset)}
 
 - curret project (${this.project.name})
 ${
-  _.isArray(this.project.children) && this.project.children.length > 0
+  withChildren &&
+  _.isArray(this.project.children) &&
+  this.project.children.length > 0
     ? `- modules:\n${this.project.children
         .map(c => `\t${c.basename} (${chalk.yellow(c.name)})`)
         .join('\n')}`
     : ''
 }
-      `);
+      `,
+    );
   }
 
   async fetch() {
@@ -349,6 +356,7 @@ ${
       return;
     }
     const parent = this.project.parent as BaseProject;
+
     const branchFromLinkedProjectConfig =
       parent?.linkedProjects?.linkedProjects.find(l => {
         return (
@@ -380,7 +388,9 @@ ${
       ...this.__filterBranchesByPattern(''),
     ]);
 
-    if (resetOnlyChildren) {
+    const resetChildren = this.project.git.resetIsRestingAlsoChildren();
+
+    if (resetChildren && resetOnlyChildren) {
       Helpers.info(`Reseting only children...for defualt branches.`);
     } else {
       if (branches.length > 0) {
@@ -399,9 +409,11 @@ ${
       overrideBranchToReset
         ? overrideBranchToReset
         : this.project.git.getDefaultDevelopmentBranch(),
+      resetChildren,
     );
 
     let resetProject = this.project;
+
     if (this.project.git.isInsideGitRepo && !this.project.git.isGitRoot) {
       Helpers.warn(`You are not in root of git repo...`, false);
       resetProject = this.ins.nearestTo(
@@ -421,7 +433,7 @@ ${
 
     const res = await Helpers.questionYesNo(
       `Reset hard and pull current project ` +
-        `${resetProject.linkedProjects.linkedProjects.length > 0 ? '(and children)' : ''} ?`,
+        `${resetChildren && resetProject.linkedProjects.linkedProjects.length > 0 ? '(and children)' : ''} ?`,
     );
     if (res) {
       await resetProject.resetProcess(overrideBranchToReset);
@@ -1366,10 +1378,14 @@ Would you like to update current project configuration?`)
     branches: string[],
     task: 'rebase' | 'reset' | 'checkout',
   ) {
-    const childrenMsg =
-      this.project.children.length == 0
+    const actionWithoutChildren =
+      task === 'reset' && !this.project.git.resetIsRestingAlsoChildren();
+    const childrenMsg = actionWithoutChildren
+      ? '(without children)'
+      : this.project.children.length == 0
         ? '(no children in project)'
         : '(with children)';
+
     return await Helpers.autocompleteAsk(
       `Choose branch to ${task} in this project ${childrenMsg}: `,
       branches.map(b => {

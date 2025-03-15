@@ -120,8 +120,18 @@ export class BaseNodeModules<
   //#endregion
 
   //#region delete node_modules
-  remove() {
-    Helpers.remove(this.path, true);
+  async remove(options?: { skipQuestion?: boolean }): Promise<void> {
+    //#region @backendFunc
+    options = options || {};
+    if (
+      options.skipQuestion ||
+      (await Helpers.questionYesNo(
+        `You are about delete ${config.folder.node_modules} (Yes -> continue, No -> skip action) ?`,
+      ))
+    ) {
+      Helpers.remove(this.path, true);
+    }
+    //#endregion
   }
   //#endregion
 
@@ -154,7 +164,7 @@ export class BaseNodeModules<
       `,
     );
     while (true) {
-      this.remove();
+      await this.remove({ skipQuestion: true });
       // TODO @LAST - use method makeSureNodeModulesInstalled()
       try {
         Helpers.run(await this.prepareCommand(options), {
@@ -214,9 +224,11 @@ export class BaseNodeModules<
   }
   //#endregion
 
+  //#region empty
   get empty() {
     return this.isEmpty();
   }
+  //#endregion
 
   //#region fields & getters / empty node_modules
   /**
@@ -369,10 +381,10 @@ export class BaseNodeModules<
 
     packagesNames = (packagesNames || []).reduce((a, current, i, arr) => {
       // @ts-ignore
-      return a.concat([ 
+      return a.concat([
         ...(Array.isArray(current)
           ? ((depsArr: string[]) => {
-            // @ts-ignore
+              // @ts-ignore
               const first: string = _.first(depsArr);
               depsArr = depsArr.slice(1);
               rules[first] = {

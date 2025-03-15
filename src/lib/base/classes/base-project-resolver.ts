@@ -1,25 +1,17 @@
 //#region imports
-import {
-  //#region @backend
-  fse,
-  child_process,
-  //#endregion
-} from 'tnp-core';
-import { Helpers } from '../../index';
-import { path, crossPlatformPath } from 'tnp-core/src';
 import { config } from 'tnp-config/src';
+import {
+  fse,
+} from 'tnp-core';
+import { path, crossPlatformPath } from 'tnp-core/src';
 import { _ } from 'tnp-core/src';
-// import { Low } from 'lowdb';
+
+import { Helpers } from '../../index';
 import { ConfigDatabase } from '../config-database';
 import { ProjectDatabase } from '../project-database';
-import { BaseProject } from './base-project';
 import { PortsWorker } from '../tcp-udp-ports';
-//#region @backend
-// import { os } from 'tnp-core/src';
-// import { JSONFilePreset } from '../lowdb/node';
-// import { CLI } from 'tnp-core/src';
-export { ChildProcess } from 'child_process';
-//#endregion
+
+import { BaseProject } from './base-project';
 //#endregion
 
 export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {

@@ -1,4 +1,5 @@
 //#region imports
+import { config } from 'tnp-config/src';
 import {
   chalk,
   child_process,
@@ -7,15 +8,17 @@ import {
   path,
 } from 'tnp-core/src';
 import { _ } from 'tnp-core/src';
-import { Helpers } from '../../index';
-import { BaseFeatureForProject } from './base-feature-for-project';
-import type { BaseProject } from './base-project';
-import { config } from 'tnp-config/src';
-import { PackageJson } from 'type-fest';
 import { CoreModels } from 'tnp-core/src';
-import { BasePackageJson } from './base-package-json';
-import { BaseNodeModules } from './base-node-modules';
+import { PackageJson } from 'type-fest';
+
+import { Helpers } from '../../index';
+
 import { BaseBowerJson } from './base-bower-json';
+import { BaseFeatureForProject } from './base-feature-for-project';
+import { BaseNodeModules } from './base-node-modules';
+import { BasePackageJson } from './base-package-json';
+import type { BaseProject } from './base-project';
+
 //#endregion
 
 export class BaseNpmHelpers<
@@ -24,9 +27,11 @@ export class BaseNpmHelpers<
   //#region fields
   public readonly packageJson: BasePackageJson;
   public readonly _packageJsonType: typeof BasePackageJson = BasePackageJson;
+  private readonly _packageJsonTypeOriginal: typeof BasePackageJson = BasePackageJson;
 
   public readonly nodeModules: BaseNodeModules;
   public readonly _nodeModulesType: typeof BaseNodeModules = BaseNodeModules;
+  private readonly __nodeModulesTypeOriginal: typeof BaseNodeModules = BaseNodeModules;
 
   public readonly bowerJson: BaseBowerJson;
 
@@ -36,8 +41,12 @@ export class BaseNpmHelpers<
   constructor(project: PROJECT) {
     super(project);
     this.project = project;
-    this.packageJson = new this._packageJsonType({ cwd: project.location });
-    this.nodeModules = new this._nodeModulesType(project.location, this as any);
+    if(this._packageJsonType === this._packageJsonTypeOriginal) {
+      this.packageJson = new this._packageJsonType({ cwd: project.location });
+    }
+    if(this._nodeModulesType === this.__nodeModulesTypeOriginal) {
+      this.nodeModules = new this._nodeModulesType(project.location, this as any);
+    }
     this.bowerJson = new BaseBowerJson(project.location);
   }
   //#endregion

@@ -34,6 +34,18 @@ export class BasePackageJson extends BaseJsonFileReader<PackageJson> {
   }
 
   //#region name
+
+  /**
+   * 'dependencies'
+   * 'devDependencies'
+   * 'peerDependencies'
+   * 'resolutions';
+   * and whatever is in package.json to npm install
+   */
+  get dependenciesTypesArray(): PackageJsonDependencyObj[] {
+    return PackageJsonDependencyObjArr;
+  }
+
   get name(): string {
     return this.data?.name || '';
   }

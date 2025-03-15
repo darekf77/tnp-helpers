@@ -43,16 +43,6 @@ export class BaseReleaseProcess<
   }
   //#endregion
 
-  //#region methods & getters / reinstall node modules
-  protected async reinstallNodeModules(): Promise<void> {
-    Helpers.taskStarted(
-      `Reinstalling node_modules to recreate package-lock.json`,
-    );
-    await this.project.nodeModules.reinstall();
-    Helpers.taskDone(`Reinstalling node_modules to recreate package-lock.json`);
-  }
-  //#endregion
-
   //#region methods & getters / select changelog commits
   async selectChangelogCommits(): Promise<
     {
@@ -102,9 +92,8 @@ export class BaseReleaseProcess<
     if (lastReleaseCommitData.index !== -1) {
       const commits = [];
       for (let index = 0; index < lastReleaseCommitData.index; index++) {
-        const commitMessages = await this.project.git.getCommitMessageByIndex(
-          index,
-        );
+        const commitMessages =
+          await this.project.git.getCommitMessageByIndex(index);
         commits.push({ commitMessages, index });
       }
       return commits;
@@ -404,9 +393,8 @@ export class BaseReleaseProcess<
     //#region @backendFunc
     let askForEveryItem = false;
     while (true) {
-      let thingsToAddToChangeLog = await this.getChangelogContentToAppend(
-        askForEveryItem,
-      );
+      let thingsToAddToChangeLog =
+        await this.getChangelogContentToAppend(askForEveryItem);
 
       console.log(
         `New things for changelog.md:\n${chalk.gray.bold(
@@ -472,9 +460,8 @@ export class BaseReleaseProcess<
     const jiraNumbers = CommitData.extractAndOrderJiraNumbers(commitMessage);
     const message = CommitData.cleanMessageFromJiraNumTeamIdEtc(commitMessage);
     // console.log({ data, commit });
-    const extractedLibraries = await this.extractChangedLibrariesInCommit(
-      hashOrIndex,
-    );
+    const extractedLibraries =
+      await this.extractChangedLibrariesInCommit(hashOrIndex);
     const translatedMessage = _.upperFirst(
       await this.commitMessageInChangelogTransformFn(
         message.replace(/\-/g, '').replace(/\:/g, ''),
@@ -557,9 +544,8 @@ ${await this.getLastChangesFromCommits({
     let index = 0;
     const commits = [] as string[];
     while (true) {
-      const commitMessage = await this.project.git.getCommitMessageByIndex(
-        index,
-      );
+      const commitMessage =
+        await this.project.git.getCommitMessageByIndex(index);
       commits.push(commitMessage);
       ++index;
       if (
@@ -592,9 +578,8 @@ ${await this.getLastChangesFromCommits({
     let index = 0;
     const maxMessages = 50;
     while (true) {
-      const commitMessage = await this.project.git.getCommitMessageByIndex(
-        index,
-      );
+      const commitMessage =
+        await this.project.git.getCommitMessageByIndex(index);
 
       const npmVersionRegex = /\d+\.\d+\.\d+/;
       // console.log('commitMessage', { index, commitMessage });

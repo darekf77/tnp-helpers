@@ -1229,4 +1229,16 @@ export class BaseGit<
     //#endregion
   }
   //#endregion
+
+  //#region methods & getters / reset is resting also children
+  /**
+   * If true command navi reset will reset project
+   * and its children.
+   *
+   * If false command navi reset will reset only project.
+   */
+  resetIsRestingAlsoChildren(): boolean {
+    return true;
+  }
+  //#endregion
 }

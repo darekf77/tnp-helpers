@@ -1,48 +1,32 @@
 //#region import
-//#region @backend
-import { translate } from '../translate';
-
-import { fse, chalk } from 'tnp-core/src';
 export { ChildProcess } from 'child_process';
+import { config } from 'tnp-config/src';
 import { CommandOutputOptions } from 'tnp-core/src';
-
-//#endregion
 import { CoreModels } from 'tnp-core/src';
 import { CLI } from 'tnp-core/src';
 import { path, crossPlatformPath } from 'tnp-core/src';
-import { config } from 'tnp-config/src';
+import { fse, chalk } from 'tnp-core/src';
 import { _ } from 'tnp-core/src';
-import {
-  CommitData,
-  CoreProject,
-  Helpers,
-  LinkedPorjectsConfig,
-  LinkedProject,
-  TypeOfCommit,
-  UtilsTypescript,
-} from '../../index';
-import { BaseProjectResolver } from './base-project-resolver';
-import {
-  BaseProjectType,
-  LibrariesBuildOptions,
-  LibraryBuildCommandOptions,
-  NgProject,
-} from '../../models';
-import type { BaseLibraryBuild } from './base-library-build';
-import { BaseNpmHelpers } from './base-npm-helpers';
-import { BaseLinkedProjects } from './base-linked-projects';
-import { BaseGit } from './base-git';
-import { BaseVscodeHelpers } from './base-vscode';
-import { BaseReleaseProcess } from './base-release-process';
-import { BaseQuickFixes } from './base-quick-fixes';
-import { BaseGithubPages } from './base-github-pages';
 import { Utils } from 'tnp-core/src';
+
+import { CoreProject, Helpers, UtilsTypescript } from '../../index';
+import { BaseProjectType } from '../../models';
+
+import { BaseGit } from './base-git';
+import { BaseGithubPages } from './base-github-pages';
+import type { BaseLibraryBuild } from './base-library-build';
+import { BaseLinkedProjects } from './base-linked-projects';
+import { BaseNpmHelpers } from './base-npm-helpers';
+import { BaseProjectResolver } from './base-project-resolver';
+import { BaseQuickFixes } from './base-quick-fixes';
+import { BaseReleaseProcess } from './base-release-process';
+import { BaseVscodeHelpers } from './base-vscode';
 //#endregion
 
 const takenPorts = [];
 
 export abstract class BaseProject<
-  PROJECT extends BaseProject<any,any> = BaseProject<any, any>,
+  PROJECT extends BaseProject<any, any> = BaseProject<any, any>,
   TYPE = BaseProjectType,
 > {
   //#region static
@@ -56,7 +40,7 @@ export abstract class BaseProject<
   //#region fields
   public cache: any = {};
   public static cache: any = {};
-  public get globalCache() {
+  public get globalCache(): any {
     return BaseProject.cache;
   }
   readonly type: TYPE | string = 'unknow';
@@ -937,6 +921,9 @@ export abstract class BaseProject<
   async resetProcess(overrideBranch?: string, recrusive = false) {
     //#region @backend
     // console.log(`CORE PROJECT BRANCH ${this.name}: ${this.core?.branch}, overrideBranch: ${overrideBranch}`)
+    const resetChildren = this.git.resetIsRestingAlsoChildren();
+    const resetOnlyChildren =
+      !!this.linkedProjects.getLinkedProjectsConfig().resetOnlyChildren;
 
     Helpers.taskStarted(`
 
@@ -950,8 +937,10 @@ export abstract class BaseProject<
       this.git.getDefaultDevelopmentBranch();
 
     Helpers.info(`fetch data in ${this.genericName}`);
+
     this.git.fetch();
-    if (!this.linkedProjects.getLinkedProjectsConfig().resetOnlyChildren) {
+
+    if (!resetOnlyChildren) {
       Helpers.logInfo(`reseting hard  in ${this.genericName}`);
       this.git.resetHard();
       Helpers.logInfo(
@@ -967,17 +956,22 @@ export abstract class BaseProject<
       );
     }
 
-    for (const linked of this.linkedProjects.linkedProjects) {
-      const child = this.ins.From(this.pathFor([linked.relativeClonePath]));
-      if (child) {
-        await child.resetProcess(
-          child.linkedProjects.resetLinkedProjectsOnlyToCoreBranches()
-            ? void 0
-            : branchToReset,
-          true,
-        );
+    // console.log('resetOnlyChildren', resetOnlyChildren);
+    // console.log('resetChildren', resetChildren);
+    if (resetChildren) {
+      for (const linked of this.linkedProjects.linkedProjects) {
+        const child = this.ins.From(this.pathFor([linked.relativeClonePath]));
+        if (child) {
+          await child.resetProcess(
+            child.linkedProjects.resetLinkedProjectsOnlyToCoreBranches()
+              ? void 0
+              : branchToReset,
+            true,
+          );
+        }
       }
     }
+
     //#endregion
   }
   //#endregion

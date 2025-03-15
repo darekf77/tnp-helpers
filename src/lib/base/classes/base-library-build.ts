@@ -1,19 +1,18 @@
 //#region import
-//#region @backend
+import { config, FilesNames } from 'tnp-config/src';
 import { chalk } from 'tnp-core/src';
-export { ChildProcess } from 'child_process';
-//#endregion
 import { CoreModels } from 'tnp-core/src';
 import { path, crossPlatformPath } from 'tnp-core/src';
-import { config, FilesNames } from 'tnp-config/src';
 import { _, UtilsTerminal } from 'tnp-core/src';
-import { BaseFeatureForProject } from './base-feature-for-project';
+
 import { Helpers } from '../../index';
 import {
   LibrariesBuildOptions,
   LibraryBuildCommandOptions,
   NgProject,
 } from '../../models';
+
+import { BaseFeatureForProject } from './base-feature-for-project';
 import type { BaseProject } from './base-project';
 //#endregion
 
@@ -24,7 +23,7 @@ export abstract class BaseLibraryBuild<
   PROJECT extends BaseProject<BaseProject, any>,
 > extends BaseFeatureForProject {
   private cache: any = {};
-  private tempOrgTsConfigFile = `tmp-original-${config.file.tsconfig_json}`;
+  protected readonly tempOrgTsConfigFile = `tmp-original-${config.file.tsconfig_json}`;
 
   //#region getters & methods / sort by deps
   protected sortByDeps(libraries: PROJECT[]): PROJECT[] {
@@ -651,7 +650,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
   //#endregion
 
   //#region private methods / replace tsconfig pathes
-  private async replaceTsConfigsPathes() {
+  protected async replaceTsConfigsPathes() {
     //#region @backendFunc
 
     if (!this.project.hasFile(this.tempOrgTsConfigFile)) {
