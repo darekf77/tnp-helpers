@@ -1,9 +1,10 @@
-/**
- * @deprecated
- */
+import { CoreModels } from 'tnp-core/src';
+import type {ExecCommandType} from './execute-command';
+
+
 export type CommandType = {
   command?: string;
-  exec?: string[] | string; // | { (context: any): any };
+  exec?: ExecCommandType;
   title?: string;
   group?: string;
   hideContextMenu?: boolean;
@@ -11,22 +12,6 @@ export type CommandType = {
   isDefaultBuildCommand?: boolean;
 };
 
-/**
- * @deprecated
- */
-export type LibType =
-  | 'angular-lib'
-  | 'isomorphic-lib'
-  | 'angular-client'
-  | 'ionic-client'
-  | 'workspace'
-  | 'container'
-  | 'docker'
-  | 'unknow-npm-project';
-
-/**
- * @deprecated
- */
 export type ResolveVariable = {
   variable: string;
   resolveValueFromCommand?: string;
@@ -34,8 +19,8 @@ export type ResolveVariable = {
   placeholder?: string | Function;
   variableValue?: any;
   encode?: boolean;
-  options: { option: any; label: string }[] | string;
-  optionsResolved: {
+  options?: { option: any; label: string }[] | string;
+  optionsResolved?: {
     option: any;
     label: string;
     skipNextVariableResolve?: boolean;
@@ -49,19 +34,16 @@ export type ResolveVariable = {
   fillNextVariableResolveWhenSelectedIsActionOption?: boolean;
 };
 
-/**
- * @deprecated
- */
 export type ProcesOptions = {
   progressLocation?: 'notification' | 'statusbar';
   findNearestProject?: boolean;
   findNearestProjectWithGitRoot?: boolean;
-  findNearestProjectType?: LibType;
-  findNearestProjectTypeWithGitRoot?: LibType;
+  findNearestProjectType?: CoreModels.LibType;
+  findNearestProjectTypeWithGitRoot?: CoreModels.LibType;
   syncProcess?: boolean;
   reloadAfterSuccesFinish?: boolean;
   cancellable?: boolean;
-  title?: string;
+  titleWhenProcessing?: string;
   tnpNonInteractive?: boolean;
   tnpShowProgress?: boolean;
   debug?: boolean;

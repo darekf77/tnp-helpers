@@ -1,14 +1,12 @@
 //#region imports
-import { _, path } from 'tnp-core/src';
-import { Helpers } from '../../index';
-import { CLASS } from 'typescript-class-helpers/src';
 import { config } from 'tnp-config/src';
-import { LibTypeArr } from 'tnp-config/src';
-import type { BaseProject } from '../../index';
-//#region @backend
+import { _, CoreModels, path } from 'tnp-core/src';
 import { fse } from 'tnp-core/src';
 import { CLI } from 'tnp-core/src';
-//#endregion
+import { CLASS } from 'typescript-class-helpers/src';
+
+import type { BaseProject } from '../../index';
+import { Helpers } from '../../index';
 //#endregion
 
 export class HelpersCliTool {
@@ -320,7 +318,7 @@ export class HelpersCliTool {
     if (_.isBoolean(findNearestProjectType)) {
       Helpers.error(
         `argument --findNearestProjectType ` +
-          `needs to be library type:\n ${LibTypeArr.join(', ')}`,
+          `needs to be library type:\n ${CoreModels.BaseProjectTypeArr.join(', ')}`,
         false,
         true,
       );
@@ -328,7 +326,7 @@ export class HelpersCliTool {
     if (_.isBoolean(findNearestProjectTypeWithGitRoot)) {
       Helpers.error(
         `argument --findNearestProjectTypeWithGitRoot ` +
-          `needs to be library type:\n ${LibTypeArr.join(', ')}`,
+          `needs to be library standalone or container project`,
         false,
         true,
       );

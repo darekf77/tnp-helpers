@@ -1,9 +1,9 @@
-import type { ExtensionContext } from 'vscode';
-import * as path from 'path';
-import * as fse from 'fs';
 import * as child from 'child_process';
+import * as fse from 'fs';
+import * as path from 'path';
 
-import { ProcesOptions, ProgressData, ResolveVariable } from './models';
+import type { ExtensionContext } from 'vscode';
+
 import {
   capitalizeFirstLetter,
   optionsFix,
@@ -16,12 +16,26 @@ import {
   crossPlatformPath,
   getVscode,
 } from './helpers';
+import { ProcesOptions, ProgressData, ResolveVariable } from './models';
 
 const log = Log.instance(`execute-command`, 'logmsg');
 
+export type ExecCommandTypeOpt = {
+  vscode?: typeof import('vscode');
+  log?: Log;
+  context?: ExtensionContext;
+  cwd?: string;
+};
+
+export type ExecCommandType =
+  | string
+  | string[]
+  | ((opt: ExecCommandTypeOpt) => any);
+
 export function executeCommand(
+  titleOfTask,
   registerName: string,
-  commandToExecute: string | string[],
+  commandToExecute: ExecCommandType,
   pOptions?: ProcesOptions,
   isDefaultBuildCommand?: boolean,
   context?: ExtensionContext,
@@ -35,6 +49,8 @@ export function executeCommand(
   const vscode = getVscode();
   const vscodeWindow = vscode.window;
   return vscode.commands.registerCommand(registerName, function (uri) {
+
+
     const options = optionsFix(deepClone(pOptions));
     let progressLocation = vscode.ProgressLocation.Notification;
     if (options.progressLocation === 'statusbar') {
@@ -49,7 +65,7 @@ export function executeCommand(
       findNearestProjectWithGitRoot,
       syncProcess,
       cancellable,
-      title,
+      titleWhenProcessing,
       tnpNonInteractive,
       askBeforeExecute,
       resolveVariables,
@@ -57,6 +73,16 @@ export function executeCommand(
       showOutputDataOnSuccess,
       showSuccessMessage,
     } = options;
+
+    //#region handle title
+    if(!titleWhenProcessing && titleOfTask){
+      titleWhenProcessing = titleOfTask;
+    }
+
+    if(!titleOfTask && titleWhenProcessing){
+      titleOfTask = titleWhenProcessing;
+    }
+    //#endregion
 
     //#region prevent incorrect uri
     if (typeof uri === 'undefined') {
@@ -94,7 +120,7 @@ export function executeCommand(
     //#region handle first asking about executing command
     if (askBeforeExecute) {
       const continueMsg =
-        `Continue: ` + (title ? title : `command: ${commandToExecuteReadable}`);
+        `Continue: ` + (titleWhenProcessing ? titleWhenProcessing : `command: ${commandToExecuteReadable}`);
       vscodeWindow
         .showQuickPick(['Abort', continueMsg], {
           canPickMany: false,
@@ -112,7 +138,7 @@ export function executeCommand(
     //#region process
     async function process() {
       let MAIN_TITLE = capitalizeFirstLetter(
-        title ? title : `Executing: ${commandToExecuteReadable}`,
+        titleWhenProcessing ? titleWhenProcessing : `Executing: ${commandToExecuteReadable}`,
       );
       const resolveVars: ResolveVariable[] = [
         {
@@ -331,17 +357,23 @@ export function executeCommand(
             //#region endactions
 
             //#region finish action
-            function finishAction(childResult: any) {
+            const finishAction =(childResult: any) => {
               if (reloadAfterSuccesFinish) {
                 vscode.commands.executeCommand('workbench.action.reloadWindow');
               } else {
                 if (showSuccessMessage) {
-                  let doneMsg = title
+                  let doneMsg = titleWhenProcessing
                     ? MAIN_TITLE
                     : `command: ${commandToExecuteReadable}`;
+
+                  const commandIsFunction =
+                    typeof commandToExecute === 'function';
+
                   const message =
-                    `Done executing - ${doneMsg}.\n\n` +
-                    (childResult ? childResult.toString() : '');
+                    `Done executing ${!commandIsFunction ? doneMsg : childResult}.\n\n` +
+                    ((!commandIsFunction && childResult)
+                      ? childResult.toString()
+                      : '');
                   log.data(message);
                   vscodeWindow.showInformationMessage(message);
                 }
@@ -352,9 +384,10 @@ export function executeCommand(
 
             //#region finish error
             function finishError(err: any, data?: string) {
-              let doneMsg = title
-                ? title
+              let doneMsg = titleWhenProcessing
+                ? titleWhenProcessing
                 : `command: ${commandToExecuteReadable}`;
+
               const message = `Execution of ${doneMsg} failed:\n ${commandToExecuteReadable}
             ${err}
             ${data}
@@ -431,6 +464,16 @@ export function executeCommand(
               }
               //#endregion
 
+              if (typeof commandToExecute === 'function') {
+                try {
+                  await commandToExecute({ vscode, log, context, cwd });
+                  finishAction(titleOfTask);
+                } catch (error) {
+                  finishError(error);
+                }
+                return;
+              }
+
               //#region applying flags
               const flags = [
                 tnpShowProgress && '--tnpShowProgress',
@@ -476,8 +519,8 @@ export function executeCommand(
                     const name = await getModuleName();
                     execCommand = execCommand.replace(paramToResolve, name);
                     cmd = cmd.replace(paramToResolve, name);
-                    if (options?.title) {
-                      options.title = options.title.replace(
+                    if (options?.titleWhenProcessing) {
+                      options.titleWhenProcessing = options.titleWhenProcessing.replace(
                         paramToResolve,
                         relativePathToFileFromWorkspaceRoot,
                       );
@@ -494,8 +537,8 @@ export function executeCommand(
                       absolutePath,
                     );
                     cmd = cmd.replace(paramToResolve, absolutePath);
-                    if (options?.title) {
-                      options.title = options.title.replace(
+                    if (options?.titleWhenProcessing) {
+                      options.titleWhenProcessing = options.titleWhenProcessing.replace(
                         paramToResolve,
                         relativePathToFileFromWorkspaceRoot,
                       );
@@ -522,8 +565,8 @@ export function executeCommand(
                       paramToResolve,
                       relativePathToFileFromWorkspaceRoot,
                     );
-                    if (options?.title) {
-                      options.title = options.title.replace(
+                    if (options?.titleWhenProcessing) {
+                      options.titleWhenProcessing = options.titleWhenProcessing.replace(
                         paramToResolve,
                         relativePathToFileFromWorkspaceRoot,
                       );
@@ -542,8 +585,8 @@ export function executeCommand(
                         path.dirname(relativePathToFileFromWorkspaceRoot),
                       ),
                     );
-                    if (options?.title) {
-                      options.title = options.title.replace(
+                    if (options?.titleWhenProcessing) {
+                      options.titleWhenProcessing = options.titleWhenProcessing.replace(
                         paramToResolve,
                         relativePathToFileFromWorkspaceRoot,
                       );
@@ -570,8 +613,8 @@ export function executeCommand(
                       variableInsidPrecentSign,
                       variableValueFinal,
                     );
-                    if (options?.title) {
-                      options.title = options.title.replace(
+                    if (options?.titleWhenProcessing) {
+                      options.titleWhenProcessing = options.titleWhenProcessing.replace(
                         variableInsidPrecentSign,
                         variableValueFinal,
                       );
