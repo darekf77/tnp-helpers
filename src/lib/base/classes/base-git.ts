@@ -1,16 +1,16 @@
 //#region imports
-//#region @backend
-import { chalk, fse } from 'tnp-core/src';
-import { translate } from '../translate';
-//#endregion
-import { BaseFeatureForProject } from './base-feature-for-project';
+import { chalk, fse, Utils } from 'tnp-core/src';
+import { crossPlatformPath, path, _, UtilsTerminal } from 'tnp-core/src';
+
 import {
   CommitData,
   Helpers,
   PushProcessOptions,
   TypeOfCommit,
 } from '../../index';
-import { crossPlatformPath, path, _, UtilsTerminal } from 'tnp-core/src';
+import { translate } from '../translate';
+
+import { BaseFeatureForProject } from './base-feature-for-project';
 import type { BaseProject } from './base-project';
 //#endregion
 
@@ -259,6 +259,30 @@ export class BaseGit<
     return Helpers.git.thereAreSomeUncommitedChangeExcept(
       filesList,
       this.project.location,
+    );
+    //#endregion
+  }
+  //#endregion
+
+  async resolveActionCommits() {
+    //#region @backendFunc
+    while (this.hasActionCommitsToMelt) {
+      Helpers.info(`Please fix your project: ${this.project.genericName}`);
+      this.project.git.meltActionCommits();
+      this.project.run(`code ${this.project.location}`).sync();
+      await UtilsTerminal.pressAnyKeyToContinueAsync({
+        message: `Press any key to continue when you done`,
+      });
+    }
+    //#endregion
+  }
+
+  //#region methods & getters / has action commits to melt
+  get hasActionCommitsToMelt() {
+    //#region @backendFunc
+    const lastCommitMessage = this.lastCommitMessage() || '';
+    return (
+      lastCommitMessage.trim() === Helpers.git.ACTION_MSG_RESET_GIT_HARD_COMMIT
     );
     //#endregion
   }

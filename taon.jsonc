@@ -1,7 +1,5 @@
 {
-  "resources": [],
   "type": "isomorphic-lib",
-
   "version": "v18",
 
   "dependenciesNamesForNpmLib": [
@@ -12,7 +10,9 @@
     "typescript",
     "incremental-compiler"
   ],
+
   "additionalNpmNames": ["taon-helpers"],
+  "resources": [],
 
   "packageJsonOverride": {
     "author": "",

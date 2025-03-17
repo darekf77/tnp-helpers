@@ -120,6 +120,11 @@ export abstract class BaseProject<
   //#endregion
 
   //#region methods & getters / is monorepo
+  /**
+   * TODO move this to framework
+   * Linked projects are actual inside repo
+   * not in separated folders/git sub repos
+   */
   get isMonorepo(): boolean {
     return false;
   }

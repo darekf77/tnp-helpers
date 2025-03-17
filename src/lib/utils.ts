@@ -1,7 +1,6 @@
 //#region imports
-//#region @backend
-import { crossPlatformPath, fse, Helpers, path } from 'tnp-core/src';
-import * as express from 'express';
+import { fse, Helpers, path } from 'tnp-core/src';
+import { _, CoreModels, Utils } from 'tnp-core/src';
 import {
   createPrinter,
   createSourceFile,
@@ -40,9 +39,14 @@ import {
   isStringLiteral,
   canHaveDecorators,
   getDecorators,
+  visitNode,
+  isExportDeclaration,
+  isImportDeclaration,
+  Expression,
+  isNamedImports,
+  isNamedExports,
 } from 'typescript';
-//#endregion
-import { _, chalk, CoreModels, Utils } from 'tnp-core/src';
+import type * as ts from 'typescript';
 //#endregion
 
 //#region utils npm
@@ -257,12 +261,8 @@ export namespace UtilsTypescript {
   //#endregion
 
   //#region exports from file
-  /**
-   * Function to extract exports from a TypeScript file
-   */
-  export const exportsFromFile = (
-    filePath: string,
-  ): {
+
+  interface ExportInfo {
     type:
       | 'class'
       | 'function'
@@ -276,19 +276,32 @@ export namespace UtilsTypescript {
       | 'module'
       | 'namespace';
     name: string;
-  }[] => {
-    //#region @backendFunc
+  }
 
+  /**
+   * Function to extract exports from a TypeScript file
+   */
+  export const exportsFromFile = (filePath: string): ExportInfo[] => {
+    //#region @backendFunc
     if (!filePath.endsWith('.ts')) {
       return [];
     }
+    const file = Helpers.readFile(filePath);
+    return exportsFromContent(file);
+    //#endregion
+  };
 
+  /**
+   * Function to extract exports from a TypeScript file
+   */
+  export const exportsFromContent = (fileContent: string): ExportInfo[] => {
+    //#region @backendFunc
     // Read the content of the file
-    const sourceCode = fse.readFileSync(filePath, 'utf-8');
+    const sourceCode = fileContent;
 
     // Create a SourceFile object using the TypeScript API
     const sourceFile = createSourceFile(
-      filePath,
+      'temp.ts',
       sourceCode,
       ScriptTarget.Latest,
       true,
@@ -537,7 +550,7 @@ export namespace UtilsTypescript {
     //#region @backendFunc
     const sourceFile = createSourceFile(
       fileAbsPath,
-      require('fs').readFileSync(fileAbsPath, 'utf8'),
+      Helpers.readFile(fileAbsPath),
       ScriptTarget.Latest,
       true,
     );
@@ -617,6 +630,348 @@ export namespace UtilsTypescript {
     //#endregion
   };
   //#endregion
+
+  //#region ser or add exported variable with AST
+  // Helper to check if a node has 'export' in its modifiers
+  // const hasExportModifier = (
+  //   modifiers: ts.NodeArray<ts.Modifier> | undefined,
+  // ) => {
+  //   return (
+  //     !!modifiers && modifiers.some(m => m.kind === SyntaxKind.ExportKeyword)
+  //   );
+  // };
+
+  /**
+   * Attempts to set or add an exported const with given name and value.
+   */
+  export const setValueToVariableInTsFile = (
+    tsAbsFilePath: string,
+    variableName: string,
+    valueOfVariable: any,
+    addIfNotExists = true,
+  ): void => {
+    //#region @backendFunc
+    const sourceText = Helpers.readFile(tsAbsFilePath);
+    const sourceFile = createSourceFile(
+      tsAbsFilePath,
+      sourceText,
+      ScriptTarget.Latest,
+      /*setParentNodes */ true,
+    );
+
+    // We'll build an AST transformer that modifies or inserts our variable declaration
+    const transformer = (context: TransformationContext) => {
+      const { factory } = context;
+
+      return (rootNode: SourceFile) => {
+        let variableFound = false;
+
+        const visit = (node: ts.Node): ts.Node => {
+          // Check for "export const <variableName> = ...;"
+          if (
+            isVariableStatement(node)
+            // && hasExportModifier(node.modifiers as any)
+          ) {
+            const declList = node.declarationList;
+            const newDeclarations = declList.declarations.map(decl => {
+              if (isIdentifier(decl.name) && decl.name.text === variableName) {
+                variableFound = true;
+
+                // Create a new initializer. If valueOfVariable is a string,
+                // we wrap it with quotes; otherwise, create a numeric or object literal.
+                let initializer: ts.Expression;
+                if (typeof valueOfVariable === 'string') {
+                  initializer = factory.createStringLiteral(valueOfVariable);
+                } else if (typeof valueOfVariable === 'number') {
+                  initializer = factory.createNumericLiteral(valueOfVariable);
+                } else {
+                  // Fallback: wrap JSON string => parse with TS
+                  // Or you can create a more sophisticated approach for arrays/objects
+                  initializer = factory.createIdentifier(
+                    JSON.stringify(valueOfVariable),
+                  );
+                }
+
+                // Return a new variable declaration with the updated initializer
+                return factory.updateVariableDeclaration(
+                  decl,
+                  decl.name,
+                  decl.exclamationToken,
+                  decl.type,
+                  initializer,
+                );
+              }
+              return decl;
+            });
+
+            // Return a new VariableStatement if we changed anything
+            return factory.updateVariableStatement(
+              node,
+              node.modifiers,
+              factory.updateVariableDeclarationList(declList, newDeclarations),
+            );
+          }
+
+          return visitEachChild(node, visit, context);
+        };
+
+        let updatedRoot = visitNode(rootNode, visit) as any;
+
+        // If variable not found and addIfNotExists === true, add a new export statement
+        if (!variableFound && addIfNotExists) {
+          // Create something like: export const <variableName> = <valueOfVariable>;
+          let initializer: ts.Expression;
+          if (typeof valueOfVariable === 'string') {
+            initializer = factory.createStringLiteral(valueOfVariable);
+          } else if (typeof valueOfVariable === 'number') {
+            initializer = factory.createNumericLiteral(valueOfVariable);
+          } else {
+            initializer = factory.createIdentifier(
+              JSON.stringify(valueOfVariable),
+            );
+          }
+
+          const newVarStatement = factory.createVariableStatement(
+            [factory.createModifier(SyntaxKind.ExportKeyword)],
+            factory.createVariableDeclarationList(
+              [
+                factory.createVariableDeclaration(
+                  factory.createIdentifier(variableName),
+                  /* exclamationToken */ undefined,
+                  /* type */ undefined,
+                  initializer,
+                ),
+              ],
+              NodeFlags.Const,
+            ),
+          );
+
+          // Append it to the end of the file
+          const newStatements = [...updatedRoot.statements, newVarStatement];
+          updatedRoot = factory.updateSourceFile(updatedRoot, newStatements);
+        }
+
+        return updatedRoot;
+      };
+    };
+
+    // Apply the transformer
+    const result = transform(sourceFile, [transformer]);
+    const transformedSourceFile = result.transformed[0] as ts.SourceFile;
+
+    // Print the new AST back to text
+    const printer = createPrinter();
+    const newContent = printer.printFile(transformedSourceFile);
+
+    // Overwrite the file
+    Helpers.writeFile(tsAbsFilePath, newContent);
+    result.dispose();
+    //#endregion
+  };
+
+  //#endregion
+
+  //#region recognize imports from file
+
+  //#region helpers / ts import export class
+  export class TsImportExport {
+    type: 'export' | 'import' | 'async-import' | 'require';
+    /**
+     * ORIGNAL
+     * Name of the file that is being imported/exported
+     * with parenthesis included
+     */
+    embeddedPathToFile: string;
+    /**
+     * same as cleanEmbeddedPathToFile but without quotes (parenthesis)
+     */
+    cleanEmbeddedPathToFile: string;
+    removeStartEndQuotes(str: string) {
+      return str.replace(/^['"`]/, '').replace(/['"`]$/, '');
+    }
+    /**
+     * RESULT OF PROCESSING
+     */
+    embeddedPathToFileResult: string;
+    /**
+     * @deprecated use cleanEmbeddedPathToFile
+     */
+    packageName: string;
+    isIsomorphic?: boolean;
+    startRow: number;
+    startCol: number;
+
+    getFullLine(content: string) {
+      return content.split('\n')[this.startRow - 1];
+    }
+
+    endRow: number;
+    endCol: number;
+    parenthesisType: 'single' | 'double' | 'tics';
+    wrapInParenthesis(str: string) {
+      return this.parenthesisType === 'single'
+        ? `'${str}'`
+        : this.parenthesisType === 'double'
+          ? `"${str}"`
+          : `\`${str}\``;
+    }
+
+    importElements: string[] = [];
+
+    constructor(
+      type: 'export' | 'import' | 'async-import' | 'require',
+      embeddedPathToFile: string,
+      start: ts.LineAndCharacter,
+      end: ts.LineAndCharacter,
+      parenthesisType: 'single' | 'double' | 'tics',
+      importElements: string[] = [],
+    ) {
+      this.type = type;
+      this.isIsomorphic = false;
+      this.embeddedPathToFile = embeddedPathToFile;
+      this.cleanEmbeddedPathToFile =
+        this.removeStartEndQuotes(embeddedPathToFile);
+      this.embeddedPathToFileResult = embeddedPathToFile;
+      this.startRow = start.line + 1; // TypeScript lines are zero-based
+      this.startCol = start.character + 1;
+      this.endRow = end.line + 1;
+      this.endCol = end.character + 1;
+      this.parenthesisType = parenthesisType;
+      this.importElements = importElements;
+    }
+  }
+  //#endregion
+
+  //#region helpers / get quote type
+  const getQuoteType = (text: string): 'single' | 'double' | 'tics' => {
+    if (text.startsWith('`')) return 'tics';
+    if (text.startsWith("'")) return 'single';
+    return 'double';
+  };
+  //#endregion
+
+  const extractImportExportElements = (node: ts.Node): string[] => {
+    const elements: string[] = [];
+
+    if (isImportDeclaration(node) && node.importClause) {
+      // Check if there are named imports inside { }
+      if (
+        node.importClause.namedBindings &&
+        isNamedImports(node.importClause.namedBindings)
+      ) {
+        elements.push(
+          ...node.importClause.namedBindings.elements.map(el => el.name.text),
+        );
+      }
+    } else if (isExportDeclaration(node) && node.exportClause) {
+      // Check if there are named exports inside { }
+      if (isNamedExports(node.exportClause)) {
+        elements.push(...node.exportClause.elements.map(el => el.name.text));
+      }
+    }
+
+    return elements;
+  };
+
+  export const recognizeImportsFromFile = (
+    fileAbsPAth: string,
+  ): TsImportExport[] => {
+    //#region @backendFunc
+    const content = Helpers.readFile(fileAbsPAth);
+    return recognizeImportsFromContent(content);
+    //#endregion
+  };
+
+  export const recognizeImportsFromContent = (
+    fileContent: string,
+  ): TsImportExport[] => {
+    //#region @backendFunc
+    if (!fileContent) {
+      return [];
+    }
+
+    const sourceFile = createSourceFile(
+      'file.ts', // a name for the file
+      fileContent,
+      ScriptTarget.Latest,
+      true,
+    );
+
+    const results: TsImportExport[] = [];
+
+    const visit = (node: Node) => {
+      // Check for dynamic import expressions specifically
+      if (
+        isCallExpression(node) &&
+        node.expression.kind === SyntaxKind.ImportKeyword
+      ) {
+        const args = node.arguments;
+        if (args.length) {
+          const arg = args[0];
+          const specifier = arg.getText(sourceFile);
+          const parenthesisType = getQuoteType(specifier);
+          results.push(
+            new TsImportExport(
+              'async-import',
+              specifier,
+              sourceFile.getLineAndCharacterOfPosition(node.getStart()),
+              sourceFile.getLineAndCharacterOfPosition(node.getEnd()),
+              parenthesisType,
+            ),
+          );
+        }
+      }
+
+      if (isImportDeclaration(node) || isExportDeclaration(node)) {
+        const specifier = node.moduleSpecifier
+          ? (node.moduleSpecifier as Expression).getText(sourceFile)
+          : '';
+        const parenthesisType = getQuoteType(specifier);
+        const type =
+          node.kind === SyntaxKind.ImportDeclaration ? 'import' : 'export';
+        const importExportElements = extractImportExportElements(node);
+        results.push(
+          new TsImportExport(
+            type,
+            specifier,
+            sourceFile.getLineAndCharacterOfPosition(node.getStart()),
+            sourceFile.getLineAndCharacterOfPosition(node.getEnd()),
+            parenthesisType,
+            importExportElements,
+          ),
+        );
+      }
+
+      if (
+        isCallExpression(node) &&
+        node.expression.getText(sourceFile) === 'require'
+      ) {
+        const args = node.arguments;
+        if (args.length > 0) {
+          const arg = args[0];
+          const specifier = arg.getText(sourceFile);
+          const parenthesisType = getQuoteType(specifier);
+          results.push(
+            new TsImportExport(
+              'require',
+              specifier,
+              sourceFile.getLineAndCharacterOfPosition(arg.getStart()),
+              sourceFile.getLineAndCharacterOfPosition(arg.getEnd()),
+              parenthesisType,
+            ),
+          );
+        }
+      }
+
+      forEachChild(node, visit);
+    };
+
+    forEachChild(sourceFile, visit);
+
+    return results;
+    //#endregion
+  };
+  //#endregion
 }
 
 //#endregion
@@ -626,6 +981,7 @@ export namespace UtilsHttp {
   //#region utils http / start http server
   export const startHttpServer = async (cwd: string, port: number) => {
     //#region @backendFunc
+    const express = require('express');
     const app = express();
 
     // Serve static files from the provided cwd

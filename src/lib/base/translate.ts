@@ -1,7 +1,4 @@
-// @ts-nocheck
-//#region @backend
-// @ts-ignore
-var iso = {
+const iso = {
     aar: 'aa',
     abk: 'ab',
     afr: 'af',
@@ -421,6 +418,7 @@ var languages = e => {
     throw new Error(`The language "${e}" is not part of the ISO 639-1`);
   return e;
 };
+
 function Cache() {
   var e = Object.create(null);
   function a(a) {
@@ -433,6 +431,7 @@ function Cache() {
     t && clearTimeout(t.timeout);
     var o = { value: i, expire: r + Date.now() };
     return (
+      // @ts-ignore
       isNaN(o.expire) || (o.timeout = setTimeout(() => a(n), r)), (e[n] = o), i
     );
   }),
@@ -523,6 +522,7 @@ var libre = {
   },
   engines = { google: google, yandex: yandex, libre: libre, deepl: deepl };
 const Translate = function (e = {}) {
+    // @ts-ignore
     if (!(this instanceof Translate)) return new Translate(e);
     const a = {
         from: 'en',
@@ -534,34 +534,35 @@ const Translate = function (e = {}) {
         keys: {},
       },
       n = async (e, a = {}) => {
-        'string' == typeof a && (a = { to: a }),
-          (a.text = e),
-          (a.from = languages(a.from || n.from)),
-          (a.to = languages(a.to || n.to)),
-          (a.cache = a.cache || n.cache),
-          (a.engines = a.engines || {}),
-          (a.engine = a.engine || n.engine),
-          (a.url = a.url || n.url),
-          (a.id = a.id || `${a.url}:${a.from}:${a.to}:${a.engine}:${a.text}`),
-          (a.keys = a.keys || n.keys || {});
-        for (let e in n.keys) a.keys[e] = a.keys[e] || n.keys[e];
-        a.key = a.key || n.key || a.keys[a.engine];
-        const i = a.engines[a.engine] || n.engines[a.engine],
+        'string' == typeof a && (a = { to: a }), // @ts-ignore
+          (a.text = e), // @ts-ignore
+          (a.from = languages(a.from || n.from)), // @ts-ignore
+          (a.to = languages(a.to || n.to)), // @ts-ignore
+          (a.cache = a.cache || n.cache), // @ts-ignore
+          (a.engines = a.engines || {}), // @ts-ignore
+          (a.engine = a.engine || n.engine), // @ts-ignore
+          (a.url = a.url || n.url), // @ts-ignore
+          (a.id = a.id || `${a.url}:${a.from}:${a.to}:${a.engine}:${a.text}`), // @ts-ignore
+          (a.keys = a.keys || n.keys || {}); // @ts-ignore
+        for (let e in n.keys) a.keys[e] = a.keys[e] || n.keys[e]; // @ts-ignore
+        a.key = a.key || n.key || a.keys[a.engine]; // @ts-ignore
+        const i = a.engines[a.engine] || n.engines[a.engine], // @ts-ignore
           r = exp$1.get(a.id);
-        if (r) return Promise.resolve(r);
-        if (a.to === a.from) return Promise.resolve(a.text);
+        if (r) return Promise.resolve(r); // @ts-ignore
+        if (a.to === a.from) return Promise.resolve(a.text); // @ts-ignore
         if (i.needkey && !a.key)
-          throw new Error(
+          // @ts-ignore
+          throw new Error( // @ts-ignore
             `The engine "${a.engine}" needs a key, please provide it`,
           );
-        const t = i.fetch(a);
+        const t = i.fetch(a); // @ts-ignore
         return fetch(...t)
-          .then(i.parse)
+          .then(i.parse) // @ts-ignore
           .then(e => exp$1.set(a.id, e, a.cache));
       };
     for (let i in a) n[i] = void 0 === e[i] ? a[i] : e[i];
     return n;
-  },
+  }, // @ts-ignore
   exp = new Translate();
 exp.Translate = Translate;
 export type LangType = (typeof names)[keyof typeof names];
@@ -570,6 +571,5 @@ export const translate = exp as (
   options: { to: LangType; from: LangType },
 ) => string;
 // export { exp as default };
-//#endregion
 
 // translate('Hello', { to: 'pl', from: 'en' });
