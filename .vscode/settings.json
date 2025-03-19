@@ -157,6 +157,12 @@
         "/taon.jsonc"
       ],
       "url": "./taon-config-standalone.schema.json"
+    },
+    {
+      "fileMatch": [
+        "/taon.jsonc"
+      ],
+      "url": "./taon-config-standalone.schema.json"
     }
   ],
   "cSpell.words": [

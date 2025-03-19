@@ -801,8 +801,44 @@ export namespace UtilsTypescript {
     startRow: number;
     startCol: number;
 
-    getFullLine(content: string) {
-      return content.split('\n')[this.startRow - 1];
+    /**
+     * it will extract part of the file content
+     * that is between startRow, startCol and endRow, endCol
+     * and contains import/export/require statement
+     */
+    getStringPartFrom(wholeContentOfFile: string): string {
+      const lines = wholeContentOfFile.split('\n');
+
+      // Convert 1-based row indices to 0-based
+      const startRowIndex = this.startRow - 1;
+      const endRowIndex = this.endRow - 1;
+
+      // Ensure indices are within bounds
+      if (startRowIndex >= lines.length || endRowIndex >= lines.length) {
+        throw new Error('Row index out of bounds.');
+      }
+
+      let extractedLines: string[] = [];
+
+      for (let i = startRowIndex; i <= endRowIndex; i++) {
+        let line = lines[i];
+
+        if (i === startRowIndex && i === endRowIndex) {
+          // Same row: extract from startCol to endCol
+          extractedLines.push(line.substring(this.startCol - 1, this.endCol));
+        } else if (i === startRowIndex) {
+          // First row: extract from startCol to end
+          extractedLines.push(line.substring(this.startCol - 1));
+        } else if (i === endRowIndex) {
+          // Last row: extract from beginning to endCol
+          extractedLines.push(line.substring(0, this.endCol));
+        } else {
+          // Whole row in between
+          extractedLines.push(line);
+        }
+      }
+
+      return extractedLines.join('\n');
     }
 
     endRow: number;
@@ -1081,6 +1117,7 @@ export namespace UtilsMd {
     level = 1,
   ): string => {
     //#region @backendFunc
+    mdfileContent = mdfileContent || '';
     // Regular expressions for detecting assets
     const markdownImgRegex = /(!\[.*?\]\()(\.\/|\.\.\/.*?)(\))/g; // Matches ![alt](./path or ../path)
     const htmlImgRegex = /(<img.*?src=["'])(\.\/|\.\.\/.*?)(["'])/g; // Matches <img src="./path or ../path">
