@@ -70,6 +70,10 @@
 
 `taon pf <=> taon pushfeature <=> taon push:feature`
 
+`taon pchore <...>` => push chore update
+
+`taon pc <=> taon chore`
+
 `taon pdocs <...>` => push quickly documentation
 
 `taon ptest <...>` => push quickly test update
