@@ -2,9 +2,9 @@
 
 ## Handy shortcuts
 
-`taon soft`  => quivalent: git reset --soft HEAD~1
+`taon soft`  => `git reset --soft HEAD~1`
 
-`taon hosts`  => open hosts files
+`taon hosts`  => open hosts files in VSCode
 
 `taon count:commits`  => show origin of project
 
@@ -14,11 +14,11 @@
 
 `taon origin`  => show origin of project
 
-`taon remote`  => - || -
+`taon remote`  => `taon origin` 
 
 `taon origins`  => show all origins of project
 
-`taon remotes`  => - || -
+`taon remotes`  => `taon origins`
 
 ## Rebase 
 
@@ -36,7 +36,7 @@
 
 `taon branch`  => git fetch / display menu with branches to select / select branch
 
-`taon reset`  => remove tmp files for project + `taon branch` (include children)
+`taon reset`  => `git fetch` + remove tmp files for project + `taon branch` (include children)
 
 `taon reset my-branch`  => same as `taon reset` but specific branch
 
@@ -46,38 +46,78 @@
 
 `taon pull`  => pull current branch or current workspace projects one after another
 
-`taon repull`  => deep reset hard and pull
+`taon repull`  => `git reset hard --HEAD~10` + `taon pull`
 
 
 ## Push
 
 `taon pushall` => push code to all remotes(origins) defined in .git/config
 
-`taon pall` => - || -
+`taon pall` => `taon pushall`
 
-`taon push`  => git add + commit with message based on branch name + push current branch
+`taon push`  => (optionally git add +)  commit with message based on branch name + push current branch
 
-`taon pfix TEAM6# JIRA-379089 JIRA-380320 proper counter message`  
-=> git add + git commit bugfix/JIRA-379089-JIRA-380320-proper-counter-message
+## Checkout branch + add changes + commit message + push branch
 
-`taon pfix <=> taon pushfix <=> taon push:fix`
+Create special branches (with metadata) that can be use later with command
+`taon push`<br> to "re-push" changes and use matadata from branch name 
+ as commit message.
 
-`taon push:feature TEAM6#JIRA-379089 admin notificaiton`
-=> git add + git commit feature/JIRA-379089-JIRA-380320-admin-notification
+### fix
+Quick commit and push bugfix<br>
+`taon pfix JIRA-379089 JIRA-380320 proper counter message [my-lib]` <br> 
+<=><br>
+`git checkout -b fix/JIRA-379089-JIRA-380320-proper-counter-message` + <br>
+`git add` + <br>
+`git commit -m "fix(my-lib): proper counter message JIRA-379089 JIRA-380320"` + <br>
+`git push origin fix/JIRA-379089-JIRA-380320-proper-counter-message`
 
-`taon pf TEAM6# JIRA-379089 notyfikacje admin` 
-=> wypushowanie feature-a 
+taon pfix <=> taon pushfix <=> taon push:fix
 
-`taon pf <=> taon pushfeature <=> taon push:feature`
+### feature
+Quick commit and push feature<br>
+`taon pf JIRA-379089 JIRA-380320 admin notificaiton [my-lib]`  <br>
+<>=><br>
+`git checkout -b feature/JIRA-379089-JIRA-380320-proper-counter-message` + <br>
+`git add` + <br>
+`git commit -m "feat(my-lib): admin notificaiton JIRA-379089 JIRA-380320"` + <br>
+`git push origin feature/JIRA-379089-JIRA-380320-proper-counter-message`
 
-`taon pchore <...>` => push chore update
+taon pf <=> taon pushfeature <=> taon push:feature
 
-`taon pc <=> taon chore`
+### chore
+Quick commit and push chore <br>
+`taon pc JIRA-379089 update deps`  
+<=>  <br>
+`git checkout -b chore/JIRA-379089-update-deps` + <br>
+`git add` + <br>
+`git commit -m "chore: update deps JIRA-379089"` + <br>
+`git push origin  chore/JIRA-379089-update-deps`
 
-`taon pdocs <...>` => push quickly documentation
+taon pc <=> taon chore <=> taon pchore
 
-`taon ptest <...>` => push quickly test update
+### docs
+Quick commit and push docs update <br>
+`taon pd explained installation`<br>
+ <=> <br>
+`git checkout -b docs/explained-installation` + <br>
+`git add` + <br>
+`git commit -m "docs:explained installation"` + <br>
+`git push origin docs/explained-installation`
 
-`taon pstyl <...>` => push quickly styles update
+taon pd <=> taon pdocs
 
-`taon pref <...>` => push quickly refactor
+### test
+`taon pt <args>`<br>
+`taon ptest <args>`<br>
+
+### styl
+`taon ps <args>` <br>
+`taon pstyl <args>` v
+
+### refactor
+`taon pref <args>`<br>
+`taon prefactor <args>`<br>
+
+### release
+`taon prelease <args>`<br>
