@@ -15,8 +15,8 @@ export class LinkedProject {
         linkedProj.remoteUrl().replace('.git', ''),
       );
     }
-    if (!linkedProj.deafultBranch) {
-      linkedProj.deafultBranch = 'master';
+    if (!linkedProj.defaultBranch) {
+      linkedProj.defaultBranch = 'master';
     }
     return linkedProj;
   }
@@ -33,7 +33,7 @@ export class LinkedProject {
         path.basename(currentRemoteUrl),
         `${projectName}.git`,
       ),
-      deafultBranch: currentBranch,
+      defaultBranch: currentBranch,
       relativeClonePath: projectName,
     });
   }
@@ -118,7 +118,7 @@ export class LinkedProject {
     //#endregion
   }
 
-  deafultBranch?: string;
+  defaultBranch?: string;
   purpose?: string;
   relativeClonePath?: string;
 }

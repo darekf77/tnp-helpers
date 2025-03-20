@@ -364,7 +364,7 @@ ${projectsThatShouldBeLinked
             await this.project.git.clone(
               linkedProj.remoteUrlTransformed(setOrigin),
               linkedProj.relativeClonePath,
-              linkedProj.deafultBranch,
+              linkedProj.defaultBranch,
             );
             const childProjLocaiton = this.project.pathFor([
               linkedProj.relativeClonePath,
