@@ -1,5 +1,4 @@
 //#region import
-export { ChildProcess } from 'child_process';
 import { config } from 'tnp-config/src';
 import { CommandOutputOptions } from 'tnp-core/src';
 import { CoreModels } from 'tnp-core/src';

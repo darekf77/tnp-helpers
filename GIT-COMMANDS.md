@@ -57,9 +57,11 @@
 
 `taon push`  => (optionally git add +)  commit with message based on branch name + push current branch
 
-## Checkout branch + add changes + commit message + push branch
+## Smart Conventional Commits Branching
 
-Create special branches (with metadata) that can be use later with command
+**Checkout branch + add changes + commit message + push branch**
+
+Create special branches (with metadata inside name) that can be use later with command
 `taon push`<br> to "re-push" changes and use matadata from branch name 
  as commit message.
 
@@ -108,8 +110,15 @@ Quick commit and push docs update <br>
 taon pd <=> taon pdocs
 
 ### test
-`taon pt <args>`<br>
-`taon ptest <args>`<br>
+Quick commit and push tests update <br>
+`taon ptest admin permission new usecase`<br>
+ <=> <br>
+`git checkout -b test/admin-permission-new-usecase` + <br>
+`git add` + <br>
+`git commit -m "test: admin permission new usecase"` + <br>
+`git push origin test/admin-permission-new-usecase`
+
+taon push:test <=> taon ptest  <=> taon ptests
 
 ### styl
 `taon ps <args>` <br>
