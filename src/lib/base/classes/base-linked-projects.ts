@@ -1,18 +1,17 @@
 //#region import
-//#region @backend
-export { ChildProcess } from 'child_process';
-//#endregion
+import { load } from 'json10-writer/src';
+import { config } from 'tnp-config/src';
 import { _, chalk, crossPlatformPath, path } from 'tnp-core/src';
+
 import {
   Helpers,
   LinkedPorjectsConfig,
   LinkedProject,
   UtilsTypescript,
 } from '../../index';
+
 import { BaseFeatureForProject } from './base-feature-for-project';
 import type { BaseProject } from './base-project';
-import * as json5Write from 'json10-writer/src';
-import { config } from 'tnp-config/src';
 //#endregion
 
 export class BaseLinkedProjects<
@@ -169,7 +168,7 @@ export class BaseLinkedProjects<
       return;
     }
 
-    const writer = json5Write.load(orgContent);
+    const writer = load(orgContent);
     writer.write(linkedPorjectsConfig);
 
     const newContent = writer.toSource({
@@ -364,7 +363,7 @@ ${projectsThatShouldBeLinked
             await this.project.git.clone(
               linkedProj.remoteUrlTransformed(setOrigin),
               linkedProj.relativeClonePath,
-              linkedProj.deafultBranch,
+              linkedProj.defaultBranch,
             );
             const childProjLocaiton = this.project.pathFor([
               linkedProj.relativeClonePath,

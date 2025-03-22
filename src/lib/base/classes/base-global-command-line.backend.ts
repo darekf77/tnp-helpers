@@ -363,7 +363,7 @@ ${
           crossPlatformPath([parent.location, l.relativeClonePath]) ===
           this.project.location
         );
-      })?.deafultBranch;
+      })?.defaultBranch;
 
     let overrideBranchToReset =
       this.firstArg ||
