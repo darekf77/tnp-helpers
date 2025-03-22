@@ -553,7 +553,7 @@ ${
       return;
     }
     this.project.git.stageAllFiles();
-    this.project.git.stash({ onlyStaged: false });
+    this.project.git.stash();
     this._exit();
   }
   //#endregion

@@ -1114,9 +1114,9 @@ ${cwd}
     // console.log({ onlyStaged, cwd });
     try {
       if (onlyStaged) {
-        child_process.execSync(`git stash push --keep-index`, { cwd });
+        child_process.execSync(`git stash push --staged`, { cwd });
       } else {
-        child_process.execSync(`git stash`, { cwd });
+        child_process.execSync(`git stash -u`, { cwd });
       }
     } catch (error) {
       Helpers.info('Not able to stash changes');
