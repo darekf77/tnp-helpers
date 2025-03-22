@@ -583,9 +583,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
   //#region getters & methods / get library build success command
   get getLibraryBuildSuccessComamnds(): string[] {
     //#region @backendFunc
-    const isAngularLib = Helpers.exists(
-      this.project.pathFor('ng-package.json'),
-    );
+    const isAngularLib = this.project.isAngularLib;
     if (isAngularLib) {
       return [`Trace: Build complete`, 'Compilation complete'];
     } else {
