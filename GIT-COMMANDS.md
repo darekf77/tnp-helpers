@@ -2,9 +2,9 @@
 
 ## Handy shortcuts
 
-`taon soft`  => quivalent: git reset --soft HEAD~1
+`taon soft`  => `git reset --soft HEAD~1`
 
-`taon hosts`  => open hosts files
+`taon hosts`  => open hosts files in VSCode
 
 `taon count:commits`  => show origin of project
 
@@ -14,11 +14,11 @@
 
 `taon origin`  => show origin of project
 
-`taon remote`  => - || -
+`taon remote`  => `taon origin` 
 
 `taon origins`  => show all origins of project
 
-`taon remotes`  => - || -
+`taon remotes`  => `taon origins`
 
 ## Rebase 
 
@@ -36,7 +36,7 @@
 
 `taon branch`  => git fetch / display menu with branches to select / select branch
 
-`taon reset`  => remove tmp files for project + `taon branch` (include children)
+`taon reset`  => `git fetch` + remove tmp files for project + `taon branch` (include children)
 
 `taon reset my-branch`  => same as `taon reset` but specific branch
 
@@ -46,34 +46,113 @@
 
 `taon pull`  => pull current branch or current workspace projects one after another
 
-`taon repull`  => deep reset hard and pull
+`taon repull`  => `git reset hard --HEAD~10` + `taon pull`
 
 
 ## Push
 
 `taon pushall` => push code to all remotes(origins) defined in .git/config
 
-`taon pall` => - || -
+`taon pall` => `taon pushall`
 
-`taon push`  => git add + commit with message based on branch name + push current branch
+`taon push`  => (optionally git add +)  commit with message based on branch name + push current branch
 
-`taon pfix TEAM6# JIRA-379089 JIRA-380320 proper counter message`  
-=> git add + git commit bugfix/JIRA-379089-JIRA-380320-proper-counter-message
+## Smart Conventional Commits Branching
 
-`taon pfix <=> taon pushfix <=> taon push:fix`
+**Checkout branch + add changes + commit message + push branch**
 
-`taon push:feature TEAM6#JIRA-379089 admin notificaiton`
-=> git add + git commit feature/JIRA-379089-JIRA-380320-admin-notification
+Create special branches (with metadata inside name) that can be use later with command
+`taon push`<br> to "re-push" changes and use matadata from branch name 
+ as commit message.
 
-`taon pf TEAM6# JIRA-379089 notyfikacje admin` 
-=> wypushowanie feature-a 
+### fix
+Quick commit and push bugfix<br>
+`taon pfix JIRA-379089 JIRA-380320 proper counter message [my-lib]` <br> 
+<=><br>
+`git checkout -b fix/JIRA-379089-JIRA-380320-proper-counter-message` + <br>
+`git add` + <br>
+`git commit -m "fix(my-lib): proper counter message JIRA-379089 JIRA-380320"` + <br>
+`git push origin fix/JIRA-379089-JIRA-380320-proper-counter-message`
 
-`taon pf <=> taon pushfeature <=> taon push:feature`
+taon pfix <=> taon pushfix <=> taon push:fix
 
-`taon pdocs <...>` => push quickly documentation
+### feature
+Quick commit and push feature<br>
+`taon pf JIRA-379089 JIRA-380320 admin notificaiton [my-lib]`  <br>
+<>=><br>
+`git checkout -b feature/JIRA-379089-JIRA-380320-proper-counter-message` + <br>
+`git add` + <br>
+`git commit -m "feat(my-lib): admin notificaiton JIRA-379089 JIRA-380320"` + <br>
+`git push origin feature/JIRA-379089-JIRA-380320-proper-counter-message`
 
-`taon ptest <...>` => push quickly test update
+taon pf <=> taon pushfeature <=> taon push:feature
 
-`taon pstyl <...>` => push quickly styles update
+### chore
+Quick commit and push chore <br>
+`taon pc JIRA-379089 update deps`  
+<=>  <br>
+`git checkout -b chore/JIRA-379089-update-deps` + <br>
+`git add` + <br>
+`git commit -m "chore: update deps JIRA-379089"` + <br>
+`git push origin  chore/JIRA-379089-update-deps`
 
-`taon pref <...>` => push quickly refactor
+taon pc <=> taon chore <=> taon pchore
+
+### docs
+Quick commit and push docs update <br>
+`taon pd explained installation`<br>
+ <=> <br>
+`git checkout -b docs/explained-installation` + <br>
+`git add` + <br>
+`git commit -m "docs:explained installation"` + <br>
+`git push origin docs/explained-installation`
+
+taon pd <=> taon pdocs
+
+### test
+Quick commit and push tests update <br>
+`taon ptest admin permission new use case`<br>
+ <=> <br>
+`git checkout -b test/admin-permission-new-use-case` + <br>
+`git add` + <br>
+`git commit -m "test: admin permission new use case"` + <br>
+`git push origin test/admin-permission-new-use-case`
+
+taon push:test <=> taon ptest  <=> taon ptests
+
+### styl
+
+Quick commit and push style update (formatting, linting etc.) <br>
+`taon pstyle proper project methods`<br>
+ <=> <br>
+`git checkout -b style/proper-project-methods` + <br>
+`git add` + <br>
+`git commit -m "style: proper project methods"` + <br>
+`git push origin style/proper-project-methods`
+
+taon pstyl <=> taon pstyle
+
+### refactor
+
+Quick commit and push code refactor <br>
+`taon pref new permission module`<br>
+ <=> <br>
+`git checkout -b refactor/new-permission-module` + <br>
+`git add` + <br>
+`git commit -m "refactor: new permission module"` + <br>
+`git push origin refactor/new-permission-module`
+
+
+taon pref <=> taon prefactor
+
+### release
+
+Quick commit and push release commit <br>
+`taon prelease`<br>
+ <=> <br>
+`git checkout -b release/version-v1-2-3` + <br>
+`git add` + <br>
+`git commit -m "release: version v1.2.3"` + <br>
+`git push origin release/version-1-2-3`
+
+taon prel <=> taon prelase
