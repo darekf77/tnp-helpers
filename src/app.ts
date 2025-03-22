@@ -1,12 +1,22 @@
 //#region imports
 import { Taon, BaseContext } from 'taon/src';
 import { Observable, map } from 'rxjs';
-import { HOST_BACKEND_PORT } from './app.hosts';
+import {
+  CLIENT_DEV_NORMAL_APP_PORT,
+  CLIENT_DEV_WEBSQL_APP_PORT,
+  HOST_BACKEND_PORT,
+} from './app.hosts';
+import { Helpers } from 'tnp-helpers/src';
 //#region @browser
 import { NgModule, inject, Injectable } from '@angular/core';
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+
 //#endregion
+const frontendHost =
+  'http://localhost:' +
+  (Helpers.isWebSQL ? CLIENT_DEV_WEBSQL_APP_PORT : CLIENT_DEV_NORMAL_APP_PORT);
+
 //#endregion
 
 console.log('hello world');
@@ -101,6 +111,7 @@ class UserController extends Taon.Base.CrudController<User> {
 //#region  tnp-helpers context
 const MainContext = Taon.createContext(() => ({
   host,
+  frontendHost,
   contextName: 'MainContext',
   contexts: { BaseContext },
   controllers: {
