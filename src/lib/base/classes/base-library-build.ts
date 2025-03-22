@@ -347,20 +347,22 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     //#endregion
 
     //#region watch build
+    if (watch) {
+      for (const [index, lib] of selectedLibs.entries()) {
+        Helpers.info(
+          `Building for watch (${index + 1}/${selectedLibs.length}) ` +
+            `${lib.basename} (${chalk.bold(lib.name)})`,
+        );
 
-    for (const [index, lib] of selectedLibs.entries()) {
-      Helpers.info(
-        `Building for watch (${index + 1}/${selectedLibs.length}) ` +
-          `${lib.basename} (${chalk.bold(lib.name)})`,
-      );
-
-      await this.libWatchBuildProcess({
-        lib,
-        locationsForNodeModules,
-        strategy,
-        outputLineReplace:
-          outputLineReplace && outputLineReplace(lib, useExternalProvidedLibs),
-      });
+        await this.libWatchBuildProcess({
+          lib,
+          locationsForNodeModules,
+          strategy,
+          outputLineReplace:
+            outputLineReplace &&
+            outputLineReplace(lib, useExternalProvidedLibs),
+        });
+      }
     }
     //#endregion
 
