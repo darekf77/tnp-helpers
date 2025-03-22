@@ -114,7 +114,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
         useLastUserConfiguration
           ? true
           : await Helpers.consoleGui.question.yesNo(
-              `Continue ${watch ? 'watch' : ''} build with last selected ?`,
+              `Continue${watch ? ' watch ' : ' '}build with last selected ?`,
             )
       ) {
         selectedLibs = selected as any;

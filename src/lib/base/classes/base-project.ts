@@ -1,5 +1,4 @@
 //#region import
-export { ChildProcess } from 'child_process';
 import { config } from 'tnp-config/src';
 import { CommandOutputOptions } from 'tnp-core/src';
 import { CoreModels } from 'tnp-core/src';
@@ -793,11 +792,17 @@ export abstract class BaseProject<
 
   get isAngularLib() {
     //#region @backendFunc
-    const res =
-      Helpers.exists(this.pathFor('ng-package.json')) ||
-      Helpers.exists(this.pathFor('tsconfig.app.json'));
+    if (this.hasFile('ng-package.json')) {
+      return true;
+    }
+    const angularJson =
+      this.parent?.readJson<any>('angular.json') || ({} as any);
 
-    return res;
+    const projects = angularJson.projects || {};
+    if (projects[this.basename]?.projectType === 'library') {
+      return true;
+    }
+    return false;
     //#endregion
   }
 
