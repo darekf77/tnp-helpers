@@ -798,8 +798,8 @@ export abstract class BaseProject<
     const angularJson =
       this.parent?.readJson<any>('angular.json') || ({} as any);
 
-    const projects = angularJson.projects || {};
-    if (projects[this.basename]?.projectType === 'library') {
+    const projects = angularJson?.projects || {};
+    if (projects && projects[this.basename]?.projectType === 'library') {
       return true;
     }
     return false;
