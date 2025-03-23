@@ -1243,6 +1243,47 @@ ${cwd}
   }
   //#endregion
 
+  //#region get remote provider
+  /**
+   * Extract the provider (github.com, gitlab.com etc.)
+   * from a remote URL
+   * @param cwd The current working directory
+   *
+   */
+  getRemoteProvider(cwd: string):string {
+    //#region @backendFunc
+    const remoteUrl = this.getOriginURL(cwd);
+    if(!remoteUrl) {
+      return null;
+    }
+    try {
+      // Handle SSH URLs like git@github.com:user/repo.git
+      const sshMatch = remoteUrl.match(/^git@([^:]+):/);
+      if (sshMatch) {
+        return sshMatch[1];
+      }
+
+      // Handle HTTP/HTTPS URLs like https://github.com/user/repo.git
+      const httpMatch = remoteUrl.match(/^https?:\/\/([^/]+)\//);
+      if (httpMatch) {
+        return httpMatch[1];
+      }
+
+      // Handle SSH URLs with ssh:// format
+      const sshAltMatch = remoteUrl.match(/^ssh:\/\/(?:[^@]+@)?([^/]+)/);
+      if (sshAltMatch) {
+        return sshAltMatch[1];
+      }
+
+      return null;
+    } catch (e) {
+      // console.error("Failed to extract provider from remote URL:", e);
+      return null;
+    }
+    //#endregion
+  }
+  //#endregion
+
   //#region clone
   /**
    * @returns absolute path to cloned folder

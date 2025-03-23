@@ -513,6 +513,17 @@ export class BaseGit<
   }
   //#endregion
 
+  //#region methods & getters / remote origin url
+  /**
+   * get provider of remote origin
+   */
+  get remoteProvider():string {
+    //#region @backendFunc
+    return Helpers.git.getRemoteProvider(this.project.location);
+    //#endregion
+  }
+  //#endregion
+
   //#region methods & getters / last tag version name
   get lastTagVersionName() {
     //#region @backendFunc
