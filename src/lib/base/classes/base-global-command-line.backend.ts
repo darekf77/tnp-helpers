@@ -1470,6 +1470,87 @@ Would you like to update current project configuration?`)
   }
   //#endregion
 
+  //#region commands / proc menu
+  async procMenu() {
+    //#region @notForNpm
+    const { BaseProcessManger, CommandConfig } = await import(
+      './base-process-manager'
+    );
+
+    const ngBuildLibCommand = CommandConfig.from({});
+
+    const angularNormalNgServe = CommandConfig.from({
+      dependencyAllShouldBeActive: [ngBuildLibCommand],
+    });
+
+    const angularWebsqlNgServe = CommandConfig.from({
+      dependencyAllShouldBeActive: [ngBuildLibCommand],
+    });
+
+    const electronNormalNgServe = CommandConfig.from({
+      dependencyAllShouldBeActive: [angularNormalNgServe],
+    });
+
+    const electronWebsqlNgServe = CommandConfig.from({
+      dependencyAllShouldBeActive: [angularWebsqlNgServe],
+    });
+    6;
+
+    const nodeJsBackend = CommandConfig.from({
+      dependencyAllShouldBeActive: [ngBuildLibCommand],
+    });
+
+    const updateAssets = CommandConfig.from({});
+
+    const recreateMainIndex = CommandConfig.from({});
+
+    const showStats = CommandConfig.from({});
+
+    const processManager = BaseProcessManger.from({
+      project: this.project,
+      title: 'What do you want to build?',
+      header: 'Starting process selection...',
+      watch: true,
+      commands: [
+        ngBuildLibCommand,
+        angularNormalNgServe,
+        angularWebsqlNgServe,
+        electronNormalNgServe,
+        electronWebsqlNgServe,
+        nodeJsBackend,
+      ],
+    });
+
+    // processManager.init({
+    //   title: 'What do you want to build?',
+    //   header: 'Starting process selection...',
+    //   watch: true,
+    //   commands: [
+    //     {
+    //       name: 'TSC',
+    //       cmd: 'node -e "let i = 0; setInterval(() => console.log(\'Compiled success \' + (++i)), 1000)"',
+    //       goToNextCommandWhen: { stdoutContains: 'Compiled success 8' },
+    //     },
+    //     {
+    //       name: 'NG1',
+    //       cmd: 'node -e "let i = 0; setInterval(() => console.log(\'NG1: Hello from ng --watch \' + (++i)), 1200)"',
+    //       // goToNextCommandWhen: { stdoutContains: 'NG1: Hello from ng --watch 5' },
+    //     },
+    //     {
+    //       name: 'NG2',
+    //       cmd: 'node -e "let i = 0; setInterval(() => console.log(\'NG2: Hello from ng --watch \' + (++i)), 1500)"',
+    //     },
+    //   ],
+    // });
+    // process.on('SIGINT', () => {
+    //   Object.values(processManager.processes).forEach(proc => proc.kill());
+    //   process.exit(0);
+    // });
+    //#endregion
+  }
+  //#endregion
+
+  //#region commands / proc info
   procInfo() {
     this.processInfo();
   }
@@ -1491,4 +1572,5 @@ Would you like to update current project configuration?`)
       `);
     this._exit();
   }
+  //#endregion
 }

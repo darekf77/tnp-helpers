@@ -3,7 +3,7 @@
   "version": "18.0.20",
   "scripts": {
     "docs": "python3 -m mkdocs",
-    "mkdocs": "python3 -m mkdocs"
+    "mkdocs": "mkdocs"
   },
   "license": "MIT",
   "author": "",
