@@ -1,22 +1,24 @@
 //#region imports
 import { config } from 'tnp-config/src';
+import { path } from 'tnp-core/src';
+
+import { Helpers } from '../../index';
+
 import { BaseFeatureForProject } from './base-feature-for-project';
 import type { BaseProject } from './base-project';
-import { path } from 'tnp-core/src';
-import { Helpers } from '../../index';
 //#endregion
 
 /**
  * Easy way to create github pages
  * (or similar static site hosting)
  */
-export class BaseGithubPages<
+export class BaseStaticPages<
   PROJECT extends BaseProject = any,
 > extends BaseFeatureForProject<PROJECT> {
-  readonly TMP_GH_PAGE_SITE_REPOS = 'tmp-gh-pages-sites-repos';
+  readonly TMP_STATIC_PAGE_SITE_REPOS = 'tmp-static-pages-sites-repos';
 
   //#region clear folder for gh-pages
-  protected async cleanFolderForGhPages(pathToBranchRepoFolder: string) {
+  protected async cleanFolderForStaticPages(pathToBranchRepoFolder: string) {
     //#region @backendFunc
     const noAllowedToDeleteFiles = [config.file._gitignore];
     const noAllowedToDeleteFolders = ['.git'];
@@ -42,7 +44,7 @@ export class BaseGithubPages<
   }
 
   get mainFolderAbsPath() {
-    return this.project.pathFor([this.TMP_GH_PAGE_SITE_REPOS, this.mainFolder]);
+    return this.project.pathFor([this.TMP_STATIC_PAGE_SITE_REPOS, this.mainFolder]);
   }
   //#endregion
 
@@ -57,12 +59,12 @@ export class BaseGithubPages<
     //#region @backendFunc
     this.project.cache['mainFolder'] = mainFolder;
     const tempRepoPath = this.project.pathFor([
-      this.TMP_GH_PAGE_SITE_REPOS,
+      this.TMP_STATIC_PAGE_SITE_REPOS,
       mainFolder,
     ]);
     if (!Helpers.exists(tempRepoPath)) {
       await Helpers.git.clone({
-        cwd: this.project.pathFor(this.TMP_GH_PAGE_SITE_REPOS),
+        cwd: this.project.pathFor(this.TMP_STATIC_PAGE_SITE_REPOS),
         url: this.project.git.originURL,
         destinationFolderName: mainFolder,
       });
@@ -71,7 +73,7 @@ export class BaseGithubPages<
       createBranchIfNotExists: true,
       switchBranchWhenExists: true,
     });
-    await this.cleanFolderForGhPages(tempRepoPath);
+    await this.cleanFolderForStaticPages(tempRepoPath);
 
     const currentDocsFolderAbsPath = this.project.pathFor(config.folder.docs);
     if (

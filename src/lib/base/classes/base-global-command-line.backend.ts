@@ -1451,12 +1451,12 @@ Would you like to update current project configuration?`)
   //#region commands / gh pages init
   async ghPagesInit() {
     await this.project.init();
-    await this.project.githubPages.init(
+    await this.project.staticPages.init(
       this.params['provider'] || 'github',
       !!this.params['full'],
     );
     Helpers.run('code .', {
-      cwd: this.project.githubPages.mainFolderAbsPath,
+      cwd: this.project.staticPages.mainFolderAbsPath,
     }).sync();
     this._exit();
   }

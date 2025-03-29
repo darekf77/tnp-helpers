@@ -12,13 +12,13 @@ import { CoreProject, Helpers, UtilsTypescript } from '../../index';
 import { BaseProjectType } from '../../models';
 
 import { BaseGit } from './base-git';
-import { BaseGithubPages } from './base-github-pages';
 import type { BaseLibraryBuild } from './base-library-build';
 import { BaseLinkedProjects } from './base-linked-projects';
 import { BaseNpmHelpers } from './base-npm-helpers';
 import { BaseProjectResolver } from './base-project-resolver';
 import { BaseQuickFixes } from './base-quick-fixes';
 import { BaseReleaseProcess } from './base-release-process';
+import { BaseStaticPages } from './base-static-pages';
 import { BaseVscodeHelpers } from './base-vscode';
 //#endregion
 
@@ -70,7 +70,7 @@ export abstract class BaseProject<
   public releaseProcess?: BaseReleaseProcess;
   public git?: BaseGit;
   public quickFixes?: BaseQuickFixes;
-  public githubPages?: BaseGithubPages;
+  public staticPages?: BaseStaticPages;
   //#endregion
 
   private __location: string;
@@ -108,8 +108,8 @@ export abstract class BaseProject<
     this.vsCodeHelpers = new (require('./base-vscode')
       .BaseVscodeHelpers as typeof BaseVscodeHelpers)(this as any);
 
-    this.githubPages = new (require('./base-github-pages')
-      .BaseGithubPages as typeof BaseGithubPages)(this as any);
+    this.staticPages = new (require('./base-static-pages')
+      .BaseStaticPages as typeof BaseStaticPages)(this as any);
 
     this.releaseProcess = new (require('./base-release-process')
       .BaseReleaseProcess as typeof BaseReleaseProcess)(this as any);
