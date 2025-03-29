@@ -69,21 +69,21 @@ Create special branches (with metadata inside name) that can be use later with c
 Quick commit and push bugfix<br>
 `taon pfix JIRA-379089 JIRA-380320 proper counter message [my-lib]` <br> 
 <=><br>
-`git checkout -b fix/JIRA-379089-JIRA-380320-proper-counter-message` + <br>
+`git checkout -b bugfix/JIRA-379089-JIRA-380320--my-lib--proper-counter-message` + <br>
 `git add` + <br>
 `git commit -m "fix(my-lib): proper counter message JIRA-379089 JIRA-380320"` + <br>
-`git push origin fix/JIRA-379089-JIRA-380320-proper-counter-message`
+`git push origin bugfix/JIRA-379089-JIRA-380320--my-lib--proper-counter-message`
 
 taon pfix <=> taon pushfix <=> taon push:fix
 
 ### feature
 Quick commit and push feature<br>
-`taon pf JIRA-379089 JIRA-380320 admin notificaiton [my-lib]`  <br>
+`taon pf JIRA-379089 JIRA-380320 admin notification [my-lib]`  <br>
 <>=><br>
-`git checkout -b feature/JIRA-379089-JIRA-380320-proper-counter-message` + <br>
+`git checkout -b feature/JIRA-379089-JIRA-380320--my-lib--admin-notification` + <br>
 `git add` + <br>
-`git commit -m "feat(my-lib): admin notificaiton JIRA-379089 JIRA-380320"` + <br>
-`git push origin feature/JIRA-379089-JIRA-380320-proper-counter-message`
+`git commit -m "feat(my-lib): admin notification JIRA-379089 JIRA-380320"` + <br>
+`git push origin feature/JIRA-379089-JIRA-380320--my-lib--admin-notification`
 
 taon pf <=> taon pushfeature <=> taon push:feature
 
