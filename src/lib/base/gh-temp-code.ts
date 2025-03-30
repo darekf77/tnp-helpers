@@ -1,9 +1,12 @@
-import { crossPlatformPath, os, path } from 'tnp-core/src';
-import { BaseProject } from './classes/base-project';
 import { config } from 'tnp-config/src';
+import { crossPlatformPath, os, path } from 'tnp-core/src';
+
 import { Helpers } from '../index';
 
+import { BaseProject } from './classes/base-project';
+
 /**
+ * Class to save and restore temporary code
  * TODO fix removing files from repo
  */
 export class GhTempCode {
@@ -15,10 +18,7 @@ export class GhTempCode {
   private GHTEMP_CODE_REPO_PATH = 'git@github.com:darekf77/ghtemp-code.git';
   private get cwdRepo() {
     //#region @backendFunc
-    return crossPlatformPath([
-      os.userInfo().homedir,
-      `.taon`,
-    ]);
+    return crossPlatformPath([os.userInfo().homedir, `.taon`]);
     //#endregion
   }
   private get tempPathRepo() {

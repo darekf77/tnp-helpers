@@ -16,6 +16,7 @@ export * from './base-quick-fixes';
 export * from './base-cli-worker-controller';
 export * from './base-cli-worker';
 export * from './base-cli-worker-config';
+export * from './base-process-manager';
 
 //#region @backend
 export * from './base-start-config.backend';

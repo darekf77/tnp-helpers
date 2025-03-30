@@ -1416,7 +1416,7 @@ Would you like to update current project configuration?`)
   }
   //#endregion
 
-  //#region commands / ghtemp
+  //#region commands / gh temp
   async ghSave() {
     await new GhTempCode(this.cwd, this.project).init().save();
     this._exit();
@@ -1470,6 +1470,69 @@ Would you like to update current project configuration?`)
   }
   //#endregion
 
+  //#region commands / proc menu
+  //#region @notForNpm
+  async procMenu() {
+    //#region @backendFunc
+    const { BaseProcessManger, CommandConfig } = await import(
+      './base-process-manager'
+    );
+
+    const ngBuildLibCommand = CommandConfig.from({
+      name: 'TSC',
+      cmd: 'node -e "let i = 0; setInterval(() => console.log(\'TSC lib Compiled success \' + (++i)), 1000)"',
+      goToNextCommandWhenOutput: {
+        stdoutContains: 'TSC lib Compiled success 5',
+      },
+    });
+
+    const angularNormalNgServe = CommandConfig.from({
+      shouldBeActiveOrAlreadyBuild: [ngBuildLibCommand],
+      name: 'NG Normal',
+      cmd: 'node -e "let i = 0; setInterval(() => console.log(\'NG NORMAL: Hello from ng --watch \' + (++i)), 1200)"',
+      goToNextCommandWhenOutput: {
+        stdoutContains: 'NG NORMAL: Hello from ng --watch 5',
+      },
+    });
+
+    const angularWebsqlNgServe = CommandConfig.from({
+      shouldBeActiveOrAlreadyBuild: [ngBuildLibCommand],
+      name: 'NG websql',
+      cmd: 'node -e "let i = 0; setInterval(() => console.log(\'NG WEBSQL: Hello from ng --watch \' + (++i)), 1200)"',
+      goToNextCommandWhenOutput: {
+        stdoutContains: 'NG WEBSQL: Hello from ng --watch 5',
+      },
+    });
+
+    const electronNormalNgServe = CommandConfig.from({
+      shouldBeActiveOrAlreadyBuild: [angularNormalNgServe],
+      name: 'ELECTRON Normal',
+      cmd: 'node -e "let i = 0; setInterval(() => console.log(\'ELECTRON Normal: Hello from electron \' + (++i)), 1500)"',
+    });
+
+    const updateAssets = CommandConfig.from({
+      name: 'Update assets',
+      cmd: 'node -e "let i = 0; setInterval(() => console.log(\'Updated assets \' + (++i)), 1000)"',
+    });
+
+    await new BaseProcessManger(this.project).init({
+      title: 'What do you want to build?',
+      header: 'Starting process selection...',
+      watch: true,
+      commands: [
+        ngBuildLibCommand,
+        angularNormalNgServe,
+        angularWebsqlNgServe,
+        electronNormalNgServe,
+        updateAssets,
+      ],
+    });
+    //#endregion
+  }
+  //#endregion
+  //#endregion
+
+  //#region commands / proc info
   procInfo() {
     this.processInfo();
   }
@@ -1491,4 +1554,5 @@ Would you like to update current project configuration?`)
       `);
     this._exit();
   }
+  //#endregion
 }
