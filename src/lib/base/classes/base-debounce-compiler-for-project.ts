@@ -1,13 +1,14 @@
-import { BaseProject } from './base-project';
-import { BaseCompilerForProject } from './base-compiler-for-project';
 import { ChangeOfFile } from 'incremental-compiler/src';
 import { _, Utils } from 'tnp-core/src';
+
+import { BaseCompilerForProject } from './base-compiler-for-project';
+import { BaseProject } from './base-project';
 
 export abstract class BaseDebounceCompilerForProject<
   ADDITIONAL_DATA = any,
   PROJECT extends BaseProject = BaseProject,
 > extends BaseCompilerForProject<ADDITIONAL_DATA, PROJECT> {
-  protected initalParams: ADDITIONAL_DATA;
+  protected initialParams: ADDITIONAL_DATA;
   /**
    * default debounce time is 1s
    */
@@ -30,9 +31,9 @@ export abstract class BaseDebounceCompilerForProject<
    */
   public async syncAction(
     absFilesPathes: string[],
-    initalParams: ADDITIONAL_DATA,
+    initialParams: ADDITIONAL_DATA,
   ): Promise<void> {
-    this.initalParams = initalParams || ({} as any);
+    this.initialParams = initialParams || ({} as any);
     this.exitedFilesAbsPathes = absFilesPathes;
     return await this.action({
       changeOfFiles: absFilesPathes.map(
@@ -57,7 +58,7 @@ export abstract class BaseDebounceCompilerForProject<
    */
   public async asyncAction(
     asyncEvents: ChangeOfFile,
-    initalParams?: ADDITIONAL_DATA,
+    initialParams?: ADDITIONAL_DATA,
   ): Promise<void> {
     this.lastAsyncFilesChanges.push(asyncEvents);
     if (asyncEvents.eventName === 'unlink') {
