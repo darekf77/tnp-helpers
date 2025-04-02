@@ -49,7 +49,7 @@ export class BaseVscodeHelpers<
       'ctcuff.font-preview',
       'dbaeumer.vscode-eslint',
       'dnicolson.binary-plist',
-      'eamodio.gitlens',
+      // 'eamodio.gitlens', // not needed anymore
       'eg2.tslint',
       'esbenp.prettier-vscode',
       'henry-li.vscode-import-formatter',
