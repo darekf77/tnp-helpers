@@ -1,10 +1,7 @@
 //#region imports
 import { _, chalk, Helpers, UtilsTerminal } from 'tnp-core/src';
 
-import {
-  CommandProcess,
-  ProcessManagerConfig,
-} from '../../models';
+import { CommandProcess, ProcessManagerConfig } from '../../models';
 
 import { BaseFeatureForProject } from './base-feature-for-project';
 import { BaseProject } from './base-project';
@@ -72,7 +69,7 @@ export class BaseProcessManger<
 
     this.allProcesses.forEach(proc => {
       const config = initialOptions.commands.find(c => c.name === proc.name);
-      proc.dependenciesProceses = (
+      proc.dependenciesProcesses = (
         config.shouldBeActiveOrAlreadyBuild || []
       ).map(dep => {
         return this.allProcesses.find(p => p.name === dep.name);
@@ -110,9 +107,46 @@ export class BaseProcessManger<
   private async killOrBuildMenu(): Promise<void> {
     //#region @backendFunc
     const chooseAction = ' -- choose action -- ';
-    const { Select } = require('enquirer');
+    const Select = require('enquirer/lib/prompts/select');
+    const that = this;
+    class CustomSelect extends Select {
+      constructor(options) {
+        super(options);
+      }
+      async keypress(char, key): Promise<any> {
+        if (key.name === 'escape') {
+          this.clear();
+          that.showOutput();
+          return;
+        }
+        return super.keypress(char, key);
+      }
+    }
+
     while (true) {
       console.clear();
+
+      Helpers.info(`
+       (Press ${chalk.bold('Escaped')} to show output again)
+      Manage Processes (${chalk.bold('ctrl + c')} to exit)
+        `);
+
+      const runningProcesses = this.allProcesses;
+      for (const proc of runningProcesses) {
+        if (proc.headerMessageWhenActive) {
+          if (proc.isRunning) {
+            console.log(`[${chalk.bold.gray(proc.headerMessageWhenActive)}]`);
+          }
+          if (proc.isWaitingToStart) {
+            console.log(
+              chalk.italic.gray(
+                `[(Scheduled to start) ${proc.headerMessageWhenActive}]`,
+              ),
+            );
+          }
+        }
+      }
+      console.log('\n');
       this.showLogs = false;
       const showOutput = 'Show output';
       const buildMore = 'Build more';
@@ -143,14 +177,7 @@ export class BaseProcessManger<
       choices.push(showOutput);
       // options.push(exit);
 
-      console.clear();
-      Helpers.info(`
-
-        Manage Processes (${chalk.bold('ctrl + c')} to exit)
-
-        `);
-
-      const action: string = await new Select({
+      const action: string = await new CustomSelect({
         message: `Select action`,
         choices: choices,
       }).run();
@@ -180,12 +207,12 @@ export class BaseProcessManger<
       proc.markForStart();
     }
 
-    const selectedWithoutDependencies = this.selectedProcesses.filter(
-      f => !f.dependenciesProceses,
+    const selectedWithDependencies = this.selectedProcesses.filter(
+      f => f.dependenciesProcesses?.length > 0,
     );
 
-    const selectedWithDependencies = this.selectedProcesses.filter(
-      f => f.dependenciesProceses?.length > 0,
+    const selectedWithoutDependencies = this.selectedProcesses.filter(
+      f => selectedWithDependencies.indexOf(f) === -1,
     );
 
     for (const process of selectedWithoutDependencies) {
@@ -213,7 +240,7 @@ export class BaseProcessManger<
       return; // Avoid circular dependencies or already-started processes
     }
 
-    for (const dependency of process.dependenciesProceses) {
+    for (const dependency of process.dependenciesProcesses) {
       await this.startProcessWithDependencies(
         dependency,
         startedProcesses,

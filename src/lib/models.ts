@@ -185,6 +185,10 @@ export class CommandProcess {
     return this.config.name;
   }
 
+  get headerMessageWhenActive(): string | undefined {
+    return this.config.headerMessageWhenActive;
+  }
+
   get pid(): number | undefined {
     return this.child_process.pid;
   }
@@ -216,7 +220,7 @@ export class CommandProcess {
   }
 
   //#endregion
-  public dependenciesProceses: CommandProcess[] = [];
+  public dependenciesProcesses: CommandProcess[] = [];
 
   //#region constructor
   constructor(
@@ -233,6 +237,7 @@ export class CommandProcess {
     const { progress, resolveWhenFinish } = options || {};
 
     this.state = CommandProcessState.RUNNING;
+    // console.log('Starting process:', this.name);
 
     await new Promise<void>(async resolve => {
       const finishSyncCallback = async (): Promise<void> => {
@@ -247,6 +252,8 @@ export class CommandProcess {
           }
         }
       };
+
+      // console.log(`Running command: ${this.cmd}`);
 
       await Helpers.execute(this.cmd, this.project.location, {
         resolvePromiseMsg: {
@@ -298,6 +305,10 @@ export class CommandProcess {
       await UtilsTerminal.wait(1);
       return;
     }
+
+    this.state = CommandProcessState.NOT_STARTED;
+    this.manager.startedProcesses.delete(this);
+
     if (
       ![
         CommandProcessState.RUNNING,
@@ -325,8 +336,7 @@ export class CommandProcess {
       console.error(`Error while stopping process: ${this.name}`);
       console.error(error);
     }
-    this.state = CommandProcessState.NOT_STARTED;
-    this.manager.startedProcesses.delete(this);
+
     //#endregion
   }
   //#endregion

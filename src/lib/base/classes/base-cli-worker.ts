@@ -1,20 +1,20 @@
 //#region imports
+import { config } from 'tnp-config/src';
 import {
   chalk,
   crossPlatformPath,
   _,
-  //#region @backend
   os,
   chokidar,
   UtilsProcess,
   Utils,
-  //#endregion
   UtilsTerminal,
 } from 'tnp-core/src';
-import { config } from 'tnp-config/src';
+
 import { Helpers } from '../../index';
-import type { BaseCliWorkerController } from './base-cli-worker-controller';
+
 import { BaseCliWorkerConfig } from './base-cli-worker-config';
+import type { BaseCliWorkerController } from './base-cli-worker-controller';
 //#endregion
 
 //#region constants
