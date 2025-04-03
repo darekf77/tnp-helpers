@@ -1,9 +1,8 @@
-import { BaseFeatureForProject } from 'tnp-helpers/src';
-import type { BaseProject } from './base-project';
-import { PackageJson as PackageJsonBase } from 'type-fest';
 import { config } from 'tnp-config/src';
-import { crossPlatformPath, _, CoreModels } from 'tnp-core/src';
+import { _, CoreModels } from 'tnp-core/src';
 import { Helpers } from 'tnp-core/src';
+import { PackageJson as PackageJsonBase } from 'type-fest';
+
 import {
   BaseJsonFileReader,
   BaseJsonFileReaderOptions,

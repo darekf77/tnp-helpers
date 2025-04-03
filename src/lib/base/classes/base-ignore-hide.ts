@@ -1,12 +1,14 @@
-import { Helpers } from '../../index';
-import type { BaseProject } from './base-project';
-import { BaseFeatureForProject } from './base-feature-for-project';
 import { _ } from 'tnp-core/src';
+
+import { Helpers } from '../../index';
+
+import { BaseFeatureForProject } from './base-feature-for-project';
+import type { BaseProject } from './base-project';
 
 // TODO
 export class BaseIgnoreHideHelpers<
   PROJECT extends BaseProject = any,
-> extends BaseFeatureForProject {
+> extends BaseFeatureForProject<PROJECT> {
   //#region files to ignore
   protected filesToGitIgnore() {
     return [

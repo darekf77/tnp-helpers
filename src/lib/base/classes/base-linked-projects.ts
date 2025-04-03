@@ -16,9 +16,8 @@ import type { BaseProject } from './base-project';
 
 export class BaseLinkedProjects<
   PROJECT extends BaseProject = any,
-> extends BaseFeatureForProject {
+> extends BaseFeatureForProject<PROJECT> {
   private cache: any = {};
-  project: PROJECT;
 
   //#region methods & getters / embedded project
   get embeddedProject(): PROJECT {

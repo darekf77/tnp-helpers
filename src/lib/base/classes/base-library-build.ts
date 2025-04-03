@@ -21,7 +21,7 @@ import type { BaseProject } from './base-project';
  */
 export abstract class BaseLibraryBuild<
   PROJECT extends BaseProject<BaseProject, any>,
-> extends BaseFeatureForProject {
+> extends BaseFeatureForProject<PROJECT> {
   private cache: any = {};
   protected readonly tempOrgTsConfigFile = `tmp-original-${config.file.tsconfig_json}`;
 

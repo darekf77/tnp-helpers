@@ -1,16 +1,18 @@
 //#region imports
+import { config } from 'tnp-config/src';
 import { _, fse, path } from 'tnp-core/src';
+import { PackageJson } from 'type-fest';
+
+import { Helpers, UtilsQuickFixes } from '../../index';
+
 import { BaseFeatureForProject } from './base-feature-for-project';
 import type { BaseProject } from './base-project';
-import { Helpers, UtilsQuickFixes } from '../../index';
-import { config } from 'tnp-config/src';
-import { PackageJson } from 'type-fest';
 //#endregion
 
 export class BaseQuickFixes<
   PROJECT extends BaseProject<any, any> = BaseProject<any, any>,
-> extends BaseFeatureForProject {
-  constructor(project: PROJECT) {
+> extends BaseFeatureForProject<PROJECT> {
+  constructor(public project: PROJECT) {
     super(project);
     this.project = project;
   }

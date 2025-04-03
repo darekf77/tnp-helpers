@@ -152,7 +152,7 @@ export class HelpersTaon extends CoreHelpers {
       // sourceMapRegister: true, // default
       watch: false, // default
       license: '', // default does not generate a license file
-      target: 'es5', // default
+      target: 'es2022', // default
       v8cache: false, // default
       quiet: false, // default
       debugLog: false, // default

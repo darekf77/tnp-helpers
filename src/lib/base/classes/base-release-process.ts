@@ -1,22 +1,20 @@
 //#region imports
-//#region @backend
-import { translate } from '../translate';
-//#endregion
-import { Helpers } from '../../index';
-import { BaseFeatureForProject } from './base-feature-for-project';
-import type { BaseProject } from './base-project';
+import { config } from 'tnp-config/src';
 import { CoreModels, chalk, dateformat, _ } from 'tnp-core/src';
+
+import { Helpers } from '../../index';
 import type { ChangelogData } from '../../models';
 import { CommitData } from '../commit-data';
-import { config } from 'tnp-config/src';
 
+import { BaseFeatureForProject } from './base-feature-for-project';
+import type { BaseProject } from './base-project';
 //#endregion
 
 export class BaseReleaseProcess<
   PROJECT extends BaseProject<any, any> = any,
-> extends BaseFeatureForProject {
+> extends BaseFeatureForProject<PROJECT> {
   //#region fields
-  project: PROJECT;
+
   /**
    * Automatic release process of patch plus one version
    */

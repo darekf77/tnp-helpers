@@ -16,8 +16,7 @@ import type { BaseProject } from './base-project';
 
 export class BaseGit<
   PROJECT extends BaseProject = any,
-> extends BaseFeatureForProject {
-  project: PROJECT;
+> extends BaseFeatureForProject<PROJECT> {
   //#region methods & getters / unstage all files
   unstageAllFiles() {
     //#region @backendFunc
@@ -517,7 +516,7 @@ export class BaseGit<
   /**
    * get provider of remote origin
    */
-  get remoteProvider():string {
+  get remoteProvider(): string {
     //#region @backendFunc
     return Helpers.git.getRemoteProvider(this.project.location);
     //#endregion

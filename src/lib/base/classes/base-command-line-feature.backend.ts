@@ -1,20 +1,25 @@
 //#region imports
-import { Helpers } from '../../index';
-import type { BaseProjectResolver } from './base-project-resolver';
-import { _, crossPlatformPath, path } from 'tnp-core/src';
-import { BaseProject } from './base-project';
-import { CLASS } from 'typescript-class-helpers/src';
 import { config } from 'tnp-config/src';
+import { _, crossPlatformPath, path } from 'tnp-core/src';
+import { CLASS } from 'typescript-class-helpers/src';
+
+import { Helpers } from '../../index';
+
+import { BaseProject } from './base-project';
+import type { BaseProjectResolver } from './base-project-resolver';
+
 //#endregion
 
 export abstract class BaseCommandLineFeature<
   PARAMS extends { copyto?: string[]; copytoall?: boolean } = any,
   PROJECT extends BaseProject<any, any> = BaseProject,
+  PROJECT_RESOLVER extends BaseProjectResolver<PROJECT> = BaseProjectResolver<PROJECT>,
 > {
   /**
    * params from command line
    */
   protected params: PARAMS;
+  protected ins: PROJECT_RESOLVER;
 
   protected __transformArgsBeforeResolvingParams__(args: string[]): string[] {
     const transformaed = args.map(a => {
@@ -115,8 +120,9 @@ export abstract class BaseCommandLineFeature<
      * process.cwd()
      */
     protected cwd: string,
-    protected ins: BaseProjectResolver<PROJECT>,
+     ins: PROJECT_RESOLVER,
   ) {
+    this.ins = ins;
     this.project = project;
     this.cwd = crossPlatformPath(cwd);
     //#region resolve params and args
