@@ -9,11 +9,46 @@ import { BaseProject } from './base-project';
 export { CommandConfig } from '../../models';
 //#endregion
 
+//#region custom console select/multiselect
+//#region @backend
+// eslint-disable-next-line import/order
+const Select = require('enquirer/lib/prompts/select');
+// eslint-disable-next-line import/order
+const MultiSelect = require('enquirer/lib/prompts/multiselect');
+
+const showOutputOptionLabel = 'Show output';
+
+class CustomSelect extends Select {
+  constructor(options) {
+    super(options);
+  }
+  async keypress(char, key): Promise<any> {
+    if (key.name === 'escape') {
+      this.clear();
+      return this.submit(showOutputOptionLabel);
+    }
+    return super.keypress(char, key);
+  }
+}
+
+class CustomMultiSelect extends MultiSelect {
+  constructor(options) {
+    super(options);
+  }
+  async keypress(char, key): Promise<any> {
+    if (key.name === 'escape') {
+      this.clear();
+      return this.submit([]);
+    }
+    return super.keypress(char, key);
+  }
+}
+//#endregion
+//#endregion
+
 export class BaseProcessManger<
-  PROJECT extends Partial<BaseProject<any, any>> = Partial<
-    BaseProject<any, any>
-  >,
-> extends BaseFeatureForProject {
+  PROJECT extends BaseProject<any, any> = BaseProject<any, any>,
+> extends BaseFeatureForProject<PROJECT> {
   //#region fields and getters
   private initialOptions: ProcessManagerConfig<PROJECT>;
   private allProcesses: CommandProcess[] = [];
@@ -76,7 +111,17 @@ export class BaseProcessManger<
       });
     });
 
-    await this.buildMenu();
+    process.on('SIGINT', async () => {
+      for (const proc of this.allProcesses) {
+        if (proc.isRunning) {
+          console.log(`Stopping process: ${proc.name}`);
+          await proc.stop();
+        }
+      }
+      process.exit(0);
+    });
+
+    await this.buildMenu(false);
     //#endregion
   }
   //#endregion
@@ -106,27 +151,15 @@ export class BaseProcessManger<
   //#region kill or build menu
   private async killOrBuildMenu(): Promise<void> {
     //#region @backendFunc
+
+    const buildMore = 'Build more';
+
     const chooseAction = ' -- choose action -- ';
-    const Select = require('enquirer/lib/prompts/select');
-    const that = this;
-    class CustomSelect extends Select {
-      constructor(options) {
-        super(options);
-      }
-      async keypress(char, key): Promise<any> {
-        if (key.name === 'escape') {
-          this.clear();
-          that.showOutput();
-          return;
-        }
-        return super.keypress(char, key);
-      }
-    }
 
     while (true) {
       console.clear();
 
-      Helpers.info(`
+      console.log(`
        (Press ${chalk.bold('Escaped')} to show output again)
       Manage Processes (${chalk.bold('ctrl + c')} to exit)
         `);
@@ -148,8 +181,7 @@ export class BaseProcessManger<
       }
       console.log('\n');
       this.showLogs = false;
-      const showOutput = 'Show output';
-      const buildMore = 'Build more';
+
       const kill = chalk.bold('Kill');
       // const exit = 'Exit';
 
@@ -174,7 +206,7 @@ export class BaseProcessManger<
       if (processesNotStarted.length < this.allProcesses.length) {
         choices.push(buildMore);
       }
-      choices.push(showOutput);
+      choices.push(showOutputOptionLabel);
       // options.push(exit);
 
       const action: string = await new CustomSelect({
@@ -187,7 +219,7 @@ export class BaseProcessManger<
         await this.allProcesses.find(p => p.name === procName)?.stop();
       } else if (action === buildMore) {
         return this.buildMenu();
-      } else if (action === showOutput) {
+      } else if (action === showOutputOptionLabel) {
         return this.showOutput();
       }
     }
@@ -259,26 +291,30 @@ export class BaseProcessManger<
   //#endregion
 
   //#region build menu
-  private async buildMenu(): Promise<void> {
+  private async buildMenu(allowedToShowOutput = true): Promise<void> {
     //#region @backendFunc
     console.clear();
     const choices = this.allProcesses
       .filter(f => !f.isRunning)
       .map(proc => proc.name);
 
-    const { MultiSelect } = require('enquirer');
+    // const { MultiSelect } = require('enquirer');
     if (this.initialOptions.header) {
       console.log(this.initialOptions.header);
     }
 
     while (true) {
-      const selection: string[] = await new MultiSelect({
+      const selection: string[] = await new CustomMultiSelect({
         message: this.initialOptions.title,
         choices: choices,
         result(names: string[]) {
           return names;
         },
       }).run();
+
+      if (allowedToShowOutput && selection.length === 0) {
+        break;
+      }
 
       this.selectedProcesses = selection.map(name => {
         return this.allProcesses.find(p => p.name === name);

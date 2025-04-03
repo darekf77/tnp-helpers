@@ -175,7 +175,7 @@ export interface CommandProcessRunOptions {
 export class CommandProcess {
   //#region fields and getters
   private state: CommandProcessState = CommandProcessState.NOT_STARTED;
-  private readonly child_process: ChildProcess;
+  public readonly child_process?: ChildProcess;
 
   protected get cmd(): string {
     return this.config.cmd;
