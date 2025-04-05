@@ -458,6 +458,7 @@ export namespace UtilsTypescript {
       } catch (error) {
         console.warn(`Not able to format file: ${absPathToFile}`);
       }
+      Helpers.taskDone(`Formatting file done.`);
     }
     //#endregion
   };
