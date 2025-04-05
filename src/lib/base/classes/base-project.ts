@@ -325,6 +325,7 @@ export abstract class BaseProject<
       c => c.name === nameOrBasename || c.basename === nameOrBasename,
     );
     if (errors && !c) {
+      // TODO @LAST FIX THIS FOR DEEEP ARGGUMENTS
       Helpers.warn(
         `Project doesnt contain child with name or basename: ${nameOrBasename}`,
       );

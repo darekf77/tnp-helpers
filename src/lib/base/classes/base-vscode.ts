@@ -492,6 +492,10 @@ export class BaseVscodeHelpers<
       },
       '[typescript]': {
         'editor.defaultFormatter': 'vscode.typescript-language-features',
+        // 'editor.foldingStrategy': 'auto',
+        // 'editor.foldingImportsByDefault': true,
+        // 'editor.folding': true,
+        // 'editor.foldingInitialLevel': 10,
       },
       '[jsonc]': {
         'editor.defaultFormatter': 'vscode.json-language-features',
@@ -522,7 +526,7 @@ export class BaseVscodeHelpers<
         'mkdocs',
         'Initing',
       ],
-      "cSpell.diagnosticLevel": "Hint"
+      'cSpell.diagnosticLevel': 'Hint',
     };
     //#endregion
 

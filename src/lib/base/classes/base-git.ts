@@ -1,4 +1,5 @@
 //#region imports
+import { config } from 'tnp-config/src';
 import { chalk, fse, Utils } from 'tnp-core/src';
 import { crossPlatformPath, path, _, UtilsTerminal } from 'tnp-core/src';
 
@@ -266,8 +267,18 @@ export class BaseGit<
   async resolveActionCommits() {
     //#region @backendFunc
     while (this.hasActionCommitsToMelt) {
-      Helpers.info(`Please fix your project: ${this.project.genericName}`);
-      this.project.git.meltActionCommits();
+      Helpers.info(`Please provide proper commit message for lastest changes in your project:
+
+        ${this.project.genericName}
+
+      LAST COMMIT MESSAGE SUGGEST TEMPORARY CHANGES
+      hash: ${this.project.git.lastCommitHash()}
+      date: ${this.project.git.lastCommitDate()}
+      message: "${this.project.git.lastCommitMessage()}"
+
+      use: ${config.frameworkName} melt # to melt action commits
+
+      `);
       this.project.run(`code ${this.project.location}`).sync();
       await UtilsTerminal.pressAnyKeyToContinueAsync({
         message: `Press any key to continue when you done`,
