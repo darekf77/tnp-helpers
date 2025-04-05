@@ -11,9 +11,10 @@ import type { BaseProjectResolver } from './base-project-resolver';
 //#endregion
 
 export abstract class BaseCommandLineFeature<
-  PARAMS extends { copyto?: string[]; copytoall?: boolean } = any,
+  PARAMS extends {} = any,
   PROJECT extends BaseProject<any, any> = BaseProject,
-  PROJECT_RESOLVER extends BaseProjectResolver<PROJECT> = BaseProjectResolver<PROJECT>,
+  PROJECT_RESOLVER extends
+    BaseProjectResolver<PROJECT> = BaseProjectResolver<PROJECT>,
 > {
   /**
    * params from command line
@@ -49,50 +50,6 @@ export abstract class BaseCommandLineFeature<
     return _.last(this.args);
   }
 
-  protected async __copytoProjects(): Promise<string[]> {
-    //#region @backendFunc
-
-    if (_.isString(this.params.copyto)) {
-      this.params.copyto = [this.params.copyto];
-    }
-    if (typeof this.params.copyto === 'boolean' && this.params.copyto) {
-      this.params.copyto =
-        await this.project.libraryBuild.selectCopytoProjects();
-      // console.log('sekeced',this.params.copyto)
-    }
-    const result = (this.params.copyto || [])
-      .map(pathToSomething => {
-        if (path.isAbsolute(pathToSomething)) {
-          return crossPlatformPath(pathToSomething);
-        }
-        return crossPlatformPath([this.project.location, pathToSomething]);
-      })
-      .map(pathToSomething => {
-        const proj = this.ins.From(pathToSomething);
-        if (proj) {
-          if (proj.linkedProjects?.embeddedProject) {
-            return proj.linkedProjects.embeddedProject.location;
-          }
-          return proj.location;
-        }
-        return pathToSomething;
-      })
-      .map(pathToSomething => {
-        if (pathToSomething.endsWith(`/${config.folder.node_modules}`)) {
-          return pathToSomething;
-        }
-        return crossPlatformPath([pathToSomething, config.folder.node_modules]);
-      })
-      .filter(pathToSomething => {
-        const exists = Helpers.exists(pathToSomething);
-        // console.log(`exists: ${exists} for ${pathToSomething}`);
-        return exists;
-      });
-    // console.log(result);
-    return result;
-    //#endregion
-  }
-
   private __project: PROJECT;
   protected get project(): PROJECT {
     return this.__project;
@@ -120,7 +77,7 @@ export abstract class BaseCommandLineFeature<
      * process.cwd()
      */
     protected cwd: string,
-     ins: PROJECT_RESOLVER,
+    ins: PROJECT_RESOLVER,
   ) {
     this.ins = ins;
     this.project = project;
