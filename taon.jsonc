@@ -12,6 +12,11 @@
   ],
 
   "additionalNpmNames": ["taon-helpers"],
+
+  "autoReleaseConfigAllowedItems": [{
+    "artifactName": "npm-lib-and-cli-tool"
+  }],
+
   "resources": [],
 
   "packageJsonOverride": {

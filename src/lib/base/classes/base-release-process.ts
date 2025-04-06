@@ -1,6 +1,6 @@
 //#region imports
 import { config } from 'tnp-config/src';
-import { CoreModels, chalk, dateformat, _ } from 'tnp-core/src';
+import { CoreModels, chalk, dateformat, _, UtilsTerminal } from 'tnp-core/src';
 
 import { Helpers } from '../../index';
 import type { ChangelogData } from '../../models';
@@ -102,31 +102,58 @@ export class BaseReleaseProcess<
   //#endregion
 
   //#region methods & getters / publish to npm
-  protected async publishToNpm(): Promise<boolean> {
+  /**
+   * @returns true if publish , faslse if just version bump
+   */
+  public async publishToNpm(
+    cwdForCode = this.project.pathFor('dist'),
+    automaticRelease = this.automaticRelease,
+  ): Promise<boolean> {
     //#region   @backendFunc
-    if (!this.automaticRelease) {
+
+    if (!automaticRelease) {
       if (
-        !(await Helpers.questionYesNo(
-          `Publish packages to npm (yes) ? ..or it's just a version bump (no)`,
-        ))
-      ) {
-        return true;
-      }
-      if (
-        await Helpers.questionYesNo(`Preview compiled code before publish ?`)
+        await UtilsTerminal.confirm({
+          message: `Do you wanna check compiled version before publishing ?`,
+          defaultValue: true,
+        })
       ) {
         try {
           const editor = await this.project.ins.configDb.getCodeEditor();
-          this.project.run(`cd dist && ${editor} .`, { output: true }).sync();
+          Helpers.run(`${editor} .`, {
+            output: true,
+            cwd: cwdForCode,
+          }).sync();
         } catch (error) {}
+      }
 
-        Helpers.pressKeyOrWait(`Press any key to continue`);
+      while (true) {
+        const publishOpt = {
+          select: {
+            name: '< select option below >',
+          },
+          bump: {
+            name: 'Just bump version',
+          },
+          publish: {
+            name: 'Publish to npm',
+          },
+        };
+
+        const selected = await UtilsTerminal.select<keyof typeof publishOpt>({
+          question: `Select publish option`,
+          choices: publishOpt,
+        });
+
+        if (selected === 'bump') {
+          return true;
+        }
+        if (selected === 'publish') {
+          break;
+        }
       }
     }
 
-    if (!(await Helpers.questionYesNo(`Publish ${this.newVersion} to npm ?`))) {
-      return false;
-    }
     await this.project.publish();
     return true;
     //#endregion
@@ -322,22 +349,39 @@ export class BaseReleaseProcess<
   //#endregion
 
   //#region methods & getters / select release type
-  protected async selectReleaseType(): Promise<CoreModels.ReleaseVersionType> {
+  protected async selectReleaseType(
+    versionToUseResolveFn?: (
+      releaseVersionBumpType: CoreModels.ReleaseVersionType,
+    ) => string,
+  ): Promise<CoreModels.ReleaseVersionType> {
     //#region @backendFunc
     if (this.automaticRelease) {
       return 'patch';
     }
     const options = [
       {
-        name: `Patch release (v${this.project.packageJson.versionWithPatchPlusOne})`,
+        name: `Patch release (v${
+          versionToUseResolveFn
+            ? versionToUseResolveFn('patch')
+            : this.project.packageJson.versionWithPatchPlusOne
+        })`,
         value: 'patch' as CoreModels.ReleaseVersionType,
       },
       {
-        name: `Minor release (v${this.project.packageJson.versionWithMinorPlusOneAndPatchZero})`,
+        name: `Minor release (v${
+          versionToUseResolveFn
+            ? versionToUseResolveFn('minor')
+            : this.project.packageJson.versionWithMinorPlusOneAndPatchZero
+        })`,
         value: 'minor' as CoreModels.ReleaseVersionType,
       },
       {
-        name: `Major release (v${this.project.packageJson.versionWithMajorPlusOneAndMinorZeroAndPatchZero})`,
+        name: `Major release (v${
+          versionToUseResolveFn
+            ? versionToUseResolveFn('major')
+            : this.project.packageJson
+                .versionWithMajorPlusOneAndMinorZeroAndPatchZero
+        })`,
         value: 'major' as CoreModels.ReleaseVersionType,
       },
     ];

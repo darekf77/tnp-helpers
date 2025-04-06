@@ -1,5 +1,6 @@
 //#region imports
 import { config } from 'tnp-config/src';
+import { UtilsTerminal } from 'tnp-core';
 import {
   chalk,
   child_process,
@@ -27,11 +28,13 @@ export class BaseNpmHelpers<
   //#region fields
   public readonly packageJson: BasePackageJson;
   public readonly _packageJsonType: typeof BasePackageJson = BasePackageJson;
-  private readonly _packageJsonTypeOriginal: typeof BasePackageJson = BasePackageJson;
+  private readonly _packageJsonTypeOriginal: typeof BasePackageJson =
+    BasePackageJson;
 
   public readonly nodeModules: BaseNodeModules;
   public readonly _nodeModulesType: typeof BaseNodeModules = BaseNodeModules;
-  private readonly __nodeModulesTypeOriginal: typeof BaseNodeModules = BaseNodeModules;
+  private readonly __nodeModulesTypeOriginal: typeof BaseNodeModules =
+    BaseNodeModules;
 
   public readonly bowerJson: BaseBowerJson;
 
@@ -41,11 +44,14 @@ export class BaseNpmHelpers<
   constructor(project: PROJECT) {
     super(project);
     this.project = project;
-    if(this._packageJsonType === this._packageJsonTypeOriginal) {
+    if (this._packageJsonType === this._packageJsonTypeOriginal) {
       this.packageJson = new this._packageJsonType({ cwd: project.location });
     }
-    if(this._nodeModulesType === this.__nodeModulesTypeOriginal) {
-      this.nodeModules = new this._nodeModulesType(project.location, this as any);
+    if (this._nodeModulesType === this.__nodeModulesTypeOriginal) {
+      this.nodeModules = new this._nodeModulesType(
+        project.location,
+        this as any,
+      );
     }
     this.bowerJson = new BaseBowerJson(project.location);
   }
@@ -113,6 +119,9 @@ export class BaseNpmHelpers<
   async isLoggedInToRegistry(registry?: string): Promise<boolean> {
     //#region @backendFunc
     // validate registry with regex
+    Helpers.info(
+      `Checking if logged in to registry: ${registry || '< default public npm >'} .... `,
+    );
     if (registry && registry.match(/^(https?:\/\/)?([a-z0-9-]+\.?)+(:\d+)?$/)) {
       throw new Error(`Invalid registry: ${registry}`);
     }
@@ -145,22 +154,32 @@ export class BaseNpmHelpers<
    */
   async loginToRegistry(registry?: string): Promise<void> {
     //#region @backendFunc
-    return new Promise((resolve, reject) => {
-      const command = registry
-        ? `npm login --registry=${registry}`
-        : 'npm login';
+    Helpers.info(
+      `Trying to login to npm registry: ${registry || '< default public npm >'}`,
+    );
 
-      const child = child_process.exec(command, (error, stdout, stderr) => {
-        if (error) {
-          reject(new Error(stderr));
-        } else {
+    return new Promise((resolve, reject) => {
+      const args = ['login'];
+      if (registry) {
+        args.push(`--registry=${registry}`);
+      }
+
+      const child = child_process.spawn('npm', args, {
+        stdio: 'inherit',
+        shell: true, // ensures compatibility with Git Bash on Windows
+      });
+
+      child.on('exit', code => {
+        if (code === 0) {
           resolve();
+        } else {
+          reject(new Error(`npm login failed with exit code ${code}`));
         }
       });
 
-      child.stdout.pipe(process.stdout);
-      child.stderr.pipe(process.stderr);
-      process.stdin.pipe(child.stdin);
+      child.on('error', err => {
+        reject(err);
+      });
     });
     //#endregion
   }
@@ -173,18 +192,16 @@ export class BaseNpmHelpers<
       let loggedIn = await this.isLoggedInToRegistry();
       if (loggedIn) {
         Helpers.info(
-          `You logged in to npm registry=${registry || '< default npm>'}`,
+          `You logged in to npm registry=${registry || '< default public npm >'}`,
         );
         break;
       }
-      Helpers.pressKeyAndContinue(
-        `
+      await UtilsTerminal.pressAnyKeyToContinueAsync({
+        message: `
         NPM REGISTRY: ${!registry ? '< default public npm >' : registry}
 
-        You are not logged in to npm. Please login to npm and press any key to continue...
-
-        `,
-      );
+You are not logged in to npm. Press any key and follow instructions...`,
+      });
 
       try {
         if (!!registry) {
@@ -193,6 +210,84 @@ export class BaseNpmHelpers<
         await this.loginToRegistry();
       } catch (error) {}
     }
+    //#endregion
+  }
+  //#endregion
+
+  //#region should release lib
+  async shouldReleaseMessage(options: {
+    releaseVersionBumpType: CoreModels.ReleaseVersionType;
+    versionToUse?: string;
+    whatToRelase: {
+      itself: boolean;
+      children: boolean;
+    };
+    skipQuestionToUser?: boolean;
+  }): Promise<boolean> {
+    //#region @backendFunc
+    const {
+      releaseVersionBumpType: releaseVersionType,
+      versionToUse,
+      whatToRelase: { children: releaseChildren, itself: releaseItself },
+      skipQuestionToUser,
+    } = options;
+
+    const itselfString =
+      `- this project: ${chalk.bold(this.project.nameForNpmPackage)}` +
+      `@${versionToUse ? versionToUse : this.project.packageJson.getVersionFor(releaseVersionType)}`;
+
+    const childrenString = `- all children projects: ${chalk.bold(
+      this.project.children
+        .map(
+          c =>
+            `${c.nameForNpmPackage}` +
+            `@${c.packageJson.getVersionFor(releaseVersionType)}`,
+        )
+        .join(', '),
+    )}`;
+
+    let projectsInfo = '';
+    if (releaseItself && releaseChildren) {
+      projectsInfo = `${itselfString}\n${childrenString}`;
+    } else if (!releaseItself && releaseChildren) {
+      projectsInfo = `${childrenString}`;
+    } else if (releaseItself && !releaseChildren) {
+      projectsInfo = `${itselfString}`;
+    }
+    Helpers.info(`
+      Projects to release:
+${projectsInfo}
+      `);
+
+    let message = `Proceed with release ?`;
+
+    return skipQuestionToUser
+      ? true
+      : await UtilsTerminal.confirm({ message, defaultValue: true });
+
+    //#endregion
+  }
+  //#endregion
+
+  //#region publish to npm registry
+  /**
+   * @param registry when not specified, it will use the default npm registry
+   */
+  async publishToNpmRegistry(options?: { registry?: string }): Promise<void> {
+    //#region @backendFunc
+    const { registry } = options || {};
+    const accessPublic =
+      this.packageJson.name.startsWith('@') && this.packageJson.isPrivate
+        ? '--access public'
+        : '';
+    const registryOpt = registry ? `--registry ${registry}` : '';
+
+    await this.project
+      .run(`npm publish ${registryOpt} ${accessPublic}`, {
+        output: true,
+        silence: false,
+      })
+      .sync();
     //#endregion
   }
   //#endregion

@@ -255,6 +255,10 @@ export abstract class BaseProject<
     return this.name?.endsWith('-cli') ? this.name : `${this.name}-cli`;
   }
 
+  get nameForNpmPackage(): string {
+    return this.name;
+  }
+
   get nameFromPomXML(): string {
     const artifactIdPattern = /<artifactId>([^<]+)<\/artifactId>/;
     const match = (this.readFile('pom.xml') || '').match(artifactIdPattern);
@@ -1206,8 +1210,8 @@ export abstract class BaseProject<
   /**
    * publish project to npm
    */
-  async publish(publishOptions?: any) {
-    throw new Error('TODO IMPLEMENT');
+  async publish(publishOptions?: any): Promise<void> {
+    this.npmHelpers.publishToNpmRegistry();
   }
   //#endregion
 

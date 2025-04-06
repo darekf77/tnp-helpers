@@ -1,6 +1,6 @@
 //#region imports
 import { config } from 'tnp-config/src';
-import { chalk, fse, Utils } from 'tnp-core/src';
+import { chalk, dateformat, fse, Utils } from 'tnp-core/src';
 import { crossPlatformPath, path, _, UtilsTerminal } from 'tnp-core/src';
 
 import {
@@ -67,9 +67,17 @@ export class BaseGit<
   //#endregion
 
   //#region methods & getters / stage all files
-  stageAllFiles() {
+  stageAllFiles(): void {
     //#region @backendFunc
     Helpers.git.stageAllFiles(this.project.location);
+    //#endregion
+  }
+  //#endregion
+
+  //#region methods & getters / stage all files
+  stageFile(relativeFilePath: string): void {
+    //#region @backendFunc
+    Helpers.git.stageFile(this.project.location, relativeFilePath);
     //#endregion
   }
   //#endregion
@@ -264,31 +272,173 @@ export class BaseGit<
   }
   //#endregion
 
-  async resolveActionCommits() {
+  /**
+   * Resolve last changes
+   * - uncommited changes
+   * - action commits to melt
+   */
+  async resolveLastChanges(options?: {
+    // TODO WIP on that
+    tryAutomaticActionFirst?: boolean;
+    projectNameAsOutputPrefix?: string;
+  }): Promise<void> {
     //#region @backendFunc
-    while (this.hasActionCommitsToMelt) {
-      Helpers.info(`Please provide proper commit message for lastest changes in your project:
+    options = options || {};
+    // TODO
+    // const automaticAction = async (
+    //   uncommitedFiles: string[],
+    // ): Promise<void> => {
+    //   this.project.git.meltActionCommits();
+    //   this.project.git.resetSoftHEAD(1);
+    //   this.project.git.stageAllFiles();
+    // };
+    // let firstTimeAutomaticAction = true;
 
-        ${this.project.genericName}
+    const displayLastCommitInfo = (): void => {
+      Helpers.info(`
 
-      LAST COMMIT MESSAGE SUGGEST TEMPORARY CHANGES
-      hash: ${this.project.git.lastCommitHash()}
-      date: ${this.project.git.lastCommitDate()}
-      message: "${this.project.git.lastCommitMessage()}"
-
-      use: ${config.frameworkName} melt # to melt action commits
-
+        ${chalk.gray(`Last commit hash: ${this.project.git.lastCommitHash()}`)}
+        ${chalk.gray(`Last commit date: ${dateformat(this.project.git.lastCommitDate(), 'dd-mm-yyyy HH:MM:ss')}`)}
+        ${chalk.gray(`Last commit message: "${this.project.git.lastCommitMessage()}"`)}
       `);
-      this.project.run(`code ${this.project.location}`).sync();
-      await UtilsTerminal.pressAnyKeyToContinueAsync({
-        message: `Press any key to continue when you done`,
-      });
+    };
+
+    while (true) {
+      const uncommitedFiles = this.uncommitedFiles;
+      const hasUncommitedChanges = uncommitedFiles.length > 0;
+      const lastCommitName = this.lastCommitMessage();
+      const hasActionCommitsToMelt = this.hasActionCommitsToMelt;
+
+      if (!hasUncommitedChanges && !hasActionCommitsToMelt) {
+        break;
+      }
+
+      displayLastCommitInfo();
+      if (hasActionCommitsToMelt) {
+        Helpers.info(`LAST COMMIT MESSAGE SUGGEST TEMPORARY CHANGES`);
+
+        // if (!options.tryAutomaticActionFirst) {
+        await UtilsTerminal.pressAnyKeyToContinueAsync({
+          message: `Melting last changes.. press any key to continue`,
+        });
+        // }
+        this.project.git.meltActionCommits();
+      }
+
+      // if (firstTimeAutomaticAction && options.tryAutomaticActionFirst) {
+      //   firstTimeAutomaticAction = false;
+      //   await automaticAction(uncommitedFiles);
+      //   break;
+      // }
+
+      if (hasUncommitedChanges) {
+        let reason = '';
+        let data = '';
+
+        if (hasUncommitedChanges) {
+          reason = 'THERE ARE SOME UNCOMMITED CHANGES';
+          data = `
+${uncommitedFiles
+  .map(
+    c =>
+      `${
+        options.projectNameAsOutputPrefix
+          ? options.projectNameAsOutputPrefix + '/'
+          : ''
+      }${c}`,
+  )
+  .join('\n')}`;
+        }
+
+        Helpers.info(`
+Please provide proper commit message for lastest changes in your project:
+
+          ${this.project.genericName}
+
+        ${reason}
+        ${data}
+
+        `);
+
+        const optionsSelect = {
+          openInVscode: {
+            name: 'Open in vscode',
+          },
+          // autoCommit: {
+          //   name: 'Inteligently auto commit all changes',
+          // },
+          addToLastCommitAndPush: {
+            name: `Add to last commit ("${lastCommitName}") and push`,
+          },
+          commitAsChoreUpdateAndPush: {
+            name: `Commit as "chore: update" and push`,
+          },
+          commitAsAndPush: {
+            name: `Commit as < you will choose commit message > and push`,
+          },
+          skip: {
+            name: 'Skip resolving last changes for this project',
+          },
+          exit: {
+            name: 'Exit',
+          },
+        };
+
+        const selected = await UtilsTerminal.select<keyof typeof optionsSelect>(
+          {
+            choices: optionsSelect,
+            question: `What to do with uncommited changes ?`,
+          },
+        );
+
+        if (selected === 'openInVscode') {
+          this.project.run(`code ${this.project.location}`).sync();
+          await UtilsTerminal.pressAnyKeyToContinueAsync({
+            message: `Press any key to continue when you done`,
+          });
+        }
+        // if (selected === 'autoCommit') {
+        //   await automaticAction();
+        // }
+        if (selected === 'skip') {
+          break;
+        }
+        if (selected === 'exit') {
+          process.exit(0);
+        }
+        if (selected === 'commitAsChoreUpdateAndPush') {
+          this.project.git.stageAllFiles();
+          this.project.git.commit('chore: update');
+          await this.project.git.pushCurrentBranch({
+            askToRetry: true,
+          });
+        }
+        if (selected === 'commitAsAndPush') {
+          const input = await UtilsTerminal.input({
+            question: `Commit message`,
+            defaultValue: lastCommitName,
+          });
+          this.project.git.stageAllFiles();
+          this.project.git.commit(input);
+          await this.project.git.pushCurrentBranch({
+            askToRetry: true,
+          });
+        }
+        if (selected == 'addToLastCommitAndPush') {
+          this.project.git.resetSoftHEAD(1);
+          this.project.git.stageAllFiles();
+          this.project.git.commit(lastCommitName);
+          await this.project.git.pushCurrentBranch({
+            askToRetry: true,
+          });
+        }
+      }
     }
     //#endregion
   }
 
   //#region methods & getters / has action commits to melt
-  get hasActionCommitsToMelt() {
+  get hasActionCommitsToMelt(): boolean {
     //#region @backendFunc
     const lastCommitMessage = this.lastCommitMessage() || '';
     return (

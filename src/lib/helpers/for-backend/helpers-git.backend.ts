@@ -1,5 +1,7 @@
 //#region imports
+import * as ini from 'ini';
 import simpleGit from 'simple-git';
+import { config } from 'tnp-config/src';
 import {
   _,
   path,
@@ -8,10 +10,9 @@ import {
   crossPlatformPath,
   dateformat,
 } from 'tnp-core';
-import { CLI, UtilsTerminal } from 'tnp-core/src';
+import { CLI, UtilsOs, UtilsTerminal } from 'tnp-core/src';
+
 import { Helpers } from '../../index';
-import { config } from 'tnp-config/src';
-import * as ini from 'ini';
 
 //#endregion
 
@@ -86,8 +87,8 @@ export class HelpersGit {
     }
     try {
       let command = `git describe --tags $(git rev-list --tags --max-count=1)`;
-      if (process.platform === 'win32') {
-        command = 'git describe --tags --abbrev=0';
+      if (UtilsOs.isRunningInWindowsCmd()) {
+        command = `for /f %i in ('git rev-list --tags --max-count=1') do @git describe --tags %i`;
       }
       const tag = Helpers.commnadOutputAsString(command, cwd);
       if (!tag) {
@@ -1010,7 +1011,7 @@ ${cwd}
           true,
         );
         if (!askToRetry) {
-          return;
+          return false;
         }
 
         const pushOptions = {
@@ -1019,6 +1020,9 @@ ${cwd}
           },
           force: {
             name: 'Try again with force push ?',
+          },
+          skip: {
+            name: 'Skip pushing',
           },
           openInVscode: {
             name: 'Open in vscode window',
@@ -1039,6 +1043,10 @@ ${cwd}
           } catch (error) {}
 
           continue;
+        }
+
+        if (whatToDo === 'skip') {
+          return false;
         }
 
         if (whatToDo === 'exit') {
@@ -1094,6 +1102,19 @@ ${cwd}
   stageAllFiles(cwd: string) {
     try {
       child_process.execSync(`git add --all .`, { cwd });
+    } catch (error) {}
+  }
+  //#endregion
+
+  //#region add
+  /**
+   *
+   * @param cwd
+   * @param optinos
+   */
+  stageFile(cwd: string, fileRelativePath: string) {
+    try {
+      child_process.execSync(`git add ${fileRelativePath}`, { cwd });
     } catch (error) {}
   }
   //#endregion
@@ -1250,10 +1271,10 @@ ${cwd}
    * @param cwd The current working directory
    *
    */
-  getRemoteProvider(cwd: string):string {
+  getRemoteProvider(cwd: string): string {
     //#region @backendFunc
     const remoteUrl = this.getOriginURL(cwd);
-    if(!remoteUrl) {
+    if (!remoteUrl) {
       return null;
     }
     try {
