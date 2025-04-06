@@ -8,7 +8,6 @@ import { Helpers, LinkedProject, PushProcessOptions } from '../../index';
 import { TypeOfCommit, CommitData } from '../commit-data';
 import { GhTempCode } from '../gh-temp-code';
 
-
 import { BaseCommandLineFeature } from './base-command-line-feature.backend';
 import { BaseProject } from './base-project';
 import type { BaseProjectResolver } from './base-project-resolver';
@@ -16,7 +15,8 @@ import type { BaseProjectResolver } from './base-project-resolver';
 export class BaseGlobalCommandLine<
   PARAMS = any,
   PROJECT extends BaseProject<any, any> = BaseProject<any, any>,
-  PROJECT_RESOLVER extends BaseProjectResolver<PROJECT> = BaseProjectResolver<PROJECT>,
+  PROJECT_RESOLVER extends
+    BaseProjectResolver<PROJECT> = BaseProjectResolver<PROJECT>,
 > extends BaseCommandLineFeature<PARAMS, PROJECT, PROJECT_RESOLVER> {
   public _(): void {
     Helpers.error('Please select git command');
@@ -1558,4 +1558,9 @@ Would you like to update current project configuration?`)
     this._exit();
   }
   //#endregion
+
+  lastGitTag() {
+    console.log(this.project?.git.lastTagVersionName);
+    this._exit();
+  }
 }
