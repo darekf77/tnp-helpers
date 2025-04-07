@@ -115,32 +115,38 @@ export class HelpersTaon extends CoreHelpers {
     outputFilePath: string,
     options?: {
       /**
-           * ! beforeWrite needs to return output
-           */
+       * ! beforeWrite needs to return output
+       */
       beforeWrite?: (options: {
         output?: string;
         copyToDestination?: (fileOrFolderAbsPath: string) => void;
-      }) => string,
+      }) => string;
       additionalExternals?: string[];
-    }
-
+      skipRemovingElectron?: boolean;
+      skipFixingSQLlite?: boolean;
+    },
   ): Promise<void> {
     //#region @backendFunc
-    const { beforeWrite, additionalExternals } = options || {};
+    const {
+      beforeWrite,
+      additionalExternals,
+      skipRemovingElectron,
+      skipFixingSQLlite,
+    } = options || {};
     //#region quick fixes for output
     // existsSync()
-
 
     //#endregion
 
     Helpers.taskStarted(`Bundling node_modules for file: ${pathToJsFile}`);
+    // debugger
     const data = await require('@vercel/ncc')(pathToJsFile, {
       //#region ncc options
       // provide a custom cache path or disable caching
       cache: false,
       // out:'',
       // externals to leave as requires of the build
-      externals: ['electron','vscode', ...(additionalExternals || [])],
+      externals: ['electron', 'vscode', ...(additionalExternals || [])],
       // directory outside of which never to emit assets
       // filterAssetBase: process.cwd(), // default
       minify: false, // default
@@ -159,7 +165,12 @@ export class HelpersTaon extends CoreHelpers {
       //#endregion
     });
     let output = data.code;
-    output = UtilsQuickFixes.replaceSQLliteFaultyCode(output);
+    if(!skipFixingSQLlite) {
+      output = UtilsQuickFixes.replaceSQLliteFaultyCode(output);
+    }
+    if (!skipRemovingElectron) {
+      output = UtilsQuickFixes.replaceElectronWithNothing(output);
+    }
 
     if (_.isFunction(beforeWrite)) {
       output = await Helpers.runSyncOrAsync({
@@ -167,7 +178,7 @@ export class HelpersTaon extends CoreHelpers {
         arrayOfParams: [
           {
             output,
-            copyToDestination(fileOrFolderAbsPath: string):void {
+            copyToDestination(fileOrFolderAbsPath: string): void {
               const destiantion = crossPlatformPath([
                 path.dirname(outputFilePath),
                 path.basename(fileOrFolderAbsPath),

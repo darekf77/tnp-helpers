@@ -1157,7 +1157,9 @@ export namespace UtilsQuickFixes {
    *
    * @param node_modules/sql.js/dist/sql-wasm.js
    */
-  export function replaceSQLliteFaultyCode(contentofSQLWasmJS: string): string {
+  export const replaceSQLliteFaultyCode = (
+    contentofSQLWasmJS: string,
+  ): string => {
     //#region @backendFunc
     const replace = [
       [
@@ -1173,7 +1175,16 @@ export namespace UtilsQuickFixes {
     });
     return contentofSQLWasmJS;
     //#endregion
-  }
+  };
   //#endregion
+
+  /**
+   * for some reason electron is being bundled - and it is not needed for cli
+   */
+  export const replaceElectronWithNothing = (jsContent: string): string => {
+    //#region @backendFunc
+    return jsContent.replace(`mod${'ule.exports'} = ${'requ'+'ire'}("electron");`, '');
+    //#endregion
+  };
 }
 //#endregion
