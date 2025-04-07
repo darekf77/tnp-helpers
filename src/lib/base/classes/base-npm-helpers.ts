@@ -221,7 +221,8 @@ You are not logged in to npm. Press any key and follow instructions...`,
   async shouldReleaseMessage(options: {
     releaseVersionBumpType: CoreModels.ReleaseVersionType;
     versionToUse?: string;
-    whatToRelase: {
+    children?: BaseProject[];
+    whatToRelease: {
       itself: boolean;
       children: boolean;
     };
@@ -231,20 +232,21 @@ You are not logged in to npm. Press any key and follow instructions...`,
     const {
       releaseVersionBumpType: releaseVersionType,
       versionToUse,
-      whatToRelase: { children: releaseChildren, itself: releaseItself },
+      whatToRelease: { children: releaseChildren, itself: releaseItself },
       skipQuestionToUser,
+      children,
     } = options;
 
     const itselfString =
-      `- this project: ${chalk.bold(this.project.nameForNpmPackage)}` +
-      `@${versionToUse ? versionToUse : this.project.packageJson.getVersionFor(releaseVersionType)}`;
+      `- this project: ${chalk.italic(this.project.nameForNpmPackage)}` +
+      `@${chalk.bold(versionToUse ? versionToUse : this.project.packageJson.getVersionFor(releaseVersionType))}`;
 
-    const childrenString = `- all children projects: ${chalk.bold(
-      this.project.children
+    const childrenString = `- all children projects: ${chalk.italic(
+      ( children ? children: this.project.children)
         .map(
           c =>
             `${c.nameForNpmPackage}` +
-            `@${c.packageJson.getVersionFor(releaseVersionType)}`,
+            `@${chalk.bold( c.packageJson.getVersionFor(releaseVersionType))}`,
         )
         .join(', '),
     )}`;
