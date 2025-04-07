@@ -125,9 +125,12 @@ export class BaseNpmHelpers<
     if (registry && registry.match(/^(https?:\/\/)?([a-z0-9-]+\.?)+(:\d+)?$/)) {
       throw new Error(`Invalid registry: ${registry}`);
     }
+    const registryLink = registry ? `--registry=${registry}` : '';
     return new Promise((resolve, reject) => {
+      const command = `npm whoami ${registryLink}`;
+      console.log(`Executing command: ${command}`);
       child_process.exec(
-        registry ? `npm whoami --registry=${registry}` : 'npm whoami',
+        command,
         { cwd: this.project.location },
         (error, stdout, stderr) => {
           if (error) {

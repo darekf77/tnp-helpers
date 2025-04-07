@@ -5356,7 +5356,7 @@
         "autoReleaseConfigAllowedItems": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/Models.TaonAutoRelaseItem"
+            "$ref": "#/definitions/Models.TaonAutoReleaseItem"
           },
           "description": "Auto release helps with releasing multiple projects from a local machine. This is useful when we don't have Taon Cloud set up and want to release all projects with a single command."
         }
@@ -6248,7 +6248,7 @@
       "additionalProperties": false,
       "description": "An alternative configuration for workspaces."
     },
-    "Models.TaonAutoRelaseItem": {
+    "Models.TaonAutoReleaseItem": {
       "type": "object",
       "properties": {
         "artifactName": {
@@ -6263,7 +6263,21 @@
           ]
         },
         "envName": {
-          "$ref": "#/definitions/CoreModels.EnvironmentNameTaon",
+          "type": "string",
+          "enum": [
+            "localhost",
+            "dev",
+            "stage",
+            "prod",
+            "test",
+            "qa",
+            "sandbox",
+            "uat",
+            "preprod",
+            "demo",
+            "ci",
+            "training"
+          ],
           "description": "if not proviede default  env.<artifact-name>.__.ts will be in use"
         },
         "envNumber": {
@@ -6279,7 +6293,6 @@
         "artifactName"
       ],
       "additionalProperties": false
-    },
-    "CoreModels.EnvironmentNameTaon": {}
+    }
   }
 }
