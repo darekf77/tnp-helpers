@@ -296,7 +296,7 @@ export class BaseGit<
 
     const displayLastCommitInfo = (): void => {
       Helpers.info(`
-
+        Project: ${this.project.genericName}
         ${chalk.gray(`Last commit hash: ${this.project.git.lastCommitHash()}`)}
         ${chalk.gray(`Last commit date: ${dateformat(this.project.git.lastCommitDate(), 'dd-mm-yyyy HH:MM:ss')}`)}
         ${chalk.gray(`Last commit message: "${this.project.git.lastCommitMessage()}"`)}
