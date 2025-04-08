@@ -297,4 +297,32 @@ ${projectsInfo}
     //#endregion
   }
   //#endregion
+
+  //#region get package version from npm registry
+  getPackageVersionFromNpmRegistry(
+    packageName: string,
+    options?: {
+      registry?: string;
+    },
+  ): Promise<string | undefined> {
+    //#region @backendFunc
+    return new Promise((resolve, reject) => {
+      const { registry } = options || {};
+      const registryOpt = registry ? `--registry ${registry}` : '';
+
+      child_process.exec(
+        `npm view ${packageName} version ${registryOpt}`,
+        { cwd: this.project.location },
+        (error, stdout, stderr) => {
+          if (error) {
+            reject(new Error(stderr));
+          } else {
+            resolve(stdout.trim());
+          }
+        },
+      );
+    });
+    //#endregion
+  }
+  //#endregion
 }
