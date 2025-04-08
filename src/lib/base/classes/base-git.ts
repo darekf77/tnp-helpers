@@ -360,6 +360,9 @@ Please provide proper commit message for lastest changes in your project:
           commitAsChoreUpdateAndPush: {
             name: `Commit as "chore: update" and ${hadMeltedActionCommits ? 'force ' : ''}push`,
           },
+          push: {
+            name: `Just ${hadMeltedActionCommits ? 'force ' : ''}push changes...`,
+          },
           // commitAsAndPush: {
           //   name: `Commit as < you will choose commit message > and ${hadMeltedActionCommits ? 'force ' : ''}push`,
           // },
@@ -375,7 +378,7 @@ Please provide proper commit message for lastest changes in your project:
           {
             choices: optionsSelect,
             question: `What to do with uncommited changes ?`,
-            autocomplete: true,
+            // autocomplete: true,
           },
         );
         //#endregion
@@ -406,19 +409,26 @@ Please provide proper commit message for lastest changes in your project:
           });
           return;
         }
-        if (selected === 'commitAsAndPush') {
-          const input = await UtilsTerminal.input({
-            question: `Commit message`,
-            defaultValue: lastCommitName,
-          });
-          this.project.git.stageAllFiles();
-          this.project.git.commit(input);
+        if (selected === 'push') {
           await this.project.git.pushCurrentBranch({
             askToRetry: true,
             force: hadMeltedActionCommits,
           });
           return;
         }
+        // if (selected === 'commitAsAndPush') {
+        //   const input = await UtilsTerminal.input({
+        //     question: `Commit message`,
+        //     defaultValue: lastCommitName,
+        //   });
+        //   this.project.git.stageAllFiles();
+        //   this.project.git.commit(input);
+        //   await this.project.git.pushCurrentBranch({
+        //     askToRetry: true,
+        //     force: hadMeltedActionCommits,
+        //   });
+        //   return;
+        // }
         if (selected == 'addToLastCommitAndPush') {
           this.project.git.resetSoftHEAD(1);
           this.project.git.stageAllFiles();
