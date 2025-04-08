@@ -1494,6 +1494,11 @@ ${cwd}
   //#endregion
 
   //#region check if there are some uncommited changes except
+  /**
+   *
+   * @param cwd get current working directory
+   * @returns relative pathes to uncommited files
+   */
   uncommitedFiles(cwd: string) {
     Helpers.log('[taon-helpers][thereAreSomeUncommitedChangeExcept] ' + cwd, 1);
 
@@ -1557,15 +1562,19 @@ ${cwd}
 
   //#region get list of staged files
   /**
+   * By default return Absolute pathes to staged files
    *
    * @param cwd
-   * @returns absolute pathes to stages files
+   * @returns (absolute pathes to stages files
    */
-  stagedFiles(cwd: string): string[] {
+  stagedFiles(cwd: string, outputRelatieve = false): string[] {
     cwd = crossPlatformPath(cwd).replace(/\/$/, '');
     const command = `git diff --name-only --cached`.trim();
     const result = Helpers.commnadOutputAsString(command, cwd, {}) || '';
     return (result ? result.split('\n') : []).map(relative => {
+      if (outputRelatieve) {
+        return crossPlatformPath(relative);
+      }
       return crossPlatformPath([cwd, relative]);
     });
   }

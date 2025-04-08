@@ -284,15 +284,6 @@ export class BaseGit<
   }): Promise<void> {
     //#region @backendFunc
     options = options || {};
-    // TODO
-    // const automaticAction = async (
-    //   uncommitedFiles: string[],
-    // ): Promise<void> => {
-    //   this.project.git.meltActionCommits();
-    //   this.project.git.resetSoftHEAD(1);
-    //   this.project.git.stageAllFiles();
-    // };
-    // let firstTimeAutomaticAction = true;
 
     const displayLastCommitInfo = (): void => {
       Helpers.info(`
@@ -303,10 +294,19 @@ export class BaseGit<
       `);
     };
 
+    const getUncommitedFiles = (): string[] => {
+      return Utils.uniqArray([
+        ...this.uncommitedFiles,
+        ...this.stagedFilesRelativePaths,
+      ]);
+    };
+
+    let hadMeltedActionCommits = false;
     while (true) {
-      const uncommitedFiles = this.uncommitedFiles;
-      const hasUncommitedChanges = uncommitedFiles.length > 0;
-      const lastCommitName = this.lastCommitMessage();
+      let uncommitedFiles = getUncommitedFiles();
+
+      let hasUncommitedChanges = uncommitedFiles.length > 0;
+      let lastCommitName = this.lastCommitMessage();
       const hasActionCommitsToMelt = this.hasActionCommitsToMelt;
 
       if (!hasUncommitedChanges && !hasActionCommitsToMelt) {
@@ -315,6 +315,7 @@ export class BaseGit<
 
       displayLastCommitInfo();
       if (hasActionCommitsToMelt) {
+        hadMeltedActionCommits = true;
         Helpers.info(`LAST COMMIT MESSAGE SUGGEST TEMPORARY CHANGES`);
 
         // if (!options.tryAutomaticActionFirst) {
@@ -323,43 +324,29 @@ export class BaseGit<
         });
         // }
         this.project.git.meltActionCommits();
+        lastCommitName = this.lastCommitMessage();
+        uncommitedFiles = getUncommitedFiles();
+        hasUncommitedChanges = uncommitedFiles.length > 0;
       }
 
-      // if (firstTimeAutomaticAction && options.tryAutomaticActionFirst) {
-      //   firstTimeAutomaticAction = false;
-      //   await automaticAction(uncommitedFiles);
-      //   break;
-      // }
-
       if (hasUncommitedChanges) {
-        let reason = '';
-        let data = '';
-
-        if (hasUncommitedChanges) {
-          reason = 'THERE ARE SOME UNCOMMITED CHANGES';
-          data = `
+        const reason = 'THERE ARE SOME UNCOMMITED CHANGES';
+        const data = `
 ${uncommitedFiles
-  .map(
-    c =>
-      `${
-        options.projectNameAsOutputPrefix
-          ? options.projectNameAsOutputPrefix + '/'
-          : ''
-      }${c}`,
-  )
+  .map(c => `${`${options.projectNameAsOutputPrefix}/` ?? ''}${c}`)
   .join('\n')}`;
-        }
 
         Helpers.info(`
 Please provide proper commit message for lastest changes in your project:
 
           ${this.project.genericName}
 
-        ${reason}
+        ${chalk.yellow(reason)}
         ${data}
 
         `);
 
+        //#region handle select options
         const optionsSelect = {
           openInVscode: {
             name: 'Open in vscode',
@@ -368,14 +355,14 @@ Please provide proper commit message for lastest changes in your project:
           //   name: 'Inteligently auto commit all changes',
           // },
           addToLastCommitAndPush: {
-            name: `Add to last commit ("${lastCommitName}") and push`,
+            name: `Add to last commit ("${lastCommitName}") and ${hadMeltedActionCommits ? 'force ' : ''}push`,
           },
           commitAsChoreUpdateAndPush: {
-            name: `Commit as "chore: update" and push`,
+            name: `Commit as "chore: update" and ${hadMeltedActionCommits ? 'force ' : ''}push`,
           },
-          commitAsAndPush: {
-            name: `Commit as < you will choose commit message > and push`,
-          },
+          // commitAsAndPush: {
+          //   name: `Commit as < you will choose commit message > and ${hadMeltedActionCommits ? 'force ' : ''}push`,
+          // },
           skip: {
             name: 'Skip resolving last changes for this project',
           },
@@ -388,9 +375,12 @@ Please provide proper commit message for lastest changes in your project:
           {
             choices: optionsSelect,
             question: `What to do with uncommited changes ?`,
+            autocomplete: true,
           },
         );
+        //#endregion
 
+        //#region handle actions
         if (selected === 'openInVscode') {
           this.project.run(`code ${this.project.location}`).sync();
           await UtilsTerminal.pressAnyKeyToContinueAsync({
@@ -401,7 +391,7 @@ Please provide proper commit message for lastest changes in your project:
         //   await automaticAction();
         // }
         if (selected === 'skip') {
-          break;
+          return;
         }
         if (selected === 'exit') {
           process.exit(0);
@@ -409,9 +399,12 @@ Please provide proper commit message for lastest changes in your project:
         if (selected === 'commitAsChoreUpdateAndPush') {
           this.project.git.stageAllFiles();
           this.project.git.commit('chore: update');
+
           await this.project.git.pushCurrentBranch({
             askToRetry: true,
+            force: hadMeltedActionCommits,
           });
+          return;
         }
         if (selected === 'commitAsAndPush') {
           const input = await UtilsTerminal.input({
@@ -422,7 +415,9 @@ Please provide proper commit message for lastest changes in your project:
           this.project.git.commit(input);
           await this.project.git.pushCurrentBranch({
             askToRetry: true,
+            force: hadMeltedActionCommits,
           });
+          return;
         }
         if (selected == 'addToLastCommitAndPush') {
           this.project.git.resetSoftHEAD(1);
@@ -430,8 +425,11 @@ Please provide proper commit message for lastest changes in your project:
           this.project.git.commit(lastCommitName);
           await this.project.git.pushCurrentBranch({
             askToRetry: true,
+            force: hadMeltedActionCommits,
           });
+          return;
         }
+        //#endregion
       }
     }
     //#endregion
@@ -698,6 +696,12 @@ Please provide proper commit message for lastest changes in your project:
     return Helpers.git.stagedFiles(this.project.location);
     //#endregion
   }
+  get stagedFilesRelativePaths(): string[] {
+    //#region @backendFunc
+    return Helpers.git.stagedFiles(this.project.location, true);
+    //#endregion
+  }
+
   //#endregion
 
   //#region methods & getters / rename origin

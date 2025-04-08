@@ -241,12 +241,13 @@ You are not logged in to npm. Press any key and follow instructions...`,
       `- this project: ${chalk.italic(this.project.nameForNpmPackage)}` +
       `@${chalk.bold(versionToUse ? versionToUse : this.project.packageJson.getVersionFor(releaseVersionType))}`;
 
-    const childrenString = `- all children projects: ${chalk.italic(
-      ( children ? children: this.project.children)
+    const childrenToRelease = children ? children : this.project.children;
+    const childrenString = `- all (${childrenToRelease.length}) children projects: ${chalk.italic(
+      (children ? children : this.project.children)
         .map(
           c =>
             `${c.nameForNpmPackage}` +
-            `@${chalk.bold( c.packageJson.getVersionFor(releaseVersionType))}`,
+            `@${chalk.bold(c.packageJson.getVersionFor(releaseVersionType))}`,
         )
         .join(', '),
     )}`;

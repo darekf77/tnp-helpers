@@ -452,7 +452,15 @@ ${
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
-    this.project.git.resetSoftHEAD(1);
+    const howManyCommits = Number(this.firstArg) || 1;
+
+    _.times(howManyCommits, n => {
+      console.log(
+        `Resetting soft ${n + 1} commit "${this.project.git.lastCommitMessage()}"`,
+      );
+      this.project.git.resetSoftHEAD(1);
+    });
+
     this._exit();
   }
   //#endregion
