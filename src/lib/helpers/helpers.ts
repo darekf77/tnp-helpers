@@ -165,7 +165,7 @@ export class HelpersTaon extends CoreHelpers {
       //#endregion
     });
     let output = data.code;
-    if(!skipFixingSQLlite) {
+    if (!skipFixingSQLlite) {
       output = UtilsQuickFixes.replaceSQLliteFaultyCode(output);
     }
     if (!skipRemovingElectron) {
@@ -390,20 +390,6 @@ export class HelpersTaon extends CoreHelpers {
         }, howOfftenCheckInMs);
       }
     });
-  }
-  //#endregion
-
-  //#region methods & getters / get browser ver path
-  /**
-   * @deprecated
-   */
-  getBrowserVerPath(moduleName?: string, websql: boolean = false) {
-    //#region @backend
-    if (!moduleName) {
-      return websql ? config.folder.websql : config.folder.browser;
-    }
-    return `${websql ? config.folder.websql : config.folder.browser}-for-${moduleName}`;
-    //#endregion
   }
   //#endregion
 

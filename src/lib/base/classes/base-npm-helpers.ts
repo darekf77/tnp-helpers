@@ -1,6 +1,6 @@
 //#region imports
 import { config } from 'tnp-config/src';
-import { UtilsTerminal } from 'tnp-core';
+import { UtilsTerminal } from 'tnp-core/src';
 import {
   chalk,
   child_process,

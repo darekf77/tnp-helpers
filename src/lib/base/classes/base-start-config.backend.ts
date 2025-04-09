@@ -75,17 +75,6 @@ export class BaseStartConfig {
 
   //#region constructor
   constructor(options: BaseStartConfigOptions) {
-    if (!Helpers.isSupportedTaonTerminal) {
-      Helpers.error(
-        `This terminal is not supported. Please use:
-
-      - git bash (on windows)
-
-      `,
-        false,
-        true,
-      );
-    }
 
     options = options ? options : {};
     for (const key in options) {

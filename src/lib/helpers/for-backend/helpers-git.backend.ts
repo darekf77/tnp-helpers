@@ -563,7 +563,7 @@ export class HelpersGit {
     Helpers.log('[taon-helpers][currentBranchName] ' + cwd, 1);
     try {
       const branchName = child_process
-        .execSync(`git branch | sed -n '/\* /s///p'`, { cwd })
+        .execSync(`git rev-parse --abbrev-ref HEAD`, { cwd })
         .toString()
         .trim();
       return branchName;
@@ -856,10 +856,8 @@ export class HelpersGit {
         if (acknowledgeBeforePull) {
           Helpers.pressKeyAndContinue('Press any key to continue pulling...');
         }
-        let currentLocalBranch = child_process
-          .execSync(`git branch | sed -n '/\* /s///p'`, { cwd })
-          .toString()
-          .trim();
+        let currentLocalBranch = this.currentBranchName(cwd);
+
         Helpers.git._pull(cwd, {
           ...options,
           branchName: currentLocalBranch,
@@ -1062,20 +1060,26 @@ ${cwd}
 
   //#region get default branch for repo
   defaultRepoBranch(cwd: string) {
+    //#region @backendFunc
     Helpers.log('[defaultRepoBranch] ' + cwd, 1);
     try {
-      const defaultBranch = child_process
-        .execSync(
-          `git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'`,
-          { cwd },
-        )
+      const raw = child_process
+        .execSync(`git symbolic-ref refs/remotes/origin/HEAD`, { cwd })
         .toString()
         .trim();
+
+      // Remove the prefix manually
+      const prefix = 'refs/remotes/origin/';
+      const defaultBranch = raw.startsWith(prefix)
+        ? raw.slice(prefix.length)
+        : raw;
+
       return defaultBranch;
     } catch (e) {
       Helpers.log(e);
-      Helpers.error(`Cannot find default branch for repo in : ${cwd}`);
+      Helpers.error(`Cannot find default branch for repo in: ${cwd}`);
     }
+    //#endregion
   }
   //#endregion
 

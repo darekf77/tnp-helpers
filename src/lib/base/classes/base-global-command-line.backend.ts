@@ -1323,6 +1323,24 @@ Would you like to update current project configuration?`)
   }
   //#endregion
 
+  //#region is terminal running inside cmd
+  isRunningInsideCMD() {
+    console.log(
+      `Is terminal running insdie cmd.exe: ${UtilsOs.isRunningInWindowsCmd()}`,
+    );
+    this._exit();
+  }
+  //#endregion
+
+  //#region is running inside powershell
+  isRunningInsidePowerShell() {
+    console.log(
+      `Is terminal running insdie powershell: ${UtilsOs.isRunningInWindowsPowerShell()}`,
+    );
+    this._exit();
+  }
+  //#endregion
+
   //#region prox ext
   async INSTALL_PROJECT_EXTENSIONS(): Promise<void> {
     await this.INSTALL_PROJ_EXT();
