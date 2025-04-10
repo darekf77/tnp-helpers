@@ -1,3 +1,8 @@
+import * as crypto from 'crypto';
+
+import type { CopyOptionsSync } from 'fs-extra';
+import * as glob from 'glob';
+import { config, extAllowedToReplace } from 'tnp-config/src';
 import {
   _,
   path,
@@ -8,14 +13,10 @@ import {
   json5,
 } from 'tnp-core/src';
 import * as underscore from 'underscore';
-import * as glob from 'glob';
-import { JSON10 } from 'json10/src';
-import * as crypto from 'crypto';
-declare const global: any;
-import type { CopyOptionsSync } from 'fs-extra';
 
 import { Helpers } from '../../index';
-import { config, extAllowedToReplace } from 'tnp-config/src';
+
+declare const global: any;
 
 export interface GetRecrusiveFilesFromOptions {
   // withNameOnly?: string; // TODO
@@ -26,6 +27,7 @@ export class HelpersFileFolders {
    * Calculate file or string checksum
    */
   checksum(absolutePathToFileOrContent: string, algorithm?: 'md5' | 'sha1') {
+    //#region @backendFunc
     const fileContent = path.isAbsolute(absolutePathToFileOrContent)
       ? Helpers.readFile(absolutePathToFileOrContent)
       : absolutePathToFileOrContent;
@@ -33,6 +35,7 @@ export class HelpersFileFolders {
       .createHash(algorithm || 'md5')
       .update(fileContent, 'utf8')
       .digest('hex');
+    //#endregion
   }
 
   getValueFromJSON(
@@ -40,11 +43,13 @@ export class HelpersFileFolders {
     lodashGetPath: string,
     defaultValue = void 0,
   ): any {
+    //#region @backendFunc
     if (!fse.existsSync(filepath)) {
       return defaultValue;
     }
     const json = Helpers.readJson(filepath);
     return _.get(json, lodashGetPath, defaultValue);
+    //#endregion
   }
 
   getValueFromJSONC(
@@ -52,11 +57,13 @@ export class HelpersFileFolders {
     lodashGetPath: string,
     defaultValue = void 0,
   ): any {
+    //#region @backendFunc
     if (!fse.existsSync(filepath)) {
       return defaultValue;
     }
     const json = Helpers.readJson5(filepath);
     return _.get(json, lodashGetPath, defaultValue);
+    //#endregion
   }
 
   readValueFromJson(
@@ -64,7 +71,9 @@ export class HelpersFileFolders {
     lodashGetPath: string,
     defaultValue = void 0,
   ): any {
+    //#region @backendFunc
     return Helpers.getValueFromJSON(filepath, lodashGetPath, defaultValue);
+    //#endregion
   }
 
   readValueFromJsonC(
@@ -72,10 +81,13 @@ export class HelpersFileFolders {
     lodashGetPath: string,
     defaultValue = void 0,
   ): any {
+    //#region @backendFunc
     return Helpers.getValueFromJSONC(filepath, lodashGetPath, defaultValue);
+    //#endregion
   }
 
   setValueToJSON(filepath: string, lodashGetPath: string, value: any): void {
+    //#region @backendFunc
     if (!fse.existsSync(filepath)) {
       Helpers.warn(`Recreating unexised json file: ${filepath}`);
       Helpers.writeFile(filepath, '{}');
@@ -83,9 +95,11 @@ export class HelpersFileFolders {
     const json = Helpers.readJson(filepath);
     _.set(json, lodashGetPath, value);
     Helpers.writeJson(filepath, json);
+    //#endregion
   }
 
   setValueToJSONC(filepath: string, lodashGetPath: string, value: any): void {
+    //#region @backendFunc
     if (!fse.existsSync(filepath)) {
       Helpers.warn(`Recreating unexised json file: ${filepath}`);
       Helpers.writeFile(filepath, '{}');
@@ -93,20 +107,25 @@ export class HelpersFileFolders {
     const json = Helpers.readJsonC(filepath);
     _.set(json, lodashGetPath, value);
     Helpers.writeJsonC(filepath, json);
+    //#endregion
   }
 
   /**
    * file size in bytes
    */
   size(filePath: string): number {
+    //#region @backendFunc
     if (!Helpers.exists(filePath) || Helpers.isFolder(filePath)) {
       return null;
     }
     return fse.lstatSync(filePath).size;
+    //#endregion
   }
 
   pathFromLink(filePath: string): string {
+    //#region @backendFunc
     return fse.readlinkSync(filePath);
+    //#endregion
   }
 
   // renameFolder(from: string, to: string, cwd?: string) {
@@ -119,13 +138,16 @@ export class HelpersFileFolders {
    * @deprecated
    */
   renameFolder(from: string, to: string, cwd?: string): void {
+    //#region @backendFunc
     Helpers.renameFiles(from, to, cwd);
+    //#endregion
   }
 
   /**
    * @deprecated
    */
   renameFiles(from: string, to: string, cwd?: string): void {
+    //#region @backendFunc
     try {
       const directoryPath = cwd || '.';
 
@@ -147,9 +169,11 @@ export class HelpersFileFolders {
     } catch (error) {
       console.error(`Error renaming files from ${from} to ${to}:`, error);
     }
+    //#endregion
   }
 
   getTempFolder() {
+    //#region @backendFunc
     let tmp = '/tmp';
     if (process.platform === 'darwin') {
       tmp = '/private/tmp';
@@ -163,6 +187,7 @@ export class HelpersFileFolders {
       Helpers.mkdirp(tmp);
     }
     return tmp;
+    //#endregion
   }
 
   // createMultiplatformLink(target: string, link: string) {
@@ -217,7 +242,9 @@ export class HelpersFileFolders {
   // }
 
   isPlainFileOrFolder(filePath: string): boolean {
+    //#region @backendFunc
     return /^([a-zA-Z]|\-|\_|\@|\#|\$|\!|\^|\&|\*|\(|\))+$/.test(filePath);
+    //#endregion
   }
 
   /**
@@ -225,8 +252,10 @@ export class HelpersFileFolders {
    * use import (or modules only on backend)
    */
   requireUncached(module: string): any {
+    //#region @backendFunc
     delete require.cache[require.resolve(module)];
     return require(module);
+    //#endregion
   }
 
   /**
@@ -323,6 +352,7 @@ export class HelpersFileFolders {
   }
 
   tryRecreateDir(dirpath: string): void {
+    //#region @backendFunc
     try {
       Helpers.mkdirp(dirpath);
     } catch (error) {
@@ -330,12 +360,14 @@ export class HelpersFileFolders {
       Helpers.sleep(1);
       Helpers.mkdirp(dirpath);
     }
+    //#endregion
   }
 
   /**
    * @deprecated
    */
   tryCopyFrom(source: string, destination: string, options = {}): void {
+    //#region @backendFunc
     Helpers.log(`Trying to copy from: ${source} to ${destination}`);
     destination = crossPlatformPath(destination);
     source = crossPlatformPath(source);
@@ -379,6 +411,7 @@ export class HelpersFileFolders {
       rimraf.sync(destination);
       fse.copySync(source, destination, options);
     }
+    //#endregion
   }
 
   // private deleteFolderRecursive = (pathToFolder) => {
@@ -396,6 +429,7 @@ export class HelpersFileFolders {
   // };
 
   move(from: string, to: string): void {
+    //#region @backendFunc
     if (!fse.existsSync(from)) {
       Helpers.warn(`[move] File or folder doesnt not exists: ${from}`);
       return;
@@ -459,6 +493,7 @@ to: ${to}
         Helpers.pressKeyAndContinue('Press any to try again this action');
       }
     }
+    //#endregion
   }
 
   findChildren<T>(
@@ -466,6 +501,7 @@ to: ${to}
     createFn: (childLocation: string) => T,
     options?: { allowAllNames: boolean },
   ): T[] {
+    //#region @backendFunc
     const { allowAllNames } = options || {};
     let folders = Helpers.values(config.folder);
     folders = folders.filter(
@@ -522,6 +558,7 @@ to: ${to}
         return createFn(dir);
       })
       .filter(c => !!c);
+    //#endregion
   }
 
   /**
@@ -531,6 +568,7 @@ to: ${to}
     location: string,
     createFn: (childLocation: string) => T,
   ): T[] {
+    //#region @backendFunc
     if (!fse.existsSync(location)) {
       return [];
     }
@@ -573,6 +611,7 @@ to: ${to}
         return createFn(dir);
       })
       .filter(c => !!c);
+    //#endregion
   }
 
   /**
@@ -584,6 +623,7 @@ to: ${to}
     ommitFolders: string[] = [],
     options?: GetRecrusiveFilesFromOptions,
   ): string[] {
+    //#region @backendFunc
     options = options ? options : {};
     // const withNameOnly = options.withNameOnly;
     let files = [];
@@ -616,9 +656,11 @@ to: ${to}
       readed.forEach(r => files.push(r));
     }
     return files;
+    //#endregion
   }
 
   checkIfNameAllowedForTaonProj(folderName: string): boolean {
+    //#region @backendFunc
     const notAllowed: RegExp[] = [
       '^.vscode$',
       '^node_modules$',
@@ -638,9 +680,11 @@ to: ${to}
     ].map(s => new RegExp(s));
 
     return notAllowed.filter(p => p.test(folderName)).length === 0;
+    //#endregion
   }
 
   getLinesFromFiles(filename: string, lineCount?: number): Promise<string[]> {
+    //#region @backendFunc
     return new Promise<string[]>((resolve, reject) => {
       let stream = fse.createReadStream(filename, {
         flags: 'r',
@@ -671,6 +715,7 @@ to: ${to}
         resolve(lines);
       });
     });
+    //#endregion
   }
 
   /**
@@ -678,6 +723,7 @@ to: ${to}
    * @param dir absoulute path to file
    */
   getMostRecentFileName(dir: string): string {
+    //#region @backendFunc
     let files = Helpers.getRecrusiveFilesFrom(dir);
 
     // use underscore for max()
@@ -689,9 +735,11 @@ to: ${to}
       // console.log( `${fse.statSync(f).mtimeMs} for ${f}`   )
       return fse.statSync(f).mtimeMs;
     });
+    //#endregion
   }
 
   getMostRecentFilesNames(dir: string): string[] {
+    //#region @backendFunc
     const allFiles = Helpers.getRecrusiveFilesFrom(dir);
     const mrf = Helpers.getMostRecentFileName(dir);
     const mfrMtime = fse.lstatSync(mrf).mtimeMs;
@@ -700,9 +748,11 @@ to: ${to}
       const info = fse.lstatSync(f);
       return info.mtimeMs === mfrMtime && !info.isDirectory();
     });
+    //#endregion
   }
 
   removeExcept(fromPath: string, exceptFolderAndFiles: string[]): void {
+    //#region @backendFunc
     fse
       .readdirSync(fromPath)
       .filter(f => {
@@ -717,6 +767,7 @@ to: ${to}
         return !exceptFolderAndFiles.includes(path.basename(f));
       })
       .forEach(af => Helpers.removeFileIfExists(af));
+    //#endregion
   }
 
   copy(
@@ -745,6 +796,7 @@ to: ${to}
       dontAskOnError?: boolean;
     } & CopyOptionsSync,
   ): void {
+    //#region @backendFunc
     Helpers.log(
       `Copying from:
 
@@ -953,9 +1005,11 @@ to: ${to}
       //   process.exit(0)
       // }
     }
+    //#endregion
   }
 
   filterDontCopy(basePathFoldersTosSkip: string[], projectOrBasepath: string) {
+    //#region @backendFunc
     return (src: string, dest: string): boolean => {
       // console.log('src', src)
       src = crossPlatformPath(src);
@@ -979,12 +1033,14 @@ to: ${to}
       // console.log('isAllowed', isAllowed)
       return isAllowed;
     };
+    //#endregion
   }
 
   filterOnlyCopy(
     basePathFoldersOnlyToInclude: string[],
     projectOrBasepath: string,
   ) {
+    //#region @backendFunc
     return (src: string, dest: string): boolean => {
       src = crossPlatformPath(src);
       const baseFolder = _.first(
@@ -1005,6 +1061,7 @@ to: ${to}
 
       return isAllowed;
     };
+    //#endregion
   }
 
   copyFile(
@@ -1017,6 +1074,7 @@ to: ${to}
       dontCopySameContent?: boolean;
     },
   ): boolean {
+    //#region @backendFunc
     if (_.isUndefined(options)) {
       options = {} as any;
     }
@@ -1116,12 +1174,14 @@ ${sourceData}
     }
 
     return true;
+    //#endregion
   }
 
   /**
    * get real absolute path
    */
   resolve(fileOrFolderPath: string): string {
+    //#region @backendFunc
     if (fileOrFolderPath.startsWith('~')) {
       fileOrFolderPath = crossPlatformPath([
         os.homedir(),
@@ -1129,5 +1189,6 @@ ${sourceData}
       ]);
     }
     return crossPlatformPath(path.resolve(fileOrFolderPath));
+    //#endregion
   }
 }

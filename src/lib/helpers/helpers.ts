@@ -3,6 +3,8 @@ import { _, path } from 'tnp-core/src';
 import { HelpersArrayObj } from './helpers-array-obj';
 import { HelpersStringsRegexes } from './helpers-strings-regexes';
 import { HelpersStrings } from './helpers-strings';
+import { HelpersProcess } from './for-backend/helpers-process';
+import { HelpersFileFolders } from './for-backend/helpers-file-folders';
 //#region @backend
 import { HelpersConsoleGui } from './for-backend/helpers-console-gui';
 import { os, crossPlatformPath } from 'tnp-core/src';
@@ -11,11 +13,10 @@ import { isElevated } from 'tnp-core/src';
 import { URL } from 'url';
 import { HelpersGit } from './for-backend/helpers-git.backend';
 import { HelpersCliTool } from './for-backend/helpers-cli-tool.backend';
-import { HelpersProcess } from './for-backend/helpers-process.backend';
 
 import { HelpersNpm } from './for-backend/helpers-npm.backend';
 import { HelpersTerminal } from './for-backend/helpers-system-terminal.backend';
-import { HelpersFileFolders } from './for-backend/helpers-file-folders.backend';
+
 import { HelpersDependencies } from './for-backend/helpers-dependencies.backend';
 import { HelpersPath } from './for-backend/helpers-path.backend';
 import { HelpersNetwork } from './for-backend/helpers-network.backend';
@@ -146,7 +147,14 @@ export class HelpersTaon extends CoreHelpers {
       cache: false,
       // out:'',
       // externals to leave as requires of the build
-      externals: ['electron', 'vscode', ...(additionalExternals || [])],
+      externals: [
+        'electron',
+        'vscode',
+        'ts-node',
+        'webpack',
+        'typescript',
+        ...(additionalExternals || []),
+      ],
       // directory outside of which never to emit assets
       // filterAssetBase: process.cwd(), // default
       minify: false, // default
@@ -545,27 +553,16 @@ export class HelpersTaon extends CoreHelpers {
   //#endregion
 }
 
-// prettier-ignore-start
-/* eslint-disable prettier/prettier */
 //#region class mixins
-// @ts-ignore
-export interface HelpersTaon extends
-  HelpersStringsRegexes
-  //#region @backend
-  ,
-  HelpersProcess,
-  HelpersFileFolders
-//#endregion
-{ }
-
+export interface HelpersTaon
+  extends HelpersStringsRegexes,
+    HelpersProcess,
+    HelpersFileFolders {}
 
 applyMixins(HelpersTaon, [
   HelpersStringsRegexes,
-  //#region @backend
   HelpersProcess,
   HelpersFileFolders,
-  //#endregion
 ]);
 //#endregion
 // prettier-ignore-end
-/* eslint-enable prettier/prettier */
