@@ -399,6 +399,7 @@ export class BaseNodeModules<
         excludeFrom = entry.excludeFrom || [];
         includeOnlyIn = entry.includeOnlyIn || [];
       }
+      Helpers.info(`[${config.frameworkName}] Checking npm duplicates of ${packageName}`);
 
       const removeCommand = UtilsOs.isRunningInWindowsPowerShell()
         ? `powershell -NoProfile -Command "Get-ChildItem node_modules -Recurse -Directory | Where-Object {$_.Name -eq '${packageName}'} | Select -ExpandProperty FullName"`
