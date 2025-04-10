@@ -151,8 +151,8 @@ export class HelpersTaon extends CoreHelpers {
         'electron',
         'vscode',
         'ts-node',
-        'webpack',
-        'typescript',
+        // 'webpack',
+        // 'typescript',
         ...(additionalExternals || []),
       ],
       // directory outside of which never to emit assets

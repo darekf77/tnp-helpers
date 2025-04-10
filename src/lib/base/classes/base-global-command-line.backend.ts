@@ -1317,14 +1317,14 @@ Would you like to update current project configuration?`)
   //#endregion
 
   //#region is terminal supported
-  isTerminalSupported() {
+  isSupportedTaonTerminal() {
     console.log(`Terminal is supported: ${Helpers.isSupportedTaonTerminal}`);
     this._exit();
   }
   //#endregion
 
   //#region is terminal running inside cmd
-  isRunningInsideCMD() {
+  isRunningInWindowsCmd() {
     console.log(
       `Is terminal running insdie cmd.exe: ${UtilsOs.isRunningInWindowsCmd()}`,
     );
@@ -1333,7 +1333,7 @@ Would you like to update current project configuration?`)
   //#endregion
 
   //#region is running inside powershell
-  isRunningInsidePowerShell() {
+  isRunningInWindowsPowerShell() {
     console.log(
       `Is terminal running insdie powershell: ${UtilsOs.isRunningInWindowsPowerShell()}`,
     );
@@ -1586,6 +1586,7 @@ Would you like to update current project configuration?`)
   //#endregion
 
   lastGitTag() {
+    console.log('Latest tag')
     console.log(this.project?.git.lastTagVersionName);
     this._exit();
   }

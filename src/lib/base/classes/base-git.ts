@@ -333,7 +333,10 @@ export class BaseGit<
         const reason = 'THERE ARE SOME UNCOMMITED CHANGES';
         const data = `
 ${uncommitedFiles
-  .map(c => `${`${options.projectNameAsOutputPrefix}/` ?? ''}${c}`)
+  .map(
+    c =>
+      `${options.projectNameAsOutputPrefix ? ` ${options.projectNameAsOutputPrefix}/` : ''}${c}`,
+  )
   .join('\n')}`;
 
         Helpers.info(`
