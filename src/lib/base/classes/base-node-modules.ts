@@ -1,5 +1,6 @@
 //#region imports
 import { config } from 'tnp-config/src';
+import { UtilsOs } from 'tnp-core/src';
 import {
   CoreModels,
   crossPlatformPath,
@@ -10,7 +11,9 @@ import {
   dateformat,
 } from 'tnp-core/src';
 import type { BaseNpmHelpers } from 'tnp-helpers/src';
+
 import { Helpers } from '../../index';
+
 import type { BaseProject } from './base-project';
 //#endregion
 
@@ -376,10 +379,10 @@ export class BaseNodeModules<
     warnings = true,
   ): void {
     //#region @backendFunc
-    const projectLocation = this.cwd;
+
     Helpers.taskStarted(
       `${countOnly ? 'Counting' : 'Fixing/removing'} duplicates ${path.basename(
-        projectLocation,
+        this.cwd,
       )}/node_modules`,
     );
 
@@ -417,17 +420,18 @@ export class BaseNodeModules<
     }, []);
 
     packagesNames.forEach(f => {
+      f = crossPlatformPath(f);
       let organizationProjectSeondPart = '';
       if (f.search('/') !== -1) {
         organizationProjectSeondPart = f.split('/')[1];
         f = _.first(f.split('/'));
       }
-      let pathToCurrent = path.join(
-        projectLocation,
+      let pathToCurrent = crossPlatformPath([
+        this.cwd,
         config.folder.node_modules,
         f,
         organizationProjectSeondPart,
-      );
+      ]);
 
       const current = this.npmHelpers.ins.From(pathToCurrent);
 
@@ -439,20 +443,35 @@ export class BaseNodeModules<
         `Scanning for duplicates of current ` +
           `${current.name}@${current.npmHelpers.packageJson.version} ....\n`,
       );
-      const nodeMod = path.join(projectLocation, config.folder.node_modules);
+      const nodeMod = crossPlatformPath([this.cwd, config.folder.node_modules]);
       if (!fse.existsSync(nodeMod)) {
         Helpers.mkdirp(nodeMod);
       }
-      const removeCommand = `find ${
-        config.folder.node_modules
-      }/ -name ${f.replace('@', '\\@')} `;
-      // console.log(`removeCommand: ${removeCommand}`)
-      const res = Helpers.run(removeCommand, {
-        output: false,
-        cwd: projectLocation,
-      })
-        .sync()
-        .toString();
+
+      let removeCommand = '';
+
+      if (UtilsOs.isRunningInWindowsPowerShell()) {
+        const escapedName = f; //.replace('@', '\\\\@');
+        removeCommand = `powershell -NoProfile -Command "Get-ChildItem -Recurse -Directory -Filter "${escapedName}" -Path node_modules | Select-Object -ExpandProperty FullName"`;
+      } else {
+        const escapedName = f.replace('@', '\\@');
+        removeCommand = `find node_modules/ -name ${escapedName} `;
+      }
+
+      const res = crossPlatformPath(
+        Helpers.run(removeCommand, {
+          output: false,
+          cwd: this.cwd,
+        })
+          .sync()
+          .toString(),
+      ).replace(
+        crossPlatformPath([this.cwd, config.folder.node_modules]) + '/',
+        '',
+      );
+
+      console.log(`find command result: ${removeCommand}`);
+
       const duplicates = res
         .split('\n')
         .map(l => l.replace(/\/\//g, '/'))
@@ -470,38 +489,46 @@ export class BaseNodeModules<
 
       if (countOnly) {
         duplicates.forEach((duplicateRelativePath, i) => {
-          let p = path.join(
-            projectLocation,
+          let orgPackageAbsPath = crossPlatformPath([
+            this.cwd,
             duplicateRelativePath,
             organizationProjectSeondPart,
-          );
-          const nproj = this.npmHelpers.ins.From(p);
+          ]);
+          const nproj = this.npmHelpers.ins.From(
+            orgPackageAbsPath,
+          ) as BaseProject;
+
           if (!nproj) {
             // Helpers.warn(`Not able to identyfy project in ${p}`)
           } else {
-            p = p.replace(
-              path.join(projectLocation, config.folder.node_modules),
+            orgPackageAbsPath = orgPackageAbsPath.replace(
+              crossPlatformPath([this.cwd, config.folder.node_modules]),
               '',
             );
             Helpers.info(
-              `${i + 1}. Duplicate "${nproj.name}@${
+              `${i + 1}. Duplicate "${nproj.nameForNpmPackage}@${
                 nproj.npmHelpers.packageJson.version
-              }" in:\n\t ${chalk.bold(p)}\n`,
+              }" in:\n\t ${chalk.bold(orgPackageAbsPath)}\n`,
             );
           }
         });
         if (duplicates.length === 0) {
-          Helpers.logInfo(`No dupicate of ${current.name} fouded.`);
+          Helpers.logInfo(
+            `No dupicate of ${current.nameForNpmPackage} fouded.`,
+          );
         }
       } else {
         duplicates.forEach(duplicateRelativePath => {
-          const p = path.join(projectLocation, duplicateRelativePath);
-          const projRem = this.npmHelpers.ins.From(p);
+          const pacakgeAbsPath = crossPlatformPath([
+            this.cwd,
+            duplicateRelativePath,
+          ]);
+          const projRem = this.npmHelpers.ins.From(pacakgeAbsPath);
           const versionRem = projRem && projRem.npmHelpers.packageJson.version;
 
           let parentName = path.basename(
             path
-              .dirname(p)
+              .dirname(pacakgeAbsPath)
               .replace(
                 new RegExp(
                   `${Helpers.escapeStringForRegEx(
@@ -514,7 +541,7 @@ export class BaseNodeModules<
           );
 
           const org = path.basename(
-            path.dirname(path.dirname(path.dirname(p))),
+            path.dirname(path.dirname(path.dirname(pacakgeAbsPath))),
           );
           if (org.startsWith('@') || org.startsWith('@')) {
             parentName = `${org}/${parentName}`;
@@ -536,7 +563,7 @@ export class BaseNodeModules<
               Helpers.logWarn(
                 `[excluded] Ommiting duplicate of ` +
                   `${parentLabel}${
-                    current.name
+                    current.nameForNpmPackage
                   }@${versionRem} inside ${chalk.bold(parentName)}`,
               );
               return;
@@ -545,14 +572,14 @@ export class BaseNodeModules<
               Helpers.logWarn(
                 `[not included] Ommiting duplicate of ` +
                   `${parentLabel}${
-                    current.name
+                    current.nameForNpmPackage
                   }@${versionRem} inside ${chalk.bold(parentName)}`,
               );
               return;
             }
           }
 
-          Helpers.remove(p, true);
+          Helpers.remove(pacakgeAbsPath, true);
           Helpers.logWarn(
             `Duplicate of ${parentLabel}${current.name}@${versionRem}` +
               ` removed from ${chalk.bold(parentName)}`,
