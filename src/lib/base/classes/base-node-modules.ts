@@ -383,6 +383,7 @@ export class BaseNodeModules<
   //#region dedupe packages action
   dedupePackages(packagesConfig?: DedupePackage[], countOnly = false): void {
     //#region @backendFunc
+    // packagesConfig = ['@angular/cdk', 'tnp-models'];
     Helpers.taskStarted(
       `${countOnly ? 'Counting' : 'Removing'} duplicates in node_modules`,
     );
@@ -399,10 +400,16 @@ export class BaseNodeModules<
         excludeFrom = entry.excludeFrom || [];
         includeOnlyIn = entry.includeOnlyIn || [];
       }
-      Helpers.info(`[${config.frameworkName}] Checking npm duplicates of ${packageName}`);
+      packageName = crossPlatformPath(packageName);
+
+      Helpers.info(
+        `[${config.frameworkName}] Checking npm duplicates of ${packageName}`,
+      );
 
       const removeCommand = UtilsOs.isRunningInWindowsPowerShell()
-        ? `powershell -NoProfile -Command "Get-ChildItem node_modules -Recurse -Directory | Where-Object {$_.Name -eq '${packageName}'} | Select -ExpandProperty FullName"`
+        ? `powershell -NoProfile -Command "Get-ChildItem node_modules` +
+          ` -Recurse -Directory | Where-Object ` +
+          `{ $_.FullName -replace '\\\\','/' -like '*/${packageName}' } | Select -ExpandProperty FullName"`
         : `find node_modules/ -name "${packageName.replace('@', '\\@')}"`;
 
       const foundPaths = Helpers.run(removeCommand, {
@@ -415,6 +422,7 @@ export class BaseNodeModules<
         .split('\n')
         .map(p => crossPlatformPath(p.trim()))
         .filter(p => p);
+      // console.log({ foundPaths, packageName });
 
       const nodeModulesRoot = crossPlatformPath([
         this.cwd,
@@ -422,12 +430,9 @@ export class BaseNodeModules<
       ]);
 
       const duplicates = foundPaths.filter(p => {
-        const relative = path.relative(nodeModulesRoot, p);
-        const packageJsonPath = crossPlatformPath([
-          nodeModulesRoot,
-          p,
-          'package.json',
-        ]);
+        const relative = crossPlatformPath(path.relative(nodeModulesRoot, p));
+        const packageJsonPath = crossPlatformPath([p, 'package.json']);
+        // console.log({ packageJsonPath, relative, packageName });
         return (
           !relative.startsWith(packageName) &&
           !relative.startsWith(config.folder._bin) &&
@@ -436,8 +441,19 @@ export class BaseNodeModules<
       });
 
       duplicates.forEach(duplicatePath => {
-        const parentPath = path.dirname(path.dirname(duplicatePath));
-        const parentName = path.basename(parentPath);
+        const pathParts = duplicatePath.split('/').filter(Boolean);
+        const nodeModulesIndex = pathParts.lastIndexOf('node_modules');
+
+        let parentName = '';
+        if (pathParts[nodeModulesIndex + 1].startsWith('@')) {
+          // Scoped package, parent is two levels deeper
+          parentName = pathParts[nodeModulesIndex + 3] || '';
+        } else {
+          // Regular package, parent is one level deeper
+          parentName = pathParts[nodeModulesIndex + 2] || '';
+        }
+
+        const parentRealName = duplicatePath.replace(nodeModulesRoot + '/', '');
 
         if (
           excludeFrom.some(rule => parentName.includes(rule.replace('!', '')))
@@ -461,11 +477,11 @@ export class BaseNodeModules<
         }
 
         if (countOnly) {
-          Helpers.info(`Found duplicate ${packageName} in ${parentName}`);
+          Helpers.info(`Found duplicate ${packageName} in ${parentRealName}`);
         } else {
           Helpers.remove(duplicatePath, true);
           Helpers.warn(
-            `Removed duplicate ${packageName} from ${parentName}`,
+            `Removed duplicate ${packageName} from ${parentRealName}`,
           );
         }
       });
