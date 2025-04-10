@@ -422,9 +422,15 @@ export class BaseNodeModules<
 
       const duplicates = foundPaths.filter(p => {
         const relative = path.relative(nodeModulesRoot, p);
+        const packageJsonPath = crossPlatformPath([
+          nodeModulesRoot,
+          p,
+          'package.json',
+        ]);
         return (
           !relative.startsWith(packageName) &&
-          !relative.startsWith(config.folder._bin)
+          !relative.startsWith(config.folder._bin) &&
+          fse.existsSync(packageJsonPath)
         );
       });
 
