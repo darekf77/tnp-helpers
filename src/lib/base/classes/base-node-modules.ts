@@ -442,7 +442,7 @@ export class BaseNodeModules<
         if (
           excludeFrom.some(rule => parentName.includes(rule.replace('!', '')))
         ) {
-          Helpers.logWarn(
+          Helpers.warn(
             `Skipping removal of ${packageName} from excluded parent: ${parentName}`,
           );
           return;
@@ -454,7 +454,7 @@ export class BaseNodeModules<
             parentName.includes(rule.replace('*', '')),
           )
         ) {
-          Helpers.logWarn(
+          Helpers.warn(
             `Skipping removal of ${packageName} from non-included parent: ${parentName}`,
           );
           return;
@@ -464,7 +464,7 @@ export class BaseNodeModules<
           Helpers.info(`Found duplicate ${packageName} in ${parentName}`);
         } else {
           Helpers.remove(duplicatePath, true);
-          Helpers.logWarn(
+          Helpers.warn(
             `Removed duplicate ${packageName} from ${parentName}`,
           );
         }
