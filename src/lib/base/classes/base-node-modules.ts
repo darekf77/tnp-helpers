@@ -17,6 +17,14 @@ import { Helpers } from '../../index';
 import type { BaseProject } from './base-project';
 //#endregion
 
+export type DedupePackage =
+  | string
+  | {
+      package: string;
+      excludeFrom?: string[];
+      includeOnlyIn?: string[];
+    };
+
 export class BaseNodeModules<
   NPM_HELPERS extends BaseNpmHelpers = BaseNpmHelpers,
 > {
@@ -373,227 +381,92 @@ export class BaseNodeModules<
   //#endregion
 
   //#region dedupe packages action
-  public dedupePackages(
-    packagesNames?: string[],
-    countOnly = false,
-    warnings = true,
-  ): void {
+  dedupePackages(packagesConfig?: DedupePackage[], countOnly = false): void {
     //#region @backendFunc
-
     Helpers.taskStarted(
-      `${countOnly ? 'Counting' : 'Fixing/removing'} duplicates ${path.basename(
-        this.cwd,
-      )}/node_modules`,
+      `${countOnly ? 'Counting' : 'Removing'} duplicates in node_modules`,
     );
 
-    const rules: {
-      [key: string]: { ommitParents: string[]; onlyFor: string[] };
-    } = {};
+    for (const entry of packagesConfig) {
+      let packageName: string;
+      let excludeFrom: string[] = [];
+      let includeOnlyIn: string[] = [];
 
-    packagesNames = (packagesNames || []).reduce((a, current, i, arr) => {
-      // @ts-ignore
-      return a.concat([
-        ...(Array.isArray(current)
-          ? ((depsArr: string[]) => {
-              // @ts-ignore
-              const first: string = _.first(depsArr);
-              depsArr = depsArr.slice(1);
-              rules[first] = {
-                ommitParents: depsArr
-                  .filter(f => f.startsWith('!'))
-                  .map(f => f.replace(/^\!/, '')),
-                onlyFor: depsArr.filter(f => !f.startsWith('!')),
-              };
-              if (rules[first].onlyFor.length === 0) {
-                // @ts-ignore
-                delete rules[first].onlyFor;
-              }
-              if (rules[first].ommitParents.length === 0) {
-                // @ts-ignore
-                delete rules[first].ommitParents;
-              }
-
-              return [first];
-            })(current)
-          : [current]),
-      ]);
-    }, []);
-
-    packagesNames.forEach(f => {
-      f = crossPlatformPath(f);
-      let organizationProjectSeondPart = '';
-      if (f.search('/') !== -1) {
-        organizationProjectSeondPart = f.split('/')[1];
-        f = _.first(f.split('/'));
+      if (typeof entry === 'string') {
+        packageName = entry;
+      } else {
+        packageName = entry.package;
+        excludeFrom = entry.excludeFrom || [];
+        includeOnlyIn = entry.includeOnlyIn || [];
       }
-      let pathToCurrent = crossPlatformPath([
+
+      const removeCommand = UtilsOs.isRunningInWindowsPowerShell()
+        ? `powershell -NoProfile -Command "Get-ChildItem node_modules -Recurse -Directory | Where-Object {$_.Name -eq '${packageName}'} | Select -ExpandProperty FullName"`
+        : `find node_modules/ -name "${packageName.replace('@', '\\@')}"`;
+
+      const foundPaths = Helpers.run(removeCommand, {
+        output: false,
+        cwd: this.cwd,
+      })
+        .sync()
+        .toString()
+        .trim()
+        .split('\n')
+        .map(p => crossPlatformPath(p.trim()))
+        .filter(p => p);
+
+      const nodeModulesRoot = crossPlatformPath([
         this.cwd,
         config.folder.node_modules,
-        f,
-        organizationProjectSeondPart,
       ]);
 
-      const current = this.npmHelpers.ins.From(pathToCurrent);
-
-      if (!current) {
-        warnings && Helpers.log(`Project with name ${f} not founded`);
-        return;
-      }
-      Helpers.logInfo(
-        `Scanning for duplicates of current ` +
-          `${current.name}@${current.npmHelpers.packageJson.version} ....\n`,
-      );
-      const nodeMod = crossPlatformPath([this.cwd, config.folder.node_modules]);
-      if (!fse.existsSync(nodeMod)) {
-        Helpers.mkdirp(nodeMod);
-      }
-
-      let removeCommand = '';
-
-      if (UtilsOs.isRunningInWindowsPowerShell()) {
-        const escapedName = f; //.replace('@', '\\\\@');
-        removeCommand = `powershell -NoProfile -Command "Get-ChildItem -Recurse -Directory -Filter "${escapedName}" -Path node_modules | Select-Object -ExpandProperty FullName"`;
-      } else {
-        const escapedName = f.replace('@', '\\@');
-        removeCommand = `find node_modules/ -name ${escapedName} `;
-      }
-
-      const res = crossPlatformPath(
-        Helpers.run(removeCommand, {
-          output: false,
-          cwd: this.cwd,
-        })
-          .sync()
-          .toString(),
-      ).replace(
-        crossPlatformPath([this.cwd, config.folder.node_modules]) + '/',
-        '',
-      );
-
-      console.log(`find command result: ${removeCommand}`);
-
-      const duplicates = res
-        .split('\n')
-        .map(l => l.replace(/\/\//g, '/'))
-        .filter(l => !!l)
-        .filter(l => !l.startsWith(`${config.folder.node_modules}/${f}`))
-        .filter(
-          l =>
-            !l.startsWith(
-              `${config.folder.node_modules}/${config.folder._bin}`,
-            ),
-        )
-        .filter(
-          l => path.basename(path.dirname(l)) === config.folder.node_modules,
+      const duplicates = foundPaths.filter(p => {
+        const relative = path.relative(nodeModulesRoot, p);
+        return (
+          !relative.startsWith(packageName) &&
+          !relative.startsWith(config.folder._bin)
         );
+      });
 
-      if (countOnly) {
-        duplicates.forEach((duplicateRelativePath, i) => {
-          let orgPackageAbsPath = crossPlatformPath([
-            this.cwd,
-            duplicateRelativePath,
-            organizationProjectSeondPart,
-          ]);
-          const nproj = this.npmHelpers.ins.From(
-            orgPackageAbsPath,
-          ) as BaseProject;
+      duplicates.forEach(duplicatePath => {
+        const parentPath = path.dirname(path.dirname(duplicatePath));
+        const parentName = path.basename(parentPath);
 
-          if (!nproj) {
-            // Helpers.warn(`Not able to identyfy project in ${p}`)
-          } else {
-            orgPackageAbsPath = orgPackageAbsPath.replace(
-              crossPlatformPath([this.cwd, config.folder.node_modules]),
-              '',
-            );
-            Helpers.info(
-              `${i + 1}. Duplicate "${nproj.nameForNpmPackage}@${
-                nproj.npmHelpers.packageJson.version
-              }" in:\n\t ${chalk.bold(orgPackageAbsPath)}\n`,
-            );
-          }
-        });
-        if (duplicates.length === 0) {
-          Helpers.logInfo(
-            `No dupicate of ${current.nameForNpmPackage} fouded.`,
+        if (
+          excludeFrom.some(rule => parentName.includes(rule.replace('!', '')))
+        ) {
+          Helpers.logWarn(
+            `Skipping removal of ${packageName} from excluded parent: ${parentName}`,
+          );
+          return;
+        }
+
+        if (
+          includeOnlyIn.length > 0 &&
+          !includeOnlyIn.some(rule =>
+            parentName.includes(rule.replace('*', '')),
+          )
+        ) {
+          Helpers.logWarn(
+            `Skipping removal of ${packageName} from non-included parent: ${parentName}`,
+          );
+          return;
+        }
+
+        if (countOnly) {
+          Helpers.info(`Found duplicate ${packageName} in ${parentName}`);
+        } else {
+          Helpers.remove(duplicatePath, true);
+          Helpers.logWarn(
+            `Removed duplicate ${packageName} from ${parentName}`,
           );
         }
-      } else {
-        duplicates.forEach(duplicateRelativePath => {
-          const pacakgeAbsPath = crossPlatformPath([
-            this.cwd,
-            duplicateRelativePath,
-          ]);
-          const projRem = this.npmHelpers.ins.From(pacakgeAbsPath);
-          const versionRem = projRem && projRem.npmHelpers.packageJson.version;
+      });
+    }
 
-          let parentName = path.basename(
-            path
-              .dirname(pacakgeAbsPath)
-              .replace(
-                new RegExp(
-                  `${Helpers.escapeStringForRegEx(
-                    config.folder.node_modules,
-                  )}\/?$`,
-                ),
-                '',
-              )
-              .replace(/\/$/, ''),
-          );
-
-          const org = path.basename(
-            path.dirname(path.dirname(path.dirname(pacakgeAbsPath))),
-          );
-          if (org.startsWith('@') || org.startsWith('@')) {
-            parentName = `${org}/${parentName}`;
-          }
-
-          const parentLabel = parentName ? `${parentName}/` : ''; // TODO not working !
-
-          if (rules[current.name]) {
-            const r = rules[current.name];
-            if (
-              _.isArray(r.ommitParents) &&
-              (r.ommitParents.includes(parentName) ||
-                _.isObject(
-                  r.ommitParents.find(o =>
-                    o.startsWith(parentName.replace('*', '')),
-                  ),
-                ))
-            ) {
-              Helpers.logWarn(
-                `[excluded] Ommiting duplicate of ` +
-                  `${parentLabel}${
-                    current.nameForNpmPackage
-                  }@${versionRem} inside ${chalk.bold(parentName)}`,
-              );
-              return;
-            }
-            if (_.isArray(r.onlyFor) && !r.onlyFor.includes(parentName)) {
-              Helpers.logWarn(
-                `[not included] Ommiting duplicate of ` +
-                  `${parentLabel}${
-                    current.nameForNpmPackage
-                  }@${versionRem} inside ${chalk.bold(parentName)}`,
-              );
-              return;
-            }
-          }
-
-          Helpers.remove(pacakgeAbsPath, true);
-          Helpers.logWarn(
-            `Duplicate of ${parentLabel}${current.name}@${versionRem}` +
-              ` removed from ${chalk.bold(parentName)}`,
-          );
-        });
-      }
-    });
-
-    Helpers.taskDone(
-      `${
-        countOnly ? 'Counting' : 'Fixing/removing'
-      } duplicates from npm container`,
-    );
+    Helpers.taskDone(`${countOnly ? 'Counting' : 'Removing'} duplicates done.`);
     //#endregion
   }
+
   //#endregion
 }
