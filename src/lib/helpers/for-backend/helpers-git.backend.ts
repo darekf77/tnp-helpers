@@ -80,17 +80,39 @@ export class HelpersGit {
   //#endregion
 
   //#region get last tag version name
-  lastTagVersionName(cwd: string) {
+  lastTagVersionName(cwd: string): string | void {
     Helpers.log('[lastTagVersionName] ' + cwd, 1);
     if (!Helpers.git.hasAnyCommits(cwd)) {
       return void 0;
     }
     try {
-      let command = `git describe --tags $(git rev-list --tags --max-count=1)`;
-      if (UtilsOs.isRunningInWindowsCmd()) {
-        command = `for /f %i in ('git rev-list --tags --max-count=1') do @git describe --tags %i`;
+      if (process.platform === 'win32' && UtilsOs.isRunningInWindowsCmd()) {
+        let tagOnCMd = Helpers.commnadOutputAsString(
+          `for /f %i in ('git rev-list --tags --max-count=1') do @git describe --tags %i`,
+        );
+        console.log({ tagOnCMd });
+        tagOnCMd = tagOnCMd.toString().trim();
+        return tagOnCMd ? tagOnCMd : void 0;
       }
-      const tag = Helpers.commnadOutputAsString(command, cwd);
+
+      const latestCommit = Helpers.commnadOutputAsString(
+        `git rev-list --tags --max-count=1`,
+        cwd,
+      )
+        .toString()
+        .trim();
+
+      if (!latestCommit) {
+        return void 0;
+      }
+
+      const tag = Helpers.commnadOutputAsString(
+        `git describe --tags ${latestCommit}`,
+        cwd,
+      )
+        .toString()
+        .trim();
+
       if (!tag) {
         return void 0;
       }
