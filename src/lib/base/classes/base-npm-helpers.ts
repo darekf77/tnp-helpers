@@ -288,12 +288,26 @@ ${projectsInfo}
         : '';
     const registryOpt = registry ? `--registry ${registry}` : '';
 
-    await this.project
-      .run(`npm publish ${registryOpt} ${accessPublic}`, {
-        output: true,
-        silence: false,
-      })
-      .sync();
+    try {
+      await this.project
+        .run(`npm publish ${registryOpt} ${accessPublic}`, {
+          output: true,
+          silence: false,
+        })
+        .sync();
+    } catch (error) {
+      console.log(error);
+      Helpers.error(
+        `
+
+        Not able to publish to npm registry project in ${this.project.location}
+
+        `,
+        false,
+        true,
+      );
+    }
+
     //#endregion
   }
   //#endregion
