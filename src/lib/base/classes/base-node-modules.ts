@@ -167,7 +167,7 @@ export class BaseNodeModules<
       await this.remove({ skipQuestion: true });
       // TODO @LAST - use method makeSureNodeModulesInstalled()
       try {
-        Helpers.run(await this.prepareCommand(options), {
+        Helpers.run(await this.prepareCommand(options, this.cwd), {
           output: true,
           silence: false,
           cwd: this.cwd,
@@ -299,7 +299,8 @@ export class BaseNodeModules<
    * (or yarn install)
    */
   async prepareCommand(
-    options?: CoreModels.NpmInstallOptions,
+    options: CoreModels.NpmInstallOptions,
+    cwd: string = this.cwd,
   ): Promise<string> {
     //#region @backendFunc
     let {
@@ -311,7 +312,7 @@ export class BaseNodeModules<
       generateYarnOrPackageJsonLock,
     } = options || {};
 
-    force = true; // TODO QUICK_FIX
+    force = true; // TODO QUICK_FIX @UNCOMMENT
 
     let command = '';
     const commonOptions = `--ignore-engines`;
@@ -319,13 +320,15 @@ export class BaseNodeModules<
     if (useYarn) {
       //#region yarn
       const argsForFasterInstall = `${force ? '--force' : ''} ${commonOptions} `;
+      if (removeYarnOrPackageJsonLock) {
+        const yarnLock = crossPlatformPath([cwd, config.file.yarn_lock]);
+        try {
+          fse.unlinkSync(yarnLock);
+        } catch (error) {}
+        fse.writeFileSync(yarnLock, ''); // simulate touch
+      }
+
       command =
-        `${
-          removeYarnOrPackageJsonLock
-            ? `(rm ${config.file.yarn_lock}  || true) ` +
-              `&& touch ${config.file.yarn_lock} && `
-            : ''
-        }` +
         `yarn ${pkg ? (pkg?.installType === 'remove' ? 'remove' : 'add') : 'install'} ${pkg ? pkg.name : ''} ` +
         ` ${generateYarnOrPackageJsonLock ? '' : '--no-lockfile'} ` +
         ` ${argsForFasterInstall} ` +
@@ -337,13 +340,18 @@ export class BaseNodeModules<
         `${force ? '--force' : ''} ${commonOptions} --no-audit ` +
         `${silent ? '--silent --no-progress' : ''}   `;
 
+      if (removeYarnOrPackageJsonLock) {
+        const packageLock = crossPlatformPath([
+          cwd,
+          config.file.package_lock_json,
+        ]);
+        try {
+          fse.unlinkSync(packageLock);
+        } catch (error) {}
+        fse.writeFileSync(packageLock, ''); // simulate touch
+      }
+
       command =
-        `${
-          removeYarnOrPackageJsonLock
-            ? `(rm ${config.file.package_lock_json} || true) ` +
-              `&& touch ${config.file.package_lock_json}  && `
-            : ''
-        }` +
         `npx --node-options=--max-old-space-size=8000 npm ` +
         `${pkg?.installType === 'remove' ? 'uninstall' : 'install'} ${pkg ? pkg.name : ''} ` +
         ` ${generateYarnOrPackageJsonLock ? '' : '--no-package-lock'} ` +
