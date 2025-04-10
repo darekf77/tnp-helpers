@@ -137,7 +137,7 @@ export class BaseNpmHelpers<
             if (stderr.includes('ENEEDAUTH')) {
               resolve(false);
             } else {
-              reject(new Error(stderr));
+              resolve(false); // TODO QUICK FIX
             }
           } else {
             resolve(true);
