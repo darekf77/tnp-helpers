@@ -17,6 +17,29 @@ export class BaseQuickFixes<
     this.project = project;
   }
 
+  /**
+   * filesRelativePaths example:
+   * ['node_modules/@types/glob/index.d.ts', '/home/user/project/src/app.ts']
+   *
+   * @param filesRelativeAbsPaths\ Quick fix for typescript check
+   */
+  excludeNodeModulesDtsFromTypescriptCheck(filesRelativeAbsPaths:string[]) {
+    //#region @backendFunc
+    for (const file of filesRelativeAbsPaths) {
+      const fileContent = Helpers.readFile(file) || '';
+      if(fileContent) {
+         if(!fileContent.startsWith(`// @ts-${'nocheck'}`)) {
+          const contentFixed = `// @ts-${'nocheck'}\n${fileContent}`;
+          if(fileContent !== contentFixed) {
+            Helpers.writeFile(file, contentFixed);
+          }
+         }
+      }
+    }
+    //#endregion
+
+  }
+
   //#region fix sqlite pacakge in node_modules
   fixSQLLiteModuleInNodeModules() {
     //#region @backendFunc
