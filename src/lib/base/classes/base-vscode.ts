@@ -1,4 +1,3 @@
-//#region @backend
 import {
   crossPlatformPath,
   fse,
@@ -7,11 +6,12 @@ import {
   Utils,
   UtilsTerminal,
 } from 'tnp-core/src';
-//#endregion
-import { Helpers } from '../../index';
-import type { BaseProject } from './base-project';
-import { BaseFeatureForProject } from './base-feature-for-project';
 import { _ } from 'tnp-core/src';
+
+import { Helpers } from '../../index';
+
+import { BaseFeatureForProject } from './base-feature-for-project';
+import type { BaseProject } from './base-project';
 
 export interface ISettingsVscode {
   'workbench.colorTheme': string;
