@@ -13,9 +13,7 @@ export * from './base-release-process';
 export * from './base-compiler-for-project';
 export * from './base-debounce-compiler-for-project';
 export * from './base-quick-fixes';
-export * from './base-cli-worker-controller';
 export * from './base-cli-worker';
-export * from './base-cli-worker-config';
 export * from './base-process-manager';
 
 //#region @backend

@@ -1,7 +1,9 @@
 //#region imports
 import { Taon } from 'taon/src';
 import { _, UtilsOs } from 'tnp-core/src';
-import { BaseCliWorkerController } from '../classes/base-cli-worker-controller';
+
+import { BaseCliWorkerController } from '../classes/base-cli-worker';
+
 import { Port, PortStatus } from './ports.entity';
 //#endregion
 
@@ -18,7 +20,7 @@ export class PortsController extends BaseCliWorkerController {
   //#region methods
 
   //#region methods / first free port
-  protected get firstFreePort() {
+  protected get firstFreePort(): Port | null | undefined {
     //#region  @backendFunc
     if (!this.portsCache) {
       return null;

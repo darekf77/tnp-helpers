@@ -3,7 +3,7 @@ import { _ } from 'tnp-core/src';
 
 //#region base worker config
 export class BaseCliWorkerConfig {
-  static from(opt: Partial<BaseCliWorkerConfig>) {
+  static from(opt: Partial<BaseCliWorkerConfig>): BaseCliWorkerConfig {
     return _.merge(new BaseCliWorkerConfig(), opt);
   }
 
@@ -29,7 +29,7 @@ export class BaseCliWorkerConfig {
    */
   version: string;
 
-  hasBiggerOrEqualWorkerVersionThan(other: BaseCliWorkerConfig) {
+  hasBiggerOrEqualWorkerVersionThan(other: BaseCliWorkerConfig): boolean {
     //#region @backendFunc
     other = BaseCliWorkerConfig.from(other);
     if (this.serviceID !== other.serviceID) {
@@ -46,7 +46,7 @@ export class BaseCliWorkerConfig {
     //#endregion
   }
 
-  isEquals(other: BaseCliWorkerConfig) {
+  isEquals(other: BaseCliWorkerConfig): boolean {
     other = BaseCliWorkerConfig.from(other);
     return (
       !!this.serviceID &&
@@ -58,7 +58,7 @@ export class BaseCliWorkerConfig {
     );
   }
 
-  get isEmpty() {
+  get isEmpty(): boolean {
     return !this.serviceID && !this.port && !this.pid;
   }
 }

@@ -11,10 +11,11 @@ import {
   UtilsTerminal,
 } from 'tnp-core/src';
 
-import { Helpers } from '../../index';
+import { CfontAlign, CfontStyle, Helpers } from '../../../index';
 
 import { BaseCliWorkerConfig } from './base-cli-worker-config';
 import type { BaseCliWorkerController } from './base-cli-worker-controller';
+import { BaseCliWorkerTerminalUI } from './base-cli-worker-terminal-ui';
 //#endregion
 
 //#region constants
@@ -22,54 +23,15 @@ const WORKER_INIT_START_TIME_LIMIT = 25; // 15 seconds max to start worker
 const START_PORT_FOR_SERVICES = 3600;
 //#endregion
 
-//#region models
-export type CfontStyle =
-  | 'block'
-  | 'slick'
-  | 'tiny'
-  | 'grid'
-  | 'pallet'
-  | 'shade'
-  | 'chrome'
-  | 'simple'
-  | 'simpleBlock'
-  | '3d'
-  | 'simple3d'
-  | 'huge';
-
-export type CfontAlign = 'left' | 'center' | 'right' | 'block';
-//#endregion
-
 export abstract class BaseCliWorker<
-  REMOTE_CTRL extends BaseCliWorkerController = BaseCliWorkerController,
+  REMOTE_CTRL extends BaseCliWorkerController,
+  TERMINAL_UI extends BaseCliWorkerTerminalUI<any>,
 > {
-  protected SPECIAL_WORKER_READY_MESSAGE = '$$$ WORKER_READY $$$';
-
-  //#region constructor
-  constructor(
-    /**
-     * unique id for service
-     */
-    protected readonly serviceID: string,
-    /**
-     * external command that will start service
-     */
-    protected readonly startCommand: string,
-    /**
-     * unique id for service
-     */
-    protected readonly serviceVersion: string,
-  ) {}
-  //#endregion
-
-  //#region abstract
-  protected abstract startNormallyInCurrentProcess(options?: {});
-
-  public abstract getControllerForRemoteConnection(): Promise<REMOTE_CTRL>;
-  //#endregion
-
   //#region fields & getters
+  public readonly SPECIAL_WORKER_READY_MESSAGE = '$$$ WORKER_READY $$$';
 
+  // @ts-ignore TODO weird inheritance problem
+  readonly terminalUi: TERMINAL_UI = new BaseCliWorkerTerminalUI(this);
   //#region fields & getters / path to process local info
   protected get pathToProcessLocalInfoJson(): string {
     //#region @backendFunc
@@ -85,7 +47,7 @@ export abstract class BaseCliWorker<
   //#endregion
 
   //#region fields & getters / process local info json object
-  protected get processLocalInfoObj(): BaseCliWorkerConfig {
+  public get processLocalInfoObj(): BaseCliWorkerConfig {
     //#region @backendFunc
     const configJson = Helpers.readJson5(this.pathToProcessLocalInfoJson) || {};
     if (_.isObject(configJson)) {
@@ -98,7 +60,28 @@ export abstract class BaseCliWorker<
 
   //#endregion
 
-  //#region public methods
+  //#region constructor
+  constructor(
+    /**
+     * unique id for service
+     */
+    public readonly serviceID: string,
+    /**
+     * external command that will start service
+     */
+    public readonly startCommand: string,
+    /**
+     * unique id for service
+     */
+    public readonly serviceVersion: string,
+  ) {}
+  //#endregion
+
+  //#region abstract methods
+  protected abstract startNormallyInCurrentProcess(options?: {});
+
+  public abstract getControllerForRemoteConnection(): Promise<REMOTE_CTRL>;
+  //#endregion
 
   //#region public methods / start if needs to be started
   public async startDetachedIfNeedsToBeStarted(options?: {
@@ -187,36 +170,31 @@ export abstract class BaseCliWorker<
    * @param cliParams on from cli
    */
   async cliStartProcedure(cliParams: any) {
-    const instance: BaseCliWorker = this;
     const detached = !!cliParams['detached'] || !!cliParams['detach'];
     //#region @backendFunc
     if (cliParams['restart']) {
-      await instance.restart({
+      await this.restart({
         detached,
       });
       process.exit(0);
     }
 
     if (cliParams['kill']) {
-      await instance.kill();
+      await this.kill();
       process.exit(0);
     }
 
     if (detached) {
-      await instance.startDetachedIfNeedsToBeStarted();
+      await this.startDetachedIfNeedsToBeStarted();
       process.exit(0);
     } else {
-      await instance.startNormallyInCurrentProcess();
+      await this.startNormallyInCurrentProcess();
     }
     //#endregion
   }
   //#endregion
 
-  //#endregion
-
-  //#region protected methods
-
-  //#region protected methods / prevent external config change
+  //#region prevent external config change
   protected preventExternalConfigChange() {
     //#region @backendFunc
     Helpers.info(`watching: ${this.pathToProcessLocalInfoJson}`);
@@ -235,8 +213,8 @@ export abstract class BaseCliWorker<
   }
   //#endregion
 
-  //#region protected methods / prevent start if already started
-  protected async preventStartIfAlreadyStarted() {
+  //#region prevent prevent start if already started
+  protected async preventStartIfAlreadyStarted(): Promise<void> {
     //#region @backendFunc
     try {
       const isHealthy = await this.isServiceHealthy({
@@ -254,8 +232,8 @@ export abstract class BaseCliWorker<
   }
   //#endregion
 
-  //#region protected methods / prevent start if already started
-  protected async killWorkerWithLowerVersion() {
+  //#region prevent kill worker with lower version
+  protected async killWorkerWithLowerVersion(): Promise<void> {
     //#region @backendFunc
     try {
       const ctrl = await this.getControllerForRemoteConnection();
@@ -279,7 +257,7 @@ export abstract class BaseCliWorker<
   }
   //#endregion
 
-  //#region protected methods / is service healthy
+  //#region is service healthy
   /**
    * This has 2 purposes:
    * - infinite check when when detached process finished starting
@@ -294,7 +272,7 @@ export abstract class BaseCliWorker<
     let i = 0; // 15 seconds to start worker
     while (true) {
       i++;
-      Helpers.log(`Checking if service "${this.serviceID}" is starting...`);
+      Helpers.logInfo(`Checking if service "${this.serviceID}" is starting...`);
       const workerIsStarting = !!this.processLocalInfoObj.startTimestamp;
 
       if (!workerIsStarting) {
@@ -366,16 +344,16 @@ export abstract class BaseCliWorker<
   }
   //#endregion
 
-  //#region protected methods / start detached
+  //#region start detached
   /**
    * start if not started detached process
    */
   protected async startDetached(options?: {
     useCurrentWindowForDetach?: boolean;
-  }) {
+  }): Promise<void> {
     //#region @backendFunc
     options = options || {};
-    Helpers.log(
+    Helpers.logInfo(
       `Starting detached command in new terminal "${chalk.bold(this.startCommand)}"...`,
     );
     if (options.useCurrentWindowForDetach) {
@@ -389,7 +367,7 @@ export abstract class BaseCliWorker<
       await UtilsProcess.startInNewTerminalWindow(this.startCommand);
     }
 
-    Helpers.log(
+    Helpers.logInfo(
       `Starting detached service "${chalk.bold(this.serviceID)}" - waiting until healthy...`,
     );
     const isServiceHealthy = await this.isServiceHealthy({
@@ -399,177 +377,14 @@ export abstract class BaseCliWorker<
       Helpers.throw(`Not able to start service "${this.serviceID}"...`);
       return;
     }
-    Helpers.log(
+    Helpers.logInfo(
       `Healthy detached service "${chalk.bold(this.serviceID)}" started.`,
     );
     //#endregion
   }
   //#endregion
 
-  //#region protected methods / text for header
-  protected async headerText(): Promise<string> {
-    return _.startCase(this.serviceID);
-  }
-  //#endregion
-
-  //#region protected methods / text header style
-  protected textHeaderStyle(): CfontStyle {
-    return 'block';
-  }
-  //#endregion
-
-  //#region protected methods / header text align
-  protected headerTextAlign(): CfontAlign {
-    return 'left';
-  }
-  //#endregion
-
-  //#region protected methods / header
-  /**
-   * override whole terminal header
-   */
-  protected async header(): Promise<void> {
-    //#region @backendFunc
-    const cfonts = require('cfonts');
-    const output = cfonts.render(await this.headerText(), {
-      font: this.textHeaderStyle(),
-      align: this.headerTextAlign(),
-      colors: ['system'],
-      background: 'transparent',
-      letterSpacing: 1,
-      lineHeight: 1,
-      space: true,
-      maxLength: '0',
-      gradient: false,
-      independentGradient: false,
-      transitionGradient: false,
-      env: 'node',
-    });
-    console.log(output.string);
-    //#endregion
-  }
-  //#endregion
-
-  //#region protected methods / info message below header
-  async infoMessageBelowHeader(): Promise<void> {
-    //#region @backendFunc
-    Helpers.info(
-      `
-
-      Service ${chalk.bold.red(this.serviceID)}` +
-        ` (version: ${this.serviceVersion}) started..
-      Check info here http://localhost:${chalk.bold(
-        this.processLocalInfoObj?.port?.toString(),
-      )}/${'info' as keyof BaseCliWorkerController}
-
-        `,
-    );
-    //#endregion
-  }
-  //#endregion
-
-  //#region protected methods / get back action
-  protected get backAction() {
-    return {
-      back: {
-        name: 'Back',
-      },
-    };
-  }
-  //#endregion
-
-  //#region protected methods / choose action
-  protected get chooseAction() {
-    return {
-      emptyAction: {
-        name: ' -- choose any action below --',
-        action: async () => {},
-      },
-    };
-  }
-  //#endregion
-
-  //#region protected methods / display special worker ready message
-  protected displaySpecialWorkerReadyMessage() {
-    console.log(this.SPECIAL_WORKER_READY_MESSAGE);
-  }
-  //#endregion
-
-  //#region protected methods / worker terminal actions
-  protected getWorkerTerminalActions(options?: {
-    exitIsOnlyReturn?: boolean;
-    chooseAction?: boolean;
-  }): {
-    [uniqeActionName: string]: {
-      name: string;
-      action: () => unknown | Promise<unknown>;
-    };
-  } {
-    //#region @backendFunc
-    options = options || {};
-    options.chooseAction = _.isBoolean(options.chooseAction)
-      ? options.chooseAction
-      : true;
-
-    return {
-      ...(options.chooseAction ? this.chooseAction : {}),
-      openBrowser: {
-        name: 'Open browser with service info',
-        action: async () => {
-          const openInBrowser = require('open');
-          openInBrowser(
-            `http://localhost:${this.processLocalInfoObj.port}/info`,
-          );
-        },
-      },
-      exit: {
-        name: options.exitIsOnlyReturn
-          ? '< Return to previous menu'
-          : `Shut down service`,
-        action: async () => {
-          if (options.exitIsOnlyReturn) {
-            return true; // false will keep loop running
-          }
-          if (
-            await UtilsTerminal.confirm({
-              defaultValue: false,
-              message: 'Are you sure you want to shut down service?',
-            })
-          ) {
-            await this.kill();
-            process.exit(0);
-          }
-        },
-      },
-    };
-    //#endregion
-  }
-  //#endregion
-
-  //#region protected methods / info screen
-  public async infoScreen(options?: { exitIsOnlyReturn?: boolean }) {
-    options = options || {};
-    while (true) {
-      Helpers.clearConsole();
-
-      await this.header();
-
-      await this.infoMessageBelowHeader();
-      const choices = this.getWorkerTerminalActions(options);
-      const choice = await UtilsTerminal.select<keyof typeof choices>({
-        choices,
-        question: 'Choose action',
-      });
-      const action = choices[choice].action;
-      const result = await action();
-      if (choice === 'exit' && result) {
-        break;
-      }
-    }
-  }
-  //#endregion
-
-  //#region protected methods / save process info
+  //#region save process info
   private saveProcessInfo(processConfig: Partial<BaseCliWorkerConfig>) {
     //#region @backendFunc
     processConfig = processConfig || ({} as any);
@@ -590,7 +405,7 @@ export abstract class BaseCliWorker<
   }
   //#endregion
 
-  //#region protected methods / initialize worker
+  //#region initialize worker
   protected async initializeWorkerMetadata() {
     //#region @backendFunc
     try {
@@ -617,7 +432,7 @@ export abstract class BaseCliWorker<
   }
   //#endregion
 
-  //#region protected methods / wait for process port saved to disk
+  //#region wait for process port saved to disk
   protected async waitForProcessPortSavedToDisk(): Promise<void> {
     //#region @backendFunc
     let portForRemote = this.processLocalInfoObj.port;
@@ -645,9 +460,10 @@ export abstract class BaseCliWorker<
   }
   //#endregion
 
-  //#region protected methods / get free port
-  async getServicePort(): Promise<number> {
+  //#region get free port
+  public async getServicePort(): Promise<number> {
     //#region @backendFunc
+    Helpers.logInfo(`Getting free port for service...`);
     const port = await Utils.getFreePort({
       startFrom: START_PORT_FOR_SERVICES,
     });
@@ -659,10 +475,9 @@ export abstract class BaseCliWorker<
       startTimestamp: Date.now(),
       version: this.serviceVersion,
     });
+    Helpers.logInfo(`Done getting free port for service...`);
     return port;
     //#endregion
   }
-  //#endregion
-
   //#endregion
 }
