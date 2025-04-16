@@ -120,18 +120,15 @@ export class BaseVscodeHelpers<
       // -------
       // 'mihelcic.colored-regions', TODO I need modified version for taon
       // 'shardulm94.trailing-spaces',
-      ...(process.platform === 'win32'
-        ? [
-            // wsl
-            'ms-vscode-remote.remote-wsl',
-            'kgrzywocz.wsl-path',
-            // ---
-            // 'skacekachna.win-opacity',
-            // 'electrotype.windows-explorer-context-menu',
-            // escape win path on paset TODO CHECK THIS
-            // 'coalaura.win-path',
-          ]
-        : []),
+
+      // wsl
+      'ms-vscode-remote.remote-wsl',
+      'kgrzywocz.wsl-path',
+      // ---
+      // 'skacekachna.win-opacity',
+      // 'electrotype.windows-explorer-context-menu',
+      // escape win path on paset TODO CHECK THIS
+      // 'coalaura.win-path',
 
       // nice extension but not use for now in taon
       // csv thing
