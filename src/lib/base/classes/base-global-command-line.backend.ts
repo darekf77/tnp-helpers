@@ -1185,6 +1185,25 @@ Would you like to update current project configuration?`)
   }
   //#endregion
 
+  //#region commands / remove tag
+  async removeTag() {
+    let tagToRemove = this.firstArg;
+    if (!tagToRemove) {
+      const allTags = await Helpers.git.getAllTags(this.cwd);
+      tagToRemove = await UtilsTerminal.select({
+        question: `Select tag to remove`,
+        autocomplete: true,
+        choices: allTags.map(t => {
+          return { name: t, value: t };
+        }),
+      });
+    }
+
+    Helpers.git.removeTag(this.cwd, tagToRemove);
+    this._exit();
+  }
+  //#endregion
+
   //#region commands / branch name
   BRANCH_NAME() {
     console.log(
@@ -1586,7 +1605,7 @@ Would you like to update current project configuration?`)
   //#endregion
 
   lastGitTag() {
-    console.log('Latest tag')
+    console.log('Latest tag');
     console.log(this.project?.git.lastTagVersionName);
     this._exit();
   }

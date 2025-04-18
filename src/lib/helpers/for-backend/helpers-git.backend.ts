@@ -17,6 +17,37 @@ import { Helpers } from '../../index';
 //#endregion
 
 export class HelpersGit {
+  //#region getters & methods / get all tags
+  async getAllTags(cwd: string) {
+    //#region @backendFunc
+    const git = simpleGit(cwd);
+    try {
+      const tags = await git.tags();
+      return tags.all; // array of tag names
+    } catch (error) {
+      console.error('Failed to fetch tags:', error);
+      return [];
+    }
+    //#endregion
+  }
+  //#endregion
+
+  //#region getters & methods / remove tag
+  removeTag(cwd: string, tagName: string) {
+    //#region @backendFunc
+    try {
+      child_process.execSync(`git tag -d ${tagName}`, { cwd });
+      Helpers.info(`Tag "${tagName}" removed successfully.`);
+    } catch (error) {
+      Helpers.warn(
+        `[${config.frameworkName}-helpers] not able to remove tag ${tagName} in ${cwd}`,
+        true,
+      );
+    }
+    //#endregion
+  }
+  //#endregion
+
   //#region getters & methods / action mess reset git hard commit
   public get ACTION_MSG_RESET_GIT_HARD_COMMIT(): string {
     return '$$$ update $$$';
