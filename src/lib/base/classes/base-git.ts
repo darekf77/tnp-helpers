@@ -503,7 +503,7 @@ Please provide proper commit message for lastest changes in your project:
   //#endregion
 
   //#region methods & getters / reset soft HEAD
-  resetSoftHEAD(HEAD = 1) {
+  resetSoftHEAD(HEAD = 1):void {
     //#region @backendFunc
     Helpers.git.resetSoftHEAD(this.project.location, HEAD);
     //#endregion

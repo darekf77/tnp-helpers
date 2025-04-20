@@ -640,45 +640,18 @@ export class HelpersGit {
       commitMessage = 'update';
     }
 
-    if (
-      commitMessage.search('-m') === -1 &&
-      commitMessage.search('-msg') === -1
-    ) {
-      const addBrackets = !(
-        (commitMessage.startsWith("'") || commitMessage.startsWith('"')) &&
-        (commitMessage.endsWith("'") || commitMessage.endsWith('"'))
-      );
-
-      commitMessage =
-        `${addBrackets ? `"${commitMessage}"` : commitMessage}`.replace(
-          /\"\"/g,
-          '"',
-        );
-    }
-
-    if (process.platform === 'win32') {
-      commitMessage = commitMessage
-        .split('\n')
-        .filter(f => !!f.trim())
-        .map(l => ` -m "${l}" `)
-        .join(' ');
-    } else {
-      commitMessage = `-m ${commitMessage}`;
-    }
-
-    if (process.platform !== 'win32') {
-      commitMessage = commitMessage.replace(/\"/g, `'`);
-    }
-
-    commitMessage = commitMessage.replace(/\"\"/g, `"`);
-    commitMessage = commitMessage.replace(/\'\'/g, `'`);
+    const tempCommitnameFile = crossPlatformPath([
+      cwd,
+      'tmp-git-commit-name.txt',
+    ]);
+    Helpers.writeFile(tempCommitnameFile, commitMessage);
 
     try {
       Helpers.info(`[taon-helpers][git][commit] trying to commit what it with argument:
       "${commitMessage}"
       location: ${cwd}
       `);
-      var commandToExecute = `git commit --no-verify ${commitMessage}`;
+      var commandToExecute = `git commit --no-verify -F "${tempCommitnameFile}"`;
       // Helpers.info(`COMMITING WITH COMMAND: ${commandToExecute}`);
       // process.exit(0)
       Helpers.run(commandToExecute, { cwd }).sync();

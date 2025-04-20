@@ -1,4 +1,5 @@
 //#region imports
+import { EndpointContext, Taon } from 'taon/src';
 import { config } from 'tnp-config/src';
 import {
   chalk,
@@ -31,7 +32,13 @@ export abstract class BaseCliWorker<
   public readonly SPECIAL_WORKER_READY_MESSAGE = '$$$ WORKER_READY $$$';
 
   // @ts-ignore TODO weird inheritance problem
-  readonly terminalUi: TERMINAL_UI = new BaseCliWorkerTerminalUI(this);
+  readonly terminalUI: TERMINAL_UI = new BaseCliWorkerTerminalUI(this);
+  readonly workerContextTemplate: ReturnType<typeof Taon.createContextTemplate>;
+  private workerMainContext: ReturnType<typeof Taon.createContext>;
+  private workerRemoteContext: ReturnType<typeof Taon.createContext>;
+  readonly controllerClass: new () => REMOTE_CTRL;
+  private contextForRemoteConnection: EndpointContext;
+
   //#region fields & getters / path to process local info
   protected get pathToProcessLocalInfoJson(): string {
     //#region @backendFunc
@@ -77,10 +84,63 @@ export abstract class BaseCliWorker<
   ) {}
   //#endregion
 
-  //#region abstract methods
-  protected abstract startNormallyInCurrentProcess(options?: {});
+  //#region methods / start normally in current process
+  /**
+   * start normally process
+   * this will crash if process already started
+   */
+  protected async startNormallyInCurrentProcess(): Promise<void> {
+    //#region @backendFunc
+    await this.killWorkerWithLowerVersion();
+    await this.preventStartIfAlreadyStarted();
+    const port = await this.getServicePort();
 
-  public abstract getControllerForRemoteConnection(): Promise<REMOTE_CTRL>;
+    this.workerMainContext = this.workerContextTemplate();
+    await this.workerMainContext.initialize({
+      overrideHost: `http://localhost:${port}`,
+    });
+
+    await this.initializeWorkerMetadata();
+
+    Helpers.info(`Service started !`);
+    this.preventExternalConfigChange();
+    this.terminalUI.displaySpecialWorkerReadyMessage();
+    await this.terminalUI.infoScreen();
+    //#endregion
+  }
+  //#endregion
+
+  //#region methods / get controller for remote connection
+  async getControllerForRemoteConnection(): Promise<REMOTE_CTRL> {
+    //#region @backendFunc
+    await this.waitForProcessPortSavedToDisk();
+
+    if (
+      this.contextForRemoteConnection &&
+      !_.isNaN(this.contextForRemoteConnection.port) &&
+      !_.isNaN(this.processLocalInfoObj.port) &&
+      this.contextForRemoteConnection.port !== this.processLocalInfoObj.port
+    ) {
+      Helpers.logInfo('Destroying old context for remote connection...');
+      // debugger;
+      await this.contextForRemoteConnection.destroy();
+      delete this.contextForRemoteConnection;
+    }
+
+    if (!this.contextForRemoteConnection) {
+      Helpers.logInfo('Creating new context for remote connection...');
+      this.workerRemoteContext = this.workerContextTemplate();
+      this.contextForRemoteConnection =
+        await this.workerRemoteContext.initialize({
+          overrideRemoteHost: `http://localhost:${this.processLocalInfoObj.port}`,
+        });
+    }
+
+    const taonProjectsController =
+      this.contextForRemoteConnection.getInstanceBy(this.controllerClass);
+    return taonProjectsController;
+    //#endregion
+  }
   //#endregion
 
   //#region public methods / start if needs to be started

@@ -289,7 +289,7 @@ export class HelpersFileFolders {
           const matches = line.match(new RegExp(stringForRegex));
           if (matches !== null) {
             // console.log('matched', matches)
-            const rep = _.first(matches);
+            const rep = _.first(matches) as string;
             if (rep) {
               const newFilename = crossPlatformPath([
                 path.dirname(jsFilePath),
@@ -321,7 +321,7 @@ export class HelpersFileFolders {
           const matches = line.match(new RegExp(stringForRegex));
           if (matches !== null) {
             // console.log('matched', matches)
-            const rep = _.first(matches);
+            const rep = _.first(matches) as string;
             if (rep) {
               const relativePart = rep.split('(')[1].replace(/("|'|\))/g, '');
               // console.log(`RELATIVE PART: "${relativePart}"`)

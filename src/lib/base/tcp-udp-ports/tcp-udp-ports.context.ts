@@ -18,7 +18,7 @@ if (!Helpers.exists(path.dirname(portsWorkerDatabaseLocation))) {
 // console.log('portsWorkerDatabaseLocation', portsWorkerDatabaseLocation);
 //#endregion
 
-export const PortsContext = Taon.createContext(() => ({
+export const PortsContextTemplate = Taon.createContextTemplate(() => ({
   contextName: 'PortsContext',
   contexts: { BaseContext },
   controllers: { PortsController },

@@ -721,6 +721,27 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
     await this.push({ skipLint: true });
   }
 
+  async rePush() {
+    const lastCommitMessage = this.project.git.lastCommitMessage();
+
+    this.project.git.resetSoftHEAD();
+    this.project.git.stageAllFiles();
+
+    this.project.git.commit(lastCommitMessage);
+    Helpers.info(`Last fixed commit:
+${lastCommitMessage}
+
+      ...`);
+    await UtilsTerminal.pressAnyKeyToContinueAsync({
+      message: `Press any key to force push`,
+    });
+    await this.project.git.pushCurrentBranch({
+      forcePushNoQuestion: true,
+      force: true,
+    });
+    this._exit();
+  }
+
   async push(options: PushProcessOptions = {}): Promise<void> {
     // console.log('args', this.args);
     // console.log(`argsWithParams "${this.argsWithParams}"` );
@@ -1478,7 +1499,7 @@ Would you like to update current project configuration?`)
   //#region commands / start cli service ports worker
 
   async ports() {
-    await this.ins.portsWorker.terminalUi.infoScreen();
+    await this.ins.portsWorker.terminalUI.infoScreen();
   }
 
   /**

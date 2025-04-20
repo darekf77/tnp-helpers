@@ -190,7 +190,7 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
       fse.existsSync(absoluteLocation) &&
       !fse.lstatSync(absoluteLocation).isDirectory()
     ) {
-      absoluteLocation = path.dirname(absoluteLocation);
+      absoluteLocation = path.dirname(absoluteLocation as string);
     }
 
     let project: PROJECT & BaseProject;
@@ -198,9 +198,9 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
     while (true) {
       if (
         onlyOutSideNodeModules &&
-        path.basename(path.dirname(absoluteLocation)) === 'node_modules'
+        path.basename(path.dirname(absoluteLocation as string)) === 'node_modules'
       ) {
-        absoluteLocation = path.dirname(path.dirname(absoluteLocation));
+        absoluteLocation = path.dirname(path.dirname(absoluteLocation as string));
       }
       project = this.From(absoluteLocation, options) as any;
       // console.log(`is project  ${!!project} ${absoluteLocation}`);
@@ -226,8 +226,8 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
         }
       }
 
-      previousLocation = absoluteLocation;
-      const newAbsLocation = path.join(absoluteLocation, '..');
+      previousLocation = absoluteLocation as string;
+      const newAbsLocation = path.join(absoluteLocation as string, '..');
       if (!path.isAbsolute(newAbsLocation)) {
         return;
       }
