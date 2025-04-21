@@ -524,6 +524,9 @@ export class BaseVscodeHelpers<
         'Initing',
       ],
       'cSpell.diagnosticLevel': 'Hint',
+      "cSpell.enabledNotifications": {
+        "Maximum Word Length Exceeded": false
+      }
     };
     //#endregion
 

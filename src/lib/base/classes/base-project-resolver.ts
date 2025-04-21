@@ -1,8 +1,6 @@
 //#region imports
 import { config } from 'tnp-config/src';
-import {
-  fse,
-} from 'tnp-core';
+import { fse } from 'tnp-core';
 import { path, crossPlatformPath } from 'tnp-core/src';
 import { _ } from 'tnp-core/src';
 
@@ -10,6 +8,7 @@ import { Helpers } from '../../index';
 import { ConfigDatabase } from '../config-database';
 import { ProjectDatabase } from '../project-database';
 import { PortsWorker } from '../tcp-udp-ports';
+import { CURRENT_PACKAGE_VERSION } from '../../build-info._auto-generated_';
 
 import { BaseProject } from './base-project';
 //#endregion
@@ -42,7 +41,7 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
     this.portsWorker = new PortsWorker(
       'ports-worker',
       `${this.cliToolName} startCliServicePortsWorker --skipCoreCheck`,
-      '0.0.1',
+      CURRENT_PACKAGE_VERSION,
     );
   }
   //#endregion
@@ -198,9 +197,12 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
     while (true) {
       if (
         onlyOutSideNodeModules &&
-        path.basename(path.dirname(absoluteLocation as string)) === 'node_modules'
+        path.basename(path.dirname(absoluteLocation as string)) ===
+          'node_modules'
       ) {
-        absoluteLocation = path.dirname(path.dirname(absoluteLocation as string));
+        absoluteLocation = path.dirname(
+          path.dirname(absoluteLocation as string),
+        );
       }
       project = this.From(absoluteLocation, options) as any;
       // console.log(`is project  ${!!project} ${absoluteLocation}`);
@@ -317,7 +319,9 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
   //#endregion
 
   //#region fields & getters / sort group of projects
-  public sortGroupOfProject<T extends BaseProject<any,any> = BaseProject<any,any>>(
+  public sortGroupOfProject<
+    T extends BaseProject<any, any> = BaseProject<any, any>,
+  >(
     projects: T[],
     resoveDepsArray: (proj: T) => string[],
     projNameToCompare: (proj: T) => string,
