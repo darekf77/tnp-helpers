@@ -110,11 +110,14 @@ export class HelpersTaon extends CoreHelpers {
   //#region methods & getters / uniqArray
   /**
    * Bundle file with node_modules into one file
+   * default strategy is cli
+   * Please keep:  'ts-node', 'typescript' as dependency in your package.json
    */
   async ncc(
     pathToJsFile: string,
     outputFilePath: string,
     options?: {
+      strategy?: 'cli' | 'vscode-ext' | 'node-app' | 'electron-app';
       /**
        * ! beforeWrite needs to return output
        */
@@ -123,21 +126,30 @@ export class HelpersTaon extends CoreHelpers {
         copyToDestination?: (fileOrFolderAbsPath: string) => void;
       }) => string;
       additionalExternals?: string[];
-      skipRemovingElectron?: boolean;
       skipFixingSQLlite?: boolean;
+      minify?: boolean;
     },
   ): Promise<void> {
     //#region @backendFunc
-    const {
+    let {
       beforeWrite,
       additionalExternals,
-      skipRemovingElectron,
       skipFixingSQLlite,
+      minify,
+      strategy,
     } = options || {};
-    //#region quick fixes for output
-    // existsSync()
+    if (!strategy) {
+      strategy = 'cli';
+    }
 
-    //#endregion
+    const externals = [
+      'electron',
+      'vscode',
+      'ts-node',
+      // 'webpack',
+      'typescript',
+      ...(additionalExternals || []),
+    ];
 
     Helpers.taskStarted(`Bundling node_modules for file: ${pathToJsFile}`);
     // debugger
@@ -147,17 +159,10 @@ export class HelpersTaon extends CoreHelpers {
       cache: false,
       // out:'',
       // externals to leave as requires of the build
-      externals: [
-        'electron',
-        'vscode',
-        'ts-node',
-        // 'webpack',
-        // 'typescript',
-        ...(additionalExternals || []),
-      ],
+      externals,
       // directory outside of which never to emit assets
       // filterAssetBase: process.cwd(), // default
-      minify: false, // default
+      minify: !!minify, // default
       sourceMap: false, // default
       // assetBuilds: false, // default
       // sourceMapBasePrefix: '../', // default treats sources as output-relative
@@ -176,7 +181,7 @@ export class HelpersTaon extends CoreHelpers {
     if (!skipFixingSQLlite) {
       output = UtilsQuickFixes.replaceSQLliteFaultyCode(output);
     }
-    if (!skipRemovingElectron) {
+    if (strategy !== 'electron-app') {
       output = UtilsQuickFixes.replaceElectronWithNothing(output);
     }
 
@@ -203,7 +208,7 @@ export class HelpersTaon extends CoreHelpers {
     }
 
     Helpers.writeFile(outputFilePath, output);
-    Helpers.taskDone('Bundling finish');
+    Helpers.taskDone('[ncc] Bundling done');
     //#endregion
   }
 
