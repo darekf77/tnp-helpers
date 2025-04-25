@@ -360,6 +360,9 @@ Please provide proper commit message for lastest changes in your project:
           addToLastCommitAndPush: {
             name: `Add to last commit ("${lastCommitName}") and ${hadMeltedActionCommits ? 'force ' : ''}push`,
           },
+          discard: {
+            name: `Discard all changes`,
+          },
           commitAsChoreUpdateAndPush: {
             name: `Commit as "chore: update" and ${hadMeltedActionCommits ? 'force ' : ''}push`,
           },
@@ -397,6 +400,12 @@ Please provide proper commit message for lastest changes in your project:
         //   await automaticAction();
         // }
         if (selected === 'skip') {
+          return;
+        }
+        if (selected === 'discard') {
+          try {
+            this.project.git.resetHard({ HEAD: 0 });
+          } catch (error) {}
           return;
         }
         if (selected === 'exit') {
@@ -503,7 +512,7 @@ Please provide proper commit message for lastest changes in your project:
   //#endregion
 
   //#region methods & getters / reset soft HEAD
-  resetSoftHEAD(HEAD = 1):void {
+  resetSoftHEAD(HEAD = 1): void {
     //#region @backendFunc
     Helpers.git.resetSoftHEAD(this.project.location, HEAD);
     //#endregion
