@@ -18,7 +18,7 @@ import {
 } from './helpers';
 import { ProcesOptions, ProgressData, ResolveVariable } from './models';
 
-const log = Log.instance(`execute-command`, 'logmsg');
+
 
 export type ExecCommandTypeOpt = {
   vscode?: typeof import('vscode');
@@ -39,7 +39,9 @@ export function executeCommand(
   pOptions?: ProcesOptions,
   isDefaultBuildCommand?: boolean,
   context?: ExtensionContext,
+  debug?: boolean,
 ) {
+  const log = Log.instance(`execute-command`, 'logmsg',debug);
   const commandToExecuteReadable =
     '"' +
     (Array.isArray(commandToExecute)
