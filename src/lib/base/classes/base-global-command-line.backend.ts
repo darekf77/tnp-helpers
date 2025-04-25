@@ -526,7 +526,7 @@ ${
       this.project.git.resetHard({ HEAD: safeReset });
       this.project.git.rebase(rebaseBranch);
       this.project.git.stashApply();
-      await this.project.init();
+      await this.project.struct();
       Helpers.info('REBASE DONE');
     } catch (error) {
       Helpers.renderError(error);
@@ -1205,6 +1205,15 @@ Would you like to update current project configuration?`)
     this._exit();
   }
   //#endregion
+
+  async allTags() {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
+      return;
+    }
+    const allTags = await Helpers.git.getAllTags(this.cwd);
+    console.log(allTags);
+    this._exit();
+  }
 
   //#region commands / remove tag
   async removeTag() {
