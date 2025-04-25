@@ -101,7 +101,10 @@ export class BaseReleaseProcess<
   }
   //#endregion
 
-  public async checkBundleQuestion(cwdForCode :string, checkMessage = `Select action before publishing ?`): Promise<boolean> {
+  public async checkBundleQuestion(
+    cwdForCode: string,
+    checkMessage = `Select action before publishing ?`,
+  ): Promise<boolean> {
     //#region @backendFunc
     const choices = {
       yes: {
@@ -113,7 +116,7 @@ export class BaseReleaseProcess<
       exit: {
         name: 'Exit',
       },
-    }
+    };
     const selected = await UtilsTerminal.select<keyof typeof choices>({
       question: checkMessage,
       choices,
@@ -127,9 +130,14 @@ export class BaseReleaseProcess<
         output: true,
         cwd: cwdForCode,
       }).sync();
-      await UtilsTerminal.pressAnyKeyToContinueAsync({
-        message: `Press any key to continue`,
-      });
+      if (
+        !(await UtilsTerminal.confirm({
+          message: `Is everything ok with bundle ?`,
+          defaultValue: true,
+        }))
+      ) {
+        process.exit(0);
+      }
       return true;
     }
     if (selected === 'continue') {
