@@ -86,8 +86,11 @@ export class HelpersFileFolders {
     //#endregion
   }
 
-  setValueToJSON(filepath: string, lodashGetPath: string, value: any): void {
+  setValueToJSON(filepath: string | string[], lodashGetPath: string, value: any): void {
     //#region @backendFunc
+    if (_.isArray(filepath)) {
+      filepath = crossPlatformPath(filepath);
+    }
     if (!fse.existsSync(filepath)) {
       Helpers.warn(`Recreating unexised json file: ${filepath}`);
       Helpers.writeFile(filepath, '{}');
@@ -771,8 +774,8 @@ to: ${to}
   }
 
   copy(
-    sourceDir: string,
-    destinationDir: string,
+    sourceDir: string | string[],
+    destinationDir: string | string[],
     options?: {
       filter?: any;
       overwrite?: boolean;
@@ -797,17 +800,12 @@ to: ${to}
     } & CopyOptionsSync,
   ): void {
     //#region @backendFunc
-    Helpers.log(
-      `Copying from:
-
-    ${sourceDir}
-    to
-    ${destinationDir}
-
-    `,
-      1,
-    );
-    Helpers.log(options, 1);
+    if (_.isArray(sourceDir)) {
+      sourceDir = crossPlatformPath(sourceDir);
+    }
+    if (_.isArray(destinationDir)) {
+      destinationDir = crossPlatformPath(destinationDir);
+    }
 
     // sourceDir = sourceDir ? (sourceDir.replace(/\/$/, '')) : sourceDir;
     // destinationDir = destinationDir ? (destinationDir.replace(/\/$/, '')) : destinationDir;

@@ -101,6 +101,43 @@ export class BaseReleaseProcess<
   }
   //#endregion
 
+  public async checkBundleQuestion(cwdForCode :string, checkMessage = `Select action before publishing ?`): Promise<boolean> {
+    //#region @backendFunc
+    const choices = {
+      yes: {
+        name: 'Open compiled version',
+      },
+      continue: {
+        name: 'Continue process..',
+      },
+      exit: {
+        name: 'Exit',
+      },
+    }
+    const selected = await UtilsTerminal.select<keyof typeof choices>({
+      question: checkMessage,
+      choices,
+    });
+    if (selected === 'exit') {
+      process.exit(0);
+    }
+    if (selected === 'yes') {
+      const editor = await this.project.ins.configDb.getCodeEditor();
+      Helpers.run(`${editor} .`, {
+        output: true,
+        cwd: cwdForCode,
+      }).sync();
+      await UtilsTerminal.pressAnyKeyToContinueAsync({
+        message: `Press any key to continue`,
+      });
+      return true;
+    }
+    if (selected === 'continue') {
+      return true;
+    }
+    //#endregion
+  }
+
   //#region methods & getters / publish to npm
   /**
    * @returns true if publish , faslse if just version bump
@@ -112,20 +149,7 @@ export class BaseReleaseProcess<
     //#region   @backendFunc
 
     if (!automaticRelease) {
-      if (
-        await UtilsTerminal.confirm({
-          message: `Do you wanna check compiled version before publishing ?`,
-          defaultValue: true,
-        })
-      ) {
-        try {
-          const editor = await this.project.ins.configDb.getCodeEditor();
-          Helpers.run(`${editor} .`, {
-            output: true,
-            cwd: cwdForCode,
-          }).sync();
-        } catch (error) {}
-      }
+      await this.checkBundleQuestion(cwdForCode);
 
       while (true) {
         const publishOpt = {
