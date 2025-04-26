@@ -1,4 +1,5 @@
 import { Utils } from 'tnp-core/src';
+// import { getVscode } from 'tnp-helpers/src';
 import { CommandType, executeCommand } from 'tnp-helpers/src';
 import type { ExtensionContext } from 'vscode';
 
@@ -24,6 +25,9 @@ export const commands: CommandType[] = (
 });
 
 export function activate(context: ExtensionContext) {
+  // const vscode = getVscode();
+  // const outputChannel = vscode.window.createOutputChannel('EXTENSION');
+  // outputChannel.show();
   for (let index = 0; index < commands.length; index++) {
     const {
       title = '',
@@ -32,6 +36,7 @@ export function activate(context: ExtensionContext) {
       options,
       isDefaultBuildCommand,
     } = commands[index];
+    // outputChannel.appendLine(`title: ${title}, command: ${command}, group: ${group}`);
     const sub = executeCommand(
       title,
       command,
@@ -51,4 +56,3 @@ export function deactivate() {}
 export default { commands };
 
 
-        

@@ -142,7 +142,7 @@ export class HelpersTaon extends CoreHelpers {
       strategy = 'cli';
     }
 
-    const externals = [
+    let externals = [
       'electron',
       'vscode',
       'ts-node',
@@ -150,6 +150,10 @@ export class HelpersTaon extends CoreHelpers {
       'typescript',
       ...(additionalExternals || []),
     ];
+    if (strategy === 'vscode-ext') {
+      // typescript is needed/bundle with vscode extension
+      externals = externals.filter(f => f !== 'typescript');
+    }
 
     Helpers.taskStarted(`Bundling node_modules for file: ${pathToJsFile}`);
     // debugger
