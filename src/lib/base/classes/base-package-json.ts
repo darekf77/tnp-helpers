@@ -434,6 +434,12 @@ export class BasePackageJson extends BaseJsonFileReader<PackageJson> {
   }
   //#endregion
 
+  get sideEffects(): boolean {
+    //#region @backendFunc
+    return !!this.data?.sideEffects;
+    //#endregion
+  }
+
   //#region set new version
   async setMainProperty(main: string, purpose = ''): Promise<void> {
     //#region @backendFunc
