@@ -7,10 +7,16 @@ export class BasePowerShellHelpers<
   PROJECT extends BaseProject = any,
 > extends BaseFeatureForProject<PROJECT> {
   get properPowerShellConfigOhMyPosh() {
+
+    // notepad $PROFILE
     //     `$env:PATH += ";${os.homedir()}\AppData\Local\Programs\oh-my-posh\bin"
     // oh-my-posh init pwsh --config "C:\Users\darek\AppData\Local\Programs\oh-my-posh\themes\jandedobbeleer.omp.json" | Invoke-Expression`
+    // function readlink($Path) {
+    //     (Get-Item $Path).Target
+    // }
 
     // Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+
 
     const config = {
       $schema:
