@@ -389,30 +389,30 @@ export class BaseNodeModules<
     );
 
     for (const entry of packagesConfig) {
-      let packageName: string;
+      let packageNameForDuplicationRemoval: string;
       let excludeFrom: string[] = [];
       let includeOnlyIn: string[] = [];
 
       if (typeof entry === 'string') {
-        packageName = entry;
+        packageNameForDuplicationRemoval = entry;
       } else {
-        packageName = entry.package;
+        packageNameForDuplicationRemoval = entry.package;
         excludeFrom = entry.excludeFrom || [];
         includeOnlyIn = entry.includeOnlyIn || [];
       }
-      packageName = crossPlatformPath(packageName);
+      packageNameForDuplicationRemoval = crossPlatformPath(packageNameForDuplicationRemoval);
 
       Helpers.info(
-        `[${config.frameworkName}] Checking npm duplicates of ${packageName}`,
+        `[${config.frameworkName}] Checking npm duplicates of ${packageNameForDuplicationRemoval}`,
       );
 
-      const removeCommand = UtilsOs.isRunningInWindowsPowerShell()
+      const findPathsCommand = UtilsOs.isRunningInWindowsPowerShell()
         ? `powershell -NoProfile -Command "Get-ChildItem node_modules` +
           ` -Recurse -Directory | Where-Object ` +
-          `{ $_.FullName -replace '\\\\','/' -like '*/${packageName}' } | Select -ExpandProperty FullName"`
-        : `find node_modules/ -name "${packageName.replace('@', '\\@')}"`;
+          `{ $_.FullName -replace '\\\\','/' -like '*/${packageNameForDuplicationRemoval}' } | Select -ExpandProperty FullName"`
+        : `find node_modules/ -name "${packageNameForDuplicationRemoval.replace('@', '\\@')}"`;
 
-      const foundPaths = Helpers.run(removeCommand, {
+      const foundPaths = Helpers.run(findPathsCommand, {
         output: false,
         cwd: this.cwd,
       })
@@ -431,10 +431,13 @@ export class BaseNodeModules<
 
       const duplicates = foundPaths.filter(p => {
         const relative = crossPlatformPath(path.relative(nodeModulesRoot, p));
+
         const packageJsonPath = crossPlatformPath([p, 'package.json']);
+        const packageJsonName = Helpers.readJsonC(packageJsonPath)?.name;
         // console.log({ packageJsonPath, relative, packageName });
         return (
-          !relative.startsWith(packageName) &&
+          packageJsonName === packageNameForDuplicationRemoval &&
+          !relative.startsWith(packageNameForDuplicationRemoval) &&
           !relative.startsWith(config.folder._bin) &&
           fse.existsSync(packageJsonPath)
         );
@@ -459,7 +462,7 @@ export class BaseNodeModules<
           excludeFrom.some(rule => parentName.includes(rule.replace('!', '')))
         ) {
           Helpers.warn(
-            `Skipping removal of ${packageName} from excluded parent: ${parentName}`,
+            `Skipping removal of ${packageNameForDuplicationRemoval} from excluded parent: ${parentName}`,
           );
           return;
         }
@@ -471,17 +474,17 @@ export class BaseNodeModules<
           )
         ) {
           Helpers.warn(
-            `Skipping removal of ${packageName} from non-included parent: ${parentName}`,
+            `Skipping removal of ${packageNameForDuplicationRemoval} from non-included parent: ${parentName}`,
           );
           return;
         }
 
         if (countOnly) {
-          Helpers.info(`Found duplicate ${packageName} in ${parentRealName}`);
+          Helpers.info(`Found duplicate ${packageNameForDuplicationRemoval} in ${parentRealName}`);
         } else {
           Helpers.remove(duplicatePath, true);
           Helpers.warn(
-            `Removed duplicate ${packageName} from ${parentRealName}`,
+            `Removed duplicate ${packageNameForDuplicationRemoval} from ${parentRealName}`,
           );
         }
       });
