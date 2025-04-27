@@ -476,9 +476,34 @@ Please provide proper commit message for lastest changes in your project:
   }
   //#endregion
 
+  //#region push to git repo
+  /**
+   *
+   * @param newVersion
+   * @param pushWithoutAsking
+   */
+  async tagAndPushToGitRepo(
+    newVersion: string,
+    autoReleaseUsingConfig: boolean,
+    isCiProcess: boolean,
+  ): Promise<void> {
+    //#region @backendFunc
+    return await Helpers.git.tagAndPushToGitRepo(this.project.location, {
+      newVersion,
+      autoReleaseUsingConfig,
+      isCiProcess,
+    });
+    //#endregion
+  }
+  //#endregion
+
   //#region methods & getters / pull current branch
   async pullCurrentBranch(options?: {
     askToRetry?: boolean;
+    /**
+     * default true, when false it will throw error instead process.exit(0)
+     */
+    exitOnError?: boolean;
     defaultHardResetCommits?: number;
   }) {
     //#region @backendFunc
@@ -637,12 +662,20 @@ Please provide proper commit message for lastest changes in your project:
       fetchBeforeCheckout?: boolean;
       switchBranchWhenExists?: boolean;
     },
-  ) {
+  ): void {
     //#region @backendFunc
     return Helpers.git.checkout(this.project.location, branchName, options);
     //#endregion
   }
   //#endregion
+
+  cleanRepoFromAnyFilesExceptDotGitFolder(): void {
+    //#region @backendFunc
+    return Helpers.git.cleanRepoFromAnyFilesExceptDotGitFolder(
+      this.project.location,
+    );
+    //#endregion
+  }
 
   //#region methods & getters / checkout from to
   checkoutFromTo(

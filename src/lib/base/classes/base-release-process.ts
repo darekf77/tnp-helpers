@@ -108,7 +108,7 @@ export class BaseReleaseProcess<
     //#region @backendFunc
     const choices = {
       yes: {
-        name: 'Open compiled version',
+        name: 'Open in VSCode',
       },
       continue: {
         name: 'Continue process..',
@@ -132,7 +132,7 @@ export class BaseReleaseProcess<
       }).sync();
       if (
         !(await UtilsTerminal.confirm({
-          message: `Is everything ok with bundle ?`,
+          message: `Is everything ok with code ?`,
           defaultValue: true,
         }))
       ) {

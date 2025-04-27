@@ -5,6 +5,7 @@ import { config } from 'tnp-config/src';
 import {
   _,
   path,
+  rimraf,
   fse,
   child_process,
   crossPlatformPath,
@@ -17,6 +18,54 @@ import { Helpers } from '../../index';
 //#endregion
 
 export class HelpersGit {
+  async tagAndPushToGitRepo(
+    cwd: string,
+    options: {
+      newVersion: string;
+      autoReleaseUsingConfig: boolean;
+      isCiProcess: boolean;
+    },
+  ): Promise<void> {
+    //#region @backendFunc
+    const { newVersion, autoReleaseUsingConfig, isCiProcess } = options;
+    const tagName = `v${newVersion}`;
+
+    this.stageAllAndCommit(cwd, `release: ${tagName}`);
+
+    const tagMessage = 'new version ' + newVersion;
+    try {
+      Helpers.run(`git tag -a ${tagName} ` + `-m "${tagMessage}"`, {
+        cwd,
+        output: false,
+      }).sync();
+    } catch (error) {
+      Helpers.throw(`Not able to tag project`);
+    }
+    // const lastCommitHash = this.project.git.lastCommitHash();
+    // this.project.packageJson.setBuildHash(lastCommitHash);
+
+    if (
+      autoReleaseUsingConfig ||
+      (await UtilsTerminal.confirm({
+        message: `Push changes to git repo ?`,
+        defaultValue: true,
+      }))
+    ) {
+      Helpers.log('Pushing to git repository... ');
+      Helpers.log(`Git branch: ${this.currentBranchName(cwd)}`);
+
+      if (
+        !(await this.pushCurrentBranch(cwd, {
+          askToRetry: !isCiProcess,
+        }))
+      ) {
+        Helpers.throw(`Not able to push to git repository`);
+      }
+      Helpers.info('Pushing to git repository done.');
+    }
+    //#endregion
+  }
+
   //#region getters & methods / get all tags
   async getAllTags(cwd: string) {
     //#region @backendFunc
@@ -680,7 +729,9 @@ export class HelpersGit {
     try {
       // git config --get remote.origin.url
       url = Helpers.run(
-        `git config --get remote.${differentOriginName ? differentOriginName : 'origin'}.url`,
+        `git config --get remote.${
+          differentOriginName ? differentOriginName : 'origin'
+        }.url`,
         { output: false, cwd },
       )
         .sync()
@@ -856,11 +907,19 @@ export class HelpersGit {
     cwd: string,
     options?: {
       askToRetry?: boolean;
+      /**
+       * default true, when false it will throw error instead process.exit(0)
+       */
+      exitOnError?: boolean;
       defaultHardResetCommits?: number;
     },
   ) {
     options = options || ({} as any);
-    let { askToRetry } = options || {};
+    let { askToRetry, exitOnError } = options || {};
+    if (_.isUndefined(exitOnError)) {
+      options.exitOnError = true;
+      exitOnError = true;
+    }
     Helpers.log('[taon-helpers][pullCurrentBranch] ' + cwd, 1);
     if (global['tnpNonInteractive']) {
       askToRetry = false;
@@ -874,7 +933,12 @@ export class HelpersGit {
       return;
     }
     Helpers.info(
-      `[taon-helpers][${dateformat(new Date(), 'dd-mm-yyyy HH:MM:ss')}] Pulling git changes in "${cwd}", origin=${Helpers.git.getOriginURL(cwd)}  `,
+      `[taon-helpers][${dateformat(
+        new Date(),
+        'dd-mm-yyyy HH:MM:ss',
+      )}] Pulling git changes in "${cwd}", origin=${Helpers.git.getOriginURL(
+        cwd,
+      )}  `,
     );
     let acknowledgeBeforePull = false;
     while (true) {
@@ -889,16 +953,23 @@ export class HelpersGit {
           branchName: currentLocalBranch,
         });
         Helpers.info(
-          `[taon-helpers] Branch "${currentLocalBranch}" updated successfully in ${path.basename(cwd)}`,
+          `[taon-helpers] Branch "${currentLocalBranch}" updated successfully in ${path.basename(
+            cwd,
+          )}`,
         );
         break;
       } catch (e) {
         // console.log(e)
-        Helpers.error(
-          `[taon-helpers] Cannot update current branch in: ${cwd}`,
-          askToRetry,
-          true,
-        );
+        if (!askToRetry && exitOnError) {
+          Helpers.error(
+            `[taon-helpers] Cannot update current branch in: ${cwd}`,
+            askToRetry,
+            true,
+          );
+        }
+        if (!askToRetry && !exitOnError) {
+          throw e;
+        }
         if (askToRetry) {
           //#region ask to retry question
           const pullOptions = {
@@ -1015,12 +1086,18 @@ ${cwd}
       try {
         const taskName = `
     [${dateformat(new Date(), 'dd-mm-yyyy HH:MM:ss')}]
-    Pushing ${force ? 'FORCE' : 'NORMALLY'} current branch (remote=${origin}): ${currentBranchName}
+    Pushing ${
+      force ? 'FORCE' : 'NORMALLY'
+    } current branch (remote=${origin}): ${currentBranchName}
     `;
         Helpers.info(taskName);
-        const command = `git push ${force ? '-f' : ''} ${origin} ${currentBranchName} --tags`;
+        const command = `git push ${
+          force ? '-f' : ''
+        } ${origin} ${currentBranchName} --tags`;
         Helpers.info(
-          `[git][push] [${dateformat(new Date(), 'dd-mm-yyyy HH:MM:ss')}] ${force ? 'force' : 'normal'} pushing current branch ${currentBranchName} ,` +
+          `[git][push] [${dateformat(new Date(), 'dd-mm-yyyy HH:MM:ss')}] ${
+            force ? 'force' : 'normal'
+          } pushing current branch ${currentBranchName} ,` +
             ` origin=${Helpers.git.getOriginURL(cwd, origin)}`,
         );
 
@@ -1212,6 +1289,36 @@ ${cwd}
     Helpers.taskDone('Fetching git changes');
   }
   //#endregion
+
+  cleanRepoFromAnyFilesExceptDotGitFolder(cwd: string): void {
+    //#region @backendFunc
+    const entries = fse.readdirSync(cwd);
+
+    for (const entry of entries) {
+      // Skip the .git directory
+      if (entry === '.git') {
+        continue;
+      }
+
+      const fullPath = crossPlatformPath([cwd, entry]);
+      const stats = fse.statSync(fullPath);
+
+      if (stats.isDirectory()) {
+        try {
+          // when link
+          fse.unlinkSync(fullPath);
+        } catch (error) {}
+        // Recursively remove directories
+        Helpers.remove(fullPath, true);
+      } else {
+        // Remove files
+        try {
+          fse.unlinkSync(fullPath);
+        } catch (error) {}
+      }
+    }
+    //#endregion
+  }
 
   //#region checkout
   checkout(
@@ -1418,7 +1525,9 @@ ${cwd}
 
     const commnad =
       url.startsWith(`https://`) || url.startsWith(`http://`)
-        ? `git -c http.sslVerify=false clone ${url} ${path.basename(cloneFolderPath)}`
+        ? `git -c http.sslVerify=false clone ${url} ${path.basename(
+            cloneFolderPath,
+          )}`
         : `git clone ${url} ${path.basename(cloneFolderPath)}`;
     Helpers.info(`
 
@@ -1562,7 +1671,9 @@ ${cwd}
     }
     try {
       Helpers.log(
-        `[taon-helpers][git] restoring last verion of file ${path.basename(cwd)}/${relativeFilePath}`,
+        `[taon-helpers][git] restoring last verion of file ${path.basename(
+          cwd,
+        )}/${relativeFilePath}`,
       );
       Helpers.run(`git checkout -- ${relativeFilePath}`, { cwd }).sync();
     } catch (error) {
@@ -1581,7 +1692,9 @@ ${cwd}
         Helpers.run(`git checkout HEAD -- ${p}`, { cwd }).sync();
       } catch (err) {
         Helpers.error(
-          `[taon-helpers][git] Not able to reset files: ${p} inside project ${path.basename(cwd)}.`,
+          `[taon-helpers][git] Not able to reset files: ${p} inside project ${path.basename(
+            cwd,
+          )}.`,
           true,
           true,
         );
@@ -1848,4 +1961,7 @@ ${cwd}
   }
 
   //#endregion
+}
+function rmSync(fullPath: any, arg1: { recursive: boolean; force: boolean }) {
+  throw new Error('Function not implemented.');
 }
