@@ -1,5 +1,5 @@
 //#region imports
-import { fse, Helpers, path } from 'tnp-core/src';
+import { crossPlatformPath, fse, path } from 'tnp-core/src';
 import { _, CoreModels, Utils } from 'tnp-core/src';
 import {
   createPrinter,
@@ -45,8 +45,13 @@ import {
   Expression,
   isNamedImports,
   isNamedExports,
+  NewLineKind,
+  TransformerFactory,
+  isDecorator,
 } from 'typescript';
 import type * as ts from 'typescript';
+
+import { Helpers } from './index';
 //#endregion
 
 //#region utils npm
@@ -466,12 +471,60 @@ export namespace UtilsTypescript {
   export const formatAllFilesInsideFolder = (absPathToFolder: string): void => {
     //#region @backendFunc
     if (Helpers.exists(absPathToFolder)) {
+      if (!Helpers.isFolder(absPathToFolder)) {
+        Helpers.error(`"${absPathToFolder}" is not a folder`);
+      }
       const { execSync } = require('child_process');
+      fixHtmlTemplatesInDir(absPathToFolder);
       try {
         execSync(`prettier --write .`, { cwd: absPathToFolder });
       } catch (error) {
-        console.warn(`Not able to files in: ${absPathToFolder}`);
+        console.warn(`Not able to prettier all files in: ${absPathToFolder}`);
       }
+    }
+    //#endregion
+  };
+  //#endregion
+
+  //#region lint file(s) with eslint
+  export const eslintFixFile = (absPathToFile: string | string[]): void => {
+    //#region @backendFunc
+    absPathToFile = crossPlatformPath(absPathToFile);
+    if (Helpers.exists(absPathToFile)) {
+      const { execSync } = require('child_process');
+      Helpers.logInfo(`Fixing file with eslint: ${absPathToFile}`);
+      try {
+        execSync(
+          `npx --yes eslint --fix ${path.basename(absPathToFile as string)}`,
+          {
+            cwd: path.dirname(absPathToFile as string),
+          },
+        );
+      } catch (error) {}
+      Helpers.taskDone(`Eslint file fix done.`);
+    }
+    //#endregion
+  };
+
+  export const eslintFixAllFilesInsideFolder = (
+    absPathToFolder: string | string[],
+  ): void => {
+    //#region @backendFunc
+    absPathToFolder = crossPlatformPath(absPathToFolder);
+    if (Helpers.exists(absPathToFolder)) {
+      Helpers.info(`Fixing files with eslint in: ${absPathToFolder}`);
+      const lintFixFn = () => {
+        try {
+          Helpers.run(`npx --yes eslint --fix . `, {
+            cwd: absPathToFolder,
+            output: false,
+            silence: true,
+          }).sync();
+        } catch (error) {}
+      };
+      lintFixFn();
+      lintFixFn(); // sometimes it needs to be run twice
+      Helpers.info(`Eslint fixing files done.`);
     }
     //#endregion
   };
@@ -1312,7 +1365,10 @@ export namespace UtilsQuickFixes {
    */
   export const replaceElectronWithNothing = (jsContent: string): string => {
     //#region @backendFunc
-    return jsContent.replace(`mod${'ule.exports'} = ${'requ'+'ire'}("electron");`, '');
+    return jsContent.replace(
+      `mod${'ule.exports'} = ${'requ' + 'ire'}("electron");`,
+      '',
+    );
     //#endregion
   };
 }
