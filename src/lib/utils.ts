@@ -1190,6 +1190,74 @@ export namespace UtilsTypescript {
     //#endregion
   };
   //#endregion
+
+  //#region remove tagged imports/exports
+  export function removeTaggedImportExport(
+    tsFileContent: string,
+    tags: string[],
+    // debug = false,
+  ): string {
+    //#region @backendFunc
+    const sourceFile = createSourceFile(
+      'temp.ts',
+      tsFileContent,
+      ScriptTarget.Latest,
+      true,
+      ScriptKind.TS,
+    );
+    // debug && console.log(tsFileContent);
+
+    const lines = tsFileContent.split(/\r?\n/);
+    const tagRegex = new RegExp(
+      tags
+        .map(t => (Array.isArray(t) ? t[0] : t))
+        .filter(Boolean)
+        .map(Utils.escapeStringForRegEx)
+        .join('|'),
+      'i',
+    );
+
+    let a = 0;
+    for (const statement of sourceFile.statements) {
+      // debug && console.log('processing line ' + a++);
+      if (!isImportDeclaration(statement) && !isExportDeclaration(statement)) {
+        continue;
+      }
+
+      const start = statement.getStart();
+      const end = statement.getEnd();
+
+      const startLine = sourceFile.getLineAndCharacterOfPosition(start).line;
+      const endLine = sourceFile.getLineAndCharacterOfPosition(end).line;
+
+      // get full text including trailing comments
+      const endLineText = lines[endLine]; // ← get real line content from file
+
+      if (!tagRegex.test(endLineText)) continue;
+
+      // debug &&
+      //   console.log(`
+      //   start: ${start}
+      //   end: ${end}
+      //   startLine: ${startLine}
+      //   endLine: ${endLine}
+      //   endLineText: >> ${endLineText} <<
+      //   `);
+
+      // console.log('removing line ' + startLine + ' to ' + endLine);
+      for (let i = startLine; i <= endLine; i++) {
+        const original = lines[i];
+        lines[i] = '/* */' + ' '.repeat(Math.max(0, original.length - 4));
+      }
+    }
+
+    // debug && console.log('\n\n\n\n');
+    const result = lines.join('\n');
+    // debug && console.log(result)
+    return result;
+    //#endregion
+  }
+  //#endregion
 }
 
 //#endregion
