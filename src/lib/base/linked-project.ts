@@ -1,4 +1,6 @@
+import { config } from 'tnp-config/src';
 import { _, crossPlatformPath, path } from 'tnp-core/src';
+
 import { Helpers } from '../index';
 
 export class LinkedProject {
@@ -40,8 +42,16 @@ export class LinkedProject {
   //#endregion
 
   //#region static / detect
-  static detect(insideLocation: string, recursive = false): LinkedProject[] {
+  static detect(
+    insideLocation: string,
+    options?: {
+      recursive?: boolean;
+      checkAlsoNonRepos?: boolean;
+    },
+  ): LinkedProject[] {
     //#region @backendFunc
+    options = options || ({} as any);
+    const { recursive, checkAlsoNonRepos } = options;
     insideLocation = crossPlatformPath(insideLocation).replace(/\/$/, '');
     const detectedLinkedProjects = Helpers.foldersFrom(insideLocation, {
       recursive,
@@ -49,6 +59,14 @@ export class LinkedProject {
       .filter(folderAbsPath => {
         // console.log('folderAbsPath', folderAbsPath);
         // Helpers.checkIfNameAllowedForTaonProj(path.basename(folderAbsPath)) &&
+        if (
+          checkAlsoNonRepos &&
+          Helpers.exists([folderAbsPath, config.file.taon_jsonc]) &&
+          !!Helpers.readJsonC([folderAbsPath, config.file.taon_jsonc])?.type &&
+          Helpers.exists([folderAbsPath, config.file.package_json])
+        ) {
+          return true;
+        }
 
         return Helpers.git.isGitRoot(folderAbsPath);
       })

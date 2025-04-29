@@ -273,7 +273,7 @@ export class BaseLinkedProjects<
   get detectedLinkedProjects(): LinkedProject[] {
     const detectedLinkedProjects = LinkedProject.detect(
       this.project.location,
-      true, // TOOD fix recrusive
+      { recursive: true }, // TOOD fix recrusive
     );
     return detectedLinkedProjects;
   }

@@ -1169,13 +1169,14 @@ ${lastCommitMessage}
   //#endregion
 
   //#region commands / update
-  async UPDATE() {
-    const linkedProjects = LinkedProject.detect(this.project.location).filter(
-      linkedProj =>
-        this.project.ins.From([
-          this.project.location,
-          linkedProj.relativeClonePath,
-        ]),
+  async refresh() {
+    const linkedProjects = LinkedProject.detect(this.project.location, {
+      checkAlsoNonRepos: true,
+    }).filter(linkedProj =>
+      this.project.ins.From([
+        this.project.location,
+        linkedProj.relativeClonePath,
+      ]),
     );
 
     if (
@@ -1206,6 +1207,7 @@ Would you like to update current project configuration?`)
   }
   //#endregion
 
+  //#region commands / all tags
   async allTags() {
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
@@ -1214,6 +1216,7 @@ Would you like to update current project configuration?`)
     console.log(allTags);
     this._exit();
   }
+  //#endregion
 
   //#region commands / remove tag
   async removeTag() {
@@ -1634,9 +1637,11 @@ Would you like to update current project configuration?`)
   }
   //#endregion
 
+  //#region commands / last git tag
   lastGitTag() {
     console.log('Latest tag');
     console.log(this.project?.git.lastTagVersionName);
     this._exit();
   }
+  //#endregion
 }
