@@ -1009,6 +1009,135 @@ export namespace UtilsTypescript {
     //#endregion
   };
   //#endregion
+
+  //#region fix standalone ng 19
+  /**
+   * Transition methods ng18 => ng19
+   * Remove standalone:true from component decorator
+   * and add standalone: false if not exists
+   */
+  export function transformComponentStandaloneOption(
+    sourceText: string,
+  ): string {
+    //#region @backendFunc
+    const sourceFile = createSourceFile(
+      'temp.ts',
+      sourceText,
+      ScriptTarget.Latest,
+      true,
+      ScriptKind.TS,
+    );
+    const printer = createPrinter({ newLine: NewLineKind.LineFeed });
+
+    // @ts-ignore
+    const transformerFactory: TransformerFactory<ts.SourceFile> = context => {
+      const { factory } = context;
+
+      const visit: ts.Visitor = node => {
+        if (
+          isDecorator(node) &&
+          isCallExpression(node.expression) &&
+          isIdentifier(node.expression.expression) &&
+          node.expression.expression.text === 'Component'
+        ) {
+          const args = node.expression.arguments;
+          if (args.length === 1 && isObjectLiteralExpression(args[0])) {
+            const originalProps = args[0].properties;
+            const newProps: ts.ObjectLiteralElementLike[] = [];
+
+            let hasStandalone = false;
+            let standaloneIsTrue = false;
+
+            for (const prop of originalProps) {
+              if (
+                isPropertyAssignment(prop) &&
+                isIdentifier(prop.name) &&
+                prop.name.text === 'standalone'
+              ) {
+                hasStandalone = true;
+                if (prop.initializer.kind === SyntaxKind.TrueKeyword) {
+                  standaloneIsTrue = true;
+                  continue; // skip it
+                }
+              }
+              newProps.push(prop);
+            }
+
+            if (!hasStandalone) {
+              // add standalone: false
+              newProps.push(
+                factory.createPropertyAssignment(
+                  factory.createIdentifier('standalone'),
+                  factory.createFalse(),
+                ),
+              );
+            }
+
+            const newArgs = [
+              factory.updateObjectLiteralExpression(args[0], newProps),
+            ];
+
+            const newExpression = factory.updateCallExpression(
+              node.expression,
+              node.expression.expression,
+              undefined,
+              newArgs,
+            );
+
+            return factory.updateDecorator(node, newExpression);
+          }
+        }
+
+        return visitEachChild(node, visit, context);
+      };
+
+      return node => visitNode(node, visit);
+    };
+
+    const result = transform(sourceFile, [transformerFactory]);
+    const transformedSourceFile = result.transformed[0];
+    const resultText = printer.printFile(transformedSourceFile);
+
+    result.dispose();
+    return resultText;
+    //#endregion
+  }
+  //#endregion
+
+  //#region escape @ in html text
+  const escapeAtInHtmlText = (fileContent: string): string => {
+    return fileContent.replace(
+      />([^<@]*?)@([^<]*)</g,
+      (_match, before, after) => {
+        return `>${before}&#64;${after}<`;
+      },
+    );
+  };
+
+  export const fixHtmlTemplatesInDir = (directoryPath: string): void => {
+    //#region @backendFunc
+    Helpers.taskStarted(`(before prettier) Fixing HTML templates in`);
+    const files = Helpers.filesFrom(directoryPath, true, false);
+
+    for (const fullPath of files) {
+      const file = path.basename(fullPath);
+      if (Helpers.exists(fullPath)) {
+        const stat = fse.statSync(fullPath);
+
+        if (file.endsWith('.html')) {
+          const original = Helpers.readFile(fullPath);
+          const fixed = escapeAtInHtmlText(original);
+          if (fixed !== original) {
+            Helpers.writeFile(fullPath, fixed);
+            console.log(`Html fixed @ -> &#64: ${fullPath}`);
+          }
+        }
+      }
+    }
+    Helpers.taskDone(`(before prettier) Fixing HTML templates done.`);
+    //#endregion
+  };
+  //#endregion
 }
 
 //#endregion
