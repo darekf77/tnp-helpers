@@ -475,7 +475,6 @@ export namespace UtilsTypescript {
         Helpers.error(`"${absPathToFolder}" is not a folder`);
       }
       const { execSync } = require('child_process');
-      fixHtmlTemplatesInDir(absPathToFolder);
       try {
         execSync(`prettier --write .`, { cwd: absPathToFolder });
       } catch (error) {
