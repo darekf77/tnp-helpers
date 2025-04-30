@@ -828,38 +828,78 @@ export namespace UtilsTypescript {
 
   //#region helpers / ts import export class
   export class TsImportExport {
-    type: 'export' | 'import' | 'async-import' | 'require';
     /**
-     * ORIGNAL
-     * Name of the file that is being imported/exported
-     * with parenthesis included
-     */
-    embeddedPathToFile: string;
-    /**
-     * same as cleanEmbeddedPathToFile but without quotes (parenthesis)
-     */
-    cleanEmbeddedPathToFile: string;
-    removeStartEndQuotes(str: string) {
-      return str.replace(/^['"`]/, '').replace(/['"`]$/, '');
-    }
-    /**
-     * RESULT OF PROCESSING
+     * for external modification
      */
     embeddedPathToFileResult: string;
     /**
-     * @deprecated use cleanEmbeddedPathToFile
+     * for external modification
      */
     packageName: string;
+    /**
+     * for external modification
+     */
     isIsomorphic?: boolean;
-    startRow: number;
-    startCol: number;
 
+    //#region generated/readonly files
+    readonly type: 'export' | 'import' | 'async-import' | 'require';
+    /**
+     * ORIGNAL
+     * Name of the file that is being imported/exported
+     * with parenthesis included , example
+     * 'my-file' or "my-file" or `my-file`
+     */
+    readonly embeddedPathToFile: string;
+    /**
+     * same as cleanEmbeddedPathToFile but without quotes (parenthesis), example:
+     * my-file or my-file or my-file
+     */
+    readonly cleanEmbeddedPathToFile: string;
+    readonly startRow: number;
+    readonly startCol: number;
+    readonly endRow: number;
+    readonly endCol: number;
+    readonly parenthesisType: 'single' | 'double' | 'tics';
+    readonly importElements: string[] = [];
+    //#endregion
+
+    //#region constructor
+    constructor(
+      type: 'export' | 'import' | 'async-import' | 'require',
+      embeddedPathToFile: string,
+      start: ts.LineAndCharacter,
+      end: ts.LineAndCharacter,
+      parenthesisType: 'single' | 'double' | 'tics',
+      importElements: string[] = [],
+    ) {
+      this.type = type;
+      this.isIsomorphic = false;
+      this.embeddedPathToFile = embeddedPathToFile;
+      this.cleanEmbeddedPathToFile =
+        this.removeStartEndQuotes(embeddedPathToFile);
+      this.embeddedPathToFileResult = embeddedPathToFile;
+      this.startRow = start.line + 1; // TypeScript lines are zero-based
+      this.startCol = start.character + 1;
+      this.endRow = end.line + 1;
+      this.endCol = end.character + 1;
+      this.parenthesisType = parenthesisType;
+      this.importElements = importElements;
+    }
+    //#endregion
+
+    //#region remove quotes
+    private removeStartEndQuotes(str: string): string {
+      return str.replace(/^['"`]/, '').replace(/['"`]$/, '');
+    }
+    //#endregion
+
+    //#region get string part
     /**
      * it will extract part of the file content
      * that is between startRow, startCol and endRow, endCol
      * and contains import/export/require statement
      */
-    getStringPartFrom(wholeContentOfFile: string): string {
+    public getStringPartFrom(wholeContentOfFile: string): string {
       const lines = wholeContentOfFile.split('\n');
 
       // Convert 1-based row indices to 0-based
@@ -893,40 +933,16 @@ export namespace UtilsTypescript {
 
       return extractedLines.join('\n');
     }
+    //#endregion
 
-    endRow: number;
-    endCol: number;
-    parenthesisType: 'single' | 'double' | 'tics';
-    wrapInParenthesis(str: string) {
+    //#region wrap in current parenthesis
+    public wrapInParenthesis(str: string): string {
       return this.parenthesisType === 'single'
         ? `'${str}'`
         : this.parenthesisType === 'double'
           ? `"${str}"`
           : `\`${str}\``;
-    }
-
-    importElements: string[] = [];
-
-    constructor(
-      type: 'export' | 'import' | 'async-import' | 'require',
-      embeddedPathToFile: string,
-      start: ts.LineAndCharacter,
-      end: ts.LineAndCharacter,
-      parenthesisType: 'single' | 'double' | 'tics',
-      importElements: string[] = [],
-    ) {
-      this.type = type;
-      this.isIsomorphic = false;
-      this.embeddedPathToFile = embeddedPathToFile;
-      this.cleanEmbeddedPathToFile =
-        this.removeStartEndQuotes(embeddedPathToFile);
-      this.embeddedPathToFileResult = embeddedPathToFile;
-      this.startRow = start.line + 1; // TypeScript lines are zero-based
-      this.startCol = start.character + 1;
-      this.endRow = end.line + 1;
-      this.endCol = end.character + 1;
-      this.parenthesisType = parenthesisType;
-      this.importElements = importElements;
+      //#endregion
     }
   }
   //#endregion
