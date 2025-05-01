@@ -111,6 +111,14 @@ export class BaseGlobalCommandLine<
   }
   //#endregion
 
+  async cu() {
+    await this.update();
+  }
+
+  async choreUpdate() {
+    await this.update();
+  }
+
   //#region commands / quick git update
   /**
    * quick git update push

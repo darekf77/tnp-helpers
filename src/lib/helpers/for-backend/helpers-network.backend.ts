@@ -1,22 +1,22 @@
-import {
-  _
-} from 'tnp-core';
-import * as express from 'express';
 import * as http from 'http';
 import * as https from 'https';
-export { Application, Request, Response } from 'express';
+
+import * as express from 'express';
 import { Application, Request, Response } from 'express';
+import { _ } from 'tnp-core/src';
+export { Application, Request, Response } from 'express';
 
 export class HelpersNetwork {
   from(app: express.Application) {
     return {
-      use() {
-
-      },
-      handle(respond: (
-        req: any, // http.IncomingMessage, //http.IncomingMessage & express.Request,
-        res: any, // http.ServerResponse, //http.ServerResponse & express.Response
-      ) => void, networkPath?: string | RegExp) {
+      use() {},
+      handle(
+        respond: (
+          req: any, // http.IncomingMessage, //http.IncomingMessage & express.Request,
+          res: any, // http.ServerResponse, //http.ServerResponse & express.Response
+        ) => void,
+        networkPath?: string | RegExp,
+      ) {
         if (!networkPath) {
           networkPath = /^\/(.*)/;
         }
@@ -47,8 +47,7 @@ export class HelpersNetwork {
         app.connect(networkPath, (req, res) => {
           respond(req, res);
         });
-      }
-    }
+      },
+    };
   }
-
 }

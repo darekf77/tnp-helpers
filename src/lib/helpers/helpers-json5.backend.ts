@@ -1,6 +1,6 @@
 import {
   _, Helpers
-} from 'tnp-core';
+} from 'tnp-core/src';
 import { config } from 'tnp-config/src';
 import * as json5 from 'json5';
 import * as json5Writer from 'json10-writer/src';

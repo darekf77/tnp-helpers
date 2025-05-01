@@ -1,12 +1,8 @@
 //#region imports
-import {
-  _,
-  //#region @backend
-  chalk,
-  //#endregion
-} from 'tnp-core';
-import { Helpers } from '../index';
+import { _ } from 'tnp-core/src';
 import { path } from 'tnp-core/src';
+
+import { Helpers } from '../index';
 //#endregion
 
 //#region open source proviers

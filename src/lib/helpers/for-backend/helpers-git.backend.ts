@@ -10,7 +10,7 @@ import {
   child_process,
   crossPlatformPath,
   dateformat,
-} from 'tnp-core';
+} from 'tnp-core/src';
 import { CLI, UtilsOs, UtilsTerminal } from 'tnp-core/src';
 
 import { Helpers } from '../../index';
