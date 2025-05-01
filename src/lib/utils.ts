@@ -48,6 +48,8 @@ import {
   NewLineKind,
   TransformerFactory,
   isDecorator,
+  isEmptyStatement,
+  isExpressionStatement,
 } from 'typescript';
 import type * as ts from 'typescript';
 
@@ -1273,6 +1275,68 @@ export namespace UtilsTypescript {
     return result;
     //#endregion
   }
+  //#endregion
+
+  //#region wrap first imports in region
+  export const wrapFirstImportsInImportsRegion = (
+    fileContent: string,
+  ): string => {
+    //#region @backendFunc
+    const importRegionStart = `//#re` + `gion imports`;
+    const importRegionEnd = `//#end` + `region`;
+
+    const sourceFile = createSourceFile(
+      'temp.ts',
+      fileContent,
+      ScriptTarget.Latest,
+      true,
+    );
+    const lines = fileContent.split(/\r?\n/);
+
+    const importDeclarations: ts.ImportDeclaration[] = [];
+
+    for (const statement of sourceFile.statements) {
+      if (isImportDeclaration(statement)) {
+        importDeclarations.push(statement);
+      } else if (
+        isEmptyStatement(statement) ||
+        (isExpressionStatement(statement) &&
+          statement.getFullText(sourceFile).trim() === '')
+      ) {
+        // skip empty lines or empty statements
+        continue;
+      } else {
+        break; // stop at first non-import statement
+      }
+    }
+
+    if (importDeclarations.length === 0) {
+      return fileContent; // nothing to wrap
+    }
+
+    const firstImportStart = importDeclarations[0].getFullStart();
+    const lastImportEnd =
+      importDeclarations[importDeclarations.length - 1].getEnd();
+
+    // Get the line numbers (1-based)
+    const startLine =
+      sourceFile.getLineAndCharacterOfPosition(firstImportStart).line;
+    const endLine =
+      sourceFile.getLineAndCharacterOfPosition(lastImportEnd).line;
+
+    const before = lines.slice(0, startLine);
+    const importBlock = lines.slice(startLine, endLine + 1);
+    const after = lines.slice(endLine + 1);
+
+    return [
+      ...before,
+      importRegionStart,
+      ...importBlock,
+      importRegionEnd,
+      ...after,
+    ].join('\n');
+    //#endregion
+  };
   //#endregion
 }
 
