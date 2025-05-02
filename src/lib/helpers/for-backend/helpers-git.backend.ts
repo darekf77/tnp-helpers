@@ -1522,13 +1522,14 @@ ${cwd}
       );
       return cloneFolderPath;
     }
+    let isHttpCommand = url.startsWith('http://') || url.startsWith('https://');
 
-    const commnad =
-      url.startsWith(`https://`) || url.startsWith(`http://`)
-        ? `git -c http.sslVerify=false clone ${url} ${path.basename(
-            cloneFolderPath,
-          )}`
-        : `git clone ${url} ${path.basename(cloneFolderPath)}`;
+    let commnad = isHttpCommand
+      ? `git -c http.sslVerify=false clone ${url} ${path.basename(
+          cloneFolderPath,
+        )}`
+      : `git clone ${url} ${path.basename(cloneFolderPath)}`;
+
     Helpers.info(`
 
     Cloning:
@@ -1539,6 +1540,14 @@ ${cwd}
       Helpers.run(commnad, { cwd }).sync();
     } else {
       while (true) {
+        isHttpCommand = url.startsWith('http://') || url.startsWith('https://');
+
+        commnad = isHttpCommand
+          ? `git -c http.sslVerify=false clone ${url} ${path.basename(
+              cloneFolderPath,
+            )}`
+          : `git clone ${url} ${path.basename(cloneFolderPath)}`;
+
         Helpers.info(`Cloning from url: ${CLI.chalk.bold(url)}..`);
         try {
           Helpers.run(commnad, { cwd, output: false }).sync();
@@ -1561,6 +1570,9 @@ ${cwd}
             again: {
               name: 'Try again',
             },
+            againDif: {
+              name: `Try again with ${isHttpCommand ? 'ssh' : 'http'} url`,
+            },
             skip: {
               name: 'Skip cloning this repository',
             },
@@ -1572,6 +1584,12 @@ ${cwd}
             keyof typeof cloneLinkOpt
           >('What to do?', cloneLinkOpt);
           if (res === 'again') {
+            continue;
+          }
+          if (res === 'againDif') {
+            url = isHttpCommand
+              ? Helpers.git.originHttpToSsh(url)
+              : Helpers.git.originSshToHttp(url);
             continue;
           }
           if (res === 'exit') {
