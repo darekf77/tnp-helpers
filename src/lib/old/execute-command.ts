@@ -18,8 +18,6 @@ import {
 } from './helpers';
 import { ProcesOptions, ProgressData, ResolveVariable } from './models';
 
-
-
 export type ExecCommandTypeOpt = {
   vscode?: typeof import('vscode');
   log?: Log;
@@ -41,7 +39,8 @@ export function executeCommand(
   context?: ExtensionContext,
   debug?: boolean,
 ) {
-  const log = Log.instance(`execute-command`, 'logmsg',debug);
+  //#region @backendFunc
+  const log = Log.instance(`execute-command`, 'logmsg', debug);
   const commandToExecuteReadable =
     '"' +
     (Array.isArray(commandToExecute)
@@ -51,8 +50,6 @@ export function executeCommand(
   const vscode = getVscode();
   const vscodeWindow = vscode.window;
   return vscode.commands.registerCommand(registerName, function (uri) {
-
-
     const options = optionsFix(deepClone(pOptions));
     let progressLocation = vscode.ProgressLocation.Notification;
     if (options.progressLocation === 'statusbar') {
@@ -77,11 +74,11 @@ export function executeCommand(
     } = options;
 
     //#region handle title
-    if(!titleWhenProcessing && titleOfTask){
+    if (!titleWhenProcessing && titleOfTask) {
       titleWhenProcessing = titleOfTask;
     }
 
-    if(!titleOfTask && titleWhenProcessing){
+    if (!titleOfTask && titleWhenProcessing) {
       titleOfTask = titleWhenProcessing;
     }
     //#endregion
@@ -122,7 +119,10 @@ export function executeCommand(
     //#region handle first asking about executing command
     if (askBeforeExecute) {
       const continueMsg =
-        `Continue: ` + (titleWhenProcessing ? titleWhenProcessing : `command: ${commandToExecuteReadable}`);
+        `Continue: ` +
+        (titleWhenProcessing
+          ? titleWhenProcessing
+          : `command: ${commandToExecuteReadable}`);
       vscodeWindow
         .showQuickPick(['Abort', continueMsg], {
           canPickMany: false,
@@ -140,7 +140,9 @@ export function executeCommand(
     //#region process
     async function process() {
       let MAIN_TITLE = capitalizeFirstLetter(
-        titleWhenProcessing ? titleWhenProcessing : `Executing: ${commandToExecuteReadable}`,
+        titleWhenProcessing
+          ? titleWhenProcessing
+          : `Executing: ${commandToExecuteReadable}`,
       );
       const resolveVars: ResolveVariable[] = [
         {
@@ -359,7 +361,7 @@ export function executeCommand(
             //#region endactions
 
             //#region finish action
-            const finishAction =(childResult: any) => {
+            const finishAction = (childResult: any) => {
               if (reloadAfterSuccesFinish) {
                 vscode.commands.executeCommand('workbench.action.reloadWindow');
               } else {
@@ -373,7 +375,7 @@ export function executeCommand(
 
                   const message =
                     `Done executing ${!commandIsFunction ? doneMsg : childResult}.\n\n` +
-                    ((!commandIsFunction && childResult)
+                    (!commandIsFunction && childResult
                       ? childResult.toString()
                       : '');
                   log.data(message);
@@ -381,7 +383,7 @@ export function executeCommand(
                 }
               }
               resolve(void 0);
-            }
+            };
             //#endregion
 
             //#region finish error
@@ -522,10 +524,11 @@ export function executeCommand(
                     execCommand = execCommand.replace(paramToResolve, name);
                     cmd = cmd.replace(paramToResolve, name);
                     if (options?.titleWhenProcessing) {
-                      options.titleWhenProcessing = options.titleWhenProcessing.replace(
-                        paramToResolve,
-                        relativePathToFileFromWorkspaceRoot,
-                      );
+                      options.titleWhenProcessing =
+                        options.titleWhenProcessing.replace(
+                          paramToResolve,
+                          relativePathToFileFromWorkspaceRoot,
+                        );
                     }
                   }
 
@@ -540,10 +543,11 @@ export function executeCommand(
                     );
                     cmd = cmd.replace(paramToResolve, absolutePath);
                     if (options?.titleWhenProcessing) {
-                      options.titleWhenProcessing = options.titleWhenProcessing.replace(
-                        paramToResolve,
-                        relativePathToFileFromWorkspaceRoot,
-                      );
+                      options.titleWhenProcessing =
+                        options.titleWhenProcessing.replace(
+                          paramToResolve,
+                          relativePathToFileFromWorkspaceRoot,
+                        );
                     }
                   }
 
@@ -568,10 +572,11 @@ export function executeCommand(
                       relativePathToFileFromWorkspaceRoot,
                     );
                     if (options?.titleWhenProcessing) {
-                      options.titleWhenProcessing = options.titleWhenProcessing.replace(
-                        paramToResolve,
-                        relativePathToFileFromWorkspaceRoot,
-                      );
+                      options.titleWhenProcessing =
+                        options.titleWhenProcessing.replace(
+                          paramToResolve,
+                          relativePathToFileFromWorkspaceRoot,
+                        );
                     }
                   }
                   if (paramToResolve === '%relativePathDirname%') {
@@ -588,10 +593,11 @@ export function executeCommand(
                       ),
                     );
                     if (options?.titleWhenProcessing) {
-                      options.titleWhenProcessing = options.titleWhenProcessing.replace(
-                        paramToResolve,
-                        relativePathToFileFromWorkspaceRoot,
-                      );
+                      options.titleWhenProcessing =
+                        options.titleWhenProcessing.replace(
+                          paramToResolve,
+                          relativePathToFileFromWorkspaceRoot,
+                        );
                     }
                   }
                 }
@@ -616,10 +622,11 @@ export function executeCommand(
                       variableValueFinal,
                     );
                     if (options?.titleWhenProcessing) {
-                      options.titleWhenProcessing = options.titleWhenProcessing.replace(
-                        variableInsidPrecentSign,
-                        variableValueFinal,
-                      );
+                      options.titleWhenProcessing =
+                        options.titleWhenProcessing.replace(
+                          variableInsidPrecentSign,
+                          variableValueFinal,
+                        );
                     }
                   }
                 }
@@ -762,4 +769,5 @@ export function executeCommand(
     }
     //#endregion
   });
+  //#endregion
 }

@@ -1510,10 +1510,13 @@ export namespace UtilsQuickFixes {
   /**
    * for some reason electron is being bundled - and it is not needed for cli
    */
-  export const replaceElectronWithNothing = (jsContent: string): string => {
+  export const replaceElectronWithNothing = (
+    jsContent: string,
+    packageName: string,
+  ): string => {
     //#region @backendFunc
     return jsContent.replace(
-      `mod${'ule.exports'} = ${'requ' + 'ire'}("electron");`,
+      `mod${'ule.exports'} = ${'requ' + 'ire'}("${packageName}");`,
       '',
     );
     //#endregion

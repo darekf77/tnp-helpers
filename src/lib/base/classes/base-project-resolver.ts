@@ -35,9 +35,10 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
   ) {
     this.cliToolName = cliToolName;
     // console.log("global.frameworkName",global.frameworkName)
-    if (!this.cliToolName) {
-      Helpers.throw(`cliToolName is not provided`);
-    }
+    // if (!UtilsOs.isRunningInVscodeExtension()) {
+    // if (!this.cliToolName) {
+    //   Helpers.throw(`cliToolName is not provided`);
+    // }
     this.portsWorker = new PortsWorker(
       'ports-worker',
       `${this.cliToolName} startCliServicePortsWorker --skipCoreCheck`,
@@ -334,7 +335,9 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
       if (stack[projNameToCompare(project)]) {
         // Circular dependency detected
         Helpers.error(
-          `Circular dependency detected involving project: ${projNameToCompare(project)}`,
+          `Circular dependency detected involving project: ${projNameToCompare(
+            project,
+          )}`,
         );
       }
 

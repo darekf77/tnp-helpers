@@ -126,6 +126,7 @@ export class HelpersTaon extends CoreHelpers {
         copyToDestination?: (fileOrFolderAbsPath: string) => void;
       }) => string;
       additionalExternals?: string[];
+      additionalReplaceWithNothing?: string[];
       skipFixingSQLlite?: boolean;
       minify?: boolean;
     },
@@ -134,6 +135,7 @@ export class HelpersTaon extends CoreHelpers {
     let {
       beforeWrite,
       additionalExternals,
+      additionalReplaceWithNothing,
       skipFixingSQLlite,
       minify,
       strategy,
@@ -141,6 +143,11 @@ export class HelpersTaon extends CoreHelpers {
     if (!strategy) {
       strategy = 'cli';
     }
+
+    let replaceWithNothing = [
+      'electron',
+      ...(additionalReplaceWithNothing || []),
+    ];
 
     let externals = [
       'electron',
@@ -185,9 +192,20 @@ export class HelpersTaon extends CoreHelpers {
     if (!skipFixingSQLlite) {
       output = UtilsQuickFixes.replaceSQLliteFaultyCode(output);
     }
-    if (strategy !== 'electron-app') {
-      output = UtilsQuickFixes.replaceElectronWithNothing(output);
+
+    if (strategy === 'vscode-ext') {
+      replaceWithNothing.push('ts-node');
     }
+
+    if (strategy !== 'electron-app') {
+      replaceWithNothing = replaceWithNothing.filter(f => f !== 'electron');
+    }
+
+    replaceWithNothing.forEach(r => {
+      if (output) {
+        output = UtilsQuickFixes.replaceElectronWithNothing(output, r);
+      }
+    });
 
     if (_.isFunction(beforeWrite)) {
       output = await Helpers.runSyncOrAsync({
