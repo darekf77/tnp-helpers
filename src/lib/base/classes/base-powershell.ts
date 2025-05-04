@@ -8,6 +8,12 @@ export class BasePowerShellHelpers<
 > extends BaseFeatureForProject<PROJECT> {
   get properPowerShellConfigOhMyPosh() {
 
+    // "terminal.integrated.profiles.windows": {
+    //   "PowerShell Core": {
+    //     "path": "C:\\Users\\darek\\AppData\\Local\\Microsoft\\WindowsApps\\pwsh.exe"
+    //   }
+    // },
+
     // notepad $PROFILE
     //     `$env:PATH += ";${os.homedir()}\AppData\Local\Programs\oh-my-posh\bin"
     // oh-my-posh init pwsh --config "C:\Users\darek\AppData\Local\Programs\oh-my-posh\themes\jandedobbeleer.omp.json" | Invoke-Expression`

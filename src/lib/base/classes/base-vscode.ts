@@ -68,7 +68,7 @@ export class BaseVscodeHelpers<
       'natewallace.angular2-inline',
       'natqe.reload',
       'nemesv.copy-file-name',
-      'oven.bun-vscode',
+      // 'oven.bun-vscode', // errors in vscode cosole
       'qwtel.sqlite-viewer',
       'redhat.vscode-xml',
       'ritwickdey.create-file-folder',
@@ -434,6 +434,8 @@ export class BaseVscodeHelpers<
       'typescript.referencesCodeLens.enabled': true,
       'git.autoRepositoryDetection': false,
       // Whether auto fetching is enabled.
+      "github.copilot.search.enable": false,
+      "github.copilot.chat.search.semanticTextResults": false,
       'git.autofetch': false,
       'gitlens.keymap': 'none',
       'gitlens.advanced.messages': {
