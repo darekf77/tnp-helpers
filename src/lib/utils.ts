@@ -51,6 +51,7 @@ import {
   isEmptyStatement,
   isExpressionStatement,
   isPropertyDeclaration,
+  isMethodDeclaration,
 } from 'typescript';
 import type * as ts from 'typescript';
 
@@ -1353,7 +1354,11 @@ export namespace UtilsTypescript {
     return result;
   };
 
-  export function wrapContentClassFieldsDecoratorsWithRegion(
+  /**
+   * wrap class field with decorators
+   * wrap class methods with decorators
+   */
+  export function wrapContentClassMembersDecoratorsWithRegion(
     classFileContent: string,
     wrapTag = '@websql',
   ): string {
@@ -1378,7 +1383,7 @@ export namespace UtilsTypescript {
     const visit = (node: ts.Node) => {
       if (isClassDeclaration(node)) {
         for (const member of node.members) {
-          if (!isPropertyDeclaration(member)) continue;
+          if (!isPropertyDeclaration(member) && !isMethodDeclaration(member)) continue;
 
           const decorators = canHaveDecorators(member)
             ? getDecorators(member)
