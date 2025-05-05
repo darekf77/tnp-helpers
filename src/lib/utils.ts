@@ -50,6 +50,7 @@ import {
   isDecorator,
   isEmptyStatement,
   isExpressionStatement,
+  isPropertyDeclaration,
 } from 'typescript';
 import type * as ts from 'typescript';
 
@@ -1337,6 +1338,73 @@ export namespace UtilsTypescript {
     ].join('\n');
     //#endregion
   };
+  //#endregion
+
+  //#region wrap entities class fields with region
+  const applyEdits = (
+    original: string,
+    edits: { pos: number; text: string }[],
+  ): string => {
+    edits.sort((a, b) => b.pos - a.pos); // apply from end to start
+    let result = original;
+    for (const edit of edits) {
+      result = result.slice(0, edit.pos) + edit.text + result.slice(edit.pos);
+    }
+    return result;
+  };
+
+  export function wrapContentClassFieldsWithRegion(
+    classFileContent: string,
+    wrapTag = '@websql',
+  ): string {
+    //#region @backendFunc
+    const sourceFile = createSourceFile(
+      'temp.ts',
+      classFileContent,
+      ScriptTarget.Latest,
+      true,
+    );
+
+    const edits: { pos: number; text: string }[] = [];
+
+    const isAlreadyWrapped = (decorator: ts.Decorator): boolean => {
+      const text = decorator.getFullText(sourceFile);
+      return (
+        text.includes(`//#reg` + `ion ${wrapTag}`) ||
+        text.includes(`//#end` + `reg` + `ion`)
+      );
+    };
+
+    const visit = (node: ts.Node) => {
+      if (isClassDeclaration(node)) {
+        for (const member of node.members) {
+          if (!isPropertyDeclaration(member)) continue;
+
+          const decorators = canHaveDecorators(member)
+            ? getDecorators(member)
+            : undefined;
+
+          if (!decorators || decorators.length === 0) continue;
+
+          for (const decorator of decorators) {
+            if (isAlreadyWrapped(decorator)) continue;
+
+            const start = decorator.getStart();
+            const end = decorator.getEnd();
+
+            edits.push({ pos: start, text: `\n//#reg` + `ion ${wrapTag}\n` });
+            edits.push({ pos: end, text: `\n//#end` + `reg` + `ion` }); // No extra newline
+          }
+        }
+      }
+
+      forEachChild(node, visit);
+    };
+
+    visit(sourceFile);
+    return applyEdits(classFileContent, edits);
+    //#endregion
+  }
   //#endregion
 }
 
