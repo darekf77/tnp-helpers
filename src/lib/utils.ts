@@ -1353,7 +1353,7 @@ export namespace UtilsTypescript {
     return result;
   };
 
-  export function wrapContentClassFieldsWithRegion(
+  export function wrapContentClassFieldsDecoratorsWithRegion(
     classFileContent: string,
     wrapTag = '@websql',
   ): string {
