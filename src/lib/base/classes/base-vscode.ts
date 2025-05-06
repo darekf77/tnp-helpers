@@ -400,6 +400,11 @@ export class BaseVscodeHelpers<
 
     //#region global / windows only settings
     const windowsSettings = {
+      'terminal.integrated.profiles.windows': {
+        'PowerShell Core': {
+          path: `C:\\Users\\${os.userInfo().username}\\AppData\\Local\\Microsoft\\WindowsApps\\pwsh.exe`,
+        },
+      },
       'terminal.integrated.defaultProfile.windows': 'Git Bash',
       'terminal.integrated.shellArgs.windows': ['--login'],
       'window.customMenuBarAltFocus': false,
@@ -434,8 +439,8 @@ export class BaseVscodeHelpers<
       'typescript.referencesCodeLens.enabled': true,
       'git.autoRepositoryDetection': false,
       // Whether auto fetching is enabled.
-      "github.copilot.search.enable": false,
-      "github.copilot.chat.search.semanticTextResults": false,
+      'github.copilot.search.enable': false,
+      'github.copilot.chat.search.semanticTextResults': false,
       'git.autofetch': false,
       'gitlens.keymap': 'none',
       'gitlens.advanced.messages': {
@@ -526,9 +531,9 @@ export class BaseVscodeHelpers<
         'Initing',
       ],
       'cSpell.diagnosticLevel': 'Hint',
-      "cSpell.enabledNotifications": {
-        "Maximum Word Length Exceeded": false
-      }
+      'cSpell.enabledNotifications': {
+        'Maximum Word Length Exceeded': false,
+      },
     };
     //#endregion
 

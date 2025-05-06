@@ -1100,7 +1100,8 @@ Please provide proper commit message for lastest changes in your project:
 
         Please provide more specific commit message than branch name
         or maybe you forgot ?
-        TEAM ID? (example TEAM2# <= hash at the end)
+        - TEAM ID? (example TEAM2# <= hash at the end)
+        - JIRA ISSUE? (example JIRA-1234)
 
         `,
           false,
