@@ -295,6 +295,10 @@ export class BaseGlobalCommandLine<
   //#endregion
 
   //#region commands / pull
+  async pul() {
+    await this.pull();
+  }
+  
   async pull() {
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
