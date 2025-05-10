@@ -1590,7 +1590,7 @@ export namespace UtilsQuickFixes {
     //#region @backendFunc
     return jsContent.replace(
       `mod${'ule.exports'} = ${'requ' + 'ire'}("${packageName}");`,
-      '',
+      `/* --- replaced ${packageName} --- */`,
     );
     //#endregion
   };

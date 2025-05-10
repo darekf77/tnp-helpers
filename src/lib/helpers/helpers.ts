@@ -144,23 +144,41 @@ export class HelpersTaon extends CoreHelpers {
       strategy = 'cli';
     }
 
-    let replaceWithNothing = [
-      'electron',
-      ...(additionalReplaceWithNothing || []),
-    ];
+    Helpers.info(`Bundling (strategy = ${strategy})
+       ${pathToJsFile}
+       to
+        ${outputFilePath}
+       `);
+
+    let replaceWithNothing = [...(additionalReplaceWithNothing || [])];
 
     let externals = [
       'electron',
       'vscode',
       'ts-node',
       // 'webpack',
-      'typescript',
+      // 'typescript',
       ...(additionalExternals || []),
     ];
+
+    Helpers.logInfo(`Externals for bundle: ${externals.join(',')}`);
+    // if (strategy === 'vscode-ext') {
+    //   // typescript is needed/bundle with vscode extension
+    //   externals = externals.filter(f => f !== 'typescript');
+    // }
+
     if (strategy === 'vscode-ext') {
-      // typescript is needed/bundle with vscode extension
-      externals = externals.filter(f => f !== 'typescript');
+      replaceWithNothing.push('ts-node');
     }
+
+    if (strategy !== 'electron-app') {
+      replaceWithNothing.push('electron');
+    }
+
+    Helpers.logInfo(
+      `Replace with 'nothing' in destination bundle: ${replaceWithNothing.join(',')}`,
+    );
+
 
     Helpers.taskStarted(`Bundling node_modules for file: ${pathToJsFile}`);
     // debugger
@@ -191,14 +209,6 @@ export class HelpersTaon extends CoreHelpers {
     let output = data.code;
     if (!skipFixingSQLlite) {
       output = UtilsQuickFixes.replaceSQLliteFaultyCode(output);
-    }
-
-    if (strategy === 'vscode-ext') {
-      replaceWithNothing.push('ts-node');
-    }
-
-    if (strategy !== 'electron-app') {
-      replaceWithNothing = replaceWithNothing.filter(f => f !== 'electron');
     }
 
     replaceWithNothing.forEach(r => {
