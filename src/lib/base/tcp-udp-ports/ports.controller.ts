@@ -119,6 +119,7 @@ export class PortsController extends BaseCliWorkerController {
       const oldServiceId = port.serviceId;
       port.status = 'unassigned';
       port.serviceId = Port.getTitleForFreePort(port.port);
+
       await repoPort.update(
         {
           port: portNumber,

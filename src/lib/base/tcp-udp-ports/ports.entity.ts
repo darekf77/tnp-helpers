@@ -19,7 +19,7 @@ export const PortStatusArr: PortStatus[] = [
   uniqueKeyProp: 'port',
 })
 export class Port extends Taon.Base.Entity {
-  static from(opt: Omit<Port, 'version' | '_' | 'clone' | 'titleOnList'>) {
+  static from(opt: Omit<Port, 'version' | '_' | 'clone' | 'titleOnList' | 'relation'| 'relations'>) {
     return _.merge(new Port(), opt);
   }
 
