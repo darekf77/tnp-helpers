@@ -298,7 +298,7 @@ export class BaseGlobalCommandLine<
   async pul() {
     await this.pull();
   }
-  
+
   async pull() {
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
@@ -1656,4 +1656,10 @@ Would you like to update current project configuration?`)
     this._exit();
   }
   //#endregion
+
+  removeSymlinksDryRun() {
+    Helpers.removeSymlinks(this.project.nodeModules.path, {
+      dryRun: true,
+    });
+  }
 }

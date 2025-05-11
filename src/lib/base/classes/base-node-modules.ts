@@ -140,6 +140,7 @@ export class BaseNodeModules<
         `You are about delete ${config.folder.node_modules} (Yes -> continue, No -> skip action) ?`,
       ))
     ) {
+      Helpers.removeSymlinks(this.path);
       Helpers.remove(this.path, true);
     }
     //#endregion
