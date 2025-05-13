@@ -56,8 +56,9 @@ export class BaseNodeModules<
    * Path to package inside node_modules folder
    * @example <project-path>/node_modules/<package-name>
    */
-  pathFor(packageName: string): string {
+  pathFor(packageName: string | string[]): string {
     //#region @backendFunc
+    packageName = crossPlatformPath(packageName);
     return crossPlatformPath([this.realPath, packageName]);
     //#endregion
   }
