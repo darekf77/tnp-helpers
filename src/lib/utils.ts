@@ -455,8 +455,9 @@ export namespace UtilsTypescript {
   //#endregion
 
   //#region format file(s) with prettier
-  export const formatFile = (absPathToFile: string): void => {
+  export const formatFile = (absPathToFile: string | string []): void => {
     //#region @backendFunc
+    absPathToFile = crossPlatformPath(absPathToFile);
     if (Helpers.exists(absPathToFile)) {
       const { execSync } = require('child_process');
       Helpers.logInfo(`Formatting file: ${absPathToFile}`);
