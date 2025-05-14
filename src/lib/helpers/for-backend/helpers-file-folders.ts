@@ -1,4 +1,5 @@
 import * as crypto from 'crypto';
+import { promisify } from 'util';
 
 import type { CopyOptionsSync } from 'fs-extra';
 import * as glob from 'glob';
@@ -11,6 +12,7 @@ import {
   rimraf,
   crossPlatformPath,
   json5,
+  child_process,
 } from 'tnp-core/src';
 import * as underscore from 'underscore';
 
@@ -86,7 +88,11 @@ export class HelpersFileFolders {
     //#endregion
   }
 
-  setValueToJSON(filepath: string | string[], lodashGetPath: string, value: any): void {
+  setValueToJSON(
+    filepath: string | string[],
+    lodashGetPath: string,
+    value: any,
+  ): void {
     //#region @backendFunc
     if (_.isArray(filepath)) {
       filepath = crossPlatformPath(filepath);
@@ -770,6 +776,51 @@ to: ${to}
         return !exceptFolderAndFiles.includes(path.basename(f));
       })
       .forEach(af => Helpers.removeFileIfExists(af));
+    //#endregion
+  }
+
+  /**
+   * Copy folder using os native command
+   * (perfect for large folders/files)
+   */
+  async copyFolderOsNative(from: string, to: string, options?: {
+    removeDestination?: boolean;
+  }): Promise<void> {
+    //#region @backendFunc
+    options = options || {};
+    if(options.removeDestination) {
+      Helpers.removeSymlinks(to);
+      Helpers.remove(to,true);
+    }
+    const isWin = os.platform() === 'win32';
+
+    const escape = (p: string) =>
+      isWin ? `"${p.replace(/\//g, '\\')}"` : `"${p}"`;
+
+    const fromEscaped = escape(from);
+    const toEscaped = escape(to);
+
+    let command: string;
+
+    if (isWin) {
+      // robocopy returns code 1 for successful copy, so we ignore non-zero exit code
+      // /E = copy all including empty folders
+      // /NFL /NDL /NJH /NJS /NC /NS = reduce console noise
+      command = `robocopy ${fromEscaped} ${toEscaped} /E /NFL /NDL /NJH /NJS /NC /NS`;
+    } else {
+      // -R = recursive, -p = preserve permissions
+      command = `cp -Rp ${fromEscaped} ${toEscaped}`;
+    }
+    const execAsync = promisify(child_process.exec);
+    try {
+      const { stdout, stderr } = await execAsync(command);
+      if (stdout) console.log(stdout);
+      if (stderr) console.error(stderr);
+    } catch (err: any) {
+      // robocopy returns non-zero even on success (code 1 = OK), so we allow that
+      if (isWin && err.code === 1) return;
+      throw new Error(`Failed to copy folder: ${err.message}`);
+    }
     //#endregion
   }
 
