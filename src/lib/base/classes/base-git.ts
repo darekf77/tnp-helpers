@@ -669,6 +669,10 @@ Please provide proper commit message for lastest changes in your project:
   }
   //#endregion
 
+  allowedGitEmailDomains(): string[] {
+    return [];
+  }
+
   cleanRepoFromAnyFilesExceptDotGitFolder(): void {
     //#region @backendFunc
     return Helpers.git.cleanRepoFromAnyFilesExceptDotGitFolder(
@@ -961,8 +965,92 @@ Please provide proper commit message for lastest changes in your project:
   }
   //#endregion
 
+  private async validateEmailDomain(
+    allowedEmailsEnds: string[],
+  ): Promise<void> {
+    //#region @backendFunc
+    while (true) {
+      let gitConfig: { name?: string; email?: string } = null;
+      try {
+        gitConfig = await this.project.git.getUserInfo();
+      } catch (error) {
+
+      }
+      const errorsMgs = {
+        notUsingEmail: `You are not using any email(s) address(es) for git operations.`,
+        notUsingName: `You are not using name for git operations`,
+        notUsingEmailAndName: `You are not using any email(s) address(es) for git operations.`,
+        notUsingAllowedEmails: `You are not using allowed ${allowedEmailsEnds.join(',')} email domains.`
+      };
+      const errors = {
+        notUsingEmail: !gitConfig?.email ? errorsMgs.notUsingEmail : null,
+        notUsingName: !gitConfig?.name ? errorsMgs.notUsingName : null,
+        notUsingAllowedEmails: !allowedEmailsEnds.some(allowedEmailEnd =>
+          gitConfig.email.endsWith(allowedEmailEnd),
+        ) ? errorsMgs.notUsingAllowedEmails : null
+      }
+
+      if(allowedEmailsEnds.length === 0) {
+        delete errors.notUsingAllowedEmails;
+      }
+
+      if(!Object.values(errors).some(e => e)) {
+        return;
+      }
+
+      Object.values(errors).filter(e => e).forEach(e => {
+        Helpers.warn(e);
+      });
+
+      Helpers.warn(
+        `
+        Please provide proper email and name for git operations.
+
+        `,
+      );
+
+      const options = {
+        changeLocalEmailAndName: {
+          name: 'Change local .git/config email and name',
+        },
+        useItAnyway: {
+          name: 'Use it anyway',
+        },
+        exitProcess: {
+          name: 'Exit process',
+        },
+      };
+
+      if(!gitConfig?.email || !gitConfig?.name) {
+        delete options.useItAnyway;
+      }
+
+      const selected = await UtilsTerminal.select<keyof typeof options>({
+        question: 'Select action',
+        choices: options,
+      });
+      if (selected === 'changeLocalEmailAndName') {
+
+        const email = await UtilsTerminal.input({
+          question: 'Enter git email',
+        });
+
+        const name = await UtilsTerminal.input({
+          question: 'Enter your git name and surname (or just name)',
+        });
+        await this.project.git.setUserInfo({ email, name });
+      }
+
+      if (selected === 'exitProcess') {
+        process.exit(0);
+      }
+    }
+
+    //#endregion
+  }
+
   protected async _afterPullProcessAction(
-    setOrigin: 'ssh' | 'http'
+    setOrigin: 'ssh' | 'http',
   ): Promise<void> {
     // nothing yet
   }
@@ -1343,10 +1431,12 @@ Please provide proper commit message for lastest changes in your project:
         this.project.git.commit('first commit ');
       }
     }
+
     await this.project.linkedProjects.cloneUnexistedLinkedProjects(
       'push',
       setOrigin,
     );
+    await this.validateEmailDomain(this.allowedGitEmailDomains());
     //#endregion
   }
   //#endregion
