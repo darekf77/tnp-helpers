@@ -363,6 +363,9 @@ Please provide proper commit message for lastest changes in your project:
           discard: {
             name: `Discard all changes`,
           },
+          discardAndPush: {
+            name: `Discard all changes and ${hadMeltedActionCommits ? 'force ' : ''}push`,
+          },
           commitAsChoreUpdateAndPush: {
             name: `Commit as "chore: update" and ${hadMeltedActionCommits ? 'force ' : ''}push`,
           },
@@ -400,6 +403,16 @@ Please provide proper commit message for lastest changes in your project:
         //   await automaticAction();
         // }
         if (selected === 'skip') {
+          return;
+        }
+        if (selected === 'discardAndPush') {
+          try {
+            this.project.git.resetHard({ HEAD: 0 });
+          } catch (error) {}
+          await this.project.git.pushCurrentBranch({
+            askToRetry: true,
+            force: hadMeltedActionCommits,
+          });
           return;
         }
         if (selected === 'discard') {
@@ -973,34 +986,36 @@ Please provide proper commit message for lastest changes in your project:
       let gitConfig: { name?: string; email?: string } = null;
       try {
         gitConfig = await this.project.git.getUserInfo();
-      } catch (error) {
-
-      }
+      } catch (error) {}
       const errorsMgs = {
         notUsingEmail: `You are not using any email(s) address(es) for git operations.`,
         notUsingName: `You are not using name for git operations`,
         notUsingEmailAndName: `You are not using any email(s) address(es) for git operations.`,
-        notUsingAllowedEmails: `You are not using allowed ${allowedEmailsEnds.join(',')} email domains.`
+        notUsingAllowedEmails: `You are not using allowed ${allowedEmailsEnds.join(',')} email domains.`,
       };
       const errors = {
         notUsingEmail: !gitConfig?.email ? errorsMgs.notUsingEmail : null,
         notUsingName: !gitConfig?.name ? errorsMgs.notUsingName : null,
         notUsingAllowedEmails: !allowedEmailsEnds.some(allowedEmailEnd =>
           gitConfig.email.endsWith(allowedEmailEnd),
-        ) ? errorsMgs.notUsingAllowedEmails : null
-      }
+        )
+          ? errorsMgs.notUsingAllowedEmails
+          : null,
+      };
 
-      if(allowedEmailsEnds.length === 0) {
+      if (allowedEmailsEnds.length === 0) {
         delete errors.notUsingAllowedEmails;
       }
 
-      if(!Object.values(errors).some(e => e)) {
+      if (!Object.values(errors).some(e => e)) {
         return;
       }
 
-      Object.values(errors).filter(e => e).forEach(e => {
-        Helpers.warn(e);
-      });
+      Object.values(errors)
+        .filter(e => e)
+        .forEach(e => {
+          Helpers.warn(e);
+        });
 
       Helpers.warn(
         `
@@ -1021,7 +1036,7 @@ Please provide proper commit message for lastest changes in your project:
         },
       };
 
-      if(!gitConfig?.email || !gitConfig?.name) {
+      if (!gitConfig?.email || !gitConfig?.name) {
         delete options.useItAnyway;
       }
 
@@ -1030,7 +1045,6 @@ Please provide proper commit message for lastest changes in your project:
         choices: options,
       });
       if (selected === 'changeLocalEmailAndName') {
-
         const email = await UtilsTerminal.input({
           question: 'Enter git email',
         });
