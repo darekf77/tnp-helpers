@@ -102,7 +102,6 @@ export class BaseNodeModules<
     const source = this.realPath;
     let dest = project.pathFor(config.folder.node_modules);
     dest = this.preventWrongLinkDestination(dest);
-    Helpers.remove(dest, true);
     Helpers.createSymLink(source, dest, {
       continueWhenExistedFolderDoesntExists: true,
     });
@@ -236,6 +235,21 @@ export class BaseNodeModules<
     return Helpers.isSymlinkFileExitedOrUnexisted(this.path);
   }
   //#endregion
+
+  unlinkNodeModulesWhenLinked() {
+    //#region @backendFunc
+    if (this.isLink) {
+      try {
+        Helpers.info(
+          `Unlinking incorrect node_modules link from ${path.basename(this.cwd)}`,
+        );
+        fse.unlinkSync(this.path);
+      } catch (error) {
+
+      }
+    }
+    //#endregion
+  }
 
   //#region empty
   get empty() {
