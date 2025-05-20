@@ -98,6 +98,7 @@ export class BaseVscodeHelpers<
       'DavidAnson.vscode-markdownlint',
       'bibhasdn.unique-lines',
       'streetsidesoftware.code-spell-checker',
+      'tshino.kb-macro', // nice macros
       // 'usernamehw.errorlens', nice extension.. but to much input at once
 
       // 'pranaygp.vscode-css-peek', // high cpu usage
@@ -307,6 +308,38 @@ export class BaseVscodeHelpers<
         key: 'shift+alt+d',
         command: 'eslint.executeAutofix',
       },
+      //#region macros start stop replay
+      {
+        key: 'ctrl+oem_1',
+        command: 'kb-macro.startRecording',
+        when: "!kb-macro.recording && config.keyboardMacro.recordingShortcuts == 'Option1'",
+      },
+      {
+        key: 'ctrl+alt+r',
+        command: '-kb-macro.startRecording',
+        when: "!kb-macro.recording && config.keyboardMacro.recordingShortcuts == 'Option1'",
+      },
+      {
+        key: 'ctrl+oem_1',
+        command: 'kb-macro.finishRecording',
+        when: "kb-macro.recording && config.keyboardMacro.recordingShortcuts == 'Option1'",
+      },
+      {
+        key: 'ctrl+alt+r',
+        command: '-kb-macro.finishRecording',
+        when: "kb-macro.recording && config.keyboardMacro.recordingShortcuts == 'Option1'",
+      },
+      {
+        key: 'ctrl+shift+oem_1',
+        command: 'kb-macro.playback',
+        when: "!kb-macro.recording && config.keyboardMacro.recordingShortcuts == 'Option1'",
+      },
+      {
+        key: 'ctrl+alt+p',
+        command: '-kb-macro.playback',
+        when: "!kb-macro.recording && config.keyboardMacro.recordingShortcuts == 'Option1'",
+      },
+      //#endregion
     ];
 
     //#region global / keybindings macos
