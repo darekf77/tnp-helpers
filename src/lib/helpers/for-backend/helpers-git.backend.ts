@@ -661,7 +661,7 @@ export class HelpersGit {
   //#endregion
 
   //#region get current branch name
-  currentBranchName(cwd) {
+  currentBranchName(cwd: string): string | undefined {
     Helpers.log('[taon-helpers][currentBranchName] ' + cwd, 1);
     try {
       const branchName = child_process
@@ -670,13 +670,13 @@ export class HelpersGit {
         .trim();
       return branchName;
     } catch (e) {
-      Helpers.error(e);
+      return void 0;
     }
   }
   //#endregion
 
   //#region commit "what is"
-  stageAllAndCommit(cwd: string, commitMessage?: string) {
+  stageAllAndCommit(cwd: string, commitMessage?: string): void {
     this.stageAllFiles(cwd);
     this.commit(cwd, commitMessage);
   }

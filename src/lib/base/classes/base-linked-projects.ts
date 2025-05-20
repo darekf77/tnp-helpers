@@ -222,7 +222,7 @@ export class BaseLinkedProjects<
     const orgExistedConfig = _.cloneDeep(existedConfig);
     // console.log({ existedConfig });
     let linkedPorjectsConfig = LinkedPorjectsConfig.from(existedConfig);
-    const currentRemoteUrl = this.project.git.originURL;
+    const currentRemoteUrl = this.project.git.originURL || '';
     const currentBranch = this.project.git.currentBranchName;
 
     linkedPorjectsConfig.projects = (linkedPorjectsConfig.projects || []).map(
