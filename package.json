@@ -1,6 +1,6 @@
 {
   "name": "tnp-helpers",
-  "version": "19.0.14",
+  "version": "19.0.15",
   "scripts": {
     "docs": "python3 -m mkdocs",
     "mkdocs": "python3 -m mkdocs"
@@ -332,5 +332,6 @@
     "zone.js": "~0.13.0"
   },
   "description": "",
+  "main": "dist/app.electron.js",
   "bin": {}
 }
