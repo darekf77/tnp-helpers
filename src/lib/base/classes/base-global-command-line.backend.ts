@@ -316,7 +316,6 @@ export class BaseGlobalCommandLine<
       return;
     }
     await this.project.git.pullProcess({
-      cloneChildren: true,
       setOrigin: this.params['setOrigin'],
     });
     this._exit();

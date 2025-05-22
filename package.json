@@ -3,24 +3,7 @@
   "version": "19.0.17",
   "scripts": {
     "docs": "python3 -m mkdocs",
-    "mkdocs": "python3 -m mkdocs",
-    "taon init": "taon init",
-    "taon start": "taon start",
-    "taon build:lib": "taon build:lib",
-    "taon build:watch:lib": "taon build:watch:lib",
-    "taon build:watch:app": "taon build:watch:app",
-    "taon build:watch:electron": "taon build:watch:electron",
-    "taon docs": "taon docs",
-    "taon docs:watch": "taon docs:watch",
-    "taon clear": "taon clear",
-    "taon release": "taon release",
-    "taon release:auto": "taon release:auto",
-    "taon release:install:locally": "taon release:install:locally",
-    "taon migration:create": "taon migration:create",
-    "taon migration:run": "taon migration:run",
-    "taon migration:revert": "taon migration:revert",
-    "taon vscode:temp:show": "taon vscode:temp:show",
-    "taon vscode:temp:hide": "taon vscode:temp:hide"
+    "mkdocs": "python3 -m mkdocs"
   },
   "license": "MIT",
   "author": "",
@@ -79,6 +62,7 @@
     "@ngx-formly/material": "~6.3.12",
     "@ngx-translate/core": "~16.0.4",
     "@ngx-translate/http-loader": "~16.0.1",
+    "@nut-tree-fork/nut-js": "4.2.6",
     "@primeng/themes": "~19.1.2",
     "@semantic-components/re-captcha": "0.34.0",
     "@sqltools/formatter": "~1.2.5",
@@ -349,6 +333,5 @@
     "zone.js": "~0.13.0"
   },
   "description": "",
-  "main": "dist/app.electron.js",
   "bin": {}
 }

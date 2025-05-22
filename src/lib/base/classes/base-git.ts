@@ -935,16 +935,16 @@ Please provide proper commit message for lastest changes in your project:
   //#region methods & getters / push process
   async pullProcess(
     options: {
-      cloneChildren?: boolean;
+      skipCloneGitChildren?: boolean;
       setOrigin?: 'ssh' | 'http';
     } = {},
   ): Promise<void> {
     //#region @backendFunc
     options = options || {};
-    options.cloneChildren = !!options.cloneChildren;
-    let { cloneChildren, setOrigin } = options;
+    options.skipCloneGitChildren = !!options.skipCloneGitChildren;
+    let { skipCloneGitChildren, setOrigin } = options;
 
-    await this._beforePullProcessAction(setOrigin, cloneChildren);
+    await this._beforePullProcessAction(setOrigin, skipCloneGitChildren);
 
     await this.setRemoteOriginType(setOrigin);
 
@@ -968,7 +968,7 @@ Please provide proper commit message for lastest changes in your project:
     this.project.ins.add(this.project.ins.From(location) as any);
     await this.project.linkedProjects.saveLocationToDB();
 
-    if (this.automaticallyAddAllChangesWhenPushingToGit() || cloneChildren) {
+    if (this.automaticallyAddAllChangesWhenPushingToGit()) {
       for (const child of this.gitChildren) {
         await child.git.pullProcess(options);
       }
@@ -1446,10 +1446,6 @@ Please provide proper commit message for lastest changes in your project:
       }
     }
 
-    await this.project.linkedProjects.cloneUnexistedLinkedProjects(
-      'push',
-      setOrigin,
-    );
     await this.validateEmailDomain(this.allowedGitEmailDomains());
     //#endregion
   }
@@ -1458,15 +1454,14 @@ Please provide proper commit message for lastest changes in your project:
   //#region methods & getters / before push action
   protected async _beforePullProcessAction(
     setOrigin: 'ssh' | 'http',
-    cloneChildren = false,
+    skipCloneGitChildren = false,
   ) {
     //#region @backendFunc
     this._beforeAnyActionOnGitRoot();
-    await this.project.linkedProjects.cloneUnexistedLinkedProjects(
-      'pull',
-      setOrigin,
-      cloneChildren,
-    );
+    if (!skipCloneGitChildren) {
+      await this.project.linkedProjects.cloneUnexistedLinkedProjects(setOrigin);
+    }
+
     //#endregion
   }
   //#endregion

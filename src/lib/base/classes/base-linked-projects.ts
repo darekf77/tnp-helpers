@@ -293,64 +293,44 @@ export class BaseLinkedProjects<
 
   //#region getters & methods / get unexisted projects
   async cloneUnexistedLinkedProjects(
-    actionType: 'pull' | 'push',
     setOrigin: 'ssh' | 'http',
-    cloneChildren = false,
   ) {
     //#region @backendFunc
-    if (
-      actionType === 'push' &&
-      this.project.git.automaticallyAddAllChangesWhenPushingToGit()
-    ) {
-      return;
-    }
-
-    // Helpers.taskStarted(`Checking linked projects in ${this.genericName}`);
     const detectedLinkedProjects = this.detectedLinkedProjects;
 
-    // console.log({ detectedLinkedProjects })
-    // for (const detectedLinkedProject of detectedLinkedProjects) {
-    //   if (this.linkedProjects.find(f => f.relativeClonePath === detectedLinkedProject.relativeClonePath)) {
-    //     continue;
-    //   }
-    //   if (await Helpers.questionYesNo(`Do you want to remove unexisted linked project  ${detectedLinkedProject.relativeClonePath} ?`)) {
-    //     Helpers.taskStarted(`Removing unexisted project ${detectedLinkedProject.relativeClonePath}`);
-    //     Helpers.removeFolderIfExists(this.pathFor(detectedLinkedProject.relativeClonePath));
-    //     Helpers.taskDone(`Removed unexisted project ${detectedLinkedProject.relativeClonePath}`);
-    //   }
-    // }
-    // Helpers.taskDone(`Checking linked projects done in ${this.genericName}`);
+    if (!this.project.isMonorepo) {
+      const projectsThatShouldBeLinked = this.linkedProjects
+        .map(linkedProj => {
+          return detectedLinkedProjects.find(
+            f => f.relativeClonePath === linkedProj.relativeClonePath,
+          )
+            ? void 0
+            : linkedProj;
+        })
+        .filter(f => !!f) as LinkedProject[];
 
-    const projectsThatShouldBeLinked = this.linkedProjects
-      .map(linkedProj => {
-        return detectedLinkedProjects.find(
-          f => f.relativeClonePath === linkedProj.relativeClonePath,
-        )
-          ? void 0
-          : linkedProj;
-      })
-      .filter(f => !!f) as LinkedProject[];
+      if (projectsThatShouldBeLinked.length > 0) {
+        Helpers.info(`
+  
+  ${projectsThatShouldBeLinked
+    .map(
+      (p, index) =>
+        `- ${index + 1}. ${chalk.bold(p.relativeClonePath)} ` +
+        `${p.remoteUrlTransformed(setOrigin)} ` +
+        `${p.purpose ? `{ purpose: ${p.purpose} }` : ''}`,
+    )
+    .join('\n')}
+  
+        `);
 
-    if (projectsThatShouldBeLinked.length > 0) {
-      Helpers.info(`
+        if (projectsThatShouldBeLinked.length === 0) {
+          return;
+        }
 
-${projectsThatShouldBeLinked
-  .map(
-    (p, index) =>
-      `- ${index + 1}. ${chalk.bold(p.relativeClonePath)} ` +
-      `${p.remoteUrlTransformed(setOrigin)} ` +
-      `{${p.purpose ? ` purpose: ${p.purpose} }` : ''}`,
-  )
-  .join('\n')}
-
-      `);
-
-      if (!this.project.isMonorepo) {
         if (
-          cloneChildren ||
-          (await Helpers.questionYesNo(
+          await Helpers.questionYesNo(
             `Do you want to clone above (missing) linked projects ?`,
-          ))
+          )
         ) {
           for (const linkedProj of projectsThatShouldBeLinked) {
             // console.log({linkedProj})
