@@ -312,7 +312,7 @@ export class BaseLinkedProjects<
       if (projectsThatShouldBeLinked.length > 0) {
         Helpers.info(`
   
-  ${projectsThatShouldBeLinked
+${projectsThatShouldBeLinked
     .map(
       (p, index) =>
         `- ${index + 1}. ${chalk.bold(p.relativeClonePath)} ` +
