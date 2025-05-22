@@ -176,7 +176,9 @@ export class BaseNodeModules<
       `,
     );
     while (true) {
-      await this.remove({ skipQuestion: true });
+      if (!options.skipRemovingNodeModules) {
+        await this.remove({ skipQuestion: true });
+      }
       // TODO @LAST - use method makeSureNodeModulesInstalled()
       try {
         Helpers.run(await this.prepareCommand(options, this.cwd), {
@@ -244,9 +246,7 @@ export class BaseNodeModules<
           `Unlinking incorrect node_modules link from ${path.basename(this.cwd)}`,
         );
         fse.unlinkSync(this.path);
-      } catch (error) {
-
-      }
+      } catch (error) {}
     }
     //#endregion
   }
@@ -416,7 +416,9 @@ export class BaseNodeModules<
         excludeFrom = entry.excludeFrom || [];
         includeOnlyIn = entry.includeOnlyIn || [];
       }
-      packageNameForDuplicationRemoval = crossPlatformPath(packageNameForDuplicationRemoval);
+      packageNameForDuplicationRemoval = crossPlatformPath(
+        packageNameForDuplicationRemoval,
+      );
 
       Helpers.info(
         `[${config.frameworkName}] Checking npm duplicates of ${packageNameForDuplicationRemoval}`,
@@ -496,7 +498,9 @@ export class BaseNodeModules<
         }
 
         if (countOnly) {
-          Helpers.info(`Found duplicate ${packageNameForDuplicationRemoval} in ${parentRealName}`);
+          Helpers.info(
+            `Found duplicate ${packageNameForDuplicationRemoval} in ${parentRealName}`,
+          );
         } else {
           Helpers.remove(duplicatePath, true);
           Helpers.warn(
