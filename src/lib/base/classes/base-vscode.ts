@@ -15,6 +15,11 @@ import type { BaseProject } from './base-project';
 
 export interface ISettingsVscode {
   'workbench.colorTheme': string;
+  "workbench.colorCustomizations": {
+    "activityBar.background": string;
+    "statusBar.background": string;
+    "statusBar.debuggingBackground": string;
+  }
 }
 
 export class BaseVscodeHelpers<
