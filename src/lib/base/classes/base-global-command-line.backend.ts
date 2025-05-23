@@ -1000,14 +1000,23 @@ ${lastCommitMessage}
 
   //#region commands / set origin
   async SET_ORIGIN() {
-    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
-      return;
+    let newOriginNameOrUrl: string = this.firstArg;
+    if (newOriginNameOrUrl === 'ssh') {
+      newOriginNameOrUrl = Helpers.git.originHttpToSsh(
+        Helpers.git.getOriginURL(this.cwd),
+      );
     }
-    const newOriginNameOrUrl: string = this.firstArg;
-    const proj = this.project;
-    if (proj && proj.git.isInsideGitRepo) {
-      proj.run(`git remote rm origin`).sync();
-      proj.run(`git remote add origin ${newOriginNameOrUrl} `).sync();
+    if (newOriginNameOrUrl === 'http') {
+      newOriginNameOrUrl = Helpers.git.originSshToHttp(
+        Helpers.git.getOriginURL(this.cwd),
+      );
+    }
+
+    if (Helpers.git.isInsideGitRepo(this.cwd)) {
+      Helpers.run(`git remote rm origin`, { cwd: this.cwd }).sync();
+      Helpers.run(`git remote add origin ${newOriginNameOrUrl} `, {
+        cwd: this.cwd,
+      }).sync();
       Helpers.info(`Done`);
     } else {
       Helpers.error(`This folder is not a git repo... `, false, true);
