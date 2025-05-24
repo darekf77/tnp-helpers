@@ -1411,6 +1411,14 @@ export namespace UtilsTypescript {
     //#endregion
   }
   //#endregion
+
+  export type DeepWritable<T> = {
+    -readonly [P in keyof T]: T[P] extends object
+      ? T[P] extends Function
+        ? T[P]
+        : DeepWritable<T[P]>
+      : T[P];
+  };
 }
 
 //#endregion
