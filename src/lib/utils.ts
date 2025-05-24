@@ -455,7 +455,7 @@ export namespace UtilsTypescript {
   //#endregion
 
   //#region format file(s) with prettier
-  export const formatFile = (absPathToFile: string | string []): void => {
+  export const formatFile = (absPathToFile: string | string[]): void => {
     //#region @backendFunc
     absPathToFile = crossPlatformPath(absPathToFile);
     if (Helpers.exists(absPathToFile)) {
@@ -1382,7 +1382,8 @@ export namespace UtilsTypescript {
     const visit = (node: ts.Node) => {
       if (isClassDeclaration(node)) {
         for (const member of node.members) {
-          if (!isPropertyDeclaration(member) && !isMethodDeclaration(member)) continue;
+          if (!isPropertyDeclaration(member) && !isMethodDeclaration(member))
+            continue;
 
           const decorators = canHaveDecorators(member)
             ? getDecorators(member)
@@ -1594,4 +1595,74 @@ export namespace UtilsQuickFixes {
     //#endregion
   };
 }
+//#endregion
+
+//#region utils vscode
+export namespace UtilsVSCode {
+  export const calculateContrastingHexColor = (hex: string): string => {
+    // Normalize shorthand format like "#abc" → "#aabbcc"
+    if (hex.length === 4) {
+      hex =
+        '#' +
+        hex
+          .slice(1)
+          .split('')
+          .map(ch => ch + ch)
+          .join('');
+    }
+
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+
+    // YIQ contrast formula
+    const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+
+    return yiq >= 128 ? '#000000' : '#ffffff';
+  };
+
+  // Convert HSL to HEX if you need HEX output
+  const hslToHex = (hsl: string): string => {
+    const [_, hStr, sStr, lStr] = hsl.match(/hsl\((\d+), (\d+)%?, (\d+)%?\)/)!;
+    let h = parseInt(hStr) / 360;
+    let s = parseInt(sStr) / 100;
+    let l = parseInt(lStr) / 100;
+
+    const hue2rgb = (p: number, q: number, t: number): number => {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+      return p;
+    };
+
+    let r: number, g: number, b: number;
+
+    if (s === 0) {
+      r = g = b = l; // achromatic
+    } else {
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      const p = 2 * l - q;
+      r = hue2rgb(p, q, h + 1 / 3);
+      g = hue2rgb(p, q, h);
+      b = hue2rgb(p, q, h - 1 / 3);
+    }
+
+    const toHex = (x: number) => {
+      const hex = Math.round(x * 255).toString(16);
+      return hex.length === 1 ? '0' + hex : hex;
+    };
+
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+  };
+  export const generateFancyColor = (): string => {
+    const h = Math.floor(Math.random() * 360); // full hue range
+    const s = Math.floor(40 + Math.random() * 30); // 40–70% saturation
+    const l = Math.floor(35 + Math.random() * 25); // 35–60% lightness
+
+    return hslToHex(`hsl(${h}, ${s}%, ${l}%)`);
+  };
+}
+
 //#endregion
