@@ -15,11 +15,11 @@ import type { BaseProject } from './base-project';
 
 export interface ISettingsVscode {
   'workbench.colorTheme': string;
-  "workbench.colorCustomizations": {
-    "activityBar.background": string;
-    "statusBar.background": string;
-    "statusBar.debuggingBackground": string;
-  }
+  'workbench.colorCustomizations'?: {
+    'activityBar.background'?: string;
+    'statusBar.background'?: string;
+    'statusBar.debuggingBackground'?: string;
+  };
 }
 
 export class BaseVscodeHelpers<
@@ -28,8 +28,25 @@ export class BaseVscodeHelpers<
   /**
    * settings.json relative path
    */
-  public readonly settingsJson = '.vscode/settings.json';
-  public readonly extensionsJson = '.vscode/extensions.json';
+  public readonly relativePathSettingsJsonVscode = '.vscode/settings.json';
+  public readonly relativePathExtensionJsonVScode = '.vscode/extensions.json';
+
+  protected readonly currentSettingsValue: ISettingsVscode;
+  saveCurrentSettings(): void {
+    //#region @backendFunc
+    this.project.writeJsonC(
+      this.relativePathSettingsJsonVscode,
+      this.currentSettingsValue,
+    );
+    //#endregion
+  }
+
+  constructor(project: PROJECT) {
+    super(project);
+    this.currentSettingsValue =
+      Helpers.readJsonC(project.pathFor(this.relativePathSettingsJsonVscode)) ||
+      {};
+  }
 
   //#region extensions
   private get extensions(): string[] {
@@ -149,7 +166,7 @@ export class BaseVscodeHelpers<
   recreateExtensions(): void {
     //#region @backendFunc
     this.project.writeFile(
-      this.extensionsJson,
+      this.relativePathExtensionJsonVScode,
       JSON.stringify(
         {
           recommendations: this.extensions,
@@ -163,13 +180,19 @@ export class BaseVscodeHelpers<
   //#endregion
 
   //#region recraete window title
-  recreateWindowTitle(): void {
+  recreateWindowTitle(options?: { save?: boolean }): void {
     //#region @backendFunc
-    this.project.setValueToJSONC(
-      this.settingsJson,
+    options = options || {};
+    options.save = options.save === undefined ? true : options.save;
+
+    _.set(
+      this.currentSettingsValue,
       '["window.title"]',
       this.project.titleBarName,
     );
+    if (options.save) {
+      this.saveCurrentSettings();
+    }
     //#endregion
   }
   //#endregion
@@ -604,16 +627,6 @@ export class BaseVscodeHelpers<
     const dest = crossPlatformPath(settingspath);
     Helpers.writeFile(dest, settings);
     Helpers.info(`Vscode configured !`);
-    //#endregion
-  }
-  //#endregion
-
-  //#region fields & getters / vscode settings
-  public get vscodeSettingsJson(): ISettingsVscode {
-    //#region @backendFunc
-    const vscodeDir = path.join(this.project.location, '.vscode');
-    const p = crossPlatformPath([vscodeDir, 'settings.json']);
-    return fse.existsSync(p) && fse.readJSONSync(p, { encoding: 'utf8' });
     //#endregion
   }
   //#endregion
