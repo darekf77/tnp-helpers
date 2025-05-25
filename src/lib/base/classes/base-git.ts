@@ -360,14 +360,14 @@ Please provide proper commit message for lastest changes in your project:
           addToLastCommitAndPush: {
             name: `Add to last commit ("${lastCommitName}") and ${hadMeltedActionCommits ? 'force ' : ''}push`,
           },
+          commitAsChoreUpdateAndPush: {
+            name: `Commit as "chore: update" and ${hadMeltedActionCommits ? 'force ' : ''}push`,
+          },
           discard: {
             name: `Discard all changes`,
           },
           discardAndPush: {
             name: `Discard all changes and ${hadMeltedActionCommits ? 'force ' : ''}push`,
-          },
-          commitAsChoreUpdateAndPush: {
-            name: `Commit as "chore: update" and ${hadMeltedActionCommits ? 'force ' : ''}push`,
           },
           push: {
             name: `Just ${hadMeltedActionCommits ? 'force ' : ''}push changes...`,

@@ -102,6 +102,19 @@ export class BaseGlobalCommandLine<
     Helpers.taskDone('Done');
     this._exit();
   }
+
+  removeSubmodule() {
+    Helpers.taskStarted(`Removing submodules.. ${this.firstArg}`);
+    if (
+      Helpers.exists(crossPlatformPath([this.cwd, this.firstArg || '', '.git']))
+    ) {
+      try {
+        Helpers.run(`git rm --cached ${this.firstArg}`).sync();
+      } catch (error) {}
+    }
+    Helpers.taskDone('Done');
+    this._exit();
+  }
   //#endregion
 
   //#region commands / set editor
