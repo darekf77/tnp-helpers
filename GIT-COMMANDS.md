@@ -8,7 +8,13 @@
 
 `taon count:commits`  => show origin of project
 
-`taon remove:submodules my-not-wanted-git-submodules`  => remove unwanted git submodules
+`taon remove:submodules`  => remove all submodules from repo
+
+`taon remove:submodule my-not-wanted-git-submodules`  => remove submodule by folder name
+
+`taon remove:tag git-tag-name-optionally` => remove git tag (if not provided name - select menu appears)
+
+`taon last:tag` => display info aboutlast tag
 
 ## Remotes
 
@@ -19,6 +25,14 @@
 `taon origins`  => show all origins of project
 
 `taon remotes`  => `taon origins`
+
+`taon rename:origin http://my-new-origin`  => replaces default origin new provided
+
+`taon set:origin http://my-new-origin`  => alias to rename:origin
+
+`taon set:remote:ssh`  => changes http remote to ssh remote
+
+`taon set:remote:http`  => changes ssh remote to https remote
 
 ## Rebase 
 
