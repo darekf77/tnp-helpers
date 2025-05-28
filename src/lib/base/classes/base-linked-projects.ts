@@ -1,7 +1,7 @@
 //#region import
 import { load } from 'json10-writer/src';
 import { config } from 'tnp-config/src';
-import { _, chalk, crossPlatformPath, path } from 'tnp-core/src';
+import { _, chalk, crossPlatformPath, path, UtilsTerminal } from 'tnp-core/src';
 
 import {
   Helpers,
@@ -292,9 +292,7 @@ export class BaseLinkedProjects<
   //#endregion
 
   //#region getters & methods / get unexisted projects
-  async cloneUnexistedLinkedProjects(
-    setOrigin: 'ssh' | 'http',
-  ) {
+  async cloneUnexistedLinkedProjects(setOrigin: 'ssh' | 'http') {
     //#region @backendFunc
     const detectedLinkedProjects = this.detectedLinkedProjects;
 
@@ -311,15 +309,20 @@ export class BaseLinkedProjects<
 
       if (projectsThatShouldBeLinked.length > 0) {
         Helpers.info(`
+    Missing linked projects detected..
+
+          `);
+
+        Helpers.info(`
   
 ${projectsThatShouldBeLinked
-    .map(
-      (p, index) =>
-        `- ${index + 1}. ${chalk.bold(p.relativeClonePath)} ` +
-        `${p.remoteUrlTransformed(setOrigin)} ` +
-        `${p.purpose ? `{ purpose: ${p.purpose} }` : ''}`,
-    )
-    .join('\n')}
+  .map(
+    (p, index) =>
+      `- ${index + 1}. ${chalk.bold(p.relativeClonePath)} ` +
+      `${p.remoteUrlTransformed(setOrigin)} ` +
+      `${p.purpose ? `{ purpose: ${p.purpose} }` : ''}`,
+  )
+  .join('\n')}
   
         `);
 
@@ -327,11 +330,24 @@ ${projectsThatShouldBeLinked
           return;
         }
 
-        if (
-          await Helpers.questionYesNo(
-            `Do you want to clone above (missing) linked projects ?`,
-          )
-        ) {
+        const optionsClone = {
+          cloneAndContinue: {
+            name: 'Clone missing projects and continue',
+          },
+          cloneAndExit: {
+            name: 'Clone missing projects and exit process',
+          },
+          exit: {
+            name: 'Exit process',
+          },
+        };
+
+        const res = await UtilsTerminal.select<keyof typeof optionsClone>({
+          choices: optionsClone,
+          question: `What do you want to do with missing linked projects ?`,
+        });
+
+        if (res === 'cloneAndContinue' || res === 'cloneAndExit') {
           for (const linkedProj of projectsThatShouldBeLinked) {
             // console.log({linkedProj})
             Helpers.info(
@@ -355,6 +371,11 @@ ${projectsThatShouldBeLinked
               await childProj.linkedProjects.saveLocationToDB();
             }
           }
+        }
+
+        if (res === 'cloneAndExit' || res === 'exit') {
+          Helpers.info(`Exiting process...`);
+          process.exit(0);
         }
       }
     }
