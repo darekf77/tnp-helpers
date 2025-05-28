@@ -3,7 +3,7 @@
   "version": "19.0.20",
   "scripts": {
     "docs": "python3 -m mkdocs",
-    "mkdocs": "mkdocs",
+    "mkdocs": "python3 -m mkdocs",
     "taon init": "taon init",
     "taon start": "taon start",
     "taon build:lib": "taon build:lib",
@@ -313,6 +313,7 @@
     "taon-storage": "~19.0.0",
     "taon-type-sql": "~19.0.0",
     "taon-typeorm": "~19.0.0",
+    "taon-ui": "~19.0.2",
     "task.js": "^0.1.5",
     "threads": "1.7.0",
     "tnp": "~19.0.1",
