@@ -165,5 +165,8 @@
   ],
   "cSpell.words": [
     "columnify"
-  ]
+  ],
+  "files.watcherExclude": {
+    "local_release/**": true
+  }
 }
