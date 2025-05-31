@@ -139,7 +139,7 @@ export abstract class BaseCommandLineFeature<
     }).then(() => {
       if (methodNameToCall) {
         if (_.isFunction(this[methodNameToCall])) {
-          this[methodNameToCall](argsWithParams, this.project);
+          this[methodNameToCall]();
         } else {
           Helpers.error(
             `Class ${CLASS.getName(this as any)} doesn't have method '${methodNameToCall}'`,

@@ -1084,12 +1084,20 @@ export abstract class BaseProject<
 
   //#region methods & getters / write file
 
-  writeFile(relativePath: string | string[], content: string) {
+  writeFile(
+    relativePath: string | string[],
+    content: string,
+    options?: { formatWithPrettier?: boolean } ,
+  ) {
     //#region @backend
+    options = options || {};
     if (Array.isArray(relativePath)) {
       relativePath = crossPlatformPath(relativePath);
     }
     Helpers.writeFile([this.location, relativePath], content);
+    if (options.formatWithPrettier) {
+      this.formatFile(relativePath);
+    }
     //#endregion
   }
   //#endregion
