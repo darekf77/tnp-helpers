@@ -55,6 +55,11 @@ import {
 } from 'typescript';
 import type * as ts from 'typescript';
 
+// import * as yazl from 'yazl';
+// import * as yauzl from 'yauzl';
+// import { pipeline } from 'stream/promises';
+// import { mkdir, stat } from 'fs/promises';
+
 import { Helpers } from './index';
 //#endregion
 
@@ -1695,3 +1700,122 @@ export namespace UtilsVSCode {
 }
 
 //#endregion
+
+export namespace UtilsZipBrowser {
+  // <input type="file" id="folderInput" webkitdirectory />
+  // ts
+  // Copy
+  // Edit
+  // document.getElementById('folderInput').addEventListener('change', async (e) => {
+  //   const input = e.target as HTMLInputElement;
+  //   if (input.files) {
+  //     const zipBlob = await zipDirBrowser(input.files);
+  //     // Save the zip using FileSaver.js or URL.createObjectURL
+  //     const url = URL.createObjectURL(zipBlob);
+  //     const a = document.createElement('a');
+  //     a.href = url;
+  //     a.download = 'folder.zip';
+  //     a.click();
+  //     URL.revokeObjectURL(url);
+  //   }
+  // });
+
+  // import JSZip from 'jszip';
+
+  //   <input type="file" id="zipInput" />
+  // ts
+  // Copy
+  // Edit
+  // document.getElementById('zipInput').addEventListener('change', async (e) => {
+  //   const input = e.target as HTMLInputElement;
+  //   if (input.files?.[0]) {
+  //     const entries = await unzipArchiveBrowser(input.files[0]);
+  //     for (const [name, blob] of entries) {
+  //       console.log(`Extracted file: ${name}`, blob);
+  //     }
+  //   }
+  // });
+  export const zipDirBrowser = async (fileList: FileList): Promise<Blob> => {
+    //   const zip = new JSZip();
+
+    //   for (const file of Array.from(fileList)) {
+    //     const relativePath = (file as any).webkitRelativePath || file.name;
+    //     zip.file(relativePath, file);
+    //   }
+
+    //   return zip.generateAsync({ type: 'blob' });
+    return void 0;
+  };
+
+  export const unzipArchiveBrowser = async (
+    zipBlob: Blob,
+  ): Promise<Map<string, Blob>> => {
+    //   const zip = await JSZip.loadAsync(zipBlob);
+    //   const files = new Map<string, Blob>();
+
+    //   for (const [filePath, fileObj] of Object.entries(zip.files)) {
+    //     if (!fileObj.dir) {
+    //       const content = await fileObj.async('blob');
+    //       files.set(filePath, content);
+    //     }
+    //   }
+
+    //   return files;
+    return void 0;
+  };
+}
+
+export namespace UtilsZip {
+  export const zipDir = async (absPathToDir: string): Promise<void> => {
+    //#region @backendFunc
+    // const zipPath = `${absPathToDir}.zip`;
+    // const zipfile = new yazl.ZipFile();
+    // const addDirectoryToZip = async (dir: string, basePath: string) => {
+    //   const entries = await fs.promises.readdir(dir, { withFileTypes: true });
+    //   for (const entry of entries) {
+    //     const fullPath = path.join(dir, entry.name);
+    //     const relPath = path.relative(basePath, fullPath).replace(/\\/g, '/');
+    //     if (entry.isDirectory()) {
+    //       await addDirectoryToZip(fullPath, basePath);
+    //     } else if (entry.isFile()) {
+    //       zipfile.addFile(fullPath, relPath);
+    //     }
+    //   }
+    // };
+    // await addDirectoryToZip(absPathToDir, absPathToDir);
+    // zipfile.end();
+    // await pipeline(zipfile.outputStream, fs.createWriteStream(zipPath));
+    //#endregion
+  };
+
+  // Unzip: `/some/path/folder.zip` → `/some/path/folder`
+  export const unzipArchive = async (absPathToZip: string): Promise<void> => {
+    //#region @backendFunc
+    // const extractTo = absPathToZip.replace(/\.zip$/, '');
+    // await mkdir(extractTo, { recursive: true });
+    // return new Promise<void>((resolve, reject) => {
+    //   yauzl.open(absPathToZip, { lazyEntries: true }, (err, zipfile) => {
+    //     if (err || !zipfile) return reject(err);
+    //     zipfile.readEntry();
+    //     zipfile.on('entry', async entry => {
+    //       const filePath = path.join(extractTo, entry.fileName);
+    //       if (/\/$/.test(entry.fileName)) {
+    //         await mkdir(filePath, { recursive: true });
+    //         zipfile.readEntry();
+    //       } else {
+    //         await mkdir(path.dirname(filePath), { recursive: true });
+    //         zipfile.openReadStream(entry, async (err, readStream) => {
+    //           if (err || !readStream) return reject(err);
+    //           const writeStream = fs.createWriteStream(filePath);
+    //           await pipeline(readStream, writeStream);
+    //           zipfile.readEntry();
+    //         });
+    //       }
+    //     });
+    //     zipfile.on('end', () => resolve());
+    //     zipfile.on('error', reject);
+    //   });
+    // });
+    //#endregion
+  };
+}
