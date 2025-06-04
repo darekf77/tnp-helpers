@@ -1412,6 +1412,27 @@ export namespace UtilsTypescript {
   }
   //#endregion
 
+  export const clearRequireCacheRecursive = (
+    modulePath: string,
+    seen = new Set<string>(),
+  ): void => {
+    //#region @backendFunc
+    const resolvedPath = require.resolve(modulePath);
+    const mod = require.cache[resolvedPath];
+
+    if (!mod || seen.has(resolvedPath)) return;
+
+    seen.add(resolvedPath);
+
+    // Recursively clear children
+    for (const child of mod.children) {
+      clearRequireCacheRecursive(child.id, seen);
+    }
+
+    delete require.cache[resolvedPath];
+    //#endregion
+  };
+
   export type DeepWritable<T> = {
     -readonly [P in keyof T]: T[P] extends object
       ? T[P] extends Function
