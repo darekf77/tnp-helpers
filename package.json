@@ -1,6 +1,6 @@
 {
   "name": "tnp-helpers",
-  "version": "19.0.26",
+  "version": "19.0.27",
   "scripts": {
     "docs": "python3 -m mkdocs",
     "mkdocs": "python3 -m mkdocs",
@@ -167,6 +167,7 @@
     "enquirer": "2.4.1",
     "enum-values": "1.2.1",
     "errorhandler": "~1.5.1",
+    "esbuild": "~0.25.1",
     "eslint": "~9.24.0",
     "eslint-config-prettier": "~10.1.2",
     "eslint-plugin-import": "latest",
