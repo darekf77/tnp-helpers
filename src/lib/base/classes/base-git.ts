@@ -19,7 +19,7 @@ export class BaseGit<
   PROJECT extends BaseProject = any,
 > extends BaseFeatureForProject<PROJECT> {
   //#region methods & getters / unstage all files
-  unstageAllFiles() {
+  unstageAllFiles(): void {
     //#region @backendFunc
     Helpers.git.unstageAllFiles(this.project.location);
     //#endregion
@@ -27,7 +27,7 @@ export class BaseGit<
   //#endregion
 
   //#region methods & getters / revert file changes
-  revertFileChanges(fileReletivePath: string) {
+  revertFileChanges(fileReletivePath: string): void {
     //#region @backendFunc
     Helpers.git.revertFileChanges(this.project.location, fileReletivePath);
     //#endregion
@@ -35,7 +35,11 @@ export class BaseGit<
   //#endregion
 
   //#region methods & getters / clone
-  async clone(url: string, destinationFolderName = '', branchName?: string) {
+  async clone(
+    url: string,
+    destinationFolderName = '',
+    branchName?: string,
+  ): Promise<string> {
     //#region @backendFunc
     const clondeFolderpath = await Helpers.git.clone({
       cwd: this.project.location,
@@ -83,7 +87,7 @@ export class BaseGit<
   //#endregion
 
   //#region methods & getters / stash
-  stash(options?: { onlyStaged?: boolean }) {
+  stash(options?: { onlyStaged?: boolean }): void {
     //#region @backendFunc
     return Helpers.git.stash(this.project.location, options);
     //#endregion
@@ -91,7 +95,7 @@ export class BaseGit<
   //#endregion
 
   //#region methods & getters / stash
-  rebase(toBranch: string) {
+  rebase(toBranch: string): void {
     //#region @backendFunc
     return Helpers.git.rebase(this.project.location, toBranch);
     //#endregion
@@ -107,7 +111,7 @@ export class BaseGit<
   //#endregion
 
   //#region methods & getters / fetch
-  fetch(all = false) {
+  fetch(all = false): void {
     //#region @backendFunc
     Helpers.git.fetch(this.project.location, all);
     //#endregion
@@ -115,7 +119,7 @@ export class BaseGit<
   //#endregion
 
   //#region methods & getters / reset files
-  resetFiles(...relativePathes: string[]) {
+  resetFiles(...relativePathes: string[]): void {
     //#region @backendFunc
     return Helpers.git.resetFiles(this.project.location, ...relativePathes);
     //#endregion
@@ -123,7 +127,7 @@ export class BaseGit<
   //#endregion
 
   //#region methods & getters / is inside git repo
-  get isInsideGitRepo() {
+  get isInsideGitRepo(): boolean {
     //#region @backendFunc
     return Helpers.git.isInsideGitRepo(this.project.location);
     //#endregion
@@ -131,7 +135,7 @@ export class BaseGit<
   //#endregion
 
   //#region methods & getters / is without git repository
-  get isWithoutGitRepository() {
+  get isWithoutGitRepository(): boolean {
     //#region @backendFunc
     return !fse.existsSync(path.join(this.project.location, '.git'));
     //#endregion
@@ -139,7 +143,7 @@ export class BaseGit<
   //#endregion
 
   //#region methods & getters / is git root
-  get isGitRoot() {
+  get isGitRoot(): boolean {
     //#region @backendFunc
     return Helpers.git.isGitRoot(this.project.location);
     //#endregion
@@ -147,7 +151,7 @@ export class BaseGit<
   //#endregion
 
   //#region methods & getters / origin url
-  get originURL() {
+  get originURL(): string {
     //#region @backendFunc
     return Helpers.git.getOriginURL(this.project.location);
     //#endregion
@@ -166,7 +170,7 @@ export class BaseGit<
   /**
    * alias to stage all and commit
    */
-  addAndCommit(commitMessage: string) {
+  addAndCommit(commitMessage: string): void {
     //#region @backendFunc
     return Helpers.git.stageAllAndCommit(this.project.location, commitMessage);
     //#endregion
@@ -188,7 +192,7 @@ export class BaseGit<
   }
   //#endregion
 
-  jiraIssuesAreOutsideBrackets() {
+  jiraIssuesAreOutsideBrackets(): boolean {
     return false;
   }
 
@@ -215,7 +219,7 @@ export class BaseGit<
   }
 
   //#region methods & getters / stage all and commit
-  stageAllAndCommit(commitMessage: string) {
+  stageAllAndCommit(commitMessage: string): void {
     //#region @backendFunc
     return Helpers.git.stageAllAndCommit(this.project.location, commitMessage);
     //#endregion
@@ -228,7 +232,7 @@ export class BaseGit<
     origin?: string;
     askToRetry?: boolean;
     forcePushNoQuestion?: boolean;
-  }) {
+  }): Promise<boolean> {
     //#region @backendFunc
     return await Helpers.git.pushCurrentBranch(this.project.location, options);
     //#endregion
@@ -236,7 +240,7 @@ export class BaseGit<
   //#endregion
 
   //#region methods & getters / all origins
-  get allOrigins() {
+  get allOrigins(): { origin: string; url: string }[] {
     //#region @backendFunc
     return Helpers.git.allOrigins(this.project.location);
     //#endregion
@@ -244,7 +248,7 @@ export class BaseGit<
   //#endregion
 
   //#region methods & getters / uncommited files
-  get uncommitedFiles() {
+  get uncommitedFiles(): string[] {
     //#region @backendFunc
     return Helpers.git.uncommitedFiles(this.project.location);
     //#endregion
@@ -252,7 +256,7 @@ export class BaseGit<
   //#endregion
 
   //#region methods & getters / there are some uncommited change
-  get thereAreSomeUncommitedChange() {
+  get thereAreSomeUncommitedChange(): boolean {
     //#region @backendFunc
     return Helpers.git.checkIfthereAreSomeUncommitedChange(
       this.project.location,
@@ -262,7 +266,7 @@ export class BaseGit<
   //#endregion
 
   //#region methods & getters / there are some uncommited change except
-  thereAreSomeUncommitedChangeExcept(filesList: string[] = []) {
+  thereAreSomeUncommitedChangeExcept(filesList: string[] = []): boolean {
     //#region @backendFunc
     return Helpers.git.thereAreSomeUncommitedChangeExcept(
       filesList,
@@ -482,8 +486,11 @@ Please provide proper commit message for lastest changes in your project:
   //#endregion
 
   //#region methods & getters / melt action commits
-  meltActionCommits() {
-    //#region @backend
+  /**
+   * @returns number of melted commits
+   */
+  meltActionCommits(): number {
+    //#region @backendFunc
     return Helpers.git.meltActionCommits(this.project.location);
     //#endregion
   }
@@ -518,7 +525,7 @@ Please provide proper commit message for lastest changes in your project:
      */
     exitOnError?: boolean;
     defaultHardResetCommits?: number;
-  }) {
+  }): Promise<void> {
     //#region @backendFunc
     await Helpers.git.pullCurrentBranch(this.project.location, { ...options });
     //#endregion
@@ -526,7 +533,7 @@ Please provide proper commit message for lastest changes in your project:
   //#endregion
 
   //#region methods & getters / current branch name
-  get currentBranchName() {
+  get currentBranchName(): string {
     //#region @backendFunc
     return Helpers.git.currentBranchName(this.project.location);
     //#endregion
@@ -534,7 +541,11 @@ Please provide proper commit message for lastest changes in your project:
   //#endregion
 
   //#region methods & getters / list of current git changes
-  get listOfCurrentGitChanges() {
+  get listOfCurrentGitChanges(): {
+    modified: string[];
+    deleted: string[];
+    created: string[];
+  } {
     //#region @backendFunc
     return Helpers.git.getListOfCurrentGitChanges(this.project.location);
     //#endregion
@@ -542,7 +553,7 @@ Please provide proper commit message for lastest changes in your project:
   //#endregion
 
   //#region methods & getters / get branches names by
-  getBranchesNamesBy(pattern: string | RegExp) {
+  getBranchesNamesBy(pattern: string | RegExp): string[] {
     //#region @backendFunc
     return Helpers.git.getBranchesNames(this.project.location, pattern);
     //#endregion
@@ -558,7 +569,7 @@ Please provide proper commit message for lastest changes in your project:
   //#endregion
 
   //#region methods & getters / reset hard
-  resetHard(options?: { HEAD?: number }) {
+  resetHard(options?: { HEAD?: number }): void {
     //#region @backendFunc
     Helpers.git.resetHard(this.project.location, options);
     //#endregion
@@ -566,7 +577,7 @@ Please provide proper commit message for lastest changes in your project:
   //#endregion
 
   //#region methods & getters / count commits
-  countComits() {
+  countComits(): number {
     //#region @backendFunc
     return Helpers.git.countCommits(this.project.location);
     //#endregion
@@ -622,7 +633,7 @@ Please provide proper commit message for lastest changes in your project:
   //#endregion
 
   //#region methods & getters / get commit message by index
-  async getCommitMessageByIndex(index: number) {
+  async getCommitMessageByIndex(index: number): Promise<string> {
     //#region @backendFunc
     return await Helpers.git.getCommitMessageByIndex(
       this.project.location,
@@ -633,7 +644,7 @@ Please provide proper commit message for lastest changes in your project:
   //#endregion
 
   //#region methods & getters / get commit message by hash
-  async getCommitMessageByHash(hash: string) {
+  async getCommitMessageByHash(hash: string): Promise<string> {
     //#region @backendFunc
     return await Helpers.git.getCommitMessageByHash(
       this.project.location,
@@ -644,7 +655,7 @@ Please provide proper commit message for lastest changes in your project:
   //#endregion
 
   //#region methods & getters / get commit hash by index
-  async getCommitHashByIndex(index: number) {
+  async getCommitHashByIndex(index: number): Promise<string> {
     //#region @backendFunc
     return await Helpers.git.getCommitHashByIndex(this.project.location, index);
     //#endregion
@@ -652,7 +663,7 @@ Please provide proper commit message for lastest changes in your project:
   //#endregion
 
   //#region methods & getters / penultimate commit hash
-  penultimateCommitHash() {
+  penultimateCommitHash(): string {
     //#region @backendFunc
     return Helpers.git.penultimateCommitHash(this.project.location);
     //#endregion
@@ -660,7 +671,7 @@ Please provide proper commit message for lastest changes in your project:
   //#endregion
 
   //#region methods & getters / check tag exists
-  checkTagExists(tag: string) {
+  checkTagExists(tag: string): boolean {
     //#region @backendFunc
     return Helpers.git.checkTagExists(tag, this.project.location);
     //#endregion
@@ -699,7 +710,7 @@ Please provide proper commit message for lastest changes in your project:
     checkoutFromBranch: string,
     branch: string,
     origin = 'origin',
-  ) {
+  ): void {
     //#region @backendFunc
     return Helpers.git.checkoutFromTo(
       checkoutFromBranch,
@@ -717,7 +728,7 @@ Please provide proper commit message for lastest changes in your project:
    * @param majorVersion example: v1, v2 etc.
    * @returns tag name
    */
-  lastTagNameForMajorVersion(majorVersion) {
+  lastTagNameForMajorVersion(majorVersion): string {
     //#region @backendFunc
     return Helpers.git.lastTagNameForMajorVersion(
       this.project.location,
@@ -728,7 +739,7 @@ Please provide proper commit message for lastest changes in your project:
   //#endregion
 
   //#region methods & getters / last tag hash
-  lastTagHash() {
+  lastTagHash(): string {
     //#region @backendFunc
     return Helpers.git.lastTagHash(this.project.location);
     //#endregion
@@ -736,7 +747,7 @@ Please provide proper commit message for lastest changes in your project:
   //#endregion
 
   //#region methods & getters / remote origin url
-  get remoteOriginUrl() {
+  get remoteOriginUrl(): string {
     //#region @backendFunc
     return Helpers.git.getOriginURL(this.project.location);
     //#endregion
@@ -749,13 +760,13 @@ Please provide proper commit message for lastest changes in your project:
    */
   get remoteProvider(): string {
     //#region @backendFunc
-    return Helpers.git.getRemoteProvider(this.project.location);
+    return Helpers.git.getRemoteProvider(this.project.location) || '';
     //#endregion
   }
   //#endregion
 
   //#region methods & getters / last tag version name
-  get lastTagVersionName() {
+  get lastTagVersionName(): string {
     //#region @backendFunc
     return Helpers.git.lastTagVersionName(this.project.location) || '';
     //#endregion
@@ -780,7 +791,7 @@ Please provide proper commit message for lastest changes in your project:
   /**
    * TODO does this make any sense
    */
-  renameOrigin(newNameOrUlr: string) {
+  renameOrigin(newNameOrUlr: string): void {
     //#region @backendFunc
     if (!newNameOrUlr.endsWith('.git')) {
       newNameOrUlr = newNameOrUlr + '.git';
@@ -814,7 +825,7 @@ Please provide proper commit message for lastest changes in your project:
   /**
    * By default no translation of commit
    */
-  transalteGitCommitFromArgs() {
+  transalteGitCommitFromArgs(): { from: string; to: string } {
     return { from: void 0 as string, to: void 0 as string };
   }
   //#endregion
@@ -824,7 +835,7 @@ Please provide proper commit message for lastest changes in your project:
    * By defult true.. when commit branches will not function.
    * (false is better for simple projects)
    */
-  useGitBranchesWhenCommitingAndPushing() {
+  useGitBranchesWhenCommitingAndPushing(): boolean {
     return true;
   }
   //#endregion
@@ -833,7 +844,7 @@ Please provide proper commit message for lastest changes in your project:
   /**
    * usefull when pushing in project with childrens as git repos
    */
-  automaticallyAddAllChangesWhenPushingToGit() {
+  automaticallyAddAllChangesWhenPushingToGit(): boolean {
     return false;
   }
   //#endregion
@@ -842,13 +853,16 @@ Please provide proper commit message for lastest changes in your project:
   /**
    * usefull when pushing in project with childrens as git repos
    */
-  useGitBranchesAsMetadataForCommits() {
+  useGitBranchesAsMetadataForCommits(): boolean {
     return true;
   }
   //#endregion
 
   //#region getters & methods / clone to
-  async cloneTo(cwd: string, newProjectName?: string) {
+  /**
+   * @returns true if clone was successful
+   */
+  async cloneTo(cwd: string, newProjectName?: string): Promise<boolean> {
     //#region @backendFunc
     if (!newProjectName) {
       newProjectName = path.basename(this.project.location);
@@ -892,7 +906,7 @@ Please provide proper commit message for lastest changes in your project:
    *
    * projects that are children of this project (with its own git repo)
    */
-  get gitChildren() {
+  get gitChildren(): PROJECT[] {
     let childrenRepos: PROJECT[] = [];
 
     if (this.project.linkedProjects.linkedProjects.length > 0) {
@@ -1402,7 +1416,7 @@ Please provide proper commit message for lastest changes in your project:
   //#endregion
 
   //#region methods & getters / before any action on git root
-  public _beforeAnyActionOnGitRoot() {
+  public _beforeAnyActionOnGitRoot(): void {
     //#region @backendFunc
     if (!this.project.git.isInsideGitRepo) {
       Helpers.error(
@@ -1425,7 +1439,9 @@ Please provide proper commit message for lastest changes in your project:
   //#endregion
 
   //#region methods & getters / before push action
-  protected async _beforePushProcessAction(setOrigin: 'ssh' | 'http') {
+  protected async _beforePushProcessAction(
+    setOrigin: 'ssh' | 'http',
+  ): Promise<void> {
     //#region @backendFunc
     this._beforeAnyActionOnGitRoot();
 
@@ -1455,7 +1471,7 @@ Please provide proper commit message for lastest changes in your project:
   protected async _beforePullProcessAction(
     setOrigin: 'ssh' | 'http',
     skipCloneGitChildren = false,
-  ) {
+  ): Promise<void> {
     //#region @backendFunc
     this._beforeAnyActionOnGitRoot();
     if (!skipCloneGitChildren) {
@@ -1544,12 +1560,12 @@ Please provide proper commit message for lastest changes in your project:
    * @returns branch name
    */
   duringPushWarnIfProjectNotOnSpecyficDevBranch(): string {
-    return void 0;
+    return '';
   }
   //#endregion
 
   //#region methods & getters / get changed files in commit by hash
-  async getChangedFilesInCommitByHash(hash: string) {
+  async getChangedFilesInCommitByHash(hash: string): Promise<string[]> {
     //#region @backendFunc
     return Helpers.git.getChangedFilesInCommitByHash(
       this.project.location,
@@ -1563,7 +1579,7 @@ Please provide proper commit message for lastest changes in your project:
   /**
    * @param index 0 - means last commit
    */
-  async getChangedFilesInCommitByIndex(index: number) {
+  async getChangedFilesInCommitByIndex(index: number): Promise<string[]> {
     //#region @backendFunc
     return Helpers.git.getChangedFilesInCommitByIndex(
       this.project.location,
@@ -1574,7 +1590,7 @@ Please provide proper commit message for lastest changes in your project:
   //#endregion
 
   //#region methods & getters / get changes summary
-  async changesSummary() {
+  async changesSummary(): Promise<string> {
     //#region @backendFunc
     const fillStringWithSpaceUpTo = (
       str: string,

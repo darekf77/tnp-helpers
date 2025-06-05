@@ -148,7 +148,7 @@ export class HelpersGit {
   //#endregion
 
   //#region check tag exists
-  checkTagExists(tag: string, cwd = process.cwd()) {
+  checkTagExists(tag: string, cwd = process.cwd()): boolean {
     Helpers.log('[checkTagExists] ' + cwd, 1);
     if (!Helpers.git.hasAnyCommits(cwd)) {
       return false;
@@ -160,10 +160,10 @@ export class HelpersGit {
   //#endregion
 
   //#region get last tag version name
-  lastTagVersionName(cwd: string): string | void {
+  lastTagVersionName(cwd: string): string {
     Helpers.log('[lastTagVersionName] ' + cwd, 1);
     if (!Helpers.git.hasAnyCommits(cwd)) {
-      return void 0;
+      return '';
     }
     try {
       if (process.platform === 'win32' && UtilsOs.isRunningInWindowsCmd()) {
@@ -172,7 +172,7 @@ export class HelpersGit {
         );
         console.log({ tagOnCMd });
         tagOnCMd = tagOnCMd.toString().trim();
-        return tagOnCMd ? tagOnCMd : void 0;
+        return tagOnCMd ? tagOnCMd : '';
       }
 
       const latestCommit = Helpers.commnadOutputAsString(
@@ -183,7 +183,7 @@ export class HelpersGit {
         .trim();
 
       if (!latestCommit) {
-        return void 0;
+        return '';
       }
 
       const tag = Helpers.commnadOutputAsString(
@@ -194,7 +194,7 @@ export class HelpersGit {
         .trim();
 
       if (!tag) {
-        return void 0;
+        return '';
       }
       return tag;
     } catch (e) {
@@ -202,7 +202,7 @@ export class HelpersGit {
         `[lastCommitHash] Not able to get last commit version name for repository in ${cwd}`,
         false,
       );
-      return void 0;
+      return '';
     }
   }
   //#endregion
@@ -223,10 +223,10 @@ export class HelpersGit {
     );
     const tag = Helpers.git.lastTagVersionName(cwd);
     if (!tag) {
-      return void 0;
+      return '';
     }
     // git describe --match "v1.1.*" --abbrev=0 --tags $(git rev-list --tags --max-count=1)
-    let tagName = void 0 as string;
+    let tagName: string;
     const cm1 =
       `git describe --match "v${majorVersion.toString().replace('v', '')}.*" ` +
       `--abbrev=0 `;
@@ -266,7 +266,7 @@ export class HelpersGit {
         return tagName;
       }
     } catch (e) {}
-    return void 0;
+    return '';
   }
   //#endregion
 
@@ -349,12 +349,12 @@ export class HelpersGit {
   //#endregion
 
   //#region get last tag hash
-  lastTagHash(cwd): string {
+  lastTagHash(cwd: string): string {
     Helpers.log('[taon-helpers][lastTagHash] ' + cwd, 1);
     try {
       const tag = Helpers.git.lastTagVersionName(cwd);
       if (!tag) {
-        return null;
+        return '';
       }
       let hash = child_process
         .execSync(`git log -1 --format=format:"%H" ${tag}`, { cwd })
@@ -362,12 +362,11 @@ export class HelpersGit {
         .trim();
       return hash;
     } catch (e) {
-      Helpers.log(e, 1);
-      Helpers.log(
-        `[taon-helpers][lastCommitHash] Not able to get last commit hash for repository in ${cwd}`,
-        1,
+      Helpers.logWarn(
+        `[taon-helpers][lastCommitHash] ` +
+          `Not able to get last commit hash for repository in ${cwd}`,
       );
-      return null;
+      return '';
     }
   }
   //#endregion
@@ -515,7 +514,7 @@ export class HelpersGit {
   //#endregion
 
   //#region get number of commit in repository
-  countCommits(cwd: string) {
+  countCommits(cwd: string): number {
     Helpers.log('[taon-helpers][countCommits] ' + cwd, 1);
     if (!Helpers.git.hasAnyCommits(cwd)) {
       return 0;
@@ -534,10 +533,8 @@ export class HelpersGit {
 
       return !isNaN(value) ? value : 0;
     } catch (e) {
-      Helpers.log(e, 1);
-      Helpers.log(
+      Helpers.logWarn(
         `[taon-helpers][countCommits] Cannot counts commits in branch in: ${cwd}`,
-        1,
       );
       return 0;
     }
@@ -661,7 +658,7 @@ export class HelpersGit {
   //#endregion
 
   //#region get current branch name
-  currentBranchName(cwd: string): string | undefined {
+  currentBranchName(cwd: string): string {
     Helpers.log('[taon-helpers][currentBranchName] ' + cwd, 1);
     try {
       const branchName = child_process
@@ -670,7 +667,7 @@ export class HelpersGit {
         .trim();
       return branchName;
     } catch (e) {
-      return void 0;
+      return '';
     }
   }
   //#endregion
@@ -720,10 +717,10 @@ export class HelpersGit {
    * Note: address ends with .git always
    *
    */
-  getOriginURL(cwd: string, differentOriginName = '') {
+  getOriginURL(cwd: string, differentOriginName = ''): string {
     Helpers.log('[taon-helpers][getOriginURL] ' + cwd, 1);
     if (!this.isInsideGitRepo(cwd)) {
-      return;
+      return '';
     }
     let url = '';
     try {
@@ -739,7 +736,7 @@ export class HelpersGit {
         .trim();
     } catch (error) {
       console.log(error);
-      return void 0;
+      return '';
     }
     if (!url.endsWith('.git')) {
       return `${url}.git`;
@@ -797,7 +794,7 @@ export class HelpersGit {
   //#endregion
 
   //#region is git root
-  isGitRoot(cwd: string) {
+  isGitRoot(cwd: string): boolean {
     Helpers.log('[taon-helpers][isGitRoot] ' + cwd, 1);
     if (!fse.existsSync(crossPlatformPath([cwd, '.git']))) {
       return false;
@@ -827,7 +824,7 @@ export class HelpersGit {
   //#endregion
 
   //#region is git repo
-  isInsideGitRepo(cwd: string) {
+  isInsideGitRepo(cwd: string): boolean {
     Helpers.log('[taon-helpers][isGitRepo] ' + cwd, 1);
     if (!Helpers.git.hasAnyCommits(cwd)) {
       return false;
@@ -913,7 +910,7 @@ export class HelpersGit {
       exitOnError?: boolean;
       defaultHardResetCommits?: number;
     },
-  ) {
+  ): Promise<void> {
     options = options || ({} as any);
     let { askToRetry, exitOnError } = options || {};
     if (_.isUndefined(exitOnError)) {
@@ -1162,7 +1159,7 @@ ${cwd}
   //#endregion
 
   //#region get default branch for repo
-  defaultRepoBranch(cwd: string) {
+  defaultRepoBranch(cwd: string): string {
     //#region @backendFunc
     Helpers.log('[defaultRepoBranch] ' + cwd, 1);
     try {
@@ -1179,15 +1176,15 @@ ${cwd}
 
       return defaultBranch;
     } catch (e) {
-      Helpers.log(e);
-      Helpers.error(`Cannot find default branch for repo in: ${cwd}`);
+      Helpers.logWarn(`Cannot find default branch for repo in: ${cwd}`);
+      return '';
     }
     //#endregion
   }
   //#endregion
 
   //#region checkout default branch
-  checkoutDefaultBranch(cwd) {
+  checkoutDefaultBranch(cwd: string): void {
     Helpers.log('[checkoutDefaultBranch] ' + cwd, 1);
     const defaultBranch = child_process
       .execSync(
@@ -1206,7 +1203,7 @@ ${cwd}
    * @param cwd
    * @param optinos
    */
-  stageAllFiles(cwd: string) {
+  stageAllFiles(cwd: string): void {
     try {
       child_process.execSync(`git add --all .`, { cwd });
     } catch (error) {}
@@ -1219,7 +1216,7 @@ ${cwd}
    * @param cwd
    * @param optinos
    */
-  stageFile(cwd: string, fileRelativePath: string) {
+  stageFile(cwd: string, fileRelativePath: string): void {
     try {
       child_process.execSync(`git add ${fileRelativePath}`, { cwd });
     } catch (error) {}
@@ -1279,7 +1276,7 @@ ${cwd}
   //#endregion
 
   //#region fetch
-  fetch(cwd: string, all = false) {
+  fetch(cwd: string, all = false): void {
     Helpers.taskStarted('Fetching git changes');
     try {
       child_process.execSync(`git fetch ${all ? '--all' : ''}`, { cwd });
@@ -1363,7 +1360,7 @@ ${cwd}
     targetBranch: string,
     origin = 'origin',
     cwd,
-  ) {
+  ): void {
     Helpers.log('[checkout] ' + cwd, 1);
     child_process.execSync(`git fetch`, { cwd });
     const currentBranchName = this.currentBranchName(cwd);
@@ -1394,7 +1391,7 @@ ${cwd}
   //#endregion
 
   //#region revert file changes
-  revertFileChanges(cwd, fileReletivePath: string) {
+  revertFileChanges(cwd, fileReletivePath: string): void {
     try {
       Helpers.run(`git checkout ${fileReletivePath}`, { cwd }).sync();
     } catch (error) {}
@@ -1614,7 +1611,7 @@ ${cwd}
   //#endregion
 
   //#region check if there are some uncommited changes
-  checkIfthereAreSomeUncommitedChange(cwd: string) {
+  checkIfthereAreSomeUncommitedChange(cwd: string): boolean {
     Helpers.log(
       '[taon-helpers][checkIfthereAreSomeUncommitedChange] ' + cwd,
       1,
@@ -1624,7 +1621,10 @@ ${cwd}
   //#endregion
 
   //#region check if there are some uncommited changes except
-  thereAreSomeUncommitedChangeExcept(filesList: string[] = [], cwd: string) {
+  thereAreSomeUncommitedChangeExcept(
+    filesList: string[] = [],
+    cwd: string,
+  ): boolean {
     Helpers.log('[taon-helpers][thereAreSomeUncommitedChangeExcept] ' + cwd, 1);
     filesList = filesList.map(f => crossPlatformPath(f));
     try {
@@ -1656,9 +1656,7 @@ ${cwd}
    * @param cwd get current working directory
    * @returns relative pathes to uncommited files
    */
-  uncommitedFiles(cwd: string) {
-    Helpers.log('[taon-helpers][thereAreSomeUncommitedChangeExcept] ' + cwd, 1);
-
+  uncommitedFiles(cwd: string): string[] {
     try {
       const res = Helpers.run(
         `git ls-files --deleted --modified --others --exclude-standard`,
@@ -1682,7 +1680,7 @@ ${cwd}
   //#endregion
 
   //#region restore last version
-  restoreLastVersion(cwd: string, relativeFilePath: string) {
+  restoreLastVersion(cwd: string, relativeFilePath: string): void {
     Helpers.log('[taon-helpers][restoreLastVersion] ' + cwd, 1);
     if (!Helpers.exists([cwd, relativeFilePath])) {
       return;
@@ -1703,7 +1701,7 @@ ${cwd}
   //#endregion
 
   //#region reset files
-  resetFiles(cwd: string, ...relativePathes: string[]) {
+  resetFiles(cwd: string, ...relativePathes: string[]): void {
     Helpers.log('[taon-helpers][resetFiles] ' + cwd, 1);
     relativePathes.forEach(p => {
       try {
@@ -1753,7 +1751,7 @@ ${cwd}
   //#endregion
 
   //#region get orign ssh from origin http
-  originHttpToSsh(originHttp: string, verbose = false) {
+  originHttpToSsh(originHttp: string, verbose = false): string {
     const httpsPattern = /^https:\/\/(.+?)\/(.+?\/.+?)(\.git)?$/;
     const match = originHttp.match(httpsPattern);
 
@@ -1782,7 +1780,7 @@ ${cwd}
   async changeRemoteFromHttpsToSSh(
     cwd: string,
     diffrentOriginName: string = 'origin',
-  ) {
+  ): Promise<void> {
     try {
       const currentUrl =
         (await this.getOriginURL(cwd, diffrentOriginName)) || '';
@@ -1799,7 +1797,7 @@ ${cwd}
   //#endregion
 
   //#region get http origin from ssh origin
-  originSshToHttp(originSsh: string, verbose = false) {
+  originSshToHttp(originSsh: string, verbose = false): string {
     const sshPattern = /^git@(.+?):(.+?\/.+?)(\.git)?$/;
     const match = originSsh.match(sshPattern);
 
@@ -1829,7 +1827,7 @@ ${cwd}
   async changeRemoveFromSshToHttps(
     cwd: string,
     diffrentOriginName: string = 'origin',
-  ) {
+  ): Promise<void> {
     try {
       const currentUrl =
         (await this.getOriginURL(cwd, diffrentOriginName)) || '';
@@ -1846,7 +1844,7 @@ ${cwd}
   //#endregion
 
   //#region unstage all files
-  unstageAllFiles(cwd: string) {
+  unstageAllFiles(cwd: string): void {
     try {
       Helpers.run(`git reset HEAD -- .`, { cwd }).sync();
     } catch (error) {}
@@ -1979,7 +1977,4 @@ ${cwd}
   }
 
   //#endregion
-}
-function rmSync(fullPath: any, arg1: { recursive: boolean; force: boolean }) {
-  throw new Error('Function not implemented.');
 }
