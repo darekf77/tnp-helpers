@@ -1626,7 +1626,11 @@ export namespace UtilsQuickFixes {
     return jsContent.replace(
       `mod${'ule.exports'} = ${'requ' + 'ire'}("${packageName}");`,
       `/* --- replaced ${packageName} --- */`,
+    ).replace(
+      `var ${packageName}_1 = ${'req'+'uire'}("${packageName}");`,
+      `/* --- replaced ${packageName} --- */`,
     );
+    // var electron_1 = require("electron");
     //#endregion
   };
 }

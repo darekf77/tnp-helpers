@@ -150,9 +150,13 @@ export class HelpersTaon extends CoreHelpers {
         ${outputFilePath}
        `);
 
-    let replaceWithNothing = [...(additionalReplaceWithNothing || [])];
+    let replaceWithNothing = [
+      'esbuild',
+      ...(additionalReplaceWithNothing || []),
+    ];
 
     let externals = [
+      'esbuild',
       'electron',
       'vscode',
       'ts-node',
@@ -181,7 +185,8 @@ export class HelpersTaon extends CoreHelpers {
 
     Helpers.taskStarted(`Bundling node_modules for file: ${pathToJsFile}`);
     // debugger
-    const esbuild = await import('esbuild');
+    const esbuildImportName = 'esbuild';
+    const esbuild = await import(esbuildImportName);
 
     const data = await esbuild.build({
       entryPoints: [pathToJsFile],
