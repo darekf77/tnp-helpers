@@ -1,18 +1,14 @@
 import * as child from 'child_process';
 import * as fse from 'fs';
-import { ProcesOptions } from './models';
+
 import type { OutputChannel } from 'vscode';
-import type * as vscodeType from 'vscode';
-import { UtilsOs } from 'tnp-core/src';
+
+import { UtilsVSCode } from '../utils';
+
+import { ProcesOptions } from './models';
 
 export const getVscode = () => {
-  //#region @backendFunc
-  if (!UtilsOs.isRunningInVscodeExtension()) {
-    return {} as typeof vscodeType;
-  }
-  const vscode = require('vsc' + 'ode');
-  return vscode as typeof vscodeType;
-  //#endregion
+  return UtilsVSCode.vscodeImport();
 };
 
 /**
@@ -217,7 +213,7 @@ export function crossPlatformPath(pathStringOrPathParts: string | string[]) {
   }
 
   const isExtendedLengthPath = /^\\\\\?\\/.test(pathStringOrPathParts);
-  const hasNonAscii = /[^\u0000-\u0080]+/.test(pathStringOrPathParts); // eslint-disable-line no-control-regex
+  const hasNonAscii = /[^\u0000-\u0080]+/.test(pathStringOrPathParts);
 
   if (isExtendedLengthPath || hasNonAscii) {
     return pathStringOrPathParts;

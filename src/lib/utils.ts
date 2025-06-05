@@ -1,5 +1,5 @@
 //#region imports
-import { crossPlatformPath, fse, path } from 'tnp-core/src';
+import { crossPlatformPath, fse, path, UtilsOs } from 'tnp-core/src';
 import { _, CoreModels, Utils } from 'tnp-core/src';
 import {
   createPrinter,
@@ -54,6 +54,7 @@ import {
   isMethodDeclaration,
 } from 'typescript';
 import type * as ts from 'typescript';
+import type * as vscodeType from 'vscode';
 
 // import * as yazl from 'yazl';
 // import * as yauzl from 'yauzl';
@@ -1697,6 +1698,17 @@ export namespace UtilsVSCode {
 
     return hslToHex(`hsl(${h}, ${s}%, ${l}%)`);
   };
+
+  export const vscodeImport = () => {
+    //#region @backendFunc
+    if (!UtilsOs.isRunningInVscodeExtension()) {
+      return {} as typeof vscodeType;
+    }
+    const vscode = require('vsc' + 'ode');
+    return vscode as typeof vscodeType;
+    //#endregion
+  };
+
 }
 
 //#endregion
