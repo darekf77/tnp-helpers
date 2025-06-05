@@ -179,34 +179,50 @@ export class HelpersTaon extends CoreHelpers {
       `Replace with 'nothing' in destination bundle: ${replaceWithNothing.join(',')}`,
     );
 
-
     Helpers.taskStarted(`Bundling node_modules for file: ${pathToJsFile}`);
     // debugger
-    const data = await require('@vercel/ncc')(pathToJsFile, {
-      //#region ncc options
-      // provide a custom cache path or disable caching
-      cache: false,
-      // out:'',
-      // externals to leave as requires of the build
-      externals,
-      // directory outside of which never to emit assets
-      // filterAssetBase: process.cwd(), // default
-      minify: !!minify, // default
-      sourceMap: false, // default
-      // assetBuilds: false, // default
-      // sourceMapBasePrefix: '../', // default treats sources as output-relative
-      // when outputting a sourcemap, automatically include
-      // source-map-support in the output file (increases output by 32kB).
-      // sourceMapRegister: true, // default
-      watch: false, // default
-      license: '', // default does not generate a license file
-      target: 'es2022', // default
-      v8cache: false, // default
-      quiet: false, // default
-      debugLog: false, // default
-      //#endregion
+    const esbuild = await import('esbuild');
+
+    const data = await esbuild.build({
+      entryPoints: [pathToJsFile],
+      bundle: true,
+      platform: 'node',
+      target: 'node20', // closest to es2022 in runtime
+      minify: !!minify,
+      sourcemap: false,
+      external: externals, // array of package names to leave unbundled
+      // outfile: outputFilePath, // or use write: false if you want in-memory result
+      write: false, // don’t write to disk, just return the result
+      logLevel: 'silent', // like quiet: true
+      format: 'cjs', // CommonJS output like NCC
     });
-    let output = data.code;
+    let output = data.outputFiles[0].text;
+
+    // const data = await require('@vercel/ncc')(pathToJsFile, {
+    //   //#region ncc options
+    //   // provide a custom cache path or disable caching
+    //   cache: false,
+    //   // externals to leave as requires of the build
+    //   externals,
+    //   // directory outside of which never to emit assets
+    //   // filterAssetBase: process.cwd(), // default
+    //   minify: !!minify, // default
+    //   sourceMap: false, // default
+    //   // assetBuilds: false, // default
+    //   // sourceMapBasePrefix: '../', // default treats sources as output-relative
+    //   // when outputting a sourcemap, automatically include
+    //   // source-map-support in the output file (increases output by 32kB).
+    //   // sourceMapRegister: true, // default
+    //   watch: false, // default
+    //   license: '', // default does not generate a license file
+    //   target: 'es2022', // default
+    //   v8cache: false, // default
+    //   quiet: false, // default
+    //   debugLog: false, // default
+    //   //#endregion
+    // });
+    // let output = data.code;
+
     if (!skipFixingSQLlite) {
       output = UtilsQuickFixes.replaceSQLliteFaultyCode(output);
     }
