@@ -437,18 +437,31 @@ export class HelpersFileFolders {
   //   }
   // };
 
-  move(from: string, to: string): void {
+  move(
+    from: string,
+    to: string,
+    options?: {
+      purpose?: string; // for logging purposes
+    },
+  ): void {
     //#region @backendFunc
+    options = options || {};
     if (!fse.existsSync(from)) {
-      Helpers.warn(`[move] File or folder doesnt not exists: ${from}`);
+      Helpers.warn(
+        `[move]${options.purpose ? `[${options.purpose}]` : ''} File or folder doesnt not exists: ${from}`,
+      );
       return;
     }
     if (!path.isAbsolute(from)) {
-      Helpers.warn(`[move] Source path is not absolute: ${from}`);
+      Helpers.warn(
+        `[move]${options.purpose ? `[${options.purpose}]` : ''} Source path is not absolute: ${from}`,
+      );
       return;
     }
     if (!path.isAbsolute(to)) {
-      Helpers.warn(`[move] Destination path is not absolute: ${to}`);
+      Helpers.warn(
+        `[move]${options.purpose ? `[${options.purpose}]` : ''} Destination path is not absolute: ${to}`,
+      );
       return;
     }
 
@@ -485,21 +498,24 @@ export class HelpersFileFolders {
       } catch (error) {
         if (global['tnpNonInteractive']) {
           console.log(error);
-          Helpers.error(`[${config.frameworkName}-helpers] Not able to move files
+          Helpers.error(`[${config.frameworkName}-helpers]${options.purpose ? `[${options.purpose}]` : ''} Not able to move files
 
 from: ${from}
 to: ${to}
 
           `);
         }
-        Helpers.info(`
+
+        Helpers.info(`[${config.frameworkName}-helpers]${options.purpose ? `[${options.purpose}]` : ''} Not able to move files
  Moving things:
 
 from: ${from}
 to: ${to}
 
         `);
-        Helpers.pressKeyAndContinue('Press any to try again this action');
+        Helpers.pressKeyAndContinue(
+          `${options.purpose ? `[${options.purpose}]` : ''} Press any to try again this action`,
+        );
       }
     }
     //#endregion
@@ -783,14 +799,18 @@ to: ${to}
    * Copy folder using os native command
    * (perfect for large folders/files)
    */
-  async copyFolderOsNative(from: string, to: string, options?: {
-    removeDestination?: boolean;
-  }): Promise<void> {
+  async copyFolderOsNative(
+    from: string,
+    to: string,
+    options?: {
+      removeDestination?: boolean;
+    },
+  ): Promise<void> {
     //#region @backendFunc
     options = options || {};
-    if(options.removeDestination) {
+    if (options.removeDestination) {
       Helpers.removeSymlinks(to);
-      Helpers.remove(to,true);
+      Helpers.remove(to, true);
     }
     const isWin = os.platform() === 'win32';
 
