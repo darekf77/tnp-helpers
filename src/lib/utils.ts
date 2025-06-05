@@ -1623,13 +1623,25 @@ export namespace UtilsQuickFixes {
     packageName: string,
   ): string => {
     //#region @backendFunc
-    return jsContent.replace(
-      `mod${'ule.exports'} = ${'requ' + 'ire'}("${packageName}");`,
-      `/* --- replaced ${packageName} --- */`,
-    ).replace(
-      `var ${packageName}_1 = ${'req'+'uire'}("${packageName}");`,
-      `/* --- replaced ${packageName} --- */`,
-    );
+    return jsContent
+      .replace(
+        new RegExp(
+          Utils.escapeStringForRegEx(
+            `mod${'ule.exports'} = ${'requ' + 'ire'}("${packageName}");`,
+          ),
+          'g',
+        ),
+        `/* --- replaced ${packageName} --- */`,
+      )
+      .replace(
+        new RegExp(
+          Utils.escapeStringForRegEx(
+            `var ${packageName}_1 = ${'req' + 'uire'}("${packageName}");`,
+          ),
+          'g',
+        ),
+        `/* --- replaced ${packageName} --- */`,
+      );
     // var electron_1 = require("electron");
     //#endregion
   };
@@ -1712,7 +1724,6 @@ export namespace UtilsVSCode {
     return vscode as typeof vscodeType;
     //#endregion
   };
-
 }
 
 //#endregion
