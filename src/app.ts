@@ -138,6 +138,7 @@ class UserMigration extends Taon.Base.Migration {
 //#region  tnp-helpers context
 var MainContext = Taon.createContext(() => ({
   host: HOST_URL,
+  appId: 'dev.taon.tnp-helpers.app',
   frontendHost: FRONTEND_HOST_URL,
   contextName: 'MainContext',
   contexts: { BaseContext },
