@@ -20,6 +20,7 @@ if (!Helpers.exists(path.dirname(portsWorkerDatabaseLocation))) {
 
 export const PortsContextTemplate = Taon.createContextTemplate(() => ({
   contextName: 'PortsContext',
+  appId: 'dev.taon.taon-ports-worker',
   contexts: { BaseContext },
   controllers: { PortsController },
   entities: { Port },

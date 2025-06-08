@@ -12,6 +12,7 @@
   ],
 
   "additionalNpmNames": ["taon-helpers"],
+  "appId": "com.domain.example.tnp-helpers",
 
   "autoReleaseConfigAllowedItems": [{
     "artifactName": "npm-lib-and-cli-tool"
@@ -20,8 +21,8 @@
   "resources": [],
 
   "packageJsonOverride": {
-    "author": "",
-    "description": "",
+    "author": "Dariusz Filipiak",
+    "description": "Description for tnp-helpers. Hello world!",
     "homepage": "https://github.com/darekf77/tnp-helpers#readme",
     "license": "MIT",
     "private": false,
