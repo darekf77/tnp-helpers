@@ -725,17 +725,18 @@ export class HelpersGit {
     let url = '';
     try {
       // git config --get remote.origin.url
-      url = Helpers.run(
+      url = Helpers.commnadOutputAsString(
         `git config --get remote.${
           differentOriginName ? differentOriginName : 'origin'
         }.url`,
-        { output: false, cwd },
+        cwd,
+        {
+          biggerBuffer: false,
+        },
       )
-        .sync()
         .toString()
         .trim();
     } catch (error) {
-      console.log(error);
       return '';
     }
     if (!url.endsWith('.git')) {
