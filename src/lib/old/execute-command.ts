@@ -652,7 +652,7 @@ export function executeCommand(
                 //#region handle async process events
                 if (isDefaultBuildCommand) {
                   var outputChannel =
-                    vscode.window.createOutputChannel('FIREDEV CLI');
+                    vscode.window.createOutputChannel('TAON CLI');
                   outputChannel.show();
                 }
 
