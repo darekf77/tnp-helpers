@@ -13,7 +13,7 @@ import { Port, PortStatus } from './ports.entity';
 export class PortsController extends BaseCliWorkerController {
   //#region fields
   public START_PORT = 3000;
-  public END_PORT = 6000;
+  public END_PORT = 20000;
   public readonly portsCache = new Map<string, Port>();
   //#endregion
 
