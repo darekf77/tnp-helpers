@@ -56,11 +56,6 @@ import {
 import type * as ts from 'typescript';
 import type * as vscodeType from 'vscode';
 
-// import * as yazl from 'yazl';
-// import * as yauzl from 'yauzl';
-// import { pipeline } from 'stream/promises';
-// import { mkdir, stat } from 'fs/promises';
-
 import { Helpers } from './index';
 //#endregion
 
@@ -1793,56 +1788,123 @@ export namespace UtilsZipBrowser {
 }
 
 export namespace UtilsZip {
+  //#region split zip file
+  /**
+   * Splits a file into smaller parts if its size exceeds the specified part size.
+   * @returns true if file was split, false if not needed
+   */
+  export const splitFile = async (
+    inputPath: string,
+    partSizeMB = 99,
+  ): Promise<number> => {
+    //#region @backendFunc
+    const stat = fse.statSync(inputPath);
+    const partSize = partSizeMB * 1024 * 1024;
+
+    if (stat.size <= partSize) {
+      console.log('File is smaller than part size — no split needed.');
+      return 0;
+    }
+
+    return await new Promise<number>((resolve, reject) => {
+      const baseName = path.basename(inputPath);
+      const dirname = path.dirname(inputPath);
+      const input = fse.createReadStream(inputPath);
+      let partIndex = 0;
+      let written = 0;
+      let currentStream = fse.createWriteStream(`${baseName}.part${partIndex}`);
+
+      input.on('data', chunk => {
+        let offset = 0;
+
+        while (offset < chunk.length) {
+          if (written >= partSize) {
+            currentStream.end();
+            partIndex++;
+            currentStream = fse.createWriteStream(
+              crossPlatformPath([dirname, `${baseName}.part${partIndex}`]),
+            );
+            written = 0;
+          }
+
+          const toWrite = Math.min(partSize - written, chunk.length - offset);
+          currentStream.write(chunk.slice(offset, offset + toWrite));
+          written += toWrite;
+          offset += toWrite;
+        }
+      });
+
+      input.on('end', () => {
+        currentStream.end(() => {
+          console.log(`✅ Done splitting into ${partIndex + 1} parts.`);
+          resolve(partIndex + 1);
+        });
+      });
+
+      input.on('error', reject);
+      currentStream.on('error', reject);
+    });
+    //#endregion
+  };
+  //#endregion
+
   export const zipDir = async (absPathToDir: string): Promise<void> => {
     //#region @backendFunc
-    // const zipPath = `${absPathToDir}.zip`;
-    // const zipfile = new yazl.ZipFile();
-    // const addDirectoryToZip = async (dir: string, basePath: string) => {
-    //   const entries = await fs.promises.readdir(dir, { withFileTypes: true });
-    //   for (const entry of entries) {
-    //     const fullPath = path.join(dir, entry.name);
-    //     const relPath = path.relative(basePath, fullPath).replace(/\\/g, '/');
-    //     if (entry.isDirectory()) {
-    //       await addDirectoryToZip(fullPath, basePath);
-    //     } else if (entry.isFile()) {
-    //       zipfile.addFile(fullPath, relPath);
-    //     }
-    //   }
-    // };
-    // await addDirectoryToZip(absPathToDir, absPathToDir);
-    // zipfile.end();
-    // await pipeline(zipfile.outputStream, fs.createWriteStream(zipPath));
-    //#endregion
+    const yazl = await import('yazl'); // Use default import for yazl
+    const pipeline = (await import('stream/promises')).pipeline;
+
+    const zipPath = `${absPathToDir}.zip`;
+    const zipfile = new yazl.ZipFile();
+    const addDirectoryToZip = async (dir: string, basePath: string) => {
+      const entries = await fse.promises.readdir(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        const relPath = path.relative(basePath, fullPath).replace(/\\/g, '/');
+        if (entry.isDirectory()) {
+          await addDirectoryToZip(fullPath, basePath);
+        } else if (entry.isFile()) {
+          zipfile.addFile(fullPath, relPath);
+        }
+      }
+    };
+    await addDirectoryToZip(absPathToDir, absPathToDir);
+    zipfile.end();
+    await pipeline(zipfile.outputStream, fse.createWriteStream(zipPath));
+    //#endregion;
   };
 
   // Unzip: `/some/path/folder.zip` → `/some/path/folder`
   export const unzipArchive = async (absPathToZip: string): Promise<void> => {
     //#region @backendFunc
-    // const extractTo = absPathToZip.replace(/\.zip$/, '');
-    // await mkdir(extractTo, { recursive: true });
-    // return new Promise<void>((resolve, reject) => {
-    //   yauzl.open(absPathToZip, { lazyEntries: true }, (err, zipfile) => {
-    //     if (err || !zipfile) return reject(err);
-    //     zipfile.readEntry();
-    //     zipfile.on('entry', async entry => {
-    //       const filePath = path.join(extractTo, entry.fileName);
-    //       if (/\/$/.test(entry.fileName)) {
-    //         await mkdir(filePath, { recursive: true });
-    //         zipfile.readEntry();
-    //       } else {
-    //         await mkdir(path.dirname(filePath), { recursive: true });
-    //         zipfile.openReadStream(entry, async (err, readStream) => {
-    //           if (err || !readStream) return reject(err);
-    //           const writeStream = fs.createWriteStream(filePath);
-    //           await pipeline(readStream, writeStream);
-    //           zipfile.readEntry();
-    //         });
-    //       }
-    //     });
-    //     zipfile.on('end', () => resolve());
-    //     zipfile.on('error', reject);
-    //   });
-    // });
+    const yauzl = await import('yauzl'); // Use default import for yauzl
+    const { mkdir, stat } = await import('fs/promises'); // Use default import for fs
+    const pipeline = (await import('stream/promises')).pipeline;
+
+    const extractTo = absPathToZip.replace(/\.zip$/, '');
+    await mkdir(extractTo, { recursive: true });
+    return new Promise<void>((resolve, reject) => {
+      yauzl.open(absPathToZip, { lazyEntries: true }, (err, zipfile) => {
+        if (err || !zipfile) return reject(err);
+        zipfile.readEntry();
+        zipfile.on('entry', async entry => {
+          const filePath = path.join(extractTo, entry.fileName);
+          if (/\/$/.test(entry.fileName)) {
+            await mkdir(filePath, { recursive: true });
+            zipfile.readEntry();
+          } else {
+            await mkdir(path.dirname(filePath), { recursive: true });
+            zipfile.openReadStream(entry, async (err, readStream) => {
+              if (err || !readStream) return reject(err);
+              const writeStream = fse.createWriteStream(filePath);
+              await pipeline(readStream, writeStream);
+              zipfile.readEntry();
+            });
+          }
+        });
+        zipfile.on('end', () => resolve());
+        zipfile.on('error', reject);
+      });
+    });
     //#endregion
   };
 }
