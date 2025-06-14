@@ -24,6 +24,7 @@ export class HelpersGit {
       newVersion: string;
       autoReleaseUsingConfig: boolean;
       isCiProcess: boolean;
+      skipTag?: boolean; // if true, it will not tag the commit
     },
   ): Promise<void> {
     //#region @backendFunc
@@ -33,13 +34,15 @@ export class HelpersGit {
     this.stageAllAndCommit(cwd, `release: ${tagName}`);
 
     const tagMessage = 'new version ' + newVersion;
-    try {
-      Helpers.run(`git tag -a ${tagName} ` + `-m "${tagMessage}"`, {
-        cwd,
-        output: false,
-      }).sync();
-    } catch (error) {
-      Helpers.throw(`Not able to tag project`);
+    if(!options.skipTag) {
+      try {
+        Helpers.run(`git tag -a ${tagName} ` + `-m "${tagMessage}"`, {
+          cwd,
+          output: false,
+        }).sync();
+      } catch (error) {
+        Helpers.throw(`Not able to tag project`);
+      }
     }
     // const lastCommitHash = this.project.git.lastCommitHash();
     // this.project.packageJson.setBuildHash(lastCommitHash);
@@ -47,7 +50,9 @@ export class HelpersGit {
     if (
       autoReleaseUsingConfig ||
       (await UtilsTerminal.confirm({
-        message: `Push changes to git repo ?`,
+        message:
+          `Push changes to git repo ` +
+          `(${Helpers.git.getOriginURL(cwd)}#${Helpers.git.currentBranchName(cwd)}) ?`,
         defaultValue: true,
       }))
     ) {
