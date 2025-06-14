@@ -87,6 +87,21 @@ export class BasePackageJson extends BaseJsonFileReader<PackageJson> {
     return _.cloneDeep(this.data ? this.data.dependencies : {}) || {};
   }
 
+  get description(): string {
+    return this.data?.description || '';
+  }
+
+  get displayName(): string {
+    // @ts-ignore
+    return this.data['displayName'] || '';
+  }
+
+  get publisher(): string {
+    // @ts-ignore
+    return this.data['publisher'] || '';
+  }
+
+
   /**
    * set the WHOLE dependencies object
    * THIS WILL NOT MERGE -> IT WILL REPLACE WHOLE DEPENDENCIES OBJECT
