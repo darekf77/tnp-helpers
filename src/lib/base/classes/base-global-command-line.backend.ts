@@ -803,11 +803,24 @@ ${lastCommitMessage}
   }
   //#endregion
 
+  //#region commands / melt
+  public async meltAll() {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
+      return;
+    }
+    await this.meltUpdateCommits(true);
+    for (const child of this.project.children) {
+      await this.__meltCommitsFunc(child, true);
+    }
+    this._exit();
+  }
+  //#endregion
+
   //#region commands / melt updat ecommits
-  private async meltUpdateCommits(hideInfo = false) {
-    if (this.project.git.meltActionCommits() > 0) {
+  private async __meltCommitsFunc(project: BaseProject, hideInfo = false) {
+    if (project.git.meltActionCommits() > 0) {
       if (!hideInfo) {
-        this.project.git.stageAllFiles();
+        project.git.stageAllFiles();
         if (
           !(await Helpers.consoleGui.question.yesNo(
             'Update commits has been reset. Continue with changes ?',
@@ -817,6 +830,10 @@ ${lastCommitMessage}
         }
       }
     }
+  }
+
+  private async meltUpdateCommits(hideInfo = false) {
+    await this.__meltCommitsFunc(this.project, hideInfo);
   }
   //#endregion
 
