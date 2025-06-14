@@ -154,8 +154,50 @@ export class BaseGlobalCommandLine<
     this._exit();
   }
 
+  private async updateProject(project: PROJECT, force = false): Promise<void> {
+    try {
+      await project.packageJson.bumpPatchVersion();
+    } catch (error) {}
+    try {
+      project.git.addAndCommit(
+        `chore: ${!!this.firstArg ? this.args.join(' ') : 'update'}`,
+      );
+    } catch (error) {}
+    await project.git.pushCurrentBranch({
+      askToRetry: true,
+      forcePushNoQuestion: true,
+      force,
+    });
+
+    if (!project.isMonorepo) {
+      for (const child of project.children) {
+        if (child.git.isGitRoot) {
+          await this.updateProject(child, force);
+        }
+      }
+    }
+  }
+
   async deepUp(noExit = false) {
     await this.deepUpdate(noExit);
+  }
+
+  async deepUpForce(noExit = false) {
+    await this.deepUpdateForce(noExit);
+  }
+
+  async deepUpdateForce(noExit = false) {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
+      return;
+    }
+    Helpers.info(
+      '(force) Deep updating & force pushing project with children...',
+    );
+
+    await this.updateProject(this.project, true);
+
+    Helpers.info('Done');
+    this._exit();
   }
 
   async deepUpdate(noExit = false) {
@@ -163,30 +205,8 @@ export class BaseGlobalCommandLine<
       return;
     }
     Helpers.info('Deep updating & pushing project with children...');
-    const updateProject = async (project: PROJECT): Promise<void> => {
-      try {
-        await project.packageJson.bumpPatchVersion();
-      } catch (error) {}
-      try {
-        project.git.addAndCommit(
-          `chore: ${!!this.firstArg ? this.args.join(' ') : 'update'}`,
-        );
-      } catch (error) {}
-      await project.git.pushCurrentBranch({
-        askToRetry: true,
-        forcePushNoQuestion: true,
-      });
 
-      if (!project.isMonorepo) {
-        for (const child of project.children) {
-          if (child.git.isGitRoot) {
-            await updateProject(child);
-          }
-        }
-      }
-    };
-
-    await updateProject(this.project);
+    await this.updateProject(this.project);
 
     Helpers.info('Done');
     this._exit();
