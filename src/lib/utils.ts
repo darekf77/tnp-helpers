@@ -1,5 +1,11 @@
 //#region imports
-import { crossPlatformPath, fse, path, UtilsOs } from 'tnp-core/src';
+import {
+  child_process,
+  crossPlatformPath,
+  fse,
+  path,
+  UtilsOs,
+} from 'tnp-core/src';
 import { _, CoreModels, Utils } from 'tnp-core/src';
 import {
   createPrinter,
@@ -96,7 +102,9 @@ export namespace UtilsNpm {
       alphaOrBetaOrRc = '';
     }
     return fixMajorVerNumber(
-      `${major}.${minor}.${patch}${alphaOrBetaOrRc ? '.' + alphaOrBetaOrRc : ''}`,
+      `${major}.${minor}.${patch}${
+        alphaOrBetaOrRc ? '.' + alphaOrBetaOrRc : ''
+      }`,
     );
   };
   //#endregion
@@ -117,7 +125,9 @@ export namespace UtilsNpm {
     } else if (splited.length === 2) {
       patch = '0';
     }
-    return `${major}.${minor}.${patch}${alphaOrBetaOrRc ? '.' + alphaOrBetaOrRc : ''}`;
+    return `${major}.${minor}.${patch}${
+      alphaOrBetaOrRc ? '.' + alphaOrBetaOrRc : ''
+    }`;
   };
   //#endregion
 }
@@ -1563,7 +1573,9 @@ export namespace UtilsMd {
       markdownImgRegex,
       (_, prefixText, path, suffix) => {
         // Add the "../" prefix and normalize the path
-        return `${prefixText}${prefix}${path.replace(/^\.\//, '').replace(/^\.\.\//, '')}${suffix}`;
+        return `${prefixText}${prefix}${path
+          .replace(/^\.\//, '')
+          .replace(/^\.\.\//, '')}${suffix}`;
       },
     );
 
@@ -1572,7 +1584,9 @@ export namespace UtilsMd {
       htmlImgRegex,
       (_, prefixText, path, suffix) => {
         // Add the "../" prefix and normalize the path
-        return `${prefixText}${prefix}${path.replace(/^\.\//, '').replace(/^\.\.\//, '')}${suffix}`;
+        return `${prefixText}${prefix}${path
+          .replace(/^\.\//, '')
+          .replace(/^\.\.\//, '')}${suffix}`;
       },
     );
 
@@ -1789,6 +1803,60 @@ export namespace UtilsZipBrowser {
 
 export namespace UtilsZip {
   //#region split zip file
+
+  export const splitFile7Zip = async (
+    inputPath: string,
+    partSizeMB = 99,
+  ): Promise<number> => {
+    //#region @backendFunc
+    const stat = fse.statSync(inputPath);
+    const partSize = partSizeMB * 1024 * 1024;
+
+    if (stat.size <= partSize) {
+      console.log('File is smaller than part size — no split needed.');
+      return 0;
+    }
+
+    const { path7za } = await import('7zip-bin');
+
+    const baseName = path.basename(inputPath, path.extname(inputPath));
+    const dirname = path.dirname(inputPath);
+    const output7zPath = path.join(dirname, `${baseName}.7z`);
+
+    return new Promise((resolve, reject) => {
+      const args = [
+        'a', // Add to archive
+        output7zPath,
+        inputPath,
+        `-v${partSizeMB}m`, // ✅ Volume split flag
+        '-mx=0', // No compression (optional: speeds it up)
+      ];
+
+      const proc = child_process.spawn(path7za, args, { stdio: 'inherit' });
+
+      proc.on('close', async code => {
+        if (code !== 0)
+          return reject(new Error(`7za failed with code ${code}`));
+
+        try {
+          const files = await fse.readdir(dirname);
+          const partFiles = files.filter(
+            f =>
+              f.startsWith(`${baseName}.7z.`) &&
+              /^[0-9]{3}$/.test(f.split('.').pop() || ''),
+          );
+
+          const count = partFiles.length;
+          console.log(`✅ Created ${count} part(s):`, partFiles);
+          resolve(count);
+        } catch (err) {
+          reject(err);
+        }
+      });
+    });
+    //#endregion
+  };
+
   /**
    * Splits a file into smaller parts if its size exceeds the specified part size.
    * @returns true if file was split, false if not needed
