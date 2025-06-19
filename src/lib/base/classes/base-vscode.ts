@@ -71,7 +71,7 @@ export class BaseVscodeHelpers<
       'ctcuff.font-preview',
       'dbaeumer.vscode-eslint',
       'dnicolson.binary-plist',
-      // 'eamodio.gitlens', // not needed anymore
+      'eamodio.gitlens',// very nice inline git blame
       'eg2.tslint',
       'esbenp.prettier-vscode',
       'henry-li.vscode-import-formatter',
@@ -105,7 +105,7 @@ export class BaseVscodeHelpers<
       'tommasov.hosts',
       // 'vespa-dev-works.jestrunit',
       'firsttris.vscode-jest-runner', // better for jest
-      'waderyan.gitblame',
+      // 'waderyan.gitblame',
 
       'wenfangdu.snippet-generator',
       'xabikos.javascriptsnippets',
