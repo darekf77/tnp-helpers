@@ -229,7 +229,7 @@ export class HelpersTaon extends CoreHelpers {
     // let output = data.code;
 
     if (!skipFixingSQLlite) {
-      output = UtilsQuickFixes.replaceSQLliteFaultyCode(output);
+      output = UtilsQuickFixes.replaceKnownFaultyCode(output);
     }
 
     replaceWithNothing.forEach(r => {

@@ -51,7 +51,7 @@ export class BaseQuickFixes<
       return;
     }
     const content = Helpers.readFile(filePath);
-    const fixedContent = UtilsQuickFixes.replaceSQLliteFaultyCode(content);
+    const fixedContent = UtilsQuickFixes.replaceKnownFaultyCode(content);
     Helpers.writeFile(filePath, fixedContent);
     //#endregion
   }
