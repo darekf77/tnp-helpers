@@ -113,7 +113,7 @@ export class HelpersTaon extends CoreHelpers {
    * default strategy is cli
    * Please keep:  'ts-node', 'typescript' as dependency in your package.json
    */
-  async ncc(
+  async bundleCodeIntoSingleFile(
     pathToJsFile: string,
     outputFilePath: string,
     options?: {
