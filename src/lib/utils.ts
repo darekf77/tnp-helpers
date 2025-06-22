@@ -1650,7 +1650,7 @@ export namespace UtilsQuickFixes {
       .replace(
         new RegExp(
           Utils.escapeStringForRegEx(
-            `var ${packageName}_1 = ${'req' + 'uire'}("${packageName}");`,
+            `var ${_.snakeCase(packageName)}_1 = ${'req' + 'uire'}("${packageName}");`,
           ),
           'g',
         ),
