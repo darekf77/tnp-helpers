@@ -486,6 +486,8 @@ export class BaseVscodeHelpers<
       // 'scm.showIncomingChanges': false,
       // 'scm.showOutgoingChanges': false,
       'workbench.layoutControl.enabled': false,
+      "typescript.updateImportsOnPaste.enabled": false,
+      "editor.pasteAs.enabled": false,
       'scm.showHistoryGraph': false,
       'scm.showActionButton': false,
       'editor.renderWhitespace': true,
