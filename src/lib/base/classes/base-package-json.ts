@@ -8,7 +8,11 @@ import {
   BaseJsonFileReaderOptions,
 } from './base-json-file-reader';
 
-type PackageJson = PackageJsonBase & { lastBuildTagHash: string };
+export type PackageJson = PackageJsonBase & {
+  lastBuildTagHash?: string;
+  publisher?: string;
+  displayName?: string;
+};
 
 //#region package json dependency obj
 export type PackageJsonDependencyObj =
@@ -92,15 +96,12 @@ export class BasePackageJson extends BaseJsonFileReader<PackageJson> {
   }
 
   get displayName(): string {
-    // @ts-ignore
-    return this.data['displayName'] || '';
+    return this.data.displayName || '';
   }
 
   get publisher(): string {
-    // @ts-ignore
-    return this.data['publisher'] || '';
+    return this.data.publisher || '';
   }
-
 
   /**
    * set the WHOLE dependencies object
