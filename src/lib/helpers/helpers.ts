@@ -1,5 +1,5 @@
 //#region imports
-import { _, path } from 'tnp-core/src';
+import { _, path, Utils } from 'tnp-core/src';
 import { HelpersArrayObj } from './helpers-array-obj';
 import { HelpersStringsRegexes } from './helpers-strings-regexes';
 import { HelpersStrings } from './helpers-strings';
@@ -150,12 +150,12 @@ export class HelpersTaon extends CoreHelpers {
         ${outputFilePath}
        `);
 
-    let replaceWithNothing = [
+    let replaceWithNothing = Utils.uniqArray([
       'esbuild',
       ...(additionalReplaceWithNothing || []),
-    ];
+    ]);
 
-    let externals = [
+    let externals = Utils.uniqArray([
       'esbuild',
       'electron',
       'vscode',
@@ -163,7 +163,7 @@ export class HelpersTaon extends CoreHelpers {
       // 'webpack',
       // 'typescript',
       ...(additionalExternals || []),
-    ];
+    ]);
 
     Helpers.logInfo(`Externals for bundle: ${externals.join(',')}`);
     // if (strategy === 'vscode-ext') {
