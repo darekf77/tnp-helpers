@@ -1,6 +1,6 @@
 {
   "name": "tnp-helpers",
-  "version": "19.0.34",
+  "version": "19.0.35",
   "scripts": {
     "docs": "python3 -m mkdocs",
     "mkdocs": "python3 -m mkdocs",
@@ -181,6 +181,7 @@
     "express-fileupload": "~1.5.1",
     "express-session": "~1.18.1",
     "fast-glob": "~3.3.2",
+    "favicons": "~7.2.0",
     "file-loader": "~1.1.11",
     "file-saver": "2.0.5",
     "file-type": "~17.1.6",
