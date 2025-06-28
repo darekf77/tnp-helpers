@@ -34,7 +34,7 @@ export class HelpersGit {
     this.stageAllAndCommit(cwd, `release: ${tagName}`);
 
     const tagMessage = 'new version ' + newVersion;
-    if(!options.skipTag) {
+    if (!options.skipTag) {
       try {
         Helpers.run(`git tag -a ${tagName} ` + `-m "${tagMessage}"`, {
           cwd,
@@ -1069,7 +1069,12 @@ export class HelpersGit {
     options = options || {};
     options.origin = options.origin ? options.origin : 'origin';
 
-    const { askToRetry, origin, forcePushNoQuestion = false } = options;
+    const isSsh = Helpers.git
+      .getOriginURL(cwd, options.origin)
+      .includes('git@');
+
+    const { askToRetry, forcePushNoQuestion = false } = options;
+    let { origin } = options;
     let { force } = options;
     if (force && !forcePushNoQuestion) {
       Helpers.info(`
@@ -1122,6 +1127,9 @@ ${cwd}
           normal: {
             name: 'Try normal push again ?',
           },
+          normalButSshOrHttpOrigin: {
+            name: `Try normal ${isSsh ? 'HTTPS' : 'SSH'} origin push again ?`,
+          },
           force: {
             name: 'Try again with force push ?',
           },
@@ -1140,6 +1148,14 @@ ${cwd}
           question: 'What to do ?',
           choices: pushOptions,
         });
+
+        if (whatToDo === 'normalButSshOrHttpOrigin') {
+          if (isSsh) {
+            await Helpers.git.changeRemoveFromSshToHttps(cwd);
+          } else {
+            await Helpers.git.changeRemoteFromHttpsToSSh(cwd);
+          }
+        }
 
         if (whatToDo === 'openInVscode') {
           try {
