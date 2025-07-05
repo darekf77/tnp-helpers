@@ -996,6 +996,9 @@ Please provide proper commit message for lastest changes in your project:
     allowedEmailsEnds: string[],
   ): Promise<void> {
     //#region @backendFunc
+    if (allowedEmailsEnds.length === 0) {
+      return;
+    }
     while (true) {
       let gitConfig: { name?: string; email?: string } = null;
       try {
@@ -1011,7 +1014,7 @@ Please provide proper commit message for lastest changes in your project:
         notUsingEmail: !gitConfig?.email ? errorsMgs.notUsingEmail : null,
         notUsingName: !gitConfig?.name ? errorsMgs.notUsingName : null,
         notUsingAllowedEmails: !allowedEmailsEnds.some(allowedEmailEnd =>
-          gitConfig.email.endsWith(allowedEmailEnd),
+          gitConfig?.email?.endsWith(allowedEmailEnd),
         )
           ? errorsMgs.notUsingAllowedEmails
           : null,
