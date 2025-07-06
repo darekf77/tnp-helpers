@@ -965,13 +965,16 @@ export namespace UtilsTypescript {
 
   //#region helpers / get quote type
   const getQuoteType = (text: string): 'single' | 'double' | 'tics' => {
+    //#region @websqlFunc
     if (text.startsWith('`')) return 'tics';
     if (text.startsWith("'")) return 'single';
     return 'double';
+    //#endregion
   };
   //#endregion
 
   const extractImportExportElements = (node: ts.Node): string[] => {
+    //#region @websqlFunc
     const elements: string[] = [];
 
     if (isImportDeclaration(node) && node.importClause) {
@@ -992,6 +995,7 @@ export namespace UtilsTypescript {
     }
 
     return elements;
+    //#endregion
   };
 
   export const recognizeImportsFromFile = (
@@ -1229,6 +1233,7 @@ export namespace UtilsTypescript {
     tags: string[],
     // debug = false,
   ): string {
+    //#region @websqlFunc
     const sourceFile = createSourceFile(
       'temp.ts',
       tsFileContent,
@@ -1286,6 +1291,7 @@ export namespace UtilsTypescript {
     const result = lines.join('\n');
     // debug && console.log(result)
     return result;
+    //#endregion
   }
   //#endregion
 
