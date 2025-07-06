@@ -71,7 +71,7 @@ export class BaseVscodeHelpers<
       'ctcuff.font-preview',
       'dbaeumer.vscode-eslint',
       'dnicolson.binary-plist',
-      'eamodio.gitlens',// very nice inline git blame
+      'eamodio.gitlens', // very nice inline git blame
       'eg2.tslint',
       'esbenp.prettier-vscode',
       'henry-li.vscode-import-formatter',
@@ -103,6 +103,7 @@ export class BaseVscodeHelpers<
       'taddison.gitlazy',
       'unifiedjs.vscode-mdx',
       'tommasov.hosts',
+      'franklinteixeira205.primeflex',
       // 'vespa-dev-works.jestrunit',
       'firsttris.vscode-jest-runner', // better for jest
       // 'waderyan.gitblame',
@@ -486,8 +487,8 @@ export class BaseVscodeHelpers<
       // 'scm.showIncomingChanges': false,
       // 'scm.showOutgoingChanges': false,
       'workbench.layoutControl.enabled': false,
-      "typescript.updateImportsOnPaste.enabled": false,
-      "editor.pasteAs.enabled": false,
+      'typescript.updateImportsOnPaste.enabled': false,
+      'editor.pasteAs.enabled': false,
       'scm.showHistoryGraph': false,
       'scm.showActionButton': false,
       'editor.renderWhitespace': true,

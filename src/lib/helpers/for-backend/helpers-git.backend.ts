@@ -1043,9 +1043,13 @@ export class HelpersGit {
         this.lastCommitMessage(cwd) ===
         Helpers.git.ACTION_MSG_RESET_GIT_HARD_COMMIT
       ) {
+        Helpers.logInfo(
+          `[${config.frameworkName}-helpers] Melting action commit #`,
+        );
         Helpers.git.resetSoftHEAD(cwd, 1);
         ++i;
       } else {
+        Helpers.git.unstageAllFiles(cwd);
         return i;
       }
     }

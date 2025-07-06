@@ -818,7 +818,7 @@ ${lastCommitMessage}
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
-    await this.meltUpdateCommits(true);
+    await this.meltUpdateCommits({ hideInfo: true });
     this._exit();
   }
   //#endregion
@@ -828,32 +828,32 @@ ${lastCommitMessage}
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
-    await this.meltUpdateCommits(true);
+    await this.meltUpdateCommits({ hideInfo: true });
     for (const child of this.project.children) {
-      await this.__meltCommitsFunc(child, true);
+      await this.__meltCommitsFunc(child, { hideInfo: true });
     }
     this._exit();
   }
   //#endregion
 
   //#region commands / melt updat ecommits
-  private async __meltCommitsFunc(project: BaseProject, hideInfo = false) {
-    if (project.git.meltActionCommits() > 0) {
-      if (!hideInfo) {
-        project.git.stageAllFiles();
-        if (
-          !(await Helpers.consoleGui.question.yesNo(
-            'Update commits has been reset. Continue with changes ?',
-          ))
-        ) {
-          this._exit();
-        }
-      }
+  private async __meltCommitsFunc(
+    project: BaseProject,
+    options?: { hideInfo?: boolean },
+  ) {
+    options = options || {};
+    const meltedCommits = project.git.meltActionCommits();
+    if (meltedCommits > 0) {
+      Helpers.logInfo(
+        `${meltedCommits} has been soft reset (melted) in ${project.genericName}`,
+      );
+    } else {
+      Helpers.logInfo(`No commits to melt for project ${project.genericName}`);
     }
   }
 
-  private async meltUpdateCommits(hideInfo = false) {
-    await this.__meltCommitsFunc(this.project, hideInfo);
+  private async meltUpdateCommits(options?: { hideInfo?: boolean }) {
+    await this.__meltCommitsFunc(this.project, options);
   }
   //#endregion
 
