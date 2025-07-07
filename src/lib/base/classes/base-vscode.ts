@@ -48,8 +48,7 @@ export class BaseVscodeHelpers<
       {};
   }
 
-  //#region extensions
-  private get extensions(): string[] {
+  getExtensions(): string[] {
     return Helpers.uniqArray([
       //#region @backend
       // 'Angular.ng-template', // high cpu usage
@@ -160,6 +159,14 @@ export class BaseVscodeHelpers<
 
       //#endregion
     ]).map(c => (c as string).toLowerCase());
+  }
+
+  //#region extensions
+  /**
+   * @deprecated use getExtensions() instead
+   */
+  private get extensions(): string[] {
+    return this.getExtensions();
   }
   //#endregion
 
