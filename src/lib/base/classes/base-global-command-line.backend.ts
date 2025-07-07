@@ -4,7 +4,12 @@ import { chalk, _, path, os, UtilsOs } from 'tnp-core/src';
 import { crossPlatformPath } from 'tnp-core/src';
 import { UtilsTerminal } from 'tnp-core/src';
 
-import { Helpers, LinkedProject, PushProcessOptions } from '../../index';
+import {
+  Helpers,
+  LinkedProject,
+  PushProcessOptions,
+  UtilsVSCode,
+} from '../../index';
 import { TypeOfCommit, CommitData } from '../commit-data';
 import { GhTempCode } from '../gh-temp-code';
 
@@ -130,6 +135,34 @@ export class BaseGlobalCommandLine<
 
   async choreUpdate() {
     await this.update();
+  }
+
+  /**
+   * Generate or update .vscode/settings.json file color settings
+   */
+  settingsVscode() {
+    const vscodePath = crossPlatformPath([this.cwd, '.vscode']);
+    const settingsAbsPath = crossPlatformPath([vscodePath, 'settings.json']);
+    if (!Helpers.exists(settingsAbsPath)) {
+      Helpers.writeFile(settingsAbsPath, '{}');
+    }
+    const currentSettingsValue = Helpers.readJson(settingsAbsPath);
+
+    currentSettingsValue['workbench.colorCustomizations'] = {
+      'activityBar.background': `${UtilsVSCode.generateFancyColor()}`,
+    };
+
+    currentSettingsValue['workbench.colorCustomizations'][
+      'statusBar.background'
+    ] = UtilsVSCode.generateFancyColor();
+
+    currentSettingsValue['workbench.colorCustomizations'][
+      'statusBar.debuggingBackground'
+    ] = `#15d8ff`; // nice blue for debugging
+
+    Helpers.writeJson(settingsAbsPath, currentSettingsValue);
+
+    this._exit();
   }
 
   //#region commands / quick git update
