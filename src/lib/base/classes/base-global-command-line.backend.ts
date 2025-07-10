@@ -1748,6 +1748,28 @@ Would you like to update current project configuration?`)
   }
   //#endregion
 
+  async checkPorts() {
+    const ports = this.args
+      .join(' ')
+      .replace(/\,/, '')
+      .split(' ')
+      .map(p => {
+        return parseInt(p);
+      });
+
+    console.log(`Checking ports: ${ports.join(', ')}`);
+
+    if (ports.length === 0) {
+      Helpers.error(`No ports provided`, false, true);
+    }
+    for (const port of ports) {
+      const isPortInUse = await UtilsOs.isPortInUse(port);
+      console.log(
+        `Port ${port} is in use: ${isPortInUse ? chalk.red('YES') : chalk.green('NO')}`,
+      );
+    }
+    this._exit();
+  }
   removeSymlinksDryRun() {
     Helpers.removeSymlinks(this.project.nodeModules.path, {
       dryRun: true,
