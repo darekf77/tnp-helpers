@@ -1049,7 +1049,8 @@ export class HelpersGit {
         Helpers.git.resetSoftHEAD(cwd, 1);
         ++i;
       } else {
-        Helpers.git.unstageAllFiles(cwd);
+        // TODO breaking cli processes - put outside this fn
+        // Helpers.git.unstageAllFiles(cwd);
         return i;
       }
     }
