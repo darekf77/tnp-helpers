@@ -147,6 +147,7 @@ export class BaseVscodeHelpers<
       // wsl
       'ms-vscode-remote.remote-wsl',
       'kgrzywocz.wsl-path',
+      'imgildev.vscode-angular-generator',
       // ---
       // 'skacekachna.win-opacity',
       // 'electrotype.windows-explorer-context-menu',
