@@ -717,7 +717,10 @@ export namespace UtilsTypescript {
     tsAbsFilePath: string,
     variableName: string,
     valueOfVariable: any,
-    addIfNotExists = true,
+    options?: {
+      skipAddIfNotExists?: boolean;
+      useRawStringValue?: boolean;
+    }
   ): void => {
     //#region @backendFunc
     const sourceText = Helpers.readFile(tsAbsFilePath);
@@ -727,6 +730,8 @@ export namespace UtilsTypescript {
       ScriptTarget.Latest,
       /*setParentNodes */ true,
     );
+    options = options || {};
+    const addIfNotExists = !options.skipAddIfNotExists;
 
     // We'll build an AST transformer that modifies or inserts our variable declaration
     const transformer = (context: TransformationContext) => {
@@ -750,7 +755,12 @@ export namespace UtilsTypescript {
                 // we wrap it with quotes; otherwise, create a numeric or object literal.
                 let initializer: ts.Expression;
                 if (typeof valueOfVariable === 'string') {
-                  initializer = factory.createStringLiteral(valueOfVariable);
+                  if(options.useRawStringValue) {
+                    initializer = factory.createIdentifier(valueOfVariable);
+                  } else {
+                    initializer = factory.createStringLiteral(valueOfVariable);
+                  }
+
                 } else if (typeof valueOfVariable === 'number') {
                   initializer = factory.createNumericLiteral(valueOfVariable);
                 } else {
