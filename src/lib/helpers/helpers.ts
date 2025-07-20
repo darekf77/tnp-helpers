@@ -17,7 +17,7 @@ import { HelpersCliTool } from './for-backend/helpers-cli-tool.backend';
 import { HelpersNpm } from './for-backend/helpers-npm.backend';
 import { HelpersTerminal } from './for-backend/helpers-system-terminal.backend';
 
-import { HelpersDependencies } from './for-backend/helpers-dependencies.backend';
+
 import { HelpersPath } from './for-backend/helpers-path.backend';
 import { HelpersNetwork } from './for-backend/helpers-network.backend';
 import { HelpersJSON5 } from './helpers-json5.backend';
@@ -81,7 +81,7 @@ export class HelpersTaon extends CoreHelpers {
     public terminal = new HelpersTerminal(),
     public git = new HelpersGit(),
     public npm = new HelpersNpm(),
-    public deps = new HelpersDependencies(),
+
     public path = new HelpersPath(),
     public network = new HelpersNetwork(),
     public json5 = new HelpersJSON5(),

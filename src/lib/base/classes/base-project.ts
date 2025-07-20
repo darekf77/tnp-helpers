@@ -1128,7 +1128,7 @@ export abstract class BaseProject<
   //#region getters & methods / open location
   openLocation(relativeFolderPath: string) {
     //#region @backendFunc
-    Helpers.openFolderInFileExploer(this.pathFor(relativeFolderPath));
+    Helpers.openFolderInFileExplorer(this.pathFor(relativeFolderPath));
     //#endregion
   }
   //#endregion
