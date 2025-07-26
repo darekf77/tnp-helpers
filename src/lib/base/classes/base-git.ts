@@ -577,7 +577,7 @@ Please provide proper commit message for lastest changes in your project:
   //#endregion
 
   //#region methods & getters / count commits
-  countComits(): number {
+  countCommits(): number {
     //#region @backendFunc
     return Helpers.git.countCommits(this.project.location);
     //#endregion

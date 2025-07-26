@@ -170,3 +170,10 @@ Quick commit and push release commit <br>
 `git push origin release/version-1-2-3`
 
 taon prel <=> taon prelase
+
+
+# Other commands
+
+
+`taon refresh` => refresh linked projects configuration
+(after deleting or adding new repo)

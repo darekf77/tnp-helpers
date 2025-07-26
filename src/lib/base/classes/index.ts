@@ -15,9 +15,10 @@ export * from './base-debounce-compiler-for-project';
 export * from './base-quick-fixes';
 export * from './base-cli-worker';
 export * from './base-process-manager';
+export * from './base-command-line-feature';
 
 //#region @backend
 export * from './base-start-config.backend';
-export * from './base-command-line-feature.backend';
+
 export * from './base-global-command-line.backend';
 //#endregion

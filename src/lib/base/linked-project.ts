@@ -1,4 +1,4 @@
-import { config } from 'tnp-config/src';
+import { config, notAllowedProjectNames } from 'tnp-config/src';
 import { _, crossPlatformPath, path } from 'tnp-core/src';
 
 import { Helpers } from '../index';
@@ -57,6 +57,13 @@ export class LinkedProject {
       recursive,
     })
       .filter(folderAbsPath => {
+        if (notAllowedProjectNames.includes(path.basename(folderAbsPath))) {
+          Helpers.warn(
+            `[${config.frameworkName}-helpers][linked-projects] ` +
+              `Skipping folder ${folderAbsPath} because it has not allowed name`,
+          );
+          return false;
+        }
         // console.log('folderAbsPath', folderAbsPath);
         // Helpers.checkIfNameAllowedForTaonProj(path.basename(folderAbsPath)) &&
         if (

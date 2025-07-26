@@ -37,7 +37,7 @@ export type CoreCommandArgOptions<PROJECT extends BaseProject<any,any>> = {
   /**
    * first arg from command line
    */
-  firstArg: string;
+  firstArg?: string;
   /**
    * Not question for user ex.
    * - automatic process of patch release
@@ -47,14 +47,14 @@ export type CoreCommandArgOptions<PROJECT extends BaseProject<any,any>> = {
   /**
    * orignal args with params
    */
-  argsWithParams: string;
+  argsWithParams?: string;
   copyto?: string[];
   copytoall?: boolean;
   /**
    * args from command line (clearn from params)
    */
-  args: string[];
-  exitCallback: () => void;
+  args?: string[];
+  exitCallback?: () => void;
 };
 //#endregion
 

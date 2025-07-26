@@ -1248,11 +1248,11 @@ export abstract class BaseProject<
   /**
    * get info about porject
    */
-  async info() {
+  async info(): Promise<string> {
     //#region @backendFunc
     const proj = this;
-    Helpers.info(
-      `
+
+    return  `
 
   name: ${proj?.name}
   type: ${proj?.type}
@@ -1278,8 +1278,7 @@ ${(this.linkedProjects.linkedProjects || [])
   })
   .join('\n')}
 
-  `,
-    );
+  `
 
     // linked projects detected (${this.detectedLinkedProjects?.length || 0}):
     // ${(this.detectedLinkedProjects || []).map(c => '- ' + c.relativeClonePath).join('\n')}

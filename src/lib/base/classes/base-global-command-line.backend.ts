@@ -15,7 +15,7 @@ import {
 import { TypeOfCommit, CommitData } from '../commit-data';
 import { GhTempCode } from '../gh-temp-code';
 
-import { BaseCommandLineFeature } from './base-command-line-feature.backend';
+import { BaseCommandLineFeature } from './base-command-line-feature';
 import { BaseProject } from './base-project';
 import type { BaseProjectResolver } from './base-project-resolver';
 
@@ -1240,7 +1240,7 @@ ${lastCommitMessage}
       return;
     }
     Helpers.clearConsole();
-    await this.project.info();
+    Helpers.info(await this.project.info());
     await this.project.linkedProjects.saveAllLinkedProjectsToDB();
     this._exit();
   }

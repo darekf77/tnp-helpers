@@ -125,7 +125,37 @@ export class BaseLinkedProjects<
       : linkedProj;
     //#region @backendFunc
     const linkedProjectsConfig = this.getLinkedProjectsConfig();
-    linkedProjectsConfig.projects.push(LinkedProject.from(linkedProject));
+    const linkedProjectToAdd = LinkedProject.from(linkedProject);
+
+    const newProjRemoteHttpUrl = Helpers.git.originSshToHttp(
+      linkedProjectToAdd.remoteUrl(),
+    );
+    const newProjRemoteSshUrl = Helpers.git.originHttpToSsh(
+      linkedProjectToAdd.remoteUrl(),
+    );
+
+    const httpExists = linkedProjectsConfig.projects.some(
+      p =>
+        p.repoUrlHttp === newProjRemoteHttpUrl &&
+        p.relativeClonePath === linkedProjectToAdd.relativeClonePath,
+    );
+
+    const sshExists = linkedProjectsConfig.projects.some(
+      p =>
+        p.repoUrlSsh === newProjRemoteSshUrl &&
+        p.relativeClonePath === linkedProjectToAdd.relativeClonePath,
+    );
+
+    if (httpExists || sshExists) {
+      Helpers.warn(
+        `[${config.frameworkName}-helpers][linked-projects] ` +
+          `Project "${linkedProjectToAdd.remoteUrl()}" ` +
+          `already exists in linked projects`,
+      );
+      return;
+    }
+
+    linkedProjectsConfig.projects.push(linkedProjectToAdd);
     this.setLinkedProjectsConfig(linkedProjectsConfig);
     //#endregion
   }
@@ -314,7 +344,7 @@ export class BaseLinkedProjects<
           `);
 
         Helpers.info(`
-  
+
 ${projectsThatShouldBeLinked
   .map(
     (p, index) =>
@@ -323,7 +353,7 @@ ${projectsThatShouldBeLinked
       `${p.purpose ? `{ purpose: ${p.purpose} }` : ''}`,
   )
   .join('\n')}
-  
+
         `);
 
         if (projectsThatShouldBeLinked.length === 0) {

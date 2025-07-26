@@ -35,7 +35,7 @@ export abstract class BaseCommandLineFeature<
   /**
    * clean args without params from command line
    */
-  protected args: string[];
+   args: string[];
   /**
    * first arg from args
    */
@@ -65,9 +65,9 @@ export abstract class BaseCommandLineFeature<
     this.__project = v;
   }
 
-  //#region @backend
+
   constructor(
-    protected readonly argsWithParams: string,
+    public readonly argsWithParams: string,
     protected readonly methodNameToCall: string,
     /**
      * nearest project to cwd
@@ -79,6 +79,7 @@ export abstract class BaseCommandLineFeature<
     protected cwd: string,
     ins: PROJECT_RESOLVER,
   ) {
+    //#region @backend
     this.ins = ins;
     this.project = project;
     this.cwd = crossPlatformPath(cwd);
@@ -152,10 +153,11 @@ export abstract class BaseCommandLineFeature<
       }
     });
     //#endregion
+    //#endregion
   }
-  //#endregion
 
-  protected _exit(code = 0): void {
+
+  public _exit(code = 0): void {
     process.exit(code);
   }
 
