@@ -606,7 +606,7 @@ export class BaseVscodeHelpers<
       'cSpell.enabledNotifications': {
         'Maximum Word Length Exceeded': false,
       },
-      "docker.extension.dockerEngineAvailabilityPrompt": false,
+      'docker.extension.dockerEngineAvailabilityPrompt': false,
     };
     //#endregion
 
