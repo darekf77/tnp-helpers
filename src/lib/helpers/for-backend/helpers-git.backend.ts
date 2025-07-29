@@ -1779,6 +1779,12 @@ ${cwd}
 
   //#region get orign ssh from origin http
   originHttpToSsh(originHttp: string, verbose = false): string {
+    if (!originHttp) {
+      Helpers.warn(
+        `[${config.frameworkName}-helpers][originHttpToSsh] originHttp is empty or undefined`,
+      );
+      return originHttp;
+    }
     const httpsPattern = /^https:\/\/(.+?)\/(.+?\/.+?)(\.git)?$/;
     const match = originHttp.match(httpsPattern);
 
@@ -1825,6 +1831,12 @@ ${cwd}
 
   //#region get http origin from ssh origin
   originSshToHttp(originSsh: string, verbose = false): string {
+    if (!originSsh) {
+      Helpers.warn(
+        `[${config.frameworkName}-helpers][originSshToHttp] originSsh is empty or undefined`,
+      );
+      return originSsh;
+    }
     const sshPattern = /^git@(.+?):(.+?\/.+?)(\.git)?$/;
     const match = originSsh.match(sshPattern);
 
