@@ -360,3 +360,49 @@ export type CfontStyle =
 
 export type CfontAlign = 'left' | 'center' | 'right' | 'block';
 //#endregion
+
+//#region docker-compose models
+export interface DockerComposeFile {
+  version: string;
+  services: Record<string, DockerService>;
+  networks?: Record<string, DockerNetwork>;
+  volumes?: Record<string, DockerVolume>;
+}
+
+export interface DockerService {
+  build?: string | DockerBuild;
+  image?: string;
+  container_name?: string;
+  ports?: string[];
+  environment?: Record<string, string> | string[];
+  volumes?: string[];
+  depends_on?: string[];
+  command?: string | string[];
+  networks?: string[] | Record<string, unknown>;
+  restart?: string;
+  entrypoint?: string | string[];
+  working_dir?: string;
+  labels?: Record<string, string>;
+  env_file?: string | string[];
+  args?: Record<string, string> | string[];
+}
+
+export interface DockerBuild {
+  context: string;
+  dockerfile?: string;
+  args?: Record<string, string>;
+  target?: string;
+}
+
+export interface DockerNetwork {
+  driver?: string;
+  external?: boolean;
+  name?: string;
+}
+
+export interface DockerVolume {
+  driver?: string;
+  external?: boolean;
+  name?: string;
+}
+//#endregion
