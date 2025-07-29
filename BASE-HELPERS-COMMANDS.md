@@ -4,8 +4,6 @@
 
 `taon soft`  => `git reset --soft HEAD~1`
 
-`taon hosts`  => open hosts files in VSCode
-
 `taon count:commits`  => show origin of project
 
 `taon remove:submodules`  => remove all submodules from repo
@@ -174,6 +172,9 @@ taon prel <=> taon prelase
 
 # Other commands
 
+`taon hosts`  => open hosts files in VSCode
 
 `taon refresh` => refresh linked projects configuration
 (after deleting or adding new repo)
+
+`taon settings:vscode` => set random nice colors for you vscode window
