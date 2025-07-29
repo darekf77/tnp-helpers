@@ -1,4 +1,5 @@
 //#region imports
+import { config } from 'tnp-config/src';
 import {
   child_process,
   crossPlatformPath,
@@ -720,7 +721,7 @@ export namespace UtilsTypescript {
     options?: {
       skipAddIfNotExists?: boolean;
       useRawStringValue?: boolean;
-    }
+    },
   ): void => {
     //#region @backendFunc
     const sourceText = Helpers.readFile(tsAbsFilePath);
@@ -755,12 +756,11 @@ export namespace UtilsTypescript {
                 // we wrap it with quotes; otherwise, create a numeric or object literal.
                 let initializer: ts.Expression;
                 if (typeof valueOfVariable === 'string') {
-                  if(options.useRawStringValue) {
+                  if (options.useRawStringValue) {
                     initializer = factory.createIdentifier(valueOfVariable);
                   } else {
                     initializer = factory.createStringLiteral(valueOfVariable);
                   }
-
                 } else if (typeof valueOfVariable === 'number') {
                   initializer = factory.createNumericLiteral(valueOfVariable);
                 } else {
@@ -1758,6 +1758,168 @@ export namespace UtilsVSCode {
 
 //#endregion
 
+//#region utils dot file
+export namespace UtilsDotFile {
+  //#region parse value from dot file util
+  const parseValue = (rawValue: string): string | number | boolean => {
+    const val = rawValue.trim().replace(/^"|"$/g, '');
+
+    // Try boolean
+    if (val.toLowerCase() === 'true') return true;
+    if (val.toLowerCase() === 'false') return false;
+
+    // Try number
+    if (!isNaN(Number(val)) && val !== '') return Number(val);
+
+    return val;
+  };
+  //#endregion
+
+  //#region set value to/from dot file
+  export const setValueToDotFile = (
+    dotFileAbsPath: string | string[],
+    value: string,
+    key: string | number | boolean,
+  ): void => {
+    //#region @backendFunc
+    dotFileAbsPath = crossPlatformPath(dotFileAbsPath);
+    let envContent = '';
+    if (fse.existsSync(dotFileAbsPath)) {
+      envContent = Helpers.readFile(dotFileAbsPath, '');
+    } else {
+      // Create file if it doesn't exist
+      Helpers.writeFile(dotFileAbsPath, '');
+      Helpers.logInfo(
+        `[${config.frameworkName}-helpers] Created ${path.basename(dotFileAbsPath)}`,
+      );
+      envContent = '';
+    }
+
+    const regex = new RegExp(`^${key}=.*$`, 'm');
+
+    if (regex.test(envContent)) {
+      // Replace existing
+      envContent = envContent.replace(regex, `${key}=${value}`);
+    } else {
+      // Append new
+      if (envContent.length > 0 && !envContent.endsWith('\n')) {
+        envContent += '\n';
+      }
+      envContent += `${key}=${value}\n`;
+    }
+
+    Helpers.writeFile(dotFileAbsPath, envContent);
+    Helpers.info(
+      `[${config.frameworkName}-helpers] Updated ${path.basename(dotFileAbsPath)}: ${key}=${value}`,
+    );
+    //#endregion
+  };
+  //#endregion
+
+  //#region get value from dot file
+  export const getValueFromDotFile = (
+    dotFileAbsPath: string | string[],
+    key: string,
+  ): string | number | boolean => {
+    //#region @backendFunc
+    dotFileAbsPath = crossPlatformPath(dotFileAbsPath);
+    if (!fse.existsSync(dotFileAbsPath)) {
+      Helpers.warn(
+        `[${config.frameworkName}-helpers] File ${path.basename(dotFileAbsPath)} does not exist.`,
+      );
+      return;
+    }
+
+    const envContent = fse.readFileSync(dotFileAbsPath, 'utf-8');
+
+    // Parse line by line
+    const lines = envContent.split(/\r?\n/);
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+
+      const [k, ...rest] = trimmed.split('=');
+      if (k === key) {
+        return parseValue(rest.join('='));
+      }
+    }
+    //#endregion
+  };
+  //#endregion
+
+  //#region set values keys from object
+  export const setValuesKeysFromObject = (
+    dotFileAbsPath: string | string[],
+    obj: Record<string, string | number | boolean>,
+    options?: {
+      /**
+       * if true, it will overwrite existing keys
+       */
+      setAsNewFile?: boolean;
+    },
+  ): void => {
+    //#region @backendFunc
+    dotFileAbsPath = crossPlatformPath(dotFileAbsPath);
+    options = options || {};
+
+    let envContent = options.setAsNewFile
+      ? ''
+      : Helpers.readFile(dotFileAbsPath, '');
+
+    for (const [key, value] of Object.entries(obj)) {
+      const stringValue = String(value);
+      const regex = new RegExp(`^${key}=.*$`, 'm');
+
+      if (regex.test(envContent)) {
+        envContent = envContent.replace(regex, `${key}=${stringValue}`);
+      } else {
+        if (envContent.length > 0 && !envContent.endsWith('\n')) {
+          envContent += '\n';
+        }
+        envContent += `${key}=${stringValue}\n`;
+      }
+    }
+
+    Helpers.writeFile(dotFileAbsPath, envContent);
+    //#endregion
+  };
+  //#endregion
+
+  //#region get values keys as json object
+  export const getValuesKeysAsJsonObject = <
+    T = Record<string, string | number | boolean>,
+  >(
+    dotFileAbsPath: string | string[],
+  ): T => {
+    //#region @backendFunc
+    dotFileAbsPath = crossPlatformPath(dotFileAbsPath);
+
+    if (!Helpers.exists(dotFileAbsPath)) {
+      return {} as T;
+    }
+    const envContent = Helpers.readFile(dotFileAbsPath, '');
+
+    const result: Record<string, string | number | boolean> = {};
+    const lines = envContent.split(/\r?\n/);
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+
+      const [key, ...rest] = trimmed.split('=');
+      if (key) {
+        result[key] = parseValue(rest.join('='));
+      }
+    }
+
+    return result as T;
+    //#endregion
+  };
+  //#endregion
+}
+//#endregion
+
+//#region utils zip browser
 export namespace UtilsZipBrowser {
   // <input type="file" id="folderInput" webkitdirectory />
   // ts
@@ -1821,7 +1983,9 @@ export namespace UtilsZipBrowser {
     return void 0;
   };
 }
+//#endregion
 
+//#region utils zip node
 export namespace UtilsZip {
   //#region split zip file
 
@@ -1997,3 +2161,4 @@ export namespace UtilsZip {
     //#endregion
   };
 }
+//#endregion
