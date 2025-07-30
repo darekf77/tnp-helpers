@@ -800,20 +800,27 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
     await this.push({ skipLint: true });
   }
 
-  async rePush() {
+  async repushauto() {
+    await this.rePush(true);
+  }
+
+  async rePush(skipQuesion = false) {
     const lastCommitMessage = this.project.git.lastCommitMessage();
 
     this.project.git.resetSoftHEAD();
     this.project.git.stageAllFiles();
 
     this.project.git.commit(lastCommitMessage);
-    Helpers.info(`Last fixed commit:
+    if (!skipQuesion) {
+      Helpers.info(`Last fixed commit:
 ${lastCommitMessage}
 
       ...`);
-    await UtilsTerminal.pressAnyKeyToContinueAsync({
-      message: `Press any key to force push`,
-    });
+      await UtilsTerminal.pressAnyKeyToContinueAsync({
+        message: `Press any key to force push`,
+      });
+    }
+
     await this.project.git.pushCurrentBranch({
       forcePushNoQuestion: true,
       force: true,

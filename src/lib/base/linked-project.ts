@@ -1,4 +1,4 @@
-import { config, notAllowedProjectNames } from 'tnp-config/src';
+import { config, notAllowedNames, notAllowedProjectNames } from 'tnp-config/src';
 import { _, crossPlatformPath, path } from 'tnp-core/src';
 
 import { Helpers } from '../index';
@@ -55,9 +55,23 @@ export class LinkedProject {
     insideLocation = crossPlatformPath(insideLocation).replace(/\/$/, '');
     const detectedLinkedProjects = Helpers.foldersFrom(insideLocation, {
       recursive,
+      omitRootFolders: [
+        'src',
+        'environments',
+        'docs',
+        'node_modules',
+        'dist',
+        'bin',
+        'old',
+        'local_release',
+        'projects',
+        'browser',
+        'websql',
+      ],
+      omitRootFoldersThatStartWith: ['tmp-', '.', 'dist-'],
     })
       .filter(folderAbsPath => {
-        if (notAllowedProjectNames.includes(path.basename(folderAbsPath))) {
+        if (notAllowedNames.includes(path.basename(folderAbsPath))) {
           Helpers.warn(
             `[${config.frameworkName}-helpers][linked-projects] ` +
               `Skipping folder ${folderAbsPath} because it has not allowed name`,
