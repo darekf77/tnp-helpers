@@ -1,4 +1,5 @@
 //#region imports
+// @ts-ignore
 import { EndpointContext, Taon } from 'taon/src';
 import { config } from 'tnp-config/src';
 import {

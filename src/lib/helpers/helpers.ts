@@ -179,6 +179,10 @@ export class HelpersTaon extends CoreHelpers {
       replaceWithNothing.push('electron');
     }
 
+    if(strategy === 'node-app') {
+      externals.push('sql.js');
+    }
+
     Helpers.logInfo(
       `Replace with 'nothing' in destination bundle: ${replaceWithNothing.join(',')}`,
     );
