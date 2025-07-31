@@ -172,7 +172,7 @@ taon prel <=> taon prelase
 
 # Other commands
 
-`taon hosts`  => open hosts files in VSCode
+`taon hosts`  => open /etc/hosts files in VSCode
 
 `taon refresh` => refresh linked projects configuration
 (after deleting or adding new repo)
