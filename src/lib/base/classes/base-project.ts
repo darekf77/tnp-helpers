@@ -832,10 +832,8 @@ export abstract class BaseProject<
         ).received;
         return data.body.json.port;
       } catch (error) {
-        Helpers.logError(
-          `[${config.frameworkName}-helpers] Error while registering port for task "${taskName}":`,
-          true,
-          true,
+        Helpers.logWarn(
+          `[${config.frameworkName}-helpers] Error while registering port for task "${taskName}":`
         );
         // Helpers.logError(error, true, true);
         Helpers.logInfo(`[${config.frameworkName}-helpers] Retrying to assign port for task "${taskName}"...`);

@@ -1601,7 +1601,7 @@ Would you like to update current project configuration?`)
         url = Helpers.git.originSshToHttp(url);
       }
     }
-    Helpers.git.clone({
+    await Helpers.git.clone({
       url,
       cwd: this.cwd,
     });
