@@ -824,11 +824,25 @@ export abstract class BaseProject<
     options = options || {};
 
     const ctrl = await this.ins.portsWorker.getControllerForRemoteConnection();
-    const data = await ctrl.registerAndAssignPort(
-      encodeURIComponent(taskName),
-      _.isNumber(options.startFrom) ? options.startFrom : void 0,
-    ).received;
-    return data.body.json.port;
+    while (true) {
+      try {
+        const data = await ctrl.registerAndAssignPort(
+          encodeURIComponent(taskName),
+          _.isNumber(options.startFrom) ? options.startFrom : void 0,
+        ).received;
+        return data.body.json.port;
+      } catch (error) {
+        Helpers.logError(
+          `[${config.frameworkName}-helpers] Error while registering port for task "${taskName}":`,
+          true,
+          true,
+        );
+        // Helpers.logError(error, true, true);
+        Helpers.logInfo(`[${config.frameworkName}-helpers] Retrying to assign port for task "${taskName}"...`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+
     //#endregion
   }
 
@@ -1087,7 +1101,7 @@ export abstract class BaseProject<
   writeFile(
     relativePath: string | string[],
     content: string,
-    options?: { formatWithPrettier?: boolean } ,
+    options?: { formatWithPrettier?: boolean },
   ) {
     //#region @backend
     options = options || {};
@@ -1252,7 +1266,8 @@ export abstract class BaseProject<
     //#region @backendFunc
     const proj = this;
 
-    return  `
+    return (
+      `
 
   name: ${proj?.name}
   type: ${proj?.type}
@@ -1267,7 +1282,7 @@ ${proj?.children.map(c => '+' + c.genericName).join('\n')}
   }
 ${proj?.libraryBuild?.libraries?.map(c => '+' + c.genericName).join('\n')}
 ` +
-        `
+      `
 linked porject prefix: "${this.linkedProjects.linkedProjectsPrefix}"
 
 linked projects from json (${this.linkedProjects.linkedProjects?.length || 0}):
@@ -1279,6 +1294,7 @@ ${(this.linkedProjects.linkedProjects || [])
   .join('\n')}
 
   `
+    );
 
     // linked projects detected (${this.detectedLinkedProjects?.length || 0}):
     // ${(this.detectedLinkedProjects || []).map(c => '- ' + c.relativeClonePath).join('\n')}
