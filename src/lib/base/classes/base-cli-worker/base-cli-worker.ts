@@ -530,7 +530,7 @@ export abstract class BaseCliWorker<
   //#region wait for process port saved to disk
   protected async waitForProcessPortSavedToDisk(): Promise<void> {
     //#region @backendFunc
-    Helpers.info(
+    Helpers.logInfo(
       `[${this.serviceID}] Waiting for process port saved to disk...`,
     );
     Helpers.log(`in ${this.pathToProcessLocalInfoJson}`);
