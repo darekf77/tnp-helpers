@@ -92,6 +92,9 @@ export abstract class BaseCliWorker<
    */
   protected async startNormallyInCurrentProcess(): Promise<void> {
     //#region @backendFunc
+    Helpers.taskStarted(
+      `[${this.serviceID}] Process start in current process...`,
+    );
     await this.killWorkerWithLowerVersion();
     await this.preventStartIfAlreadyStarted();
     const port = await this.getServicePort();
@@ -296,24 +299,35 @@ export abstract class BaseCliWorker<
   //#region prevent kill worker with lower version
   protected async killWorkerWithLowerVersion(): Promise<void> {
     //#region @backendFunc
+    Helpers.taskStarted(
+      `[${this.serviceID}] Checking if current working version is up to date...`,
+    );
     try {
       const ctrl = await this.getControllerForRemoteConnection();
-      Helpers.log(`Checking if current working version is up to date...`);
+      Helpers.logInfo(
+        `[${this.serviceID}] Checking if current working version is up to date...`,
+      );
       // console.log('this.processLocalInfoObj', this.processLocalInfoObj);
       const req = await ctrl.baseCLiWorkerCommand_hasUpToDateVersion(
         _.merge(this.processLocalInfoObj, {
           version: this.serviceVersion,
         }),
       ).received;
+      Helpers.logInfo(`[${this.serviceID}] Request done...`);
       const isUpToDate = req.body.booleanValue;
       if (!isUpToDate) {
-        Helpers.info(`Killing service with lower version...`);
+        Helpers.info(
+          `[${this.serviceID}] Killing service with lower version...`,
+        );
         await this.kill({
           dontRemoveConfigFile: true,
         });
-        await Helpers.wait(1);
+        await UtilsTerminal.waitMiliseconds(500);
       }
     } catch (error) {}
+    Helpers.taskDone(
+      `[${this.serviceID}] Current working version is up to date !`,
+    );
     //#endregion
   }
   //#endregion
@@ -333,7 +347,9 @@ export abstract class BaseCliWorker<
     let i = 0; // 15 seconds to start worker
     while (true) {
       i++;
-      Helpers.logInfo(`Checking if service "${this.serviceID}" is starting...`);
+      Helpers.logInfo(
+        `[${this.serviceID}][timestamp-checking] Checking if service "${this.serviceID}" is starting...`,
+      );
       const workerIsStarting = !!this.processLocalInfoObj.startTimestamp;
 
       if (!workerIsStarting) {
@@ -343,7 +359,10 @@ export abstract class BaseCliWorker<
       if (i > WORKER_INIT_START_TIME_LIMIT) {
         return false;
       }
-      await Helpers.wait(1);
+      Helpers.log(
+        '[timestamp-checking] Waiting 500 miliseonds for service to start...',
+      );
+      await UtilsTerminal.waitMiliseconds(500);
     }
 
     i = 0;
@@ -356,9 +375,15 @@ export abstract class BaseCliWorker<
         // const isWaitingNotChecking = i >= isWaitingNotCheckingWhen;
         // TODO: check why this is may not work
         if (isWaitingNotCheckingWhen === i) {
-          Helpers.info(`Waiting for service "${this.serviceID}" to start...`);
+          Helpers.info(
+            `[${this.serviceID}] Waiting for service "${this.serviceID}" ` +
+              `to start...`,
+          );
         } else {
-          Helpers.log(`Checking if service "${this.serviceID}" is healthy...`);
+          Helpers.log(
+            `[${this.serviceID}] Checking if service "${this.serviceID}" ` +
+              `is healthy...`,
+          );
         }
         const ctrl = await this.getControllerForRemoteConnection();
         Helpers.log(`Sending is healthy request...`);
@@ -381,7 +406,7 @@ export abstract class BaseCliWorker<
           return isHealthy;
         } else {
           Helpers.log('Trying again...');
-          await Helpers.wait(1);
+          await UtilsTerminal.waitMiliseconds(500);
           continue;
         }
       } catch (error) {
@@ -396,7 +421,7 @@ export abstract class BaseCliWorker<
           return false;
         } else {
           Helpers.log('Trying again...');
-          await Helpers.wait(1);
+          await UtilsTerminal.waitMiliseconds(500);
           continue;
         }
       }
@@ -415,7 +440,7 @@ export abstract class BaseCliWorker<
     //#region @backendFunc
     options = options || {};
     Helpers.logInfo(
-      `Starting detached command in new terminal "${chalk.bold(this.startCommand)}"...`,
+      `[${this.serviceID}][detached] Starting detached command in new terminal "${chalk.bold(this.startCommand)}"...`,
     );
     if (options.useCurrentWindowForDetach) {
       await UtilsProcess.startAsyncChildProcessCommandUntil(this.startCommand, {
@@ -423,6 +448,7 @@ export abstract class BaseCliWorker<
           stdout: [this.SPECIAL_WORKER_READY_MESSAGE],
           stderr: [this.SPECIAL_WORKER_READY_MESSAGE],
         },
+        resolveAfterAnyExitCode: true,
       });
     } else {
       await UtilsProcess.startInNewTerminalWindow(this.startCommand);
@@ -469,23 +495,31 @@ export abstract class BaseCliWorker<
   //#region initialize worker
   protected async initializeWorkerMetadata() {
     //#region @backendFunc
-    try {
-      const portControllerInstance =
-        await this.getControllerForRemoteConnection();
+    while (true) {
+      try {
+        const portControllerInstance =
+          await this.getControllerForRemoteConnection();
 
-      await portControllerInstance.baseCLiWorkerCommand_initializeMetadata(
-        this.serviceID,
-        this.serviceVersion,
-      ).received;
-      this.saveProcessInfo({
-        startTimestamp: null,
-      });
-    } catch (error) {
-      this.saveProcessInfo({
-        startTimestamp: null,
-      });
-      Helpers.throw(error);
+        await portControllerInstance.baseCLiWorkerCommand_initializeMetadata(
+          this.serviceID,
+          this.serviceVersion,
+        ).received;
+        this.saveProcessInfo({
+          startTimestamp: null,
+        });
+        break;
+      } catch (error) {
+        Helpers.error(error, false, false);
+        this.saveProcessInfo({
+          startTimestamp: null,
+        });
+        Helpers.info(
+          `[${this.serviceID}][${this.serviceVersion}] Retrying to initialize worker metadata...`,
+        );
+        await UtilsTerminal.waitMiliseconds(500);
+      }
     }
+
     // process.on('SIGINT', () => {
     //   this.kill();
     // });
@@ -496,6 +530,10 @@ export abstract class BaseCliWorker<
   //#region wait for process port saved to disk
   protected async waitForProcessPortSavedToDisk(): Promise<void> {
     //#region @backendFunc
+    Helpers.info(
+      `[${this.serviceID}] Waiting for process port saved to disk...`,
+    );
+    Helpers.log(`in ${this.pathToProcessLocalInfoJson}`);
     let portForRemote = this.processLocalInfoObj.port;
     const MAX_TRYS = 10;
     let i = 0;
@@ -504,16 +542,21 @@ export abstract class BaseCliWorker<
         i++;
         portForRemote = this.processLocalInfoObj.port;
         if (portForRemote) {
+          Helpers.taskDone(
+            `[${this.serviceID}][${this.serviceVersion}] port assigned: ${portForRemote}`,
+          );
           break;
         } else {
-          Helpers.log(`Waiting for port to be available...`);
+          Helpers.logInfo(
+            `[${this.serviceID}][${this.serviceVersion}] waiting/checking again for port...`,
+          );
           if (i > MAX_TRYS) {
             Helpers.throw(
               `Can't get port for remote connection..` +
                 ` worker process did not start correctly`,
             );
           }
-          await Helpers.wait(1);
+          await UtilsTerminal.waitMiliseconds(500);
         }
       }
     }
