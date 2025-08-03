@@ -266,6 +266,7 @@ export abstract class BaseCliWorker<
     chokidar.watch(this.pathToProcessLocalInfoJson).on('change', () => {
       Helpers.log(`Service data changed...`);
       if (!this.processLocalInfoObj.isEquals(currentConfig)) {
+        UtilsTerminal.clearConsole();
         Helpers.error(
           `Service config data externally changed... killing service`,
           false,

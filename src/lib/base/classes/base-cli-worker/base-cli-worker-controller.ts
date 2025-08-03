@@ -55,7 +55,7 @@ export abstract class BaseCliWorkerController extends Taon.Base
     return async () => {
       return (
         `Service "${this.cliWorkerServiceId}" is ` +
-        `running healthy on port ${this.ctx.uri.port},
+        `running healthy on port ${this.ctx.uriPort},
       version: ${this.cliWorkerServiceVersion},
       pid: ${process.pid}
       `
@@ -76,7 +76,7 @@ export abstract class BaseCliWorkerController extends Taon.Base
       const currentConfig = BaseCliWorkerConfig.from({
         pid: process.pid,
         serviceID: this.cliWorkerServiceId,
-        port: Number(this.ctx.uri.port),
+        port: Number(this.ctx.uriPort),
         version: this.cliWorkerServiceVersion,
       });
       // console.log('configWorker', configWorker);
@@ -98,7 +98,7 @@ export abstract class BaseCliWorkerController extends Taon.Base
       const currentWorkerConfig = BaseCliWorkerConfig.from({
         pid: process.pid,
         serviceID: this.cliWorkerServiceId,
-        port: Number(this.ctx.uri.port),
+        port: Number(this.ctx.uriPort),
         version: this.cliWorkerServiceVersion,
       });
       // console.log('checkingProcessConfig', checkingProcessConfig);
