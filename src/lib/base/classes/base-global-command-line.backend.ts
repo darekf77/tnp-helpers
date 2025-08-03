@@ -139,6 +139,10 @@ export class BaseGlobalCommandLine<
     await this.update();
   }
 
+  colorvscode() {
+    this.settingsVscode();
+  }
+
   /**
    * Generate or update .vscode/settings.json file color settings
    */
