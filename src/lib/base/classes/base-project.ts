@@ -12,6 +12,7 @@ import { CoreProject, Helpers, UtilsTypescript } from '../../index';
 import { BaseProjectType } from '../../models';
 
 import { BaseGit } from './base-git';
+import { BaseJavaJdk } from './base-java-jdk';
 import type { BaseLibraryBuild } from './base-library-build';
 import { BaseLinkedProjects } from './base-linked-projects';
 import { BaseNpmHelpers } from './base-npm-helpers';
@@ -71,6 +72,7 @@ export abstract class BaseProject<
   public git?: BaseGit;
   public quickFixes?: BaseQuickFixes;
   public staticPages?: BaseStaticPages;
+  public javaJdk?: BaseJavaJdk;
   //#endregion
 
   private __location: string;
@@ -105,6 +107,10 @@ export abstract class BaseProject<
     this.git = new (require('./base-git').BaseGit as typeof BaseGit)(
       this as any,
     );
+
+    this.javaJdk = new (require('./base-java-jdk')
+      .BaseJavaJdk as typeof BaseJavaJdk)(this as any);
+
     this.vsCodeHelpers = new (require('./base-vscode')
       .BaseVscodeHelpers as typeof BaseVscodeHelpers)(this as any);
 
@@ -833,10 +839,12 @@ export abstract class BaseProject<
         return data.body.json.port;
       } catch (error) {
         Helpers.logWarn(
-          `[${config.frameworkName}-helpers] Error while registering port for task "${taskName}":`
+          `[${config.frameworkName}-helpers] Error while registering port for task "${taskName}":`,
         );
         // Helpers.logError(error, true, true);
-        Helpers.logInfo(`[${config.frameworkName}-helpers] Retrying to assign port for task "${taskName}"...`);
+        Helpers.logInfo(
+          `[${config.frameworkName}-helpers] Retrying to assign port for task "${taskName}"...`,
+        );
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
