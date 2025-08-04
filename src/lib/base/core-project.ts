@@ -136,12 +136,25 @@ export class CoreProject<PROJECT extends BaseProject = BaseProject> {
   //#endregion
 
   //#region methods & getters
+  cleanCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
+  initCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
+  /**
+   * Build whatever is needed to run project
+   * buildCommand includes initCommand
+   */
+  buildCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
+  /**
+   * startCommand includes initCommand, buildCommand and launchCommand
+   */
   startCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
+  /**
+   * launch already built project
+   */
+  launchCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>
   releaseCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
   publishCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
   deployCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
   testCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
-  buildCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
   docsCommand?: (options: CoreCommandArgOptions<PROJECT>) => Promise<void>;
   /**
    * function to recognize project
