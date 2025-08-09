@@ -323,7 +323,7 @@ export abstract class BaseCliWorker<
         await this.kill({
           dontRemoveConfigFile: true,
         });
-        await UtilsTerminal.waitMiliseconds(500);
+        await UtilsTerminal.wait(1);
       }
     } catch (error) {}
     Helpers.taskDone(
@@ -363,7 +363,7 @@ export abstract class BaseCliWorker<
       Helpers.log(
         '[timestamp-checking] Waiting 500 miliseonds for service to start...',
       );
-      await UtilsTerminal.waitMiliseconds(500);
+      await UtilsTerminal.wait(1);
     }
 
     i = 0;
@@ -407,7 +407,7 @@ export abstract class BaseCliWorker<
           return isHealthy;
         } else {
           Helpers.log('Trying again...');
-          await UtilsTerminal.waitMiliseconds(500);
+          await UtilsTerminal.wait(1);
           continue;
         }
       } catch (error) {
@@ -422,7 +422,7 @@ export abstract class BaseCliWorker<
           return false;
         } else {
           Helpers.log('Trying again...');
-          await UtilsTerminal.waitMiliseconds(500);
+          await UtilsTerminal.wait(1);
           continue;
         }
       }
@@ -517,7 +517,7 @@ export abstract class BaseCliWorker<
         Helpers.info(
           `[${this.serviceID}][${this.serviceVersion}] Retrying to initialize worker metadata...`,
         );
-        await UtilsTerminal.waitMiliseconds(500);
+        await UtilsTerminal.wait(1);
       }
     }
 
@@ -557,7 +557,7 @@ export abstract class BaseCliWorker<
                 ` worker process did not start correctly`,
             );
           }
-          await UtilsTerminal.waitMiliseconds(500);
+          await UtilsTerminal.wait(1);
         }
       }
     }
