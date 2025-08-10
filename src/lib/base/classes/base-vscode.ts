@@ -601,6 +601,7 @@ export class BaseVscodeHelpers<
         'nocheck',
         'mkdocs',
         'Initing',
+        'traefik',
       ],
       'cSpell.diagnosticLevel': 'Hint',
       'cSpell.enabledNotifications': {

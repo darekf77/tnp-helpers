@@ -1,4 +1,5 @@
 //#region imports
+import { config } from 'tnp-config/src';
 import { Helpers, UtilsTerminal } from 'tnp-core/src';
 import { _, chalk } from 'tnp-core/src';
 
@@ -68,6 +69,7 @@ export class BaseCliWorkerTerminalUI<
       Check info here http://localhost:${chalk.bold(
         this.worker.processLocalInfoObj?.port?.toString(),
       )}/${'info' as keyof BaseCliWorkerController}
+      Worker started by ${chalk.bold(config.frameworkName)}
 
         `,
     );

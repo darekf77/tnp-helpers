@@ -323,7 +323,7 @@ export abstract class BaseCliWorker<
         await this.kill({
           dontRemoveConfigFile: true,
         });
-        await UtilsTerminal.waitMiliseconds(500);
+        await UtilsTerminal.wait(1);
       }
     } catch (error) {}
     Helpers.taskDone(
@@ -363,7 +363,7 @@ export abstract class BaseCliWorker<
       Helpers.log(
         '[timestamp-checking] Waiting 500 miliseonds for service to start...',
       );
-      await UtilsTerminal.waitMiliseconds(500);
+      await UtilsTerminal.wait(1);
     }
 
     i = 0;
@@ -407,7 +407,7 @@ export abstract class BaseCliWorker<
           return isHealthy;
         } else {
           Helpers.log('Trying again...');
-          await UtilsTerminal.waitMiliseconds(500);
+          await UtilsTerminal.wait(1);
           continue;
         }
       } catch (error) {
@@ -422,7 +422,7 @@ export abstract class BaseCliWorker<
           return false;
         } else {
           Helpers.log('Trying again...');
-          await UtilsTerminal.waitMiliseconds(500);
+          await UtilsTerminal.wait(1);
           continue;
         }
       }
@@ -440,10 +440,11 @@ export abstract class BaseCliWorker<
   }): Promise<void> {
     //#region @backendFunc
     options = options || {};
-    Helpers.logInfo(
-      `[${this.serviceID}][detached] Starting detached command in new terminal "${chalk.bold(this.startCommand)}"...`,
-    );
+
     if (options.useCurrentWindowForDetach) {
+      Helpers.logInfo(
+        `[${this.serviceID}][startDetached] Starting in new terminal "${chalk.bold(this.startCommand)}"...`,
+      );
       await UtilsProcess.startAsyncChildProcessCommandUntil(this.startCommand, {
         untilOptions: {
           stdout: [this.SPECIAL_WORKER_READY_MESSAGE],
@@ -452,11 +453,14 @@ export abstract class BaseCliWorker<
         resolveAfterAnyExitCode: true,
       });
     } else {
+      Helpers.logInfo(
+        `[${this.serviceID}][startDetached] Starting in current terminal "${chalk.bold(this.startCommand)}"...`,
+      );
       await UtilsProcess.startInNewTerminalWindow(this.startCommand);
     }
 
     Helpers.logInfo(
-      `Starting detached service "${chalk.bold(this.serviceID)}" - waiting until healthy...`,
+      `"${chalk.bold(this.serviceID)}" - waiting until healthy (Infinite health check trys )...`,
     );
     const isServiceHealthy = await this.isServiceHealthy({
       healthCheckRequestTrys: Infinity, // wait infinity until started
@@ -466,7 +470,7 @@ export abstract class BaseCliWorker<
       return;
     }
     Helpers.logInfo(
-      `Healthy detached service "${chalk.bold(this.serviceID)}" started.`,
+      `Healthy service "${chalk.bold(this.serviceID)}" started.`,
     );
     //#endregion
   }
@@ -517,7 +521,7 @@ export abstract class BaseCliWorker<
         Helpers.info(
           `[${this.serviceID}][${this.serviceVersion}] Retrying to initialize worker metadata...`,
         );
-        await UtilsTerminal.waitMiliseconds(500);
+        await UtilsTerminal.wait(1);
       }
     }
 
@@ -557,7 +561,7 @@ export abstract class BaseCliWorker<
                 ` worker process did not start correctly`,
             );
           }
-          await UtilsTerminal.waitMiliseconds(500);
+          await UtilsTerminal.wait(1);
         }
       }
     }
