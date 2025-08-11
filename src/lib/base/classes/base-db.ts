@@ -1,5 +1,5 @@
 //#region imports
-import { Helpers, crossPlatformPath } from "tnp-core/src";
+import { Helpers, UtilsOs, crossPlatformPath } from "tnp-core/src";
 
 import type { BaseProjectResolver } from "./base-project-resolver";
 
@@ -32,7 +32,7 @@ export class BaseDb<DB extends object> {
 
   get projectsDbLocation() {
     //#region @backendFunc
-    const userFolder = crossPlatformPath([os.homedir(), `.taon/apps/${this.dbName}-db/${this.ins.cliToolName}`]);
+    const userFolder = crossPlatformPath([UtilsOs.getRealHomeDir(), `.taon/apps/${this.dbName}-db/${this.ins.cliToolName}`]);
     try {
       Helpers.mkdirp(userFolder);
     } catch (error) { }

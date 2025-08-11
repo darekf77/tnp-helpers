@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
 
-import { fse, os, path, UtilsTerminal } from 'tnp-core/src';
+import { crossPlatformPath, fse, os, path, UtilsOs, UtilsTerminal } from 'tnp-core/src';
 
 import { BaseFeatureForProject } from './base-feature-for-project';
 import { BaseProject } from './base-project';
@@ -155,7 +155,7 @@ export class BaseJavaJdk<
 
     if (platform === 'darwin') {
       try {
-        const shellPath = path.resolve(os.homedir(), '.zshrc'); // or .bash_profile
+        const shellPath = path.resolve(UtilsOs.getRealHomeDir(), '.zshrc'); // or .bash_profile
         execSync(`export JAVA_HOME="${selectedPath}"`);
         console.log(
           `✅ JAVA_HOME set to ${selectedPath} (only in current session).`,
@@ -210,7 +210,7 @@ export class BaseJavaJdk<
         '/usr/local', // will check for tomcat* here
         '/opt',
         '/usr/share',
-        path.join(os.homedir(), 'tomcat'),
+        crossPlatformPath([UtilsOs.getRealHomeDir(), 'tomcat']),
       ];
 
       for (const base of searchDirs) {

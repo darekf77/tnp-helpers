@@ -4,6 +4,7 @@ import {
   os,
   path,
   Utils,
+  UtilsOs,
   UtilsTerminal,
 } from 'tnp-core/src';
 import { _ } from 'tnp-core/src';
@@ -293,7 +294,11 @@ export class BaseVscodeHelpers<
      */
 
     // Adjust the folder path as needed (Insiders, etc.)
-    const extensionsPath = path.join(os.homedir(), '.vscode', 'extensions');
+    const extensionsPath = crossPlatformPath([
+      UtilsOs.getRealHomeDir(),
+      '.vscode',
+      'extensions',
+    ]);
 
     if (!fse.existsSync(extensionsPath)) {
       console.error('Extensions directory not found:', extensionsPath);

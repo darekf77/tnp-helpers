@@ -13,6 +13,7 @@ import {
   crossPlatformPath,
   json5,
   child_process,
+  UtilsOs,
 } from 'tnp-core/src';
 import * as underscore from 'underscore';
 
@@ -188,9 +189,10 @@ export class HelpersFileFolders {
       tmp = '/private/tmp';
     }
     if (process.platform === 'win32') {
-      tmp = crossPlatformPath(
-        path.join(crossPlatformPath(os.homedir()), '/AppData/Local/Temp'),
-      );
+      tmp = crossPlatformPath([
+        UtilsOs.getRealHomeDir(),
+        '/AppData/Local/Temp',
+      ]);
     }
     if (!Helpers.exists(tmp)) {
       Helpers.mkdirp(tmp);
@@ -1253,7 +1255,7 @@ ${sourceData}
     //#region @backendFunc
     if (fileOrFolderPath.startsWith('~')) {
       fileOrFolderPath = crossPlatformPath([
-        os.homedir(),
+        UtilsOs.getRealHomeDir(),
         fileOrFolderPath.replace(`~/`, ''),
       ]);
     }

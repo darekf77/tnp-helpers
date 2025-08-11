@@ -1,4 +1,4 @@
-import { crossPlatformPath, os } from 'tnp-core/src';
+import { crossPlatformPath, os, UtilsOs } from 'tnp-core/src';
 
 import { BaseFeatureForProject } from './base-feature-for-project';
 import { BaseProject } from './base-project';
@@ -15,7 +15,7 @@ export class BasePowerShellHelpers<
     // },
 
     // notepad $PROFILE
-    //     `$env:PATH += ";${os.homedir()}\AppData\Local\Programs\oh-my-posh\bin"
+    //     `$env:PATH += ";${UtilsOs.getRealHomeDir()}\AppData\Local\Programs\oh-my-posh\bin"
     // oh-my-posh init pwsh --config "C:\Users\darek\AppData\Local\Programs\oh-my-posh\themes\jandedobbeleer.omp.json" | Invoke-Expression`
     // function readlink($Path) {
     //     (Get-Item $Path).Target
@@ -94,7 +94,7 @@ export class BasePowerShellHelpers<
     return {
       config,
       path: crossPlatformPath(
-        `${os.homedir()}/AppData/Local/Programs/oh-my-posh/themes/jandedobbeleer.omp.json`,
+        `${UtilsOs.getRealHomeDir()}/AppData/Local/Programs/oh-my-posh/themes/jandedobbeleer.omp.json`,
       ),
     };
   }
