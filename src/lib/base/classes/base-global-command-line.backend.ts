@@ -1815,50 +1815,8 @@ Would you like to update current project configuration?`)
     //#region @backendFunc
     UtilsTerminal.clearConsole();
     let domain = this.firstArg || '';
-    if (!UtilsNetwork.isValidDomain(domain)) {
-      Helpers.error(`Invalid domain: "${domain}"`, false, true);
-    }
-    if (!(await isElevated())) {
-      Helpers.error(
-        `You must run this command with elevated privileges (sudo or as administrator)`,
-        false,
-        true,
-      );
-    }
-
-    const url = new URL(
-      domain.startsWith('http') ? domain : `http://${domain}`,
-    );
-    domain = url.hostname;
-
-    UtilsNetwork.setEtcHost(domain);
-    Helpers.info(`
-
-      You can access the domain at:
-
-      ${chalk.underline(`http://${domain}`)}
-      ${chalk.underline(`https://${domain}`)}
-
-      (domain is now pointing to ${chalk.bold('localhost')}):
-
-      PRESS ANY KEY TO STOP REMOVE DOMAIN FROM /etc/hosts
-      AND STOP SIMULATION
-      
-      `);
-
-    let closing = false;
-    process.stdin.setRawMode(true);
-    process.stdin.resume();
-    process.stdin.on('data', () => {
-      if (closing) {
-        return;
-      }
-
-      closing = true;
-      console.log('Removing domain from /etc/hosts');
-      UtilsNetwork.removeEtcHost(domain);
-      process.exit(0);
-    });
+    await UtilsNetwork.simulateDomain(domain);
+    this._exit();
     //#endregion
   }
 }
