@@ -1,9 +1,10 @@
 import { execSync } from 'child_process'; // @backend
 
 import { config } from 'tnp-config/src';
-import { chalk, _, path, os, UtilsOs, fse } from 'tnp-core/src';
+import { chalk, _, path, os, UtilsOs, fse, isElevated } from 'tnp-core/src';
 import { crossPlatformPath } from 'tnp-core/src';
 import { UtilsTerminal } from 'tnp-core/src';
+import { UtilsNetwork } from 'tnp-core/src';
 
 import {
   Helpers,
@@ -17,7 +18,6 @@ import { GhTempCode } from '../gh-temp-code';
 import { BaseCommandLineFeature } from './base-command-line-feature';
 import { BaseProject } from './base-project';
 import type { BaseProjectResolver } from './base-project-resolver';
-import { UtilsNetwork } from 'tnp-core';
 
 export class BaseGlobalCommandLine<
   PARAMS = any,
@@ -82,7 +82,9 @@ export class BaseGlobalCommandLine<
 
   //#region commands / hosts
   hosts() {
-    Helpers.run(`code ${crossPlatformPath(UtilsNetwork.getEtcHostsPath())}`).sync();
+    Helpers.run(
+      `code ${crossPlatformPath(UtilsNetwork.getEtcHostsPath())}`,
+    ).sync();
     process.exit(0);
   }
   //#endregion
@@ -1761,6 +1763,7 @@ Would you like to update current project configuration?`)
   }
   //#endregion
 
+  //#region commands / check ports
   async checkPorts() {
     const ports = this.args
       .join(' ')
@@ -1783,20 +1786,79 @@ Would you like to update current project configuration?`)
     }
     this._exit();
   }
+  //#endregion
+
+  //#region commands / remove symlinks
   removeSymlinksDryRun() {
     Helpers.removeSymlinks(this.project.nodeModules.path, {
       dryRun: true,
     });
   }
+  //#endregion
 
+  //#region commands / select java
   async selectJava() {
     const selectedJava = await this.project.javaJdk.selectJdkVersion();
     this.project.javaJdk.updateJavaHomePath(selectedJava);
   }
+  //#endregion
 
+  //#region commands / select tomcat
   async selectTomcat() {
     const selectedTomcat = await this.project.javaJdk.selectTomcatVersion();
     this.project.javaJdk.updateTomcatHomePath(selectedTomcat);
     this._exit();
+  }
+  //#endregion
+
+  async simulateDomain() {
+    //#region @backendFunc
+    UtilsTerminal.clearConsole();
+    let domain = this.firstArg || '';
+    if (!UtilsNetwork.isValidDomain(domain)) {
+      Helpers.error(`Invalid domain: "${domain}"`, false, true);
+    }
+    if (!(await isElevated())) {
+      Helpers.error(
+        `You must run this command with elevated privileges (sudo or as administrator)`,
+        false,
+        true,
+      );
+    }
+
+    const url = new URL(
+      domain.startsWith('http') ? domain : `http://${domain}`,
+    );
+    domain = url.hostname;
+
+    UtilsNetwork.setEtcHost(domain);
+    Helpers.info(`
+
+      You can access the domain at:
+
+      ${chalk.underline(`http://${domain}`)}
+      ${chalk.underline(`https://${domain}`)}
+
+      (domain is now pointing to ${chalk.bold('localhost')}):
+
+      PRESS ANY KEY TO STOP REMOVE DOMAIN FROM /etc/hosts
+      AND STOP SIMULATION
+      
+      `);
+
+    let closing = false;
+    process.stdin.setRawMode(true);
+    process.stdin.resume();
+    process.stdin.on('data', () => {
+      if (closing) {
+        return;
+      }
+
+      closing = true;
+      console.log('Removing domain from /etc/hosts');
+      UtilsNetwork.removeEtcHost(domain);
+      process.exit(0);
+    });
+    //#endregion
   }
 }
