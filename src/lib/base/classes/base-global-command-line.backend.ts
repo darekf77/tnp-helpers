@@ -1,6 +1,5 @@
 import { execSync } from 'child_process'; // @backend
 
-import { HOST_FILE_PATH } from 'tnp-config/src';
 import { config } from 'tnp-config/src';
 import { chalk, _, path, os, UtilsOs, fse } from 'tnp-core/src';
 import { crossPlatformPath } from 'tnp-core/src';
@@ -18,6 +17,7 @@ import { GhTempCode } from '../gh-temp-code';
 import { BaseCommandLineFeature } from './base-command-line-feature';
 import { BaseProject } from './base-project';
 import type { BaseProjectResolver } from './base-project-resolver';
+import { UtilsNetwork } from 'tnp-core';
 
 export class BaseGlobalCommandLine<
   PARAMS = any,
@@ -82,7 +82,7 @@ export class BaseGlobalCommandLine<
 
   //#region commands / hosts
   hosts() {
-    Helpers.run(`code ${crossPlatformPath(HOST_FILE_PATH)}`).sync();
+    Helpers.run(`code ${crossPlatformPath(UtilsNetwork.getEtcHostsPath())}`).sync();
     process.exit(0);
   }
   //#endregion

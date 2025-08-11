@@ -11,6 +11,7 @@ import {
   UtilsProcess,
   Utils,
   UtilsTerminal,
+  UtilsOs,
 } from 'tnp-core/src';
 
 import { CfontAlign, CfontStyle, Helpers } from '../../../index';
@@ -45,7 +46,7 @@ export abstract class BaseCliWorker<
     //#region @backendFunc
     // console.log('os.userInfo()', os.userInfo());
     return crossPlatformPath([
-      os.userInfo().homedir,
+      UtilsOs.getRealHomeDir(),
       `.taon`,
       '__workers-service-process-info__',
       `${this.serviceID}.json`,
@@ -469,9 +470,7 @@ export abstract class BaseCliWorker<
       Helpers.throw(`Not able to start service "${this.serviceID}"...`);
       return;
     }
-    Helpers.logInfo(
-      `Healthy service "${chalk.bold(this.serviceID)}" started.`,
-    );
+    Helpers.logInfo(`Healthy service "${chalk.bold(this.serviceID)}" started.`);
     //#endregion
   }
   //#endregion

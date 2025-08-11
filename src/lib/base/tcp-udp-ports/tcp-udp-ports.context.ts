@@ -1,5 +1,5 @@
 import { BaseContext, Taon } from 'taon/src';
-import { os } from 'tnp-core/src';
+import { os, UtilsOs } from 'tnp-core/src';
 import { crossPlatformPath, path, Helpers } from 'tnp-core/src';
 
 import { MIGRATIONS_CLASSES_FOR_PortsContext } from '../../../migrations';
@@ -9,7 +9,7 @@ import { Port } from './ports.entity';
 
 //#region @backend
 const portsWorkerDatabaseLocation = crossPlatformPath([
-  os.userInfo().homedir,
+  UtilsOs.getRealHomeDir(),
   `.taon/databases-for-services/ports-worker.sqlite`,
 ]);
 if (!Helpers.exists(path.dirname(portsWorkerDatabaseLocation))) {
