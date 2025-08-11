@@ -297,7 +297,9 @@ export class BaseNodeModules<
       return true;
     }
 
-    if (Helpers.findChildren(node_modules_path, c => c).length === 0) {
+    const childrenInNodeModules = Helpers.foldersFrom(node_modules_path);
+
+    if (childrenInNodeModules.length === 0) {
       return true;
     }
 
@@ -305,9 +307,7 @@ export class BaseNodeModules<
       this.npmHelpers.packageJson.allDependencies,
     ).length;
 
-    const notFullyInstalled =
-      Helpers.findChildren(node_modules_path, c => c).length <
-      minDepsLength + 1;
+    const notFullyInstalled = childrenInNodeModules.length < minDepsLength + 1;
 
     if (notFullyInstalled) {
       Helpers.logWarn(
