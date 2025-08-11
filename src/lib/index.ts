@@ -1,4 +1,3 @@
-export * from './validators/validators';
 //#region @browser
 export { HelpersAngular } from './helpers/for-browser/angular.helper';
 //#endregion

@@ -1,5 +1,5 @@
 //#region imports
-import { _, path, Utils } from 'tnp-core/src';
+import { _, path, Utils, UtilsNetwork } from 'tnp-core/src';
 import { HelpersArrayObj } from './helpers-array-obj';
 import { HelpersStringsRegexes } from './helpers-strings-regexes';
 import { HelpersStrings } from './helpers-strings';
@@ -25,7 +25,7 @@ import { CLI } from 'tnp-core/src';
 import { HelpersVscode } from './for-backend/helpers-vscode.backend';
 //#endregion
 import { config } from 'tnp-config/src';
-import { Helpers, UtilsQuickFixes, Validators } from '../index';
+import { Helpers, UtilsQuickFixes } from '../index';
 import { CLASS } from 'typescript-class-helpers/src';
 import { CoreHelpers, CoreModels } from 'tnp-core/src';
 import { HelpersNumber } from './helpers-numbers';
@@ -288,37 +288,6 @@ export class HelpersTaon extends CoreHelpers {
   // }
   //#endregion
 
-  //#region methods & getters / parse url
-  urlParse(portOrHost: number | string | URL, forceDomain = false) {
-    let url: URL;
-    if (portOrHost instanceof URL) {
-      url = portOrHost;
-    } else if (_.isNumber(portOrHost)) {
-      url = new URL(`http://localhost:${portOrHost}`);
-    } else if (!_.isNaN(Number(portOrHost))) {
-      url = new URL(`http://localhost:${Number(portOrHost)}`);
-    } else if (_.isString(portOrHost)) {
-      try {
-        url = new URL(portOrHost);
-      } catch (error) {}
-      if (Validators.network.isValidIp(portOrHost)) {
-        try {
-          url = new URL(`http://${portOrHost}`);
-        } catch (error) {
-          Helpers.warn(`Not able to get port from ${portOrHost}`);
-        }
-      }
-      if (forceDomain) {
-        const domain = portOrHost as string;
-        url = new URL(
-          domain.startsWith('http') ? domain : `http://${portOrHost}`,
-        );
-      }
-    }
-    return url;
-  }
-  //#endregion
-
   //#region methods & getters / slash
   slash(pathFromWindowsOrUnixType: string) {
     //#region @backendFunc
@@ -395,7 +364,7 @@ export class HelpersTaon extends CoreHelpers {
         }
       }
     }
-    return ips.map(a => Helpers.urlParse(a));
+    return ips.map(a => UtilsNetwork.urlParse(a));
     //#endregion
   }
   //#endregion
@@ -604,14 +573,6 @@ export class HelpersTaon extends CoreHelpers {
 
   //#region methods & getters / apply mixins
   public applyMixins = applyMixins;
-  //#endregion
-
-  //#region methods & getters / is valid ip
-  isValidIp = Validators.network.isValidIp;
-  //#endregion
-
-  //#region methods & getters / is valid git repo url
-  isValidGitRepuUrl = Validators.git.isValidRepoUrl;
   //#endregion
 }
 
