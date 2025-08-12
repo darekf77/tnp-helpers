@@ -73,7 +73,7 @@ export class BaseNodeModules<
    */
   get realPath() {
     try {
-      const realPath = fse.realpathSync(this.path);
+      const realPath = crossPlatformPath(fse.realpathSync(this.path));
       return realPath;
     } catch (error) {
       return this.path;
