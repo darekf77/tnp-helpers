@@ -359,6 +359,17 @@ export abstract class BaseCliWorker<
         break;
       }
       if (i > WORKER_INIT_START_TIME_LIMIT) {
+        Helpers.logInfo(
+          `[${this.serviceID}][timestamp-checking] Worker "${this.serviceID}" did not start in time...`,
+        );
+        return false;
+      }
+      const compareTimestamp =
+        Date.now() - this.processLocalInfoObj.startTimestamp;
+      if (compareTimestamp > 60000) {
+        Helpers.logInfo(
+          `[${this.serviceID}][timestamp-checking] Worker "${this.serviceID}" exceeds start time...`,
+        );
         return false;
       }
       Helpers.log(
