@@ -3,20 +3,10 @@ import { os, UtilsOs } from 'tnp-core/src';
 import { crossPlatformPath, path, Helpers } from 'tnp-core/src';
 
 import { MIGRATIONS_CLASSES_FOR_PortsContext } from '../../../migrations';
+import { getBaseCliWorkerDatabaseConfig } from '../classes/base-cli-worker/base-cli-worker-database-config';
 
 import { PortsController } from './ports.controller';
 import { Port } from './ports.entity';
-
-//#region @backend
-const portsWorkerDatabaseLocation = crossPlatformPath([
-  UtilsOs.getRealHomeDir(),
-  `.taon/databases-for-services/ports-worker.sqlite`,
-]);
-if (!Helpers.exists(path.dirname(portsWorkerDatabaseLocation))) {
-  Helpers.mkdirp(path.dirname(portsWorkerDatabaseLocation));
-}
-// console.log('portsWorkerDatabaseLocation', portsWorkerDatabaseLocation);
-//#endregion
 
 export const PortsContextTemplate = Taon.createContextTemplate(() => ({
   contextName: 'PortsContext',
@@ -26,12 +16,7 @@ export const PortsContextTemplate = Taon.createContextTemplate(() => ({
   entities: { Port },
   migrations: { ...MIGRATIONS_CLASSES_FOR_PortsContext },
   skipWritingServerRoutes: true,
-  //#region @backend
-  database: {
-    recreateMode: 'DROP_DB+MIGRATIONS',
-    location: portsWorkerDatabaseLocation,
-  },
-  //#endregion
+  ...getBaseCliWorkerDatabaseConfig('ports-worker', 'DROP_DB+MIGRATIONS'),
   logs: {
     migrations: true,
   },

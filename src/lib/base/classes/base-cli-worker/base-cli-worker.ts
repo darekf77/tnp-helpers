@@ -14,7 +14,7 @@ import {
   UtilsOs,
 } from 'tnp-core/src';
 
-import { CfontAlign, CfontStyle, Helpers } from '../../../index';
+import { Helpers } from '../../../index';
 
 import { BaseCliWorkerConfig } from './base-cli-worker-config';
 import type { BaseCliWorkerController } from './base-cli-worker-controller';
@@ -88,10 +88,12 @@ export abstract class BaseCliWorker<
 
   //#region methods / start normally in current process
   /**
+   * <strong>IMPORTANT USE ONLY IN DEVELOPMENT !!!</strong>
+   * for production use startDetachedIfNeedsToBeStarted()
    * start normally process
    * this will crash if process already started
    */
-  protected async startNormallyInCurrentProcess(): Promise<void> {
+  public async startNormallyInCurrentProcess(): Promise<void> {
     //#region @backendFunc
     Helpers.taskStarted(
       `[${this.serviceID}] Process start in current process...`,
@@ -455,7 +457,7 @@ export abstract class BaseCliWorker<
 
     if (options.useCurrentWindowForDetach) {
       Helpers.logInfo(
-        `[${this.serviceID}][startDetached] Starting in new terminal "${chalk.bold(this.startCommand)}"...`,
+        `[${this.serviceID}][startDetached]  Starting in current terminal "${chalk.bold(this.startCommand)}"...`,
       );
       await UtilsProcess.startAsyncChildProcessCommandUntil(this.startCommand, {
         untilOptions: {
@@ -466,7 +468,7 @@ export abstract class BaseCliWorker<
       });
     } else {
       Helpers.logInfo(
-        `[${this.serviceID}][startDetached] Starting in current terminal "${chalk.bold(this.startCommand)}"...`,
+        `[${this.serviceID}][startDetached] Starting in new terminal "${chalk.bold(this.startCommand)}"...`,
       );
       await UtilsProcess.startInNewTerminalWindow(this.startCommand);
     }

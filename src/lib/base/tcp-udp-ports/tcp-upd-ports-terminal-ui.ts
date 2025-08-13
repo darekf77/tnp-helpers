@@ -1,8 +1,7 @@
 //#region imports
-import { UtilsTerminal, _ } from 'tnp-core/src';
+import { CoreModels, UtilsTerminal, _ } from 'tnp-core/src';
 
 import { Helpers, Port, PortStatusArr } from '../../index';
-import { CfontStyle } from '../../models';
 import { BaseCliWorkerTerminalUI } from '../classes/base-cli-worker/base-cli-worker-terminal-ui';
 
 import { PortStatus } from './ports.entity';
@@ -17,7 +16,7 @@ export class TcpUdpPortsTerminalUI extends BaseCliWorkerTerminalUI<PortsWorker> 
   //#endregion
 
   //#region methods / header text style
-  protected textHeaderStyle(): CfontStyle {
+  protected textHeaderStyle(): CoreModels.CfontStyle {
     return 'block';
   }
   //#endregion

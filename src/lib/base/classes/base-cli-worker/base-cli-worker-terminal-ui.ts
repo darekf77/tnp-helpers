@@ -1,9 +1,7 @@
 //#region imports
 import { config } from 'tnp-config/src';
-import { Helpers, UtilsTerminal } from 'tnp-core/src';
+import { CoreModels, Helpers, UtilsTerminal } from 'tnp-core/src';
 import { _, chalk } from 'tnp-core/src';
-
-import type { CfontAlign, CfontStyle } from '../../../models';
 
 import type { BaseCliWorker } from './base-cli-worker';
 import type { BaseCliWorkerController } from './base-cli-worker-controller';
@@ -21,13 +19,13 @@ export class BaseCliWorkerTerminalUI<
   //#endregion
 
   //#region protected methods / text header style
-  protected textHeaderStyle(): CfontStyle {
+  protected textHeaderStyle(): CoreModels.CfontStyle {
     return 'block';
   }
   //#endregion
 
   //#region protected methods / header text align
-  protected headerTextAlign(): CfontAlign {
+  protected headerTextAlign(): CoreModels.CfontAlign {
     return 'left';
   }
   //#endregion
@@ -38,22 +36,10 @@ export class BaseCliWorkerTerminalUI<
    */
   protected async header(): Promise<void> {
     //#region @backendFunc
-    const cfonts = require('cfonts');
-    const output = cfonts.render(await this.headerText(), {
-      font: this.textHeaderStyle(),
+    UtilsTerminal.drawBigText(await this.headerText(), {
       align: this.headerTextAlign(),
-      colors: ['system'],
-      background: 'transparent',
-      letterSpacing: 1,
-      lineHeight: 1,
-      space: true,
-      maxLength: '0',
-      gradient: false,
-      independentGradient: false,
-      transitionGradient: false,
-      env: 'node',
+      style: this.textHeaderStyle(),
     });
-    console.log(output.string);
     //#endregion
   }
   //#endregion

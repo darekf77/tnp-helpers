@@ -343,24 +343,6 @@ export class CommandProcess {
 }
 //#endregion
 
-//#region models
-export type CfontStyle =
-  | 'block'
-  | 'slick'
-  | 'tiny'
-  | 'grid'
-  | 'pallet'
-  | 'shade'
-  | 'chrome'
-  | 'simple'
-  | 'simpleBlock'
-  | '3d'
-  | 'simple3d'
-  | 'huge';
-
-export type CfontAlign = 'left' | 'center' | 'right' | 'block';
-//#endregion
-
 //#region docker-compose models
 export interface DockerComposeFile {
   version: string;
