@@ -2101,12 +2101,34 @@ export namespace UtilsZip {
   };
   //#endregion
 
-  export const zipDir = async (absPathToDir: string): Promise<void> => {
+  /**
+   * @returns absolute path to zip file
+   */
+  export const zipDir = async (absPathToDir: string, options?: {
+    /**
+     * default false
+     */
+    overrideIfZipFileExists?: boolean;
+  }): Promise<string> => {
     //#region @backendFunc
+    const zipPath = `${absPathToDir}.zip`;
+    const destinationFileName = crossPlatformPath([
+      path.dirname(absPathToDir),
+      zipPath,
+    ])
+    if(options.overrideIfZipFileExists) {
+      try {
+      Helpers.removeFileIfExists(destinationFileName);
+      } catch (error) {}
+    }
+    if(Helpers.exists(destinationFileName)) {
+      Helpers.info(`[${config.frameworkName}-helpers] Zip file already exists: ${destinationFileName}`);
+      return destinationFileName;
+    }
     const yazl = await import('yazl'); // Use default import for yazl
     const pipeline = (await import('stream/promises')).pipeline;
 
-    const zipPath = `${absPathToDir}.zip`;
+
     const zipfile = new yazl.ZipFile();
     const addDirectoryToZip = async (dir: string, basePath: string) => {
       const entries = await fse.promises.readdir(dir, { withFileTypes: true });
@@ -2123,6 +2145,7 @@ export namespace UtilsZip {
     await addDirectoryToZip(absPathToDir, absPathToDir);
     zipfile.end();
     await pipeline(zipfile.outputStream, fse.createWriteStream(zipPath));
+    return destinationFileName;
     //#endregion;
   };
 

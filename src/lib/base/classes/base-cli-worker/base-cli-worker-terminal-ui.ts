@@ -7,6 +7,13 @@ import type { BaseCliWorker } from './base-cli-worker';
 import type { BaseCliWorkerController } from './base-cli-worker-controller';
 //#endregion
 
+export type BaseWorkerTerminalActionReturnType = {
+  [uniqeActionName: string]: {
+    name: string;
+    action: () => unknown | Promise<unknown>;
+  };
+}
+
 export class BaseCliWorkerTerminalUI<
   WORKER extends BaseCliWorker<BaseCliWorkerController, any>,
 > {
@@ -88,12 +95,7 @@ export class BaseCliWorkerTerminalUI<
   protected getWorkerTerminalActions(options?: {
     exitIsOnlyReturn?: boolean;
     chooseAction?: boolean;
-  }): {
-    [uniqeActionName: string]: {
-      name: string;
-      action: () => unknown | Promise<unknown>;
-    };
-  } {
+  }): BaseWorkerTerminalActionReturnType {
     //#region @backendFunc
     options = options || {};
     options.chooseAction = _.isBoolean(options.chooseAction)
