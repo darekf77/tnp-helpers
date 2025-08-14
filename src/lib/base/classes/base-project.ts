@@ -828,8 +828,11 @@ export abstract class BaseProject<
     //#region @backendFunc
     taskName = this.getUniqueForTask(taskName);
     options = options || {};
-
-    const ctrl = await this.ins.portsWorker.getControllerForRemoteConnection();
+    // console.log('taskNmae', taskName);
+    const ctrl = await this.ins.portsWorker.getControllerForRemoteConnection({
+      calledFrom: 'registerAndAssignPort',
+      // skipWaitingForWorkerProcessPortToBeSaved: true,
+    });
     while (true) {
       try {
         const data = await ctrl.registerAndAssignPort(

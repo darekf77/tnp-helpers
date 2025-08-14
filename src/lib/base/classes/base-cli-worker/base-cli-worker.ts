@@ -118,9 +118,17 @@ export abstract class BaseCliWorker<
   //#endregion
 
   //#region methods / get controller for remote connection
-  async getControllerForRemoteConnection(): Promise<REMOTE_CTRL> {
+  async getControllerForRemoteConnection(options?: {
+    calledFrom?: string;
+    // skipWaitingForWorkerProcessPortToBeSaved?: boolean;
+  }): Promise<REMOTE_CTRL> {
     //#region @backendFunc
-    await this.waitForProcessPortSavedToDisk();
+    options = options || {};
+    // ! TODO this waiting is called for every generated port in app.host.ts
+    // ! this may be expensive in future
+    // if (!options.skipWaitingForWorkerProcessPortToBeSaved) {
+    await this.waitForProcessPortSavedToDisk(options);
+    // }
 
     if (
       this.contextForRemoteConnection &&
@@ -188,7 +196,9 @@ export abstract class BaseCliWorker<
       );
       return;
     }
-    const ctrl = await this.getControllerForRemoteConnection();
+    const ctrl = await this.getControllerForRemoteConnection({
+      calledFrom: 'kill',
+    });
     try {
       if (!options.dontRemoveConfigFile) {
         Helpers.removeFileIfExists(this.pathToProcessLocalInfoJson);
@@ -307,7 +317,9 @@ export abstract class BaseCliWorker<
       `[${this.serviceID}] Checking if current working version is up to date...`,
     );
     try {
-      const ctrl = await this.getControllerForRemoteConnection();
+      const ctrl = await this.getControllerForRemoteConnection({
+        calledFrom: 'killWorkerWithLowerVersion',
+      });
       Helpers.logInfo(
         `[${this.serviceID}] Checking if current working version is up to date...`,
       );
@@ -400,7 +412,9 @@ export abstract class BaseCliWorker<
               `is healthy...`,
           );
         }
-        const ctrl = await this.getControllerForRemoteConnection();
+        const ctrl = await this.getControllerForRemoteConnection({
+          calledFrom: 'isServiceHealthy',
+        });
         Helpers.log(`Sending is healthy request...`);
         // console.log('this.processLocalInfoObj', this.processLocalInfoObj);
         const req = await ctrl.baseCLiWorkerCommand_isHealthy(
@@ -515,7 +529,9 @@ export abstract class BaseCliWorker<
     while (true) {
       try {
         const portControllerInstance =
-          await this.getControllerForRemoteConnection();
+          await this.getControllerForRemoteConnection({
+            calledFrom: 'initializeWorkerMetadata',
+          });
 
         await portControllerInstance.baseCLiWorkerCommand_initializeMetadata(
           this.serviceID,
@@ -545,10 +561,13 @@ export abstract class BaseCliWorker<
   //#endregion
 
   //#region wait for process port saved to disk
-  protected async waitForProcessPortSavedToDisk(): Promise<void> {
+  protected async waitForProcessPortSavedToDisk(options?: {
+    calledFrom?: string;
+  }): Promise<void> {
     //#region @backendFunc
+    options = options || {};
     Helpers.logInfo(
-      `[${this.serviceID}] Waiting for process port saved to disk...`,
+      `[${this.serviceID}][${options.calledFrom}] Waiting for process port saved to disk...`,
     );
     Helpers.log(`in ${this.pathToProcessLocalInfoJson}`);
     let portForRemote = this.processLocalInfoObj.port;
