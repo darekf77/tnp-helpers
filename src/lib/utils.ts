@@ -283,7 +283,7 @@ export namespace UtilsTypescript {
 
   //#region exports from file
 
-  interface ExportInfo {
+  export interface ExportInfo {
     type:
       | 'class'
       | 'function'
