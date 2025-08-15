@@ -1,15 +1,26 @@
-import { execSync } from 'child_process'; // @backend
-
-import { config } from 'tnp-config/src';
-import { chalk, _, path, os, UtilsOs, fse, isElevated } from 'tnp-core/src';
+import { config, fileName } from 'tnp-config/src';
+import {
+  chalk,
+  _,
+  path,
+  os,
+  UtilsOs,
+  fse,
+  isElevated,
+  Utils,
+  UtilsJson,
+  CoreModels,
+} from 'tnp-core/src';
 import { crossPlatformPath } from 'tnp-core/src';
 import { UtilsTerminal } from 'tnp-core/src';
 import { UtilsNetwork } from 'tnp-core/src';
+import { child_process } from 'tnp-core/src'; //@backend
 
 import {
   Helpers,
   LinkedProject,
   PushProcessOptions,
+  UtilsDotFile,
   UtilsVSCode,
 } from '../../index';
 import { TypeOfCommit, CommitData } from '../commit-data';
@@ -18,6 +29,7 @@ import { GhTempCode } from '../gh-temp-code';
 import { BaseCommandLineFeature } from './base-command-line-feature';
 import { BaseProject } from './base-project';
 import type { BaseProjectResolver } from './base-project-resolver';
+import { Subject } from 'rxjs';
 
 export class BaseGlobalCommandLine<
   PARAMS = any,
@@ -1817,6 +1829,150 @@ Would you like to update current project configuration?`)
     let domain = this.firstArg || '';
     await UtilsNetwork.simulateDomain(domain);
     this._exit();
+    //#endregion
+  }
+
+  async preview(): Promise<void> {
+    //#region handle preview of docker compose
+    if (
+      [fileName.docker_compose_yml, fileName.compose_yml].includes(
+        path.basename(this.firstArg),
+      )
+    ) {
+      const simulateDomain = this.params['domain'] || this.params['domains'];
+
+      const firstArg = path.isAbsolute(this.firstArg)
+        ? this.firstArg
+        : crossPlatformPath([this.cwd, this.firstArg]);
+
+      const cwd = crossPlatformPath(path.dirname(firstArg));
+      const composeFileName = path.basename(firstArg);
+      //   import { spawn } from 'child_process';
+      //   import { readFileSync } from 'fs';
+      //   import { resolve } from 'path';
+      const envPath = crossPlatformPath([cwd, '.env']);
+
+      const COMPOSE_PROJECT_NAME = UtilsDotFile.getValueFromDotFile(
+        envPath,
+        'COMPOSE_PROJECT_NAME',
+      );
+
+      const envContent = UtilsDotFile.getValuesKeysAsJsonObject(envPath) || {};
+      const allDomains = Utils.uniqArray(
+        Object.keys(envContent)
+          .filter(key => {
+            return key.startsWith('FRONTEND_HOST_URL_');
+          })
+          .map(domainKey => envContent[domainKey] as string),
+      );
+
+      if (simulateDomain && allDomains.length === 0) {
+        Helpers.error(
+          `No domains to simulate found in .env file.
+
+          Before release build update your
+
+          env.ts or env.angular-node-app.ENVIRONTMENT_NAME.ts with
+
+          ${chalk.bold(`website.useDomain = true;`)}
+
+          `,
+          false,
+          true,
+        );
+      }
+
+      const envKeyAndComments =
+        UtilsDotFile.getCommentsKeysAsJsonObject(envPath) || {};
+
+      const project = this.ins.From(cwd);
+      const envKeyAndCommentsKey = Object.keys(envKeyAndComments);
+      for (const key of envKeyAndCommentsKey) {
+        const comment = envKeyAndComments[key];
+        const tags = UtilsJson.getAttributiesFromComment(comment);
+        if (tags.map(c => c.name).includes(CoreModels.tagForTaskName)) {
+          const tag = tags.find(c => c.name === CoreModels.tagForTaskName);
+          const taskName = tag.value;
+          const taskPort = await project.registerAndAssignPort(taskName);
+          UtilsDotFile.setValueToDotFile(envPath, key, taskPort);
+          UtilsDotFile.setCommentToKeyInDotFile(
+            envPath,
+            key,
+            `${tag.name}="${tag.value}"`,
+          );
+          console.log(
+            `Updating .env "${key}"="${taskPort}" from available ports range.`,
+          );
+        }
+      }
+
+      const env = { ...process.env };
+      let closing = false;
+
+      const triggerRevertChangesToEtcHosts = new Subject<void>();
+      if (simulateDomain) {
+        await UtilsNetwork.simulateDomain(allDomains, {
+          triggerRevertChangesToEtcHosts,
+        });
+      }
+
+      const child = child_process.spawn(
+        'docker-compose',
+        ['-f', composeFileName, 'up', '--build'],
+        {
+          env,
+          cwd,
+          stdio: 'inherit', // inherit stdio so output shows in terminal
+        },
+      );
+
+      console.log(
+        `
+
+
+
+
+
+     ${chalk.bold('PRESS ANY KEY TO STOP')} RUNNING CONTAINER(S) ` +
+          `FOR ${chalk.bold.underline(COMPOSE_PROJECT_NAME as string)}
+  ${simulateDomain ? `AND SIMULATING DOMAINS: ${allDomains.join(', ')} IN ETC/HOST` : ''}
+
+
+
+
+  `,
+      );
+
+      process.stdin.setRawMode(true);
+      process.stdin.resume();
+      process.stdin.on('data', () => {
+        if (closing) {
+          return;
+        }
+        // If we are already closing, ignore further input
+
+        closing = true;
+        triggerRevertChangesToEtcHosts.next();
+        console.log('Stopping container...');
+
+        child.kill('SIGINT');
+        console.log('Exiting...');
+        const downProcess = child_process.spawn(
+          'docker-compose',
+          ['-f', composeFileName, 'down'],
+          {
+            env,
+            cwd,
+            stdio: 'inherit',
+          },
+        );
+
+        downProcess.on('close', code => {
+          console.log(`docker-compose down exited with code ${code}`);
+          process.exit(0);
+        });
+      });
+    }
     //#endregion
   }
 }

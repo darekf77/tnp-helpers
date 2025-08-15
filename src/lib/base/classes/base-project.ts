@@ -8,7 +8,12 @@ import { fse, chalk } from 'tnp-core/src';
 import { _ } from 'tnp-core/src';
 import { Utils } from 'tnp-core/src';
 
-import { CoreProject, Helpers, UtilsTypescript } from '../../index';
+import {
+  CoreProject,
+  Helpers,
+  UtilsTaonWorker,
+  UtilsTypescript,
+} from '../../index';
 import { BaseProjectType } from '../../models';
 
 import { BaseGit } from './base-git';
@@ -818,7 +823,7 @@ export abstract class BaseProject<
   }
 
   protected getUniqueForTask(task: string): string {
-    return `task(${task}) in ${this.genericName}`;
+    return UtilsTaonWorker.getUniqueForTask(task, this.location);
   }
 
   public async registerAndAssignPort(
