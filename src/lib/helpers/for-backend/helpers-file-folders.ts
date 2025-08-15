@@ -1136,8 +1136,8 @@ to: ${to}
   }
 
   copyFile(
-    sourcePath: string,
-    destinationPath: string,
+    sourcePath: string | string[],
+    destinationPath: string  |  string[],
     options?: {
       transformTextFn?: (input: string) => string;
       debugMode?: boolean;
@@ -1146,6 +1146,8 @@ to: ${to}
     },
   ): boolean {
     //#region @backendFunc
+    sourcePath = crossPlatformPath(sourcePath);
+    destinationPath = crossPlatformPath(destinationPath);
     if (_.isUndefined(options)) {
       options = {} as any;
     }
