@@ -1778,7 +1778,7 @@ export namespace UtilsDotFile {
   //#region set value to/from dot file
   export const setValueToDotFile = (
     dotFileAbsPath: string | string[],
-    key: string ,
+    key: string,
     value: string | number | boolean,
   ): void => {
     //#region @backendFunc
@@ -1816,10 +1816,11 @@ export namespace UtilsDotFile {
   };
   //#endregion
 
+  //#region set comment to key in dot file
   export const setCommentToKeyInDotFile = (
     dotFileAbsPath: string | string[],
     key: string,
-    comment: string
+    comment: string,
   ): void => {
     //#region @backendFunc
     dotFileAbsPath = crossPlatformPath(dotFileAbsPath);
@@ -1851,11 +1852,11 @@ export namespace UtilsDotFile {
 
     Helpers.writeFile(dotFileAbsPath, envContent);
     Helpers.info(
-      `[${config.frameworkName}-helpers] Updated comment for ${key} in ${path.basename(dotFileAbsPath)}`
+      `[${config.frameworkName}-helpers] Updated comment for ${key} in ${path.basename(dotFileAbsPath)}`,
     );
     //#endregion
   };
-
+  //#endregion
 
   //#region get value from dot file
   export const getValueFromDotFile = (
@@ -1951,6 +1952,94 @@ export namespace UtilsDotFile {
       if (key) {
         result[key] = parseValue(rest.join('='));
       }
+    }
+
+    return result as T;
+    //#endregion
+  };
+  //#endregion
+
+  //#region get comments keys as json object
+  /**
+   * @returns key|comment pairs as json object
+   */
+  export const getCommentsKeysAsJsonObject = <
+    T = Record<string, string | undefined>,
+  >(
+    dotFileAbsPath: string | string[],
+  ): T => {
+    //#region @backendFunc
+    dotFileAbsPath = crossPlatformPath(dotFileAbsPath);
+
+    if (!Helpers.exists(dotFileAbsPath)) {
+      return {} as T;
+    }
+
+    const envContent = Helpers.readFile(dotFileAbsPath, '');
+    const result: Record<string, string | undefined> = {};
+    const lines = envContent.split(/\r?\n/);
+
+    const extractInlineComment = (valuePart: string): string | undefined => {
+      // Find the first unquoted `#`
+      let inSingle = false;
+      let inDouble = false;
+      let escaped = false;
+
+      for (let i = 0; i < valuePart.length; i++) {
+        const ch = valuePart[i];
+
+        if (escaped) {
+          escaped = false;
+          continue;
+        }
+
+        if (ch === '\\') {
+          escaped = true;
+          continue;
+        }
+
+        if (!inDouble && ch === "'") {
+          inSingle = !inSingle;
+          continue;
+        }
+
+        if (!inSingle && ch === '"') {
+          inDouble = !inDouble;
+          continue;
+        }
+
+        if (!inSingle && !inDouble && ch === '#') {
+          // Everything after '#' is the comment
+          const raw = valuePart.slice(i + 1);
+          const comment = raw.replace(/^\s+/, ''); // trim only leading spaces after '#'
+          return comment.length ? comment : '';
+        }
+      }
+
+      return undefined;
+    };
+
+    for (const line of lines) {
+      const raw = line;
+      const trimmed = raw.trim();
+
+      // Skip empty or full-line comments
+      if (!trimmed || trimmed.startsWith('#')) continue;
+
+      // Support optional leading `export `
+      const withoutExport = trimmed.startsWith('export ')
+        ? trimmed.slice('export '.length).trim()
+        : trimmed;
+
+      const eqIdx = withoutExport.indexOf('=');
+      if (eqIdx === -1) continue;
+
+      const key = withoutExport.slice(0, eqIdx).trim();
+      if (!key) continue;
+
+      const valuePart = withoutExport.slice(eqIdx + 1);
+
+      result[key] = extractInlineComment(valuePart);
     }
 
     return result as T;
@@ -2145,30 +2234,34 @@ export namespace UtilsZip {
   /**
    * @returns absolute path to zip file
    */
-  export const zipDir = async (absPathToDir: string, options?: {
-    /**
-     * default false
-     */
-    overrideIfZipFileExists?: boolean;
-  }): Promise<string> => {
+  export const zipDir = async (
+    absPathToDir: string,
+    options?: {
+      /**
+       * default false
+       */
+      overrideIfZipFileExists?: boolean;
+    },
+  ): Promise<string> => {
     //#region @backendFunc
     const zipPath = `${absPathToDir}.zip`;
     const destinationFileName = crossPlatformPath([
       path.dirname(absPathToDir),
       zipPath,
-    ])
-    if(options.overrideIfZipFileExists) {
+    ]);
+    if (options.overrideIfZipFileExists) {
       try {
-      Helpers.removeFileIfExists(destinationFileName);
+        Helpers.removeFileIfExists(destinationFileName);
       } catch (error) {}
     }
-    if(Helpers.exists(destinationFileName)) {
-      Helpers.info(`[${config.frameworkName}-helpers] Zip file already exists: ${destinationFileName}`);
+    if (Helpers.exists(destinationFileName)) {
+      Helpers.info(
+        `[${config.frameworkName}-helpers] Zip file already exists: ${destinationFileName}`,
+      );
       return destinationFileName;
     }
     const yazl = await import('yazl'); // Use default import for yazl
     const pipeline = (await import('stream/promises')).pipeline;
-
 
     const zipfile = new yazl.ZipFile();
     const addDirectoryToZip = async (dir: string, basePath: string) => {
@@ -2223,6 +2316,24 @@ export namespace UtilsZip {
       });
     });
     //#endregion
+  };
+}
+//#endregion
+
+//#region utils worker
+export namespace UtilsTaonWorker {
+  export const getUniqueForTask = (
+    task: string,
+    location: string | string[],
+  ): string => {
+    if (!location) {
+      throw new Error('[UtilsTaonWorker.getUniqueForTask()] Location must be provided');
+    }
+    if (!task) {
+      throw new Error('[UtilsTaonWorker.getUniqueForTask()] Task must be provided');
+    }
+    location = crossPlatformPath(location);
+    return `task(${task?.trim()}) in ${location}`?.trim();
   };
 }
 //#endregion
