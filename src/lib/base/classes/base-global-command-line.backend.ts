@@ -1813,7 +1813,7 @@ Would you like to update current project configuration?`)
 
   async simulateDomain() {
     //#region @backendFunc
-    UtilsTerminal.clearConsole();
+    // UtilsTerminal.clearConsole();
     let domain = this.firstArg || '';
     await UtilsNetwork.simulateDomain(domain);
     this._exit();

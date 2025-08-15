@@ -107,7 +107,7 @@ export class BaseReleaseProcess<
   ): Promise<boolean> {
     //#region @backendFunc
     const choices = {
-      yes: {
+      vscodeOpen: {
         name: 'Open in VSCode',
       },
       continue: {
@@ -124,12 +124,13 @@ export class BaseReleaseProcess<
     if (selected === 'exit') {
       process.exit(0);
     }
-    if (selected === 'yes') {
+    if (selected === 'vscodeOpen') {
       const editor = await this.project.ins.configDb.getCodeEditor();
       Helpers.run(`${editor} .`, {
         output: true,
         cwd: cwdForCode,
       }).sync();
+
       if (
         !(await UtilsTerminal.confirm({
           message: `Is everything ok with code ?`,

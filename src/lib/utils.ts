@@ -1778,8 +1778,8 @@ export namespace UtilsDotFile {
   //#region set value to/from dot file
   export const setValueToDotFile = (
     dotFileAbsPath: string | string[],
-    value: string,
-    key: string | number | boolean,
+    key: string ,
+    value: string | number | boolean,
   ): void => {
     //#region @backendFunc
     dotFileAbsPath = crossPlatformPath(dotFileAbsPath);
@@ -1815,6 +1815,47 @@ export namespace UtilsDotFile {
     //#endregion
   };
   //#endregion
+
+  export const setCommentToKeyInDotFile = (
+    dotFileAbsPath: string | string[],
+    key: string,
+    comment: string
+  ): void => {
+    //#region @backendFunc
+    dotFileAbsPath = crossPlatformPath(dotFileAbsPath);
+
+    let envContent = '';
+    if (fse.existsSync(dotFileAbsPath)) {
+      envContent = Helpers.readFile(dotFileAbsPath, '');
+    } else {
+      Helpers.writeFile(dotFileAbsPath, '');
+      Helpers.logInfo(
+        `[${config.frameworkName}-helpers] Created ${path.basename(dotFileAbsPath)}`,
+      );
+      envContent = '';
+    }
+
+    // Regex: match line starting with "KEY=" and capture value part
+    const regex = new RegExp(`^(${key}=[^#\\n]*)(?:#.*)?$`, 'm');
+
+    if (regex.test(envContent)) {
+      // Replace existing comment (strip old, append new)
+      envContent = envContent.replace(regex, `$1 # ${comment}`);
+    } else {
+      // Append as new entry with empty value but with comment
+      if (envContent.length > 0 && !envContent.endsWith('\n')) {
+        envContent += '\n';
+      }
+      envContent += `${key}= # ${comment}\n`;
+    }
+
+    Helpers.writeFile(dotFileAbsPath, envContent);
+    Helpers.info(
+      `[${config.frameworkName}-helpers] Updated comment for ${key} in ${path.basename(dotFileAbsPath)}`
+    );
+    //#endregion
+  };
+
 
   //#region get value from dot file
   export const getValueFromDotFile = (
