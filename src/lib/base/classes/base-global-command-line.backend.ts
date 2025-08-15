@@ -1659,6 +1659,14 @@ Would you like to update current project configuration?`)
   }
   //#endregion
 
+  //#region commands / pause terminal
+  sleepTerminal() {
+    Helpers.info(`Sleeping terminal for 1 second... before exit`);
+    Helpers.sleep(1);
+    this._exit();
+  }
+  //#endregion
+
   //#region commands / gh pages init
   async ghPagesInit() {
     await this.project.init();
