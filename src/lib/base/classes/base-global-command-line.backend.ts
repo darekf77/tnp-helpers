@@ -1826,8 +1826,7 @@ Would you like to update current project configuration?`)
   async simulateDomain() {
     //#region @backendFunc
     // UtilsTerminal.clearConsole();
-    let domain = this.firstArg || '';
-    await UtilsNetwork.simulateDomain(domain);
+    await UtilsNetwork.simulateDomain(this.args);
     this._exit();
     //#endregion
   }
