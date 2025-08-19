@@ -1831,6 +1831,36 @@ Would you like to update current project configuration?`)
   }
   //#endregion
 
+  copy() {
+    let [from, to] = this.args;
+    from = path.isAbsolute(from)
+      ? crossPlatformPath(from)
+      : crossPlatformPath([this.cwd, from]);
+    to = path.isAbsolute(to)
+      ? crossPlatformPath(to)
+      : crossPlatformPath([this.cwd, to]);
+
+    if (path.basename(to) !== path.basename(from)) {
+      to = crossPlatformPath([to, path.basename(from)]);
+    }
+    Helpers.taskStarted(`Copying from ${from} to ${to}`);
+    if (!Helpers.exists(from)) {
+      Helpers.error(
+        `Source file or folder "${from}" does not exist`,
+        false,
+        true,
+      );
+    }
+    if (Helpers.isFolder(from)) {
+      Helpers.copy(from, to);
+    } else {
+      Helpers.copyFile(from, to);
+    }
+
+    Helpers.taskDone(`Copied`);
+    this._exit();
+  }
+
   async simulateDomain() {
     //#region @backendFunc
     // UtilsTerminal.clearConsole();
