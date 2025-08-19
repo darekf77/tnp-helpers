@@ -63,6 +63,7 @@ export class BaseCliWorkerTerminalUI<
         this.worker.processLocalInfoObj?.port?.toString(),
       )}/${'info' as keyof BaseCliWorkerController}
       Worker started by ${chalk.bold(config.frameworkName)}
+      (cwd: ${process.cwd()})
 
         `,
     );
