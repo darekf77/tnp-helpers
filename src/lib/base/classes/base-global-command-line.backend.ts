@@ -1,3 +1,4 @@
+import { Subject } from 'rxjs';
 import { config, fileName } from 'tnp-config/src';
 import {
   chalk,
@@ -21,6 +22,7 @@ import {
   LinkedProject,
   PushProcessOptions,
   UtilsDotFile,
+  UtilsJava,
   UtilsVSCode,
 } from '../../index';
 import { TypeOfCommit, CommitData } from '../commit-data';
@@ -29,7 +31,6 @@ import { GhTempCode } from '../gh-temp-code';
 import { BaseCommandLineFeature } from './base-command-line-feature';
 import { BaseProject } from './base-project';
 import type { BaseProjectResolver } from './base-project-resolver';
-import { Subject } from 'rxjs';
 
 export class BaseGlobalCommandLine<
   PARAMS = any,
@@ -1840,15 +1841,15 @@ Would you like to update current project configuration?`)
 
   //#region commands / select java
   async selectJava() {
-    const selectedJava = await this.project.javaJdk.selectJdkVersion();
-    this.project.javaJdk.updateJavaHomePath(selectedJava);
+    const selectedJava = await UtilsJava.selectJdkVersion();
+    UtilsJava.updateJavaHomePath(selectedJava);
   }
   //#endregion
 
   //#region commands / select tomcat
   async selectTomcat() {
-    const selectedTomcat = await this.project.javaJdk.selectTomcatVersion();
-    this.project.javaJdk.updateTomcatHomePath(selectedTomcat);
+    const selectedTomcat = await UtilsJava.selectTomcatVersion();
+    UtilsJava.updateTomcatHomePath(selectedTomcat);
     this._exit();
   }
   //#endregion

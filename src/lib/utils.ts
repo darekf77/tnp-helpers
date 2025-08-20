@@ -4,8 +4,10 @@ import {
   child_process,
   crossPlatformPath,
   fse,
+  os,
   path,
   UtilsOs,
+  UtilsTerminal,
 } from 'tnp-core/src';
 import { _, CoreModels, Utils } from 'tnp-core/src';
 import {
@@ -2327,13 +2329,405 @@ export namespace UtilsTaonWorker {
     location: string | string[],
   ): string => {
     if (!location) {
-      throw new Error('[UtilsTaonWorker.getUniqueForTask()] Location must be provided');
+      throw new Error(
+        '[UtilsTaonWorker.getUniqueForTask()] Location must be provided',
+      );
     }
     if (!task) {
-      throw new Error('[UtilsTaonWorker.getUniqueForTask()] Task must be provided');
+      throw new Error(
+        '[UtilsTaonWorker.getUniqueForTask()] Task must be provided',
+      );
     }
     location = crossPlatformPath(location);
     return `task(${task?.trim()}) in ${location}`?.trim();
   };
 }
+//#endregion
+
+//#region utils java
+export namespace UtilsJava {
+  //#region select jdk version
+  export const selectJdkVersion = async (): Promise<string | undefined> => {
+    //#region @backendFunc
+    Helpers.taskStarted(`Looking for JDK versions...`);
+    const platform = os.platform();
+    let currentJava = '';
+    let currentJavaLocation = '';
+
+    try {
+      currentJava = child_process
+        .execSync('java -version 2>&1')
+        .toString()
+        .split('\n')[0];
+      currentJavaLocation = child_process
+        .execSync('which java')
+        .toString()
+        .trim();
+    } catch {
+      currentJava = '-- no selected --';
+      currentJavaLocation = '--';
+    }
+
+    console.log(`\nCURRENT JAVA GLOBAL VERSION: ${currentJava}`);
+    if (currentJavaLocation !== '--') {
+      console.log(`FROM: ${currentJavaLocation}\n`);
+    }
+
+    let javaVersions: { version: string; path: string }[] = [];
+
+    if (platform === 'darwin') {
+      try {
+        const result = child_process
+          .execSync('/usr/libexec/java_home -V 2>&1')
+          .toString()
+          .split('\n')
+          .filter(l => l.includes('/Library/Java/JavaVirtualMachines'))
+          .map(l => {
+            const match = l.match(/(\/Library\/.*?\/Contents\/Home)/);
+            if (match) {
+              const version =
+                l.match(/(?:jdk-|JDK )([\d._]+)/)?.[1] ?? 'unknown';
+              return { version, path: match[1] };
+            }
+          })
+          .filter(Boolean) as { version: string; path: string }[];
+
+        javaVersions.push(...result);
+      } catch {
+        console.warn('No versions found via /usr/libexec/java_home');
+      }
+
+      // ✅ Extra fallback for Homebrew + Corretto
+      const fallbackDirs = [
+        '/Library/Java/JavaVirtualMachines',
+        '/usr/local/Cellar',
+        '/opt/homebrew/Cellar',
+      ];
+
+      for (const baseDir of fallbackDirs) {
+        try {
+          const dirs = fse.readdirSync(baseDir, { withFileTypes: true });
+          for (const dir of dirs) {
+            if (dir.isDirectory() && /(jdk|corretto|openjdk)/i.test(dir.name)) {
+              // Cellar layout: .../openjdk@21/<version>/libexec/openjdk.jdk/Contents/Home
+              const homePath = baseDir.includes('Cellar')
+                ? path.join(
+                    baseDir,
+                    dir.name,
+                    fse.readdirSync(path.join(baseDir, dir.name))[0],
+                    'libexec',
+                    'openjdk.jdk',
+                    'Contents',
+                    'Home',
+                  )
+                : path.join(baseDir, dir.name, 'Contents', 'Home');
+
+              javaVersions.push({
+                version: detectJavaVersionMacOS(homePath),
+                path: homePath,
+              });
+            }
+          }
+        } catch {
+          // ignore
+        }
+      }
+    } else if (platform === 'linux') {
+      const knownPaths = ['/usr/lib/jvm', '/usr/java', '/opt/java', '/opt/jdk'];
+
+      for (const basePath of knownPaths) {
+        try {
+          const dirs = fse.readdirSync(basePath, { withFileTypes: true });
+          for (const dir of dirs) {
+            if (dir.isDirectory() && /(jdk|java|corretto)/i.test(dir.name)) {
+              const versionMatch = dir.name.match(/(\d+(?:\.\d+)+)/);
+              javaVersions.push({
+                version: versionMatch?.[1] ?? dir.name,
+                path: path.join(basePath, dir.name),
+              });
+            }
+          }
+        } catch {
+          // ignore
+        }
+      }
+    } else if (platform === 'win32') {
+      try {
+        const output = child_process.execSync(
+          'reg query "HKLM\\SOFTWARE\\JavaSoft\\Java Development Kit"',
+          { encoding: 'utf8' },
+        );
+        const lines = output
+          .split('\n')
+          .filter(line => line.includes('JavaSoft\\Java Development Kit'));
+        for (const line of lines) {
+          const version = line.trim().split('\\').pop()!;
+          const pathOutput = child_process.execSync(
+            `reg query "${line.trim()}" /v JavaHome`,
+            {
+              encoding: 'utf8',
+            },
+          );
+          const match = pathOutput.match(/JavaHome\s+REG_SZ\s+(.+)/);
+          if (match) {
+            javaVersions.push({
+              version,
+              path: match[1].trim(),
+            });
+          }
+        }
+      } catch {
+        // Ignore registry failure
+      }
+
+      // Fallback dirs
+      const fallbackDirs = [
+        'C:\\Program Files\\Amazon Corretto',
+        'C:\\Program Files\\Java',
+        'C:\\Program Files\\Eclipse Adoptium',
+        'C:\\Program Files\\Zulu',
+        'C:\\Java',
+      ];
+
+      for (const baseDir of fallbackDirs) {
+        try {
+          const subdirs = fse.readdirSync(baseDir, { withFileTypes: true });
+          for (const dir of subdirs) {
+            if (
+              dir.isDirectory() &&
+              /(jdk|corretto|zulu|temurin)/i.test(dir.name)
+            ) {
+              const versionMatch = dir.name.match(/(\d+(?:\.\d+)+)/);
+              javaVersions.push({
+                version: versionMatch?.[1] ?? dir.name,
+                path: path.join(baseDir, dir.name),
+              });
+            }
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    javaVersions = javaVersions
+      .filter(j => j.version !== 'unknown') // drop unknowns
+      .filter(
+        (j, index, self) =>
+          index ===
+          self.findIndex(
+            other => path.resolve(other.path) === path.resolve(j.path),
+          ),
+      );
+
+    if (javaVersions.length === 0) {
+      console.log('❌ No installed Java versions found.');
+      return;
+    }
+
+    const selected = await UtilsTerminal.select({
+      question: 'Select Java version for global usage:',
+      choices: javaVersions.map(j => ({
+        name: `${j.version}  —  ${j.path}`,
+        value: j,
+      })),
+    });
+
+    return selected.path;
+    //#endregion
+  };
+  //#endregion
+
+  export const detectJavaVersionMacOS = (javaHome: string): string => {
+    //#region @backendFunc
+    try {
+      // 1. Try to read "release" file shipped with every JDK
+      const releaseFile = path.join(javaHome, 'release');
+      if (fse.existsSync(releaseFile)) {
+        const content = fse.readFileSync(releaseFile, 'utf8');
+        const match = content.match(/JAVA_VERSION="([^"]+)"/);
+        if (match) {
+          return match[1];
+        }
+      }
+
+      // 2. Try folder name (amazon-corretto-21.jdk → 21, valhalla-ea-23 → 23)
+      const folder = path.basename(javaHome);
+      const matchFolder = folder.match(/(\d+(?:\.\d+)?)/);
+      if (matchFolder) {
+        return matchFolder[1];
+      }
+
+      return folder; // fallback: show folder name
+    } catch {
+      return 'unknown';
+    }
+    //#endregion
+  };
+
+  //#region update java home path
+  export const updateJavaHomePath = (selectedPath: string): void => {
+    //#region @backendFunc
+    const platform = os.platform();
+
+    if (platform === 'darwin') {
+      try {
+        const shellPath = path.resolve(UtilsOs.getRealHomeDir(), '.zshrc'); // or .bash_profile
+        child_process.execSync(`export JAVA_HOME="${selectedPath}"`);
+        console.log(
+          `✅ JAVA_HOME set to ${selectedPath} (only in current session).`,
+        );
+        console.log(
+          `To make permanent, add to your shell profile:\n\nexport JAVA_HOME="${selectedPath}"\n`,
+        );
+      } catch (err) {
+        console.error('❌ Failed to set JAVA_HOME on macOS.');
+      }
+    } else if (platform === 'linux') {
+      try {
+        child_process.execSync(`export JAVA_HOME="${selectedPath}"`);
+        child_process.execSync(
+          `sudo update-alternatives --set java "${selectedPath}/bin/java"`,
+        );
+        console.log(`✅ Set global Java to ${selectedPath}`);
+      } catch {
+        console.log(
+          `⚠️ Could not update alternatives. Try manually:\nexport JAVA_HOME="${selectedPath}"`,
+        );
+      }
+    } else if (platform === 'win32') {
+      try {
+        child_process.execSync(`setx JAVA_HOME "${selectedPath}"`);
+        console.log(`✅ JAVA_HOME set globally to ${selectedPath}`);
+        console.log(`⚠️ Restart your terminal or computer to apply changes.`);
+      } catch {
+        console.error('❌ Failed to set JAVA_HOME on Windows.');
+      }
+    }
+    //#endregion
+  };
+  //#endregion
+
+  //#region api methods / selectTomcatVersion
+  export const selectTomcatVersion = async (): Promise<string> => {
+    //#region @backendFunc
+    const platform = os.platform();
+    let currentTomcat = process.env.TOMCAT_HOME || '';
+    let tomcatVersions: { version: string; path: string }[] = [];
+
+    console.log('\n🔍 Searching for installed Tomcat versions...');
+
+    if (currentTomcat) {
+      console.log(`CURRENT TOMCAT_HOME: ${currentTomcat}\n`);
+    }
+
+    if (platform === 'darwin' || platform === 'linux') {
+      // Extended search directories for macOS/Linux
+      const searchDirs = [
+        '/usr/local', // will check for tomcat* here
+        '/opt',
+        '/usr/share',
+        crossPlatformPath([UtilsOs.getRealHomeDir(), 'tomcat']),
+      ];
+
+      for (const base of searchDirs) {
+        try {
+          if (!fse.existsSync(base)) continue;
+          const subdirs = fse.readdirSync(base, { withFileTypes: true });
+          for (const sub of subdirs) {
+            if (
+              sub.isDirectory() &&
+              sub.name.toLowerCase().includes('tomcat')
+            ) {
+              const foundPath = path.join(base, sub.name);
+              const versionGuess =
+                sub.name.match(/(\d+\.\d+\.\d+)/)?.[1] || sub.name;
+              tomcatVersions.push({
+                version: versionGuess,
+                path: foundPath,
+              });
+            }
+          }
+        } catch {
+          // ignore errors
+        }
+      }
+    } else if (platform === 'win32') {
+      const fallbackDirs = [
+        'C:\\Program Files\\Apache Software Foundation',
+        'C:\\Tomcat',
+      ];
+      for (const baseDir of fallbackDirs) {
+        try {
+          if (!fse.existsSync(baseDir)) continue;
+          const subdirs = fse.readdirSync(baseDir, { withFileTypes: true });
+          for (const dir of subdirs) {
+            if (
+              dir.isDirectory() &&
+              dir.name.toLowerCase().includes('tomcat')
+            ) {
+              const foundPath = path.join(baseDir, dir.name);
+              const versionGuess =
+                dir.name.match(/(\d+\.\d+\.\d+)/)?.[1] || dir.name;
+              tomcatVersions.push({
+                version: versionGuess,
+                path: foundPath,
+              });
+            }
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    if (tomcatVersions.length === 0) {
+      console.log('❌ No Tomcat installations found.');
+      return;
+    }
+
+    const selected = await UtilsTerminal.select({
+      question: 'Select Tomcat installation for global usage:',
+      choices: tomcatVersions.map(t => ({
+        name: `Tomcat ${t.version} — ${t.path}`,
+        value: t,
+      })),
+    });
+
+    const selectedPath = selected.path;
+    return selectedPath;
+    //#endregion
+  };
+  //#endregion
+
+  //#region update tomcat home path
+  export const updateTomcatHomePath = (selectedPath: string): void => {
+    //#region @backendFunc
+    const platform = os.platform();
+    if (platform === 'darwin' || platform === 'linux') {
+      try {
+        child_process.execSync(`export TOMCAT_HOME="${selectedPath}"`);
+        console.log(
+          `✅ TOMCAT_HOME set to ${selectedPath} (current session only).`,
+        );
+        console.log(
+          `To make permanent, add to your ~/.zshrc or ~/.bashrc:\n\nexport TOMCAT_HOME="${selectedPath}"\n`,
+        );
+      } catch {
+        console.error('❌ Failed to set TOMCAT_HOME.');
+      }
+    } else if (platform === 'win32') {
+      try {
+        child_process.execSync(`setx TOMCAT_HOME "${selectedPath}"`);
+        console.log(`✅ TOMCAT_HOME set globally to ${selectedPath}`);
+        console.log(`⚠️ Restart your terminal or computer to apply changes.`);
+      } catch {
+        console.error('❌ Failed to set TOMCAT_HOME on Windows.');
+      }
+    }
+    //#endregion
+  };
+  //#endregion
+}
+
 //#endregion
