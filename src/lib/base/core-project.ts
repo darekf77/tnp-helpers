@@ -187,7 +187,6 @@ export class CoreProject<PROJECT extends BaseProject = BaseProject> {
 export const CoreTypescriptProject = CoreProject.from<BaseProject>({
   //#region configuration
   branches: ['master', 'develop'],
-  urlHttp: 'https://github.com/microsoft/TypeScript',
   environments: [],
   recognizedFn: project => {
     //#region @backendFunc
@@ -227,7 +226,6 @@ export const CoreAngularProject = CoreProject.from<BaseProject>({
   //#region configuration
   extends: CoreTypescriptProject,
   branches: ['master', 'develop'],
-  urlHttp: 'https://github.com/angular/angular-cli',
   environments: [],
   recognizedFn: project => {
     return project.hasFile('angular.json');
