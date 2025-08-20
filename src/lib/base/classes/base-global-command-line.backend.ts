@@ -145,6 +145,28 @@ export class BaseGlobalCommandLine<
   }
   //#endregion
 
+  async apiup() {
+    await this.apiUpdate();
+  }
+
+  async apiUpdate() {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
+      return;
+    }
+    Helpers.info('Updating & push project...');
+    try {
+      this.project.git.addAndCommit(
+        `chore: api ${!!this.firstArg ? this.firstArg : 'update'}`,
+      );
+    } catch (error) {}
+    await this.project.git.pushCurrentBranch({
+      askToRetry: true,
+      forcePushNoQuestion: true,
+    });
+    Helpers.info('Done');
+    this._exit();
+  }
+
   async cu() {
     await this.update();
   }
