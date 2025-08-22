@@ -1,4 +1,8 @@
-import { config, notAllowedNames, notAllowedProjectNames } from 'tnp-config/src';
+import {
+  config,
+  notAllowedNames,
+  notAllowedProjectNames,
+} from 'tnp-config/src';
 import { _, crossPlatformPath, path } from 'tnp-core/src';
 
 import { Helpers } from '../index';
@@ -30,14 +34,23 @@ export class LinkedProject {
     currentRemoteUrl?: string,
     currentBranch?: string,
   ) {
+    //#region @backendFunc
+    const isProperCurrentRemoteUrl =
+      currentRemoteUrl && Helpers.git.isValidRepoUrl(currentRemoteUrl);
+
+    const repoUrl = isProperCurrentRemoteUrl
+      ? currentRemoteUrl.replace(
+          path.basename(currentRemoteUrl),
+          `${projectName}.git`,
+        )
+      : void 0;
+
     return LinkedProject.from({
-      repoUrl: currentRemoteUrl?.replace(
-        path.basename(currentRemoteUrl),
-        `${projectName}.git`,
-      ),
+      repoUrl,
       defaultBranch: currentBranch,
       relativeClonePath: projectName,
     });
+    //#endregion
   }
   //#endregion
 
@@ -94,8 +107,9 @@ export class LinkedProject {
       .map(folderAbsPath => {
         const relativePath = folderAbsPath.replace(insideLocation + '/', '');
         const projectName = path.basename(relativePath);
+        const currentParentUrl = Helpers.git.getOriginURL(folderAbsPath);
         return LinkedProject.from({
-          repoUrl: Helpers.git.getOriginURL(folderAbsPath),
+          repoUrl: currentParentUrl ? currentParentUrl : void 0,
           relativeClonePath: projectName,
         });
       });

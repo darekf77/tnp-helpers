@@ -45,7 +45,8 @@ export class TnpHelpersComponent {
   readonly users$: Observable<User[]> = this.userApiService.getAll();
   readonly hello$ = this.userApiService.userController
     .helloWorld()
-    .request().observable.pipe(map(r => r.body.text));
+    .request()
+    .observable.pipe(map(r => r.body.text));
 }
 //#endregion
 //#endregion
@@ -60,7 +61,8 @@ export class UserApiService extends Taon.Base.AngularService {
   getAll(): Observable<User[]> {
     return this.userController
       .getAll()
-      .request().observable.pipe(map(r => r.body.json));
+      .request()
+      .observable.pipe(map(r => r.body.json));
   }
 }
 //#endregion

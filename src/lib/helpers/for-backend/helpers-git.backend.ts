@@ -87,7 +87,8 @@ export class HelpersGit {
   //#endregion
 
   isValidRepoUrl(url: string) {
-    const regex = /^([A-Za-z0-9]+@|http(|s)\:\/\/)([A-Za-z0-9.]+(:\d+)?)(?::|\/)([\d\/\w.-]+?)(\.git)?$/;
+    const regex =
+      /^([A-Za-z0-9]+@|http(|s)\:\/\/)([A-Za-z0-9.]+(:\d+)?)(?::|\/)([\d\/\w.-]+?)(\.git)?$/;
     const res = regex.test(url);
     return res;
   }
@@ -564,10 +565,11 @@ export class HelpersGit {
         }).sync();
         // child_process.execSync('git rev-parse HEAD', { cwd, stdio: ['pipe',] }).toString().trim()
       } else {
-        child_process
-          .execSync('git rev-parse HEAD &> /dev/null', { cwd })
-          .toString()
-          .trim();
+        Helpers.run('git rev-parse HEAD &> /dev/null', {
+          cwd,
+          silence: true,
+          output: false,
+        }).sync();
       }
       return true;
     } catch (e) {

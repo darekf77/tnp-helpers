@@ -992,9 +992,7 @@ Please provide proper commit message for lastest changes in your project:
   }
   //#endregion
 
-  private async validateEmailDomain(
-    allowedEmailsEnds: string[],
-  ): Promise<void> {
+  public async validateEmailDomain(allowedEmailsEnds: string[]): Promise<void> {
     //#region @backendFunc
     if (allowedEmailsEnds.length === 0) {
       return;

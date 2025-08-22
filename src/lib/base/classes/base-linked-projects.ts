@@ -270,7 +270,11 @@ export class BaseLinkedProjects<
             .replace('.git', '');
         }
         projOrProjName = LinkedProject.from(projOrProjName);
-        if (!projOrProjName.remoteUrl()) {
+        if (
+          !projOrProjName.remoteUrl() &&
+          currentRemoteUrl &&
+          Helpers.git.isValidRepoUrl(currentRemoteUrl)
+        ) {
           projOrProjName.repoUrl = currentRemoteUrl.replace(
             path.basename(currentRemoteUrl),
             `${projOrProjName.relativeClonePath}.git`,
