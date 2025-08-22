@@ -843,7 +843,7 @@ export abstract class BaseProject<
         const data = await ctrl.registerAndAssignPort(
           encodeURIComponent(taskName),
           _.isNumber(options.startFrom) ? options.startFrom : void 0,
-        ).received;
+        ).request();
         return data.body.json.port;
       } catch (error) {
         Helpers.logWarn(

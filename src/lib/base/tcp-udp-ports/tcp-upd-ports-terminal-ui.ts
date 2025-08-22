@@ -70,7 +70,7 @@ export class TcpUdpPortsTerminalUI extends BaseCliWorkerTerminalUI<PortsWorker> 
         await UtilsTerminal.pressAnyKeyToContinueAsync();
         const addedPort = (
           await ctrl.addTakeByOsPort(portToAdd, encodeURIComponent(uniqueId))
-            .received
+            .request()
         ).body.json;
         await UtilsTerminal.pressAnyKeyToContinueAsync({
           message: `Port added successfully. Press any key to continue...`,
@@ -119,7 +119,7 @@ export class TcpUdpPortsTerminalUI extends BaseCliWorkerTerminalUI<PortsWorker> 
       calledFrom: 'deletePortTerminalUiProcess',
     });
     const portsTakeByOs = (
-      await ctrl.getPortsByStatus('assigned-taken-by-os').received
+      await ctrl.getPortsByStatus('assigned-taken-by-os').request()
     ).body.json;
     const selectedPort = await this.selectPortProcess(
       portsTakeByOs,
@@ -130,7 +130,7 @@ export class TcpUdpPortsTerminalUI extends BaseCliWorkerTerminalUI<PortsWorker> 
       return;
     }
     try {
-      await ctrl.deletePort(selectedPort.port).received;
+      await ctrl.deletePort(selectedPort.port).request();
       await UtilsTerminal.pressAnyKeyToContinueAsync({
         message: 'Port deleted successfully. Press any key to continue...',
       });
@@ -152,7 +152,7 @@ export class TcpUdpPortsTerminalUI extends BaseCliWorkerTerminalUI<PortsWorker> 
       calledFrom: 'editPortTerminalUiProcess',
     });
     const portsTakeByOs = (
-      await ctrl.getPortsByStatus('assigned-taken-by-os').received
+      await ctrl.getPortsByStatus('assigned-taken-by-os').request()
     ).body.json;
 
     const selectedPort = await this.selectPortProcess(
@@ -173,7 +173,7 @@ export class TcpUdpPortsTerminalUI extends BaseCliWorkerTerminalUI<PortsWorker> 
           await ctrl.updatePortUniqueId(
             selectedPort.port,
             encodeURIComponent(newDescription),
-          ).received
+          ).request()
         ).body.json;
         await UtilsTerminal.pressAnyKeyToContinueAsync({
           message: `Port edited successfully. Press any key to continue...`,
@@ -246,7 +246,7 @@ export class TcpUdpPortsTerminalUI extends BaseCliWorkerTerminalUI<PortsWorker> 
     const controller = await this.worker.getControllerForRemoteConnection({
       calledFrom: `displayItemsForPortsStatus:${status}`,
     });
-    const portsData = await controller.getPortsByStatus(status).received;
+    const portsData = await controller.getPortsByStatus(status).request();
     const ports = portsData.body.json.map(c => c.titleOnList);
     if (ports.length === 0) {
       Helpers.info(`
@@ -273,7 +273,7 @@ export class TcpUdpPortsTerminalUI extends BaseCliWorkerTerminalUI<PortsWorker> 
     });
     let portToAdd: number;
     while (true) {
-      const getFreePort = (await ctrl.getFirstFreePort().received).body.json
+      const getFreePort = (await ctrl.getFirstFreePort().request()).body.json
         .port;
 
       const inputNumber = await UtilsTerminal.input({

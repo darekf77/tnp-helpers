@@ -1291,8 +1291,8 @@ Please provide proper commit message for lastest changes in your project:
       ${
         this.useGitBranchesAsMetadataForCommits() && !overrideCommitMessage
           ? `- branch to checkout {${commitData.branchName}}`
-          : `- using ${chalk.bold('current')} branch {${this.project.git.currentBranchName}} \n
-          (generated would be: ${commitData.branchName})
+          : `- using ${chalk.bold('current')} branch {${this.project.git.currentBranchName}} \n` +
+            `(generated branches from metadata not allowed for this project) \n
           `
       }`);
 

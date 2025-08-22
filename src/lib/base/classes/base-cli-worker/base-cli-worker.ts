@@ -203,7 +203,7 @@ export abstract class BaseCliWorker<
       if (!options.dontRemoveConfigFile) {
         Helpers.removeFileIfExists(this.pathToProcessLocalInfoJson);
       }
-      await ctrl.baseCLiWorkerCommand_kill().received;
+      await ctrl.baseCLiWorkerCommand_kill().request();
       Helpers.log(`Service "${this.serviceID}" killed...`);
     } catch (error) {
       Helpers.log(error);
@@ -328,7 +328,7 @@ export abstract class BaseCliWorker<
         _.merge(this.processLocalInfoObj, {
           version: this.serviceVersion,
         }),
-      ).received;
+      ).request();
       Helpers.logInfo(`[${this.serviceID}] Request done...`);
       const isUpToDate = req.body.booleanValue;
       if (!isUpToDate) {
@@ -419,7 +419,7 @@ export abstract class BaseCliWorker<
         // console.log('this.processLocalInfoObj', this.processLocalInfoObj);
         const req = await ctrl.baseCLiWorkerCommand_isHealthy(
           this.processLocalInfoObj,
-        ).received;
+        ).request();
         const isHealthy = req.body.booleanValue;
         // console.log('isHealthy', { isHealthy });
         if (isHealthy) {
@@ -536,7 +536,7 @@ export abstract class BaseCliWorker<
         await portControllerInstance.baseCLiWorkerCommand_initializeMetadata(
           this.serviceID,
           this.serviceVersion,
-        ).received;
+        ).request();
         this.saveProcessInfo({
           startTimestamp: null,
         });
