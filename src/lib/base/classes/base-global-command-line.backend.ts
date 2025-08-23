@@ -1,3 +1,4 @@
+//#region imports
 import { Subject } from 'rxjs';
 import { config, fileName } from 'tnp-config/src';
 import {
@@ -31,6 +32,7 @@ import { GhTempCode } from '../gh-temp-code';
 import { BaseCommandLineFeature } from './base-command-line-feature';
 import { BaseProject } from './base-project';
 import type { BaseProjectResolver } from './base-project-resolver';
+//#endregion
 
 export class BaseGlobalCommandLine<
   PARAMS = any,
@@ -146,6 +148,11 @@ export class BaseGlobalCommandLine<
   }
   //#endregion
 
+  //#region commands / api update
+  async upapi() {
+    await this.apiUpdate();
+  }
+
   async apiup() {
     await this.apiUpdate();
   }
@@ -167,7 +174,9 @@ export class BaseGlobalCommandLine<
     Helpers.info('Done');
     this._exit();
   }
+  //#endregion
 
+  //#region commands / chore update
   async cu() {
     await this.update();
   }
@@ -175,11 +184,15 @@ export class BaseGlobalCommandLine<
   async choreUpdate() {
     await this.update();
   }
+  //#endregion
 
+  //#region commands / color vscode
   colorvscode() {
     this.settingsVscode();
   }
+  //#endregion
 
+  //#region commands / settings vscode
   /**
    * Generate or update .vscode/settings.json file color settings
    */
@@ -207,6 +220,7 @@ export class BaseGlobalCommandLine<
 
     this._exit();
   }
+  //#endregion
 
   //#region commands / quick git update
   /**
@@ -1854,6 +1868,7 @@ Would you like to update current project configuration?`)
   }
   //#endregion
 
+  //#region commands / copy
   copy() {
     let [from, to] = this.args;
     from = path.isAbsolute(from)
@@ -1883,7 +1898,9 @@ Would you like to update current project configuration?`)
     Helpers.taskDone(`Copied`);
     this._exit();
   }
+  //#endregion
 
+  //#region commands / simulate domain
   async simulateDomain() {
     //#region @backendFunc
     // UtilsTerminal.clearConsole();
@@ -1891,7 +1908,9 @@ Would you like to update current project configuration?`)
     this._exit();
     //#endregion
   }
+  //#endregion
 
+  //#region commands / preview
   async preview(): Promise<void> {
     //#region handle preview of docker compose
     if (
@@ -2035,4 +2054,5 @@ Would you like to update current project configuration?`)
     }
     //#endregion
   }
+  //#endregion
 }

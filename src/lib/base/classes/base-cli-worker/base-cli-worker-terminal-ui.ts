@@ -56,7 +56,6 @@ export class BaseCliWorkerTerminalUI<
     //#region @backendFunc
     Helpers.info(
       `
-
       Service ${chalk.bold.red(this.worker.serviceID)}` +
         ` (version: ${this.worker.serviceVersion}) started..
       Check info here http://localhost:${chalk.bold(
@@ -64,7 +63,6 @@ export class BaseCliWorkerTerminalUI<
       )}/${'info' as keyof BaseCliWorkerController}
       Worker started by ${chalk.bold(config.frameworkName)}
       (cwd: ${process.cwd()})
-
         `,
     );
     //#endregion
