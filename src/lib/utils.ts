@@ -66,6 +66,8 @@ import type * as ts from 'typescript';
 import type * as vscodeType from 'vscode';
 
 import { Helpers } from './index';
+
+const { scrypt, randomBytes, timingSafeEqual } = require('node:crypto'); // @backend
 //#endregion
 
 //#region utils npm
@@ -2730,4 +2732,53 @@ export namespace UtilsJava {
   //#endregion
 }
 
+//#endregion
+
+//#region utils passwords
+export namespace UtilsPasswords {
+  //#region hash password
+  export const hashPassword = (password: string): Promise<string> => {
+    //#region @backendFunc
+    return new Promise((resolve, reject) => {
+      const salt = randomBytes(16);
+      scrypt(password, salt, 64, (err, derivedKey) => {
+        if (err) return reject(err);
+        // store salt + hash (hex or base64)
+        resolve(salt.toString('hex') + ':' + derivedKey.toString('hex'));
+      });
+    });
+    //#endregion
+  };
+  //#endregion
+
+  //#region verify password
+  export const verifyPassword = (
+    password: string,
+    stored: string,
+  ): Promise<boolean> => {
+    //#region @backendFunc
+    const { scrypt, randomBytes, timingSafeEqual } = require('node:crypto');
+    return new Promise((resolve, reject) => {
+      const [saltHex, keyHex] = stored.split(':');
+      const salt = Buffer.from(saltHex, 'hex');
+      const key = Buffer.from(keyHex, 'hex');
+
+      scrypt(password, salt, key.length, (err, derivedKey) => {
+        if (err) return reject(err);
+        resolve(timingSafeEqual(key, derivedKey));
+      });
+    });
+    //#endregion
+  };
+  //#endregion
+
+  // Example
+  // (async () => {
+  //   const hash = await hashPassword('super-secret');
+  //   console.log('stored:', hash);
+
+  //   const ok = await verifyPassword('super-secret', hash);
+  //   console.log('valid?', ok);
+  // })();
+}
 //#endregion
