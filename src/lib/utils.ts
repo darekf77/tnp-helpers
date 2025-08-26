@@ -770,9 +770,18 @@ export namespace UtilsTypescript {
                 } else {
                   // Fallback: wrap JSON string => parse with TS
                   // Or you can create a more sophisticated approach for arrays/objects
-                  initializer = factory.createIdentifier(
-                    JSON.stringify(valueOfVariable),
-                  );
+                  if (valueOfVariable === undefined) {
+                    console.warn(`[${config.frameworkName}-helpers][setValueToVariableInTsFile]
+                      
+                      SETTING VALUE OF VARIABLE TO UNDEFINED "${variableName}"
+                      
+                      `);
+                    initializer = factory.createIdentifier('undefined');
+                  } else {
+                    initializer = factory.createIdentifier(
+                      JSON.stringify(valueOfVariable),
+                    );
+                  }
                 }
 
                 // Return a new variable declaration with the updated initializer
