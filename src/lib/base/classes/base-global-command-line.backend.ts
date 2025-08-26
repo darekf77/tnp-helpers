@@ -1,4 +1,6 @@
 //#region imports
+import * as readline from 'readline'; // @backend
+
 import { Subject } from 'rxjs';
 import { config, fileName } from 'tnp-config/src';
 import {
@@ -2052,6 +2054,35 @@ Would you like to update current project configuration?`)
         });
       });
     }
+    //#endregion
+  }
+  //#endregion
+
+  //#region commands / shorten
+  /**
+   * read huge file and display only lines with specyfic words
+   */
+  async shorten() {
+    //#region @backendFunc
+    const rl = readline.createInterface({
+      input: fse.createReadStream(
+        path.isAbsolute(this.firstArg)
+          ? crossPlatformPath(this.firstArg)
+          : crossPlatformPath([this.cwd, this.firstArg]),
+        { encoding: 'utf8' },
+      ),
+      crlfDelay: Infinity,
+    });
+
+    const keywords = this.args.splice(1);
+    console.log(`Searching for keywords: ${keywords.join(', ')}`);
+    for await (const line of rl) {
+      if (keywords.some(word => line.includes(word))) {
+        console.log(line);
+      }
+    }
+    Helpers.info(`File processed`);
+    this._exit();
     //#endregion
   }
   //#endregion
