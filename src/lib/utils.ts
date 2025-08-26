@@ -1,4 +1,6 @@
 //#region imports
+import { scrypt, randomBytes, timingSafeEqual } from 'node:crypto'; // @backend
+
 import { config } from 'tnp-config/src';
 import {
   child_process,
@@ -66,8 +68,6 @@ import type * as ts from 'typescript';
 import type * as vscodeType from 'vscode';
 
 import { Helpers } from './index';
-
-const { scrypt, randomBytes, timingSafeEqual } = require('node:crypto'); // @backend
 //#endregion
 
 //#region utils npm
@@ -2757,7 +2757,6 @@ export namespace UtilsPasswords {
     stored: string,
   ): Promise<boolean> => {
     //#region @backendFunc
-    const { scrypt, randomBytes, timingSafeEqual } = require('node:crypto');
     return new Promise((resolve, reject) => {
       const [saltHex, keyHex] = stored.split(':');
       const salt = Buffer.from(saltHex, 'hex');
