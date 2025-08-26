@@ -2,7 +2,7 @@
 import * as readline from 'readline'; // @backend
 
 import { Subject } from 'rxjs';
-import { config, fileName } from 'tnp-config/src';
+import { config, fileName, folderName } from 'tnp-config/src';
 import {
   chalk,
   _,
@@ -2086,4 +2086,39 @@ Would you like to update current project configuration?`)
     //#endregion
   }
   //#endregion
+
+  dumpPackagesVersions(): void {
+    const getData = (location: string) => {
+      const version = Helpers.readValueFromJson(
+        crossPlatformPath([location, fileName.package_json]),
+        'version',
+      );
+      const name = Helpers.readValueFromJson(
+        crossPlatformPath([location, fileName.package_json]),
+        'name',
+      );
+      return { version, name };
+    };
+
+    const pkgs = Helpers.foldersFrom([this.cwd, folderName.node_modules], {
+      recursive: false,
+    })
+      .reduce((arr, c) => {
+        if (path.basename(c).startsWith('@')) {
+          const newData = Helpers.foldersFrom([
+            this.cwd,
+            folderName.node_modules,
+            path.basename(c),
+          ]).map(c2 => getData(c2));
+          return arr.concat(newData);
+        }
+        return arr.concat(getData(c));
+      }, [])
+      .reduce((arr, c) => {
+        return _.merge(arr, { [c.name]: c.version });
+      }, {});
+    Helpers.writeJson([this.cwd, 'packages-versions.json'], pkgs);
+    Helpers.info(`packages-versions.json created with ${pkgs.length} packages`);
+    this._exit();
+  }
 }
