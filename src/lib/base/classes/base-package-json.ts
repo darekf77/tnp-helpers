@@ -351,6 +351,18 @@ export class BasePackageJson extends BaseJsonFileReader<PackageJson> {
   }
   //#endregion
 
+  getVersionAsNumber(releaseType: CoreModels.ReleaseVersionType): number {
+    if (releaseType === 'patch') {
+      return this.versionPathAsNumber;
+    }
+    if (releaseType === 'minor') {
+      return this.minorVersion;
+    }
+    if (releaseType === 'major') {
+      return this.majorVersion;
+    }
+  }
+
   //#region bump path version
   async bumpPatchVersion() {
     //#region @backendFunc
@@ -380,7 +392,7 @@ export class BasePackageJson extends BaseJsonFileReader<PackageJson> {
   //#endregion
 
   //#region getters & methods / get version for
-  getVersionFor(releaseType: CoreModels.ReleaseVersionType): string {
+  getBumpedVersionFor(releaseType: CoreModels.ReleaseVersionType): string {
     //#region @backendFunc
     if (releaseType === 'patch') {
       return this.versionWithPatchPlusOne;
