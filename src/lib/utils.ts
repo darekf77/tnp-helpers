@@ -772,9 +772,9 @@ export namespace UtilsTypescript {
                   // Or you can create a more sophisticated approach for arrays/objects
                   if (valueOfVariable === undefined) {
                     console.warn(`[${config.frameworkName}-helpers][setValueToVariableInTsFile]
-                      
+
                       SETTING VALUE OF VARIABLE TO UNDEFINED "${variableName}"
-                      
+
                       `);
                     initializer = factory.createIdentifier('undefined');
                   } else {
@@ -1765,6 +1765,38 @@ export namespace UtilsVSCode {
     }
     const vscode = require('vsc' + 'ode');
     return vscode as typeof vscodeType;
+    //#endregion
+  };
+
+  export const regenerateVsCodeSettingsColors = (
+    cwd: string,
+    overideBottomColor?: string,
+  ): void => {
+    //#region @backendFunc
+    const vscodePath = crossPlatformPath([cwd, '.vscode']);
+    const settingsAbsPath = crossPlatformPath([vscodePath, 'settings.json']);
+    if (!Helpers.exists(settingsAbsPath)) {
+      Helpers.writeFile(settingsAbsPath, '{}');
+    }
+    const currentSettingsValue = Helpers.readJson(settingsAbsPath);
+
+    const fanyColor = UtilsVSCode.generateFancyColor();
+
+    if (!overideBottomColor) {
+      currentSettingsValue['workbench.colorCustomizations'] = {
+        'activityBar.background': fanyColor,
+      };
+    }
+
+    currentSettingsValue['workbench.colorCustomizations'][
+      'statusBar.background'
+    ] = overideBottomColor ? overideBottomColor : fanyColor;
+
+    currentSettingsValue['workbench.colorCustomizations'][
+      'statusBar.debuggingBackground'
+    ] = `#15d8ff`; // nice blue for debugging
+
+    Helpers.writeJson(settingsAbsPath, currentSettingsValue);
     //#endregion
   };
 }

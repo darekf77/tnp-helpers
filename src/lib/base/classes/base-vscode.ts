@@ -9,7 +9,7 @@ import {
 } from 'tnp-core/src';
 import { _ } from 'tnp-core/src';
 
-import { Helpers } from '../../index';
+import { Helpers, UtilsVSCode } from '../../index';
 
 import { BaseFeatureForProject } from './base-feature-for-project';
 import type { BaseProject } from './base-project';
@@ -648,4 +648,19 @@ export class BaseVscodeHelpers<
     //#endregion
   }
   //#endregion
+
+  /**
+   * by default left menu color and bottom status bar are the same
+   */
+  getVscodeBottomColor(): string {
+    return void 0;
+  }
+
+  refreshColorsInSettings(): void {
+    const overideBottomColor = this.getVscodeBottomColor();
+    UtilsVSCode.regenerateVsCodeSettingsColors(
+      this.project.location,
+      overideBottomColor,
+    );
+  }
 }

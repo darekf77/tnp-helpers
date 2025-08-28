@@ -199,28 +199,16 @@ export class BaseGlobalCommandLine<
    * Generate or update .vscode/settings.json file color settings
    */
   settingsVscode() {
-    const vscodePath = crossPlatformPath([this.cwd, '.vscode']);
-    const settingsAbsPath = crossPlatformPath([vscodePath, 'settings.json']);
-    if (!Helpers.exists(settingsAbsPath)) {
-      Helpers.writeFile(settingsAbsPath, '{}');
-    }
-    const currentSettingsValue = Helpers.readJson(settingsAbsPath);
+    this.refreshVscodeColors();
+  }
 
-    currentSettingsValue['workbench.colorCustomizations'] = {
-      'activityBar.background': `${UtilsVSCode.generateFancyColor()}`,
-    };
-
-    currentSettingsValue['workbench.colorCustomizations'][
-      'statusBar.background'
-    ] = UtilsVSCode.generateFancyColor();
-
-    currentSettingsValue['workbench.colorCustomizations'][
-      'statusBar.debuggingBackground'
-    ] = `#15d8ff`; // nice blue for debugging
-
-    Helpers.writeJson(settingsAbsPath, currentSettingsValue);
-
+  refreshVscodeColors() {
+    this._regenerateVscodeSettingsColors();
     this._exit();
+  }
+
+  protected _regenerateVscodeSettingsColors(overideBottomColor?:string): void {
+    UtilsVSCode.regenerateVsCodeSettingsColors(this.cwd, overideBottomColor);
   }
   //#endregion
 
