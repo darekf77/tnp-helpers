@@ -106,43 +106,45 @@ export class BaseReleaseProcess<
     checkMessage = `Select action before publishing ?`,
   ): Promise<boolean> {
     //#region @backendFunc
-    const choices = {
-      vscodeOpen: {
-        name: 'Open in VSCode',
-      },
-      continue: {
-        name: 'Continue process..',
-      },
-      exit: {
-        name: 'Exit',
-      },
-    };
-    const selected = await UtilsTerminal.select<keyof typeof choices>({
-      question: checkMessage,
-      choices,
-    });
-    if (selected === 'exit') {
-      process.exit(0);
-    }
-    if (selected === 'vscodeOpen') {
-      const editor = await this.project.ins.configDb.getCodeEditor();
-      Helpers.run(`${editor} .`, {
-        output: true,
-        cwd: cwdForCode,
-      }).sync();
-
-      if (
-        !(await UtilsTerminal.confirm({
-          message: `Is everything ok with code ?`,
-          defaultValue: true,
-        }))
-      ) {
+    while (true) {
+      const choices = {
+        vscodeOpen: {
+          name: 'Open in VSCode',
+        },
+        continue: {
+          name: 'Continue process..',
+        },
+        exit: {
+          name: 'Exit',
+        },
+      };
+      const selected = await UtilsTerminal.select<keyof typeof choices>({
+        question: checkMessage,
+        choices,
+      });
+      if (selected === 'exit') {
         process.exit(0);
       }
-      return true;
-    }
-    if (selected === 'continue') {
-      return true;
+      if (selected === 'vscodeOpen') {
+        const editor = await this.project.ins.configDb.getCodeEditor();
+        Helpers.run(`${editor} .`, {
+          output: true,
+          cwd: cwdForCode,
+        }).sync();
+
+        if (
+          !(await UtilsTerminal.confirm({
+            message: `Is everything ok with code ?`,
+            defaultValue: true,
+          }))
+        ) {
+          continue;
+        }
+        return true;
+      }
+      if (selected === 'continue') {
+        return true;
+      }
     }
     //#endregion
   }
