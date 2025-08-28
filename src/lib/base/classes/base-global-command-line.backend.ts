@@ -207,7 +207,7 @@ export class BaseGlobalCommandLine<
     this._exit();
   }
 
-  protected _regenerateVscodeSettingsColors(overideBottomColor?:string): void {
+  protected _regenerateVscodeSettingsColors(overideBottomColor?: string): void {
     UtilsVSCode.regenerateVsCodeSettingsColors(this.cwd, overideBottomColor);
   }
   //#endregion
@@ -1811,6 +1811,10 @@ Would you like to update current project configuration?`)
   //#endregion
 
   //#region commands / check ports
+  async checkPort() {
+    await this.checkPorts();
+  }
+
   async checkPorts() {
     const ports = this.args
       .join(' ')
@@ -1854,6 +1858,14 @@ Would you like to update current project configuration?`)
   async selectTomcat() {
     const selectedTomcat = await UtilsJava.selectTomcatVersion();
     UtilsJava.updateTomcatHomePath(selectedTomcat);
+    this._exit();
+  }
+  //#endregion
+
+  //#region commands / ln
+  LN() {
+    const [source, dest] = this.args;
+    Helpers.createSymLink(source, dest);
     this._exit();
   }
   //#endregion
@@ -2075,6 +2087,7 @@ Would you like to update current project configuration?`)
   }
   //#endregion
 
+  //#region commands / dump packages versions
   dumpPackagesVersions(): void {
     const getData = (location: string) => {
       const version = Helpers.readValueFromJson(
@@ -2109,4 +2122,5 @@ Would you like to update current project configuration?`)
     Helpers.info(`packages-versions.json created with ${pkgs.length} packages`);
     this._exit();
   }
+  //#endregion
 }
