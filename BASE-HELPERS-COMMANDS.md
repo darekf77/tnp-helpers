@@ -1,6 +1,30 @@
-# Git
+## Os
+`taon check:port 80 443 8080`  => check if port(s) are taken
 
-## Handy shortcuts
+`taon copy from-path to-path`  => copy file or folder 
+
+`taon ln from-path to-path`  => link file or folder
+
+`taon refresh` => refresh linked projects configuration
+(after deleting or adding new repo)
+
+`taon settings:vscode` => set random nice colors for you vscode window
+
+### java & tomcat
+
+`taon select:java`  => select java for $JAVA_HOME
+
+`taon select:tomcat`  => select tomcat for $TOMCAT_HOME
+
+### /etc/host
+
+`taon simulateDomain my-test-domain.com`  => modify /etc/host in a nice way
+
+`taon hosts`  => open /etc/hosts files in VSCode
+
+## Git
+
+### Handy shortcuts
 
 `taon soft`  => `git reset --soft HEAD~1`
 
@@ -14,7 +38,9 @@
 
 `taon last:tag` => display info aboutlast tag
 
-## Remotes
+`taon clone git-repo-address-to-clone` => display info aboutlast tag
+
+### Remotes
 
 `taon origin`  => show origin of project
 
@@ -32,19 +58,19 @@
 
 `taon set:remote:http`  => changes ssh remote to https remote
 
-## Rebase 
+### Rebase 
 
 `taon rebase`  => rebase current branch with default branch
 
 `taon rebase branch-to-rebase`  => rebase current branch with changes from branch-to-rebase
 
-## Stash
+### Stash
 
 `taon stash`  => stash only staged files
 
 `taon stashall`  => stash all files
 
-## Reset + change branch
+### Reset + change branch
 
 `taon branch`  => git fetch / display menu with branches to select / select branch
 
@@ -54,14 +80,13 @@
 
 `taon reset`  => reset hard and pull (recrusively)
 
-## Pull
+### Pull & Pull
 
 `taon pull`  => pull current branch or current workspace projects one after another
 
+`taon pul` => `taon pushall`
+
 `taon repull`  => `git reset hard --HEAD~10` + `taon pull`
-
-
-## Push
 
 `taon pushall` => push code to all remotes(origins) defined in .git/config
 
@@ -69,7 +94,9 @@
 
 `taon push`  => (optionally git add +)  commit with message based on branch name + push current branch
 
-## Smart Conventional Commits Branching
+`taon pp` =>  push and pull
+
+### Smart Conventional Commits Branching
 
 **Checkout branch + add changes + commit message + push branch**
 
@@ -77,7 +104,7 @@ Create special branches (with metadata inside name) that can be use later with c
 `taon push`<br> to "re-push" changes and use matadata from branch name 
  as commit message.
 
-### fix
+#### fix
 Quick commit and push bugfix<br>
 `taon pfix JIRA-379089 JIRA-380320 proper counter message [my-lib]` <br> 
 <=><br>
@@ -88,7 +115,7 @@ Quick commit and push bugfix<br>
 
 taon pfix <=> taon pushfix <=> taon push:fix
 
-### feature
+#### feature
 Quick commit and push feature<br>
 `taon pf JIRA-379089 JIRA-380320 admin notification [my-lib]`  <br>
 <>=><br>
@@ -99,7 +126,7 @@ Quick commit and push feature<br>
 
 taon pf <=> taon pushfeature <=> taon push:feature
 
-### chore
+#### chore
 Quick commit and push chore <br>
 `taon pc JIRA-379089 update deps`  
 <=>  <br>
@@ -110,7 +137,7 @@ Quick commit and push chore <br>
 
 taon pc <=> taon chore <=> taon pchore
 
-### docs
+#### docs
 Quick commit and push docs update <br>
 `taon pd explained installation`<br>
  <=> <br>
@@ -121,7 +148,7 @@ Quick commit and push docs update <br>
 
 taon pd <=> taon pdocs
 
-### test
+#### test
 Quick commit and push tests update <br>
 `taon ptest admin permission new use case`<br>
  <=> <br>
@@ -132,7 +159,7 @@ Quick commit and push tests update <br>
 
 taon push:test <=> taon ptest  <=> taon ptests
 
-### styl
+#### styl
 
 Quick commit and push style update (formatting, linting etc.) <br>
 `taon pstyle proper project methods`<br>
@@ -144,7 +171,7 @@ Quick commit and push style update (formatting, linting etc.) <br>
 
 taon pstyl <=> taon pstyle
 
-### refactor
+#### refactor
 
 Quick commit and push code refactor <br>
 `taon pref new permission module`<br>
@@ -157,7 +184,7 @@ Quick commit and push code refactor <br>
 
 taon pref <=> taon prefactor
 
-### release
+#### release
 
 Quick commit and push release commit <br>
 `taon prelease`<br>
@@ -169,12 +196,3 @@ Quick commit and push release commit <br>
 
 taon prel <=> taon prelase
 
-
-# Other commands
-
-`taon hosts`  => open /etc/hosts files in VSCode
-
-`taon refresh` => refresh linked projects configuration
-(after deleting or adding new repo)
-
-`taon settings:vscode` => set random nice colors for you vscode window
