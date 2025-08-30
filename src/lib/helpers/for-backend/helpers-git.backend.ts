@@ -1082,10 +1082,6 @@ export class HelpersGit {
     options = options || {};
     options.origin = options.origin ? options.origin : 'origin';
 
-    const isSsh = Helpers.git
-      .getOriginURL(cwd, options.origin)
-      .includes('git@');
-
     const { askToRetry, forcePushNoQuestion = false } = options;
     let { origin } = options;
     let { force } = options;
@@ -1104,6 +1100,10 @@ ${cwd}
     const currentBranchName = Helpers.git.currentBranchName(cwd);
 
     while (true) {
+      const isSsh = Helpers.git
+        .getOriginURL(cwd, options.origin)
+        .includes('git@');
+
       try {
         const taskName = `
     [${dateformat(new Date(), 'dd-mm-yyyy HH:MM:ss')}]
