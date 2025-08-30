@@ -107,6 +107,10 @@ export class BasePackageJson extends BaseJsonFileReader<PackageJson> {
     return this.data?.contributes;
   }
 
+  get repository(): PackageJson['repository'] {
+    return this.data?.repository;
+  }
+
   /**
    * set the WHOLE dependencies object
    * THIS WILL NOT MERGE -> IT WILL REPLACE WHOLE DEPENDENCIES OBJECT
