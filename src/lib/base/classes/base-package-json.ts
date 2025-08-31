@@ -91,6 +91,10 @@ export class BasePackageJson extends BaseJsonFileReader<PackageJson> {
     return _.cloneDeep(this.data ? this.data.dependencies : {}) || {};
   }
 
+  get optionalDependencies(): PackageJson['optionalDependencies'] {
+    return _.cloneDeep(this.data ? this.data.optionalDependencies : {}) || {};
+  }
+
   get description(): string {
     return this.data?.description || '';
   }
@@ -163,6 +167,18 @@ export class BasePackageJson extends BaseJsonFileReader<PackageJson> {
       return;
     }
     this.data.peerDependencies = peerDependencies;
+    this.saveToDisk();
+  }
+  //#endregion
+
+    setOptionalDependencies(optionalDependencies: PackageJson['optionalDependencies']) {
+    if (!this.data) {
+      Helpers.warn(
+        `[taon][setOptionalDependencies] Package.json not exist in ${this.cwd}`,
+      );
+      return;
+    }
+    this.data.optionalDependencies = optionalDependencies;
     this.saveToDisk();
   }
   //#endregion
