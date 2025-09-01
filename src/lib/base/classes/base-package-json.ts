@@ -1,5 +1,5 @@
 import { config } from 'tnp-config/src';
-import { _, CoreModels } from 'tnp-core/src';
+import { _, CoreModels, crossPlatformPath, path } from 'tnp-core/src';
 import { Helpers } from 'tnp-core/src';
 import { PackageJson as PackageJsonBase } from 'type-fest';
 
@@ -171,7 +171,9 @@ export class BasePackageJson extends BaseJsonFileReader<PackageJson> {
   }
   //#endregion
 
-    setOptionalDependencies(optionalDependencies: PackageJson['optionalDependencies']) {
+  setOptionalDependencies(
+    optionalDependencies: PackageJson['optionalDependencies'],
+  ) {
     if (!this.data) {
       Helpers.warn(
         `[taon][setOptionalDependencies] Package.json not exist in ${this.cwd}`,
@@ -371,6 +373,10 @@ export class BasePackageJson extends BaseJsonFileReader<PackageJson> {
   }
   //#endregion
 
+  //#region get version as number
+  /**
+   * @deprecated TODO not usefull ?
+   */
   getVersionAsNumber(releaseType: CoreModels.ReleaseVersionType): number {
     if (releaseType === 'patch') {
       return this.versionPathAsNumber;
@@ -382,6 +388,7 @@ export class BasePackageJson extends BaseJsonFileReader<PackageJson> {
       return this.majorVersion;
     }
   }
+  //#endregion
 
   //#region bump path version
   async bumpPatchVersion() {
@@ -486,11 +493,13 @@ export class BasePackageJson extends BaseJsonFileReader<PackageJson> {
   }
   //#endregion
 
+  //#region side effects
   get sideEffects(): boolean {
     //#region @backendFunc
     return !!this.data?.sideEffects;
     //#endregion
   }
+  //#endregion
 
   //#region set new version
   async setMainProperty(main: string, purpose = ''): Promise<void> {
@@ -511,6 +520,18 @@ export class BasePackageJson extends BaseJsonFileReader<PackageJson> {
   }
   getBuildHash(): string {
     return this.data.lastBuildTagHash;
+  }
+  //#endregion
+
+  //#region copyto
+  copyTo(location: string | string[]): void {
+    //#region @backendFunc
+    location = crossPlatformPath(location);
+    if (location.endsWith(config.file.package_json)) {
+      location = crossPlatformPath(path.dirname(location));
+    }
+    Helpers.writeJson([location, config.file.package_json], this.data);
+    //#endregion
   }
   //#endregion
 }

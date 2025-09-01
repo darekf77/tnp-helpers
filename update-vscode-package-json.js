@@ -51,7 +51,7 @@ function updatePackageJson() {
   const pkgjsonpath = path.join(process.cwd(), 'package.json');
   const pkgjson = JSON.parse(fs.readFileSync(pkgjsonpath, 'utf8'));
 
-  pkgjson.contributes = proj.packageJson.contributes || {};
+  pkgjson.contributes = proj.taonJson.overridePackageJsonManager.contributes || {};
   pkgjson.contributes.commands = [];
   pkgjson.contributes.submenus = [];
   pkgjson.contributes.menus = {};
