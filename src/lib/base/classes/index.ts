@@ -16,6 +16,7 @@ export * from './base-quick-fixes';
 export * from './base-cli-worker';
 export * from './base-process-manager';
 export * from './base-command-line-feature';
+export * from './base-file-folders-operations';
 
 //#region @backend
 export * from './base-start-config.backend';

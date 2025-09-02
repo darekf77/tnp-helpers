@@ -266,7 +266,6 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
     //#region @backend
     const location = project.location;
     this.projects = this.projects.filter(p => p.location !== location);
-    Helpers.tryRemoveDir(location);
     //#endregion
   }
   //#endregion

@@ -16,6 +16,7 @@ import {
 } from '../../index';
 import { BaseProjectType } from '../../models';
 
+import { BaseFileFoldersOperations } from './base-file-folders-operations';
 import { BaseGit } from './base-git';
 import { BaseJavaJdk } from './base-java-jdk';
 import type { BaseLibraryBuild } from './base-library-build';
@@ -62,6 +63,7 @@ export abstract class BaseProject<
 
   public libraryBuild?: BaseLibraryBuild<BaseProject>;
   public npmHelpers?: BaseNpmHelpers;
+  public fileFoldersOperations?: BaseFileFoldersOperations;
 
   get packageJson() {
     return this.npmHelpers.packageJson;
@@ -108,6 +110,11 @@ export abstract class BaseProject<
 
     this.linkedProjects = new (require('./base-linked-projects')
       .BaseLinkedProjects as typeof BaseLinkedProjects)(this as any);
+
+    this.fileFoldersOperations = new (require('./base-file-folders-operations')
+      .BaseFileFoldersOperations as typeof BaseFileFoldersOperations)(
+      this as any,
+    );
 
     this.git = new (require('./base-git').BaseGit as typeof BaseGit)(
       this as any,
@@ -840,10 +847,12 @@ export abstract class BaseProject<
     });
     while (true) {
       try {
-        const data = await ctrl.registerAndAssignPort(
-          encodeURIComponent(taskName),
-          _.isNumber(options.startFrom) ? options.startFrom : void 0,
-        ).request();
+        const data = await ctrl
+          .registerAndAssignPort(
+            encodeURIComponent(taskName),
+            _.isNumber(options.startFrom) ? options.startFrom : void 0,
+          )
+          .request();
         return data.body.json.port;
       } catch (error) {
         Helpers.logWarn(
@@ -867,14 +876,6 @@ export abstract class BaseProject<
   async assignFreePort(startFrom: number = 4200): Promise<number> {
     //#region @backendFunc
     return Utils.getFreePort({ startFrom });
-    //#endregion
-  }
-  //#endregion
-
-  //#region methods & getters / remove project from disk/memory
-  removeItself() {
-    //#region @backend
-    this.ins.remove(this as any);
     //#endregion
   }
   //#endregion
