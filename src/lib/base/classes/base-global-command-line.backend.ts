@@ -911,6 +911,35 @@ ${lastCommitMessage}
   //#endregion
 
   //#region commands / melt
+  public async meltUp() {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
+      return;
+    }
+
+    const alreadyProcessedOrigins: string[] = [];
+
+    const processProject = async (proj: BaseProject): Promise<void> => {
+      if (alreadyProcessedOrigins.includes(proj.git.originURL)) {
+        return;
+      }
+      alreadyProcessedOrigins.push(proj.git.originURL);
+
+      await proj.git.resolveLastChanges({
+        tryAutomaticActionFirst: false,
+      });
+
+      for (const child of proj.children) {
+        await processProject(child);
+      }
+    };
+
+    await processProject(this.project);
+    Helpers.info('All projects are up to date with remote');
+    this._exit();
+  }
+  //#endregion
+
+  //#region commands / melt
   public async meltAll() {
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;

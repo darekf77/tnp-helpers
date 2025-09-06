@@ -18,6 +18,7 @@ import { Helpers } from '../../index';
 //#endregion
 
 export class HelpersGit {
+  //#region tag and push to git repo
   async tagAndPushToGitRepo(
     cwd: string,
     options: {
@@ -70,6 +71,7 @@ export class HelpersGit {
     }
     //#endregion
   }
+  //#endregion
 
   //#region getters & methods / get all tags
   async getAllTags(cwd: string) {
@@ -86,12 +88,14 @@ export class HelpersGit {
   }
   //#endregion
 
-  isValidRepoUrl(url: string) {
+  //#region getters & methods / is valid repo url
+  isValidRepoUrl(url: string): boolean {
     const regex =
       /^([A-Za-z0-9]+@|http(|s)\:\/\/)([A-Za-z0-9.]+(:\d+)?)(?::|\/)([\d\/\w.-]+?)(\.git)?$/;
     const res = regex.test(url);
     return res;
   }
+  //#endregion
 
   //#region getters & methods / remove tag
   removeTag(cwd: string, tagName: string) {
