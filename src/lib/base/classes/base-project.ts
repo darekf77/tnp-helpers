@@ -18,9 +18,11 @@ import { BaseProjectType } from '../../models';
 
 import { BaseFileFoldersOperations } from './base-file-folders-operations';
 import { BaseGit } from './base-git';
+import { BaseIgnoreHideHelpers } from './base-ignore-hide';
 import { BaseJavaJdk } from './base-java-jdk';
 import type { BaseLibraryBuild } from './base-library-build';
 import { BaseLinkedProjects } from './base-linked-projects';
+import { BaseLinter } from './base-linter';
 import { BaseNpmHelpers } from './base-npm-helpers';
 import { BaseProjectResolver } from './base-project-resolver';
 import { BaseQuickFixes } from './base-quick-fixes';
@@ -28,8 +30,6 @@ import { BaseReleaseProcess } from './base-release-process';
 import { BaseStaticPages } from './base-static-pages';
 import { BaseVscodeHelpers } from './base-vscode';
 //#endregion
-
-const takenPorts = [];
 
 export abstract class BaseProject<
   PROJECT extends BaseProject<any, any> = BaseProject<any, any>,
@@ -77,6 +77,8 @@ export abstract class BaseProject<
   public vsCodeHelpers?: BaseVscodeHelpers;
   public releaseProcess?: BaseReleaseProcess;
   public git?: BaseGit;
+  public linter?: BaseLinter;
+  public ignoreHide: BaseIgnoreHideHelpers;
   public quickFixes?: BaseQuickFixes;
   public staticPages?: BaseStaticPages;
   public javaJdk?: BaseJavaJdk;
@@ -119,6 +121,12 @@ export abstract class BaseProject<
     this.git = new (require('./base-git').BaseGit as typeof BaseGit)(
       this as any,
     );
+
+    this.linter = new (require('./base-linter')
+      .BaseLinter as typeof BaseLinter)(this as any);
+
+    this.ignoreHide = new (require('./base-ignore-hide')
+      .BaseIgnoreHideHelpers as typeof BaseIgnoreHideHelpers)(this as any);
 
     this.javaJdk = new (require('./base-java-jdk')
       .BaseJavaJdk as typeof BaseJavaJdk)(this as any);
@@ -829,10 +837,13 @@ export abstract class BaseProject<
     //#endregion
   }
 
+  //#region methods & getters / get unique for task
   protected getUniqueForTask(task: string): string {
     return UtilsTaonWorker.getUniqueForTask(task, this.location);
   }
+  //#endregion
 
+  //#region methods & getters / register and assign port
   public async registerAndAssignPort(
     taskName: string,
     options?: { startFrom?: number },
@@ -868,6 +879,7 @@ export abstract class BaseProject<
 
     //#endregion
   }
+  //#endregion
 
   //#region methods & getters / assign free port to project instance
   /**

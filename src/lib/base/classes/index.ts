@@ -8,6 +8,8 @@ export * from './base-node-modules';
 export * from './base-npm-helpers';
 export * from './base-linked-projects';
 export * from './base-git';
+export * from './base-ignore-hide';
+export * from './base-linter';
 export * from './base-vscode';
 export * from './base-release-process';
 export * from './base-compiler-for-project';
