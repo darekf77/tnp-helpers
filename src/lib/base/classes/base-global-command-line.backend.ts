@@ -1326,29 +1326,10 @@ ${lastCommitMessage}
   //#endregion
 
   //#region commands / update
-  async refresh() {
-    const linkedProjects = LinkedProject.detect(this.project.location, {
-      checkAlsoNonRepos: true,
-    }).filter(linkedProj =>
-      this.project.ins.From([
-        this.project.location,
-        linkedProj.relativeClonePath,
-      ]),
-    );
-
-    if (
-      await Helpers.questionYesNo(`
-
-    Deteced project:
-${linkedProjects.map(l => `- ${l.relativeClonePath}`).join('\n')}
-
-
-Would you like to update current project configuration?`)
-    ) {
-      this.project.linkedProjects.addLinkedProjects(linkedProjects);
-    }
-    await this.project.init();
-    Helpers.info(`Linked projects updated`);
+  async refresh(): Promise<void> {
+    await this.project.refreshChildrenProjects({
+      askUserAboutUpdate: true,
+    });
     this._exit(0);
   }
   //#endregion

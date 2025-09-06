@@ -11,6 +11,7 @@ import { Utils } from 'tnp-core/src';
 import {
   CoreProject,
   Helpers,
+  LinkedProject,
   UtilsTaonWorker,
   UtilsTypescript,
 } from '../../index';
@@ -834,6 +835,35 @@ export abstract class BaseProject<
       return true;
     }
     return false;
+    //#endregion
+  }
+
+  async refreshChildrenProjects(options?: {
+    askUserAboutUpdate?: boolean;
+  }): Promise<void> {
+    //#region @backendFunc
+    options = options || {};
+    const linkedProjects = LinkedProject.detect(this.location, {
+      checkAlsoNonRepos: true,
+    }).filter(linkedProj =>
+      this.ins.From([this.location, linkedProj.relativeClonePath]),
+    );
+
+    if (
+      options.askUserAboutUpdate
+        ? await Helpers.questionYesNo(`
+
+    Detected projects:
+${linkedProjects.map(l => `- ${l.relativeClonePath}`).join('\n')}
+
+
+Would you like to update current project configuration?`)
+        : true
+    ) {
+      this.linkedProjects.addLinkedProjects(linkedProjects);
+    }
+    await this.init();
+    Helpers.info(`Linked projects updated`);
     //#endregion
   }
 

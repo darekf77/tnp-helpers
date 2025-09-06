@@ -28,8 +28,8 @@ export class BaseFileFoldersOperations<
   //#endregion
 
   //#region move project to
-  moveProjectTo(destination: string): void {
-    this.copyProjectTo(destination);
+  async moveProjectTo(destination: string): Promise<void> {
+    await this.copyProjectTo(destination);
     this.deleteProject();
   }
   //#endregion
@@ -61,15 +61,15 @@ export class BaseFileFoldersOperations<
   //#endregion
 
   //#region copy project to
-  copyProjectTo(
+  async copyProjectTo(
     destination: string,
     options?: { skipChildren?: boolean },
-  ): void {
+  ): Promise<void> {
     //#region @backendFunc
     options = options || {};
     const fielsAndFoldersToCopy = this.fielsAndFoldersToCopy();
 
-    const copyProj = (proj: BaseProject, rootDest: string) => {
+    const copyProj = async (proj: BaseProject, rootDest: string) => {
       for (const relativePath of fielsAndFoldersToCopy) {
         const sourcePath = proj.pathFor(relativePath);
         const destPath = crossPlatformPath([
@@ -90,21 +90,33 @@ export class BaseFileFoldersOperations<
           console.warn(`Path ${sourcePath} does not exist. Skipping...`);
         }
       }
+      // const copiedProject = this.project.ins.From([rootDest, proj.basename]);
+      // if (!copiedProject) {
+      //   throw new Error(
+      //     `Project was not copied correctly. Cannot find it in ${crossPlatformPath([rootDest, proj.basename])}`,
+      //   );
+      // }
+      // try {
+      //   await copiedProject.init();
+      // } catch (error) {}
 
       if (!options.skipChildren) {
         const children = proj.children.filter(
           f => f.location !== proj.location,
         ); // prevent self
         for (const child of children) {
-          copyProj(child, crossPlatformPath([rootDest, proj.basename]));
+          await copyProj(child, crossPlatformPath([rootDest, proj.basename]));
           // this.ins.add(
           //   this.ins.From([destination, path.basename(child.location)]),
           // );
         }
+        // try {
+        //   await copiedProject.refreshChildrenProjects();
+        // } catch (error) {}
       }
     };
 
-    copyProj(this.project, destination);
+    await copyProj(this.project, destination);
     // this.ins.add(this.ins.From(destination));
     //#endregion
   }
