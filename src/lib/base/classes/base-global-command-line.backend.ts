@@ -923,9 +923,10 @@ ${lastCommitMessage}
         return;
       }
       alreadyProcessedOrigins.push(proj.git.originURL);
-
+      Helpers.clearConsole();
       await proj.git.resolveLastChanges({
         tryAutomaticActionFirst: false,
+        projectNameAsOutputPrefix: this.project.location !== proj.location ? proj.name: void 0,
       });
 
       for (const child of proj.children) {
