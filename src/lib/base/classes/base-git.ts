@@ -976,7 +976,7 @@ Please provide proper commit message for lastest changes in your project:
     }
 
     await this.project.git.pullCurrentBranch({ askToRetry: true });
-    await this._afterPullProcessAction(setOrigin);
+    await this._afterPullProcessAction(setOrigin, skipCloneGitChildren);
     const location = this.project.location;
     this.project.ins.unload(this as any);
     this.project.ins.add(this.project.ins.From(location) as any);
@@ -1080,8 +1080,11 @@ Please provide proper commit message for lastest changes in your project:
 
   protected async _afterPullProcessAction(
     setOrigin: 'ssh' | 'http',
+    skipCloneGitChildren = false,
   ): Promise<void> {
-    // nothing yet
+    if (!skipCloneGitChildren) {
+      await this.project.linkedProjects.cloneNonexistedLinkedProjects(setOrigin);
+    }
   }
 
   //#region methods & getters / push process
@@ -1476,7 +1479,7 @@ Please provide proper commit message for lastest changes in your project:
     //#region @backendFunc
     this._beforeAnyActionOnGitRoot();
     if (!skipCloneGitChildren) {
-      await this.project.linkedProjects.cloneUnexistedLinkedProjects(setOrigin);
+      await this.project.linkedProjects.cloneNonexistedLinkedProjects(setOrigin);
     }
 
     //#endregion

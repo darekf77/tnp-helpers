@@ -326,7 +326,7 @@ export class BaseLinkedProjects<
   //#endregion
 
   //#region getters & methods / get unexisted projects
-  async cloneUnexistedLinkedProjects(setOrigin: 'ssh' | 'http') {
+  async cloneNonexistedLinkedProjects(setOrigin: 'ssh' | 'http') {
     //#region @backendFunc
     const detectedLinkedProjects = this.detectedLinkedProjects;
 
