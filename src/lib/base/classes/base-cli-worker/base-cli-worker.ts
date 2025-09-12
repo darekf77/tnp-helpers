@@ -250,6 +250,7 @@ export abstract class BaseCliWorker<
     const detached = !!cliParams['detached'] || !!cliParams['detach'];
     //#region @backendFunc
     if (cliParams['restart']) {
+      Helpers.logInfo(`--- RESTARTING ----`)
       await this.restart({
         detached,
       });

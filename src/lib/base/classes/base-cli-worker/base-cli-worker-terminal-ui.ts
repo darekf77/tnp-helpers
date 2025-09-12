@@ -12,7 +12,7 @@ export type BaseWorkerTerminalActionReturnType = {
     name: string;
     action: () => unknown | Promise<unknown>;
   };
-}
+};
 
 export class BaseCliWorkerTerminalUI<
   WORKER extends BaseCliWorker<BaseCliWorkerController, any>,
@@ -142,7 +142,9 @@ export class BaseCliWorkerTerminalUI<
   }): Promise<void> {
     options = options || {};
     while (true) {
-      Helpers.clearConsole();
+      if (!UtilsTerminal.isVerboseModeTaon()) {
+        UtilsTerminal.clearConsole();
+      }
 
       await this.header();
 
