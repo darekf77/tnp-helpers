@@ -881,6 +881,27 @@ ${lastCommitMessage}
     }
     await this._preventPushPullFromNotCorrectBranch();
 
+    if (
+      !options.overrideCommitMessage &&
+      this.project.git.useBranchNameDirectlyAsCommitMessage()
+    ) {
+      options.overrideCommitMessage = (this.project.git.currentBranchName || '')
+        .split('-')
+        .join(' ');
+
+      const jiraNumbers =
+        CommitData.extractAndOrderJiraNumbers(
+          this.project.git.currentBranchName,
+        ) || [];
+
+      for (const jiraNum of jiraNumbers) {
+        options.overrideCommitMessage = options.overrideCommitMessage.replace(
+          jiraNum.replace('-', ' '),
+          jiraNum,
+        );
+      }
+    }
+
     await this.project.git.pushProcess({
       ...options,
       forcePushNoQuestion: options.force,
@@ -926,7 +947,8 @@ ${lastCommitMessage}
       Helpers.clearConsole();
       await proj.git.resolveLastChanges({
         tryAutomaticActionFirst: false,
-        projectNameAsOutputPrefix: this.project.location !== proj.location ? proj.name: void 0,
+        projectNameAsOutputPrefix:
+          this.project.location !== proj.location ? proj.name : void 0,
       });
 
       for (const child of proj.children) {

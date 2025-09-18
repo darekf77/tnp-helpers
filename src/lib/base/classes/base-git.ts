@@ -1622,4 +1622,8 @@ Please provide proper commit message for lastest changes in your project:
     return true;
   }
   //#endregion
+
+  useBranchNameDirectlyAsCommitMessage(): boolean {
+    return false;
+  }
 }
