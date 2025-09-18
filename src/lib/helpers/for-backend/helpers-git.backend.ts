@@ -17,6 +17,8 @@ import { Helpers } from '../../index';
 
 //#endregion
 
+const tempGitCommitMsgFile = 'tmp-git-commit-name.txt';
+
 export class HelpersGit {
   //#region tag and push to git repo
   async tagAndPushToGitRepo(
@@ -703,10 +705,7 @@ export class HelpersGit {
       commitMessage = 'update';
     }
 
-    const tempCommitnameFile = crossPlatformPath([
-      cwd,
-      'tmp-git-commit-name.txt',
-    ]);
+    const tempCommitnameFile = crossPlatformPath([cwd, tempGitCommitMsgFile]);
     Helpers.writeFile(tempCommitnameFile, commitMessage);
 
     try {
@@ -1128,6 +1127,7 @@ ${cwd}
 
         Helpers.run(command, { cwd }).sync();
         Helpers.info(taskName);
+        Helpers.removeFileIfExists([cwd, tempGitCommitMsgFile]);
         break;
       } catch (err) {
         Helpers.error(
