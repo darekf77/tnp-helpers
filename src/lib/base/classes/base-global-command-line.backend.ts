@@ -27,6 +27,7 @@ import {
   UtilsDotFile,
   UtilsJava,
   UtilsVSCode,
+  UtilsZip,
 } from '../../index';
 import { TypeOfCommit, CommitData } from '../commit-data';
 import { GhTempCode } from '../gh-temp-code';
@@ -2156,4 +2157,47 @@ ${lastCommitMessage}
     this._exit();
   }
   //#endregion
+
+  async zip() {
+    let folderPath = crossPlatformPath(this.firstArg);
+    if (!path.isAbsolute(folderPath)) {
+      folderPath = crossPlatformPath([this.cwd, this.firstArg]);
+    }
+    if (!Helpers.exists(folderPath)) {
+      Helpers.error(
+        `File or folder to zip does not exist: ${folderPath}`,
+        false,
+        true,
+      );
+    }
+    if (!Helpers.isFolder(folderPath)) {
+      Helpers.error(
+        `You can zip only folders. Provided path is not a folder: ${folderPath}`,
+        false,
+        true,
+      );
+    }
+    const zipFilePath = await UtilsZip.zipDir(folderPath, {
+      overrideIfZipFileExists: true,
+    });
+    Helpers.info(`Created zip file: ${zipFilePath}`);
+    this._exit();
+  }
+
+  async unzip() {
+    let folderPath = crossPlatformPath(this.firstArg);
+    if (!path.isAbsolute(folderPath)) {
+      folderPath = crossPlatformPath([this.cwd, this.firstArg]);
+    }
+    if (!Helpers.exists(folderPath)) {
+      Helpers.error(
+        `File or folder to zip does not exist: ${folderPath}`,
+        false,
+        true,
+      );
+    }
+    await UtilsZip.unzipArchive(folderPath);
+    Helpers.info(`Created zip file: ${folderPath.replace('.zip', '')}`);
+    this._exit();
+  }
 }
