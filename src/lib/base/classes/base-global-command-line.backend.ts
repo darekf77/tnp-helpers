@@ -14,6 +14,7 @@ import {
   Utils,
   UtilsJson,
   CoreModels,
+  UtilsProcess,
 } from 'tnp-core/src';
 import { crossPlatformPath } from 'tnp-core/src';
 import { UtilsTerminal } from 'tnp-core/src';
@@ -1954,6 +1955,7 @@ ${lastCommitMessage}
         path.basename(this.firstArg),
       )
     ) {
+      // @LAST use this in /startDeployment
       const simulateDomain = this.params['domain'] || this.params['domains'];
 
       const firstArg = path.isAbsolute(this.firstArg)
@@ -2204,4 +2206,81 @@ ${lastCommitMessage}
     this._exit();
   }
   //#endregion
+
+  async startTransmission() {
+    await this._removeTransmission();
+    const userProfile = process.env.USERPROFILE || os.homedir();
+    const downloadsDir = path.join(userProfile, 'Downloads');
+    const configDir = path.join(userProfile, 'transmission-config');
+
+    await UtilsProcess.killProcessOnPort(9091);
+    const ctrl = await this.ins.portsWorker.getControllerForRemoteConnection();
+
+    const data = await ctrl
+      .registerAndAssignPort('transmission service for whole system')
+      .request();
+    const mainPort = data.body.json.port;
+
+    Helpers.info(`Transmission will use port: ${mainPort}`);
+
+    const args = [
+      'run',
+      '-d',
+      '--name',
+      'transmission',
+      '-p',
+      '9091:9091',
+      '-p',
+      `${mainPort}:${mainPort}`,
+      '-p',
+      `${mainPort}:${mainPort}/udp`,
+      '-e',
+      'TZ=Europe/Warsaw',
+      '-e',
+      `TRANSMISSION_PEER_PORT=${mainPort}`,
+      '-v',
+      `${downloadsDir}:/downloads`,
+      '-v',
+      `${configDir}:/config`,
+      '--restart',
+      'unless-stopped',
+      'linuxserver/transmission:latest',
+    ];
+
+    console.log('Running:', 'docker', args.join(' '));
+
+    const child = child_process.spawn('docker', args, { stdio: 'inherit' });
+
+    child.on('exit', code => {
+      if (code === 0) {
+        console.log('✅ Transmission container started');
+        console.log('➡ Open http://localhost:9091 in your browser');
+      } else {
+        console.error('❌ Docker exited with code', code);
+      }
+      this._exit();
+    });
+  }
+
+  async _removeTransmission() {
+    return new Promise<void>(resolve => {
+      const args = ['rm', '-f', 'transmission'];
+
+      console.log('Running:', 'docker', args.join(' '));
+
+      const child = child_process.spawn('docker', args, { stdio: 'inherit' });
+
+      child.on('exit', code => {
+        if (code === 0) {
+          console.log('🗑️  Transmission container removed');
+        } else {
+          // In bash `2>$null` would silence errors; here we just log a note
+          console.warn(
+            '⚠️ Could not remove container (maybe it doesn’t exist)',
+          );
+        }
+        resolve();
+      });
+    });
+  }
 }
