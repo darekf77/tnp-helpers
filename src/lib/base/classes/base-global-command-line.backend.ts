@@ -2158,6 +2158,7 @@ ${lastCommitMessage}
   }
   //#endregion
 
+  //#region commands / zip
   async zip() {
     let folderPath = crossPlatformPath(this.firstArg);
     if (!path.isAbsolute(folderPath)) {
@@ -2183,7 +2184,9 @@ ${lastCommitMessage}
     Helpers.info(`Created zip file: ${zipFilePath}`);
     this._exit();
   }
+  //#endregion
 
+  //#region commands / unzip
   async unzip() {
     let folderPath = crossPlatformPath(this.firstArg);
     if (!path.isAbsolute(folderPath)) {
@@ -2200,4 +2203,5 @@ ${lastCommitMessage}
     Helpers.info(`Created zip file: ${folderPath.replace('.zip', '')}`);
     this._exit();
   }
+  //#endregion
 }
