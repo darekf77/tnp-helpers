@@ -1,6 +1,11 @@
 //#region imports
 import { config } from 'tnp-config/src';
-import { CoreModels, Helpers, UtilsTerminal } from 'tnp-core/src';
+import {
+  CoreModels,
+  crossPlatformPath,
+  Helpers,
+  UtilsTerminal,
+} from 'tnp-core/src';
 import { _, chalk } from 'tnp-core/src';
 
 import type { BaseCliWorker } from './base-cli-worker';
@@ -62,7 +67,7 @@ export class BaseCliWorkerTerminalUI<
         this.worker.processLocalInfoObj?.port?.toString(),
       )}/${'info' as keyof BaseCliWorkerController}
       Worker started by ${chalk.bold(config.frameworkName)}
-      (cwd: ${process.cwd()})
+      (cwd: ${crossPlatformPath(process.cwd())})
         `,
     );
     //#endregion
