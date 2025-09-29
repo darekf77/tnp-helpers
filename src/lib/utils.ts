@@ -1679,7 +1679,9 @@ export namespace UtilsQuickFixes {
       .replace(
         new RegExp(
           Utils.escapeStringForRegEx(
-            `var ${_.snakeCase(packageName)}_1 = ${'req' + 'uire'}("${packageName}");`,
+            `var ${_.snakeCase(packageName)}_1 = ${
+              'req' + 'uire'
+            }("${packageName}");`,
           ),
           'g',
         ),
@@ -1835,7 +1837,9 @@ export namespace UtilsDotFile {
       // Create file if it doesn't exist
       Helpers.writeFile(dotFileAbsPath, '');
       Helpers.logInfo(
-        `[${config.frameworkName}-helpers] Created ${path.basename(dotFileAbsPath)}`,
+        `[${config.frameworkName}-helpers] Created ${path.basename(
+          dotFileAbsPath,
+        )}`,
       );
       envContent = '';
     }
@@ -1855,7 +1859,9 @@ export namespace UtilsDotFile {
 
     Helpers.writeFile(dotFileAbsPath, envContent);
     Helpers.info(
-      `[${config.frameworkName}-helpers] Updated ${path.basename(dotFileAbsPath)}: ${key}=${value}`,
+      `[${config.frameworkName}-helpers] Updated ${path.basename(
+        dotFileAbsPath,
+      )}: ${key}=${value}`,
     );
     //#endregion
   };
@@ -1876,7 +1882,9 @@ export namespace UtilsDotFile {
     } else {
       Helpers.writeFile(dotFileAbsPath, '');
       Helpers.logInfo(
-        `[${config.frameworkName}-helpers] Created ${path.basename(dotFileAbsPath)}`,
+        `[${config.frameworkName}-helpers] Created ${path.basename(
+          dotFileAbsPath,
+        )}`,
       );
       envContent = '';
     }
@@ -1897,7 +1905,11 @@ export namespace UtilsDotFile {
 
     Helpers.writeFile(dotFileAbsPath, envContent);
     Helpers.info(
-      `[${config.frameworkName}-helpers] Updated comment for ${key} in ${path.basename(dotFileAbsPath)}`,
+      `[${
+        config.frameworkName
+      }-helpers] Updated comment for ${key} in ${path.basename(
+        dotFileAbsPath,
+      )}`,
     );
     //#endregion
   };
@@ -1912,7 +1924,9 @@ export namespace UtilsDotFile {
     dotFileAbsPath = crossPlatformPath(dotFileAbsPath);
     if (!fse.existsSync(dotFileAbsPath)) {
       Helpers.warn(
-        `[${config.frameworkName}-helpers] File ${path.basename(dotFileAbsPath)} does not exist.`,
+        `[${config.frameworkName}-helpers] File ${path.basename(
+          dotFileAbsPath,
+        )} does not exist.`,
       );
       return;
     }
@@ -2829,7 +2843,7 @@ export namespace UtilsPasswords {
 
 //#region utils filepath metadata
 export namespace FilePathMetaData {
-  const TERMINATOR = '|||'; // terminates metadata block
+  const TERMINATOR = '|||||'; // terminates metadata block
   const KV_SEPARATOR = '|-|'; // key/value separator
   const PAIR_SEPARATOR = '||--||'; // between pairs
 
@@ -2856,7 +2870,9 @@ export namespace FilePathMetaData {
       .map(([key, value]) => `${key}${KV_SEPARATOR}${value ?? ''}`)
       .join(PAIR_SEPARATOR);
 
-    return `${meta}${TERMINATOR}${options.skipAddingBasenameAtEnd ? '' : base}${ext}`;
+    return `${meta}${TERMINATOR}${
+      options.skipAddingBasenameAtEnd ? '' : base
+    }${ext}`;
   }
   //#endregion
 
@@ -2872,9 +2888,10 @@ export namespace FilePathMetaData {
     filename: string,
   ): T {
     const ext = path.extname(filename);
-    const base = path.basename(filename, ext);
+    const thereIsNoExt = ext.includes('|') || ext.includes('-');
+    const base = thereIsNoExt ? filename : path.basename(filename, ext);
 
-    // Everything before the last TERMINATOR
+    // Everything BEFORE the FIRST TERMINATOR
     const idx = base.lastIndexOf(TERMINATOR);
     const metaPart = idx >= 0 ? base.substring(0, idx) : base;
 
@@ -2893,7 +2910,7 @@ export namespace FilePathMetaData {
         if (kvIdx > -1) {
           const key = segment.substring(0, kvIdx);
           const value = segment.substring(kvIdx + KV_SEPARATOR.length);
-          data[key] = value; // preserves "__" and ""
+          data[key] = value;
         }
       }
 
@@ -2903,6 +2920,21 @@ export namespace FilePathMetaData {
 
     return data as T;
   }
+  //#endregion
+
+  //#region get only metadata string
+  export const getOnlyMetadataString = (filename: string): string => {
+    const ext = path.extname(filename);
+    const base = path.basename(filename, ext);
+
+    const idx = base.lastIndexOf(TERMINATOR);
+    if (idx === -1) return ''; // no terminator
+
+    const metaPart = base.substring(0, idx);
+    if (!metaPart.trim()) return ''; // empty metadata
+
+    return metaPart;
+  };
   //#endregion
 }
 //#endregion

@@ -22,6 +22,7 @@ import { UtilsNetwork } from 'tnp-core/src';
 import { child_process } from 'tnp-core/src'; //@backend
 
 import {
+  FilePathMetaData,
   Helpers,
   LinkedProject,
   PushProcessOptions,
@@ -2269,4 +2270,12 @@ ${lastCommitMessage}
     });
   }
   //#endregion
+  // projectName|-|www-domgrubegozwierzaka-pl||--||releaseType|-|manual||--||version|-|0.0.8||--||
+  // envName|-|__||--||envNumber|-|||--||targetArtifact|-|angular-node-app|||||-1759151320202-fa12e3a5cfdd
+  extractStringMetadata() {
+    const str = this.firstArg || '';
+    console.log(str);
+    console.log(FilePathMetaData.extractData(str));
+    this._exit();
+  }
 }
