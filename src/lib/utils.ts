@@ -2324,7 +2324,10 @@ export namespace UtilsZip {
     };
     await addDirectoryToZip(absPathToDir, absPathToDir);
     zipfile.end();
-    await pipeline(zipfile.outputStream, fse.createWriteStream(destinationFilePath));
+    await pipeline(
+      zipfile.outputStream,
+      fse.createWriteStream(destinationFilePath),
+    );
     return destinationFilePath;
     //#endregion;
   };
@@ -2821,5 +2824,85 @@ export namespace UtilsPasswords {
   //   const ok = await verifyPassword('super-secret', hash);
   //   console.log('valid?', ok);
   // })();
+}
+//#endregion
+
+//#region utils filepath metadata
+export namespace FilePathMetaData {
+  const TERMINATOR = '|||'; // terminates metadata block
+  const KV_SEPARATOR = '|-|'; // key/value separator
+  const PAIR_SEPARATOR = '||--||'; // between pairs
+
+  //#region embed data into filename
+  /**
+   * Embed metadata into filename while preserving the extension.
+   *
+   * Example:
+   * embedData({ version: "1.2.3", envName: "__" }, "project.zip")
+   * -> "version|-|1.2.3||--||envName|-|__|||project.zip"
+   */
+  export function embedData<T extends Record<string, any>>(
+    data: T,
+    orgFilename: string,
+    options?: {
+      skipAddingBasenameAtEnd?: boolean; // default false
+    },
+  ): string {
+    options = options || {};
+    const ext = path.extname(orgFilename);
+    const base = path.basename(orgFilename, ext);
+
+    const meta = Object.entries(data)
+      .map(([key, value]) => `${key}${KV_SEPARATOR}${value ?? ''}`)
+      .join(PAIR_SEPARATOR);
+
+    return `${meta}${TERMINATOR}${options.skipAddingBasenameAtEnd ? '' : base}${ext}`;
+  }
+  //#endregion
+
+  //#region extract data from filename
+  /**
+   * Extract metadata from filename (reverse of embedData).
+   *
+   * Example:
+   * extractData<{ version: string; env: string }>("myfile__version-1.2.3__env-prod.zip")
+   * -> { version: "1.2.3", env: "prod" }
+   */
+  export function extractData<T extends Record<string, any>>(
+    filename: string,
+  ): T {
+    const ext = path.extname(filename);
+    const base = path.basename(filename, ext);
+
+    // Everything before the last TERMINATOR
+    const idx = base.lastIndexOf(TERMINATOR);
+    const metaPart = idx >= 0 ? base.substring(0, idx) : base;
+
+    const data: Record<string, string> = {};
+
+    let cursor = 0;
+    while (cursor <= metaPart.length) {
+      const sepIdx = metaPart.indexOf(PAIR_SEPARATOR, cursor);
+      const segment =
+        sepIdx === -1
+          ? metaPart.substring(cursor)
+          : metaPart.substring(cursor, sepIdx);
+
+      if (segment) {
+        const kvIdx = segment.indexOf(KV_SEPARATOR);
+        if (kvIdx > -1) {
+          const key = segment.substring(0, kvIdx);
+          const value = segment.substring(kvIdx + KV_SEPARATOR.length);
+          data[key] = value; // preserves "__" and ""
+        }
+      }
+
+      if (sepIdx === -1) break;
+      cursor = sepIdx + PAIR_SEPARATOR.length;
+    }
+
+    return data as T;
+  }
+  //#endregion
 }
 //#endregion
