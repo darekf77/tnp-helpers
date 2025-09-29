@@ -250,7 +250,7 @@ export abstract class BaseCliWorker<
     const detached = !!cliParams['detached'] || !!cliParams['detach'];
     //#region @backendFunc
     if (cliParams['restart']) {
-      Helpers.logInfo(`--- RESTARTING ----`)
+      Helpers.logInfo(`--- RESTARTING ----`);
       await this.restart({
         detached,
       });
@@ -325,11 +325,13 @@ export abstract class BaseCliWorker<
         `[${this.serviceID}] Checking if current working version is up to date...`,
       );
       // console.log('this.processLocalInfoObj', this.processLocalInfoObj);
-      const req = await ctrl.baseCLiWorkerCommand_hasUpToDateVersion(
-        _.merge(this.processLocalInfoObj, {
-          version: this.serviceVersion,
-        }),
-      ).request();
+      const req = await ctrl
+        .baseCLiWorkerCommand_hasUpToDateVersion(
+          _.merge(this.processLocalInfoObj, {
+            version: this.serviceVersion,
+          }),
+        )
+        .request();
       Helpers.logInfo(`[${this.serviceID}] Request done...`);
       const isUpToDate = req.body.booleanValue;
       if (!isUpToDate) {
@@ -418,9 +420,9 @@ export abstract class BaseCliWorker<
         });
         Helpers.log(`Sending is healthy request...`);
         // console.log('this.processLocalInfoObj', this.processLocalInfoObj);
-        const req = await ctrl.baseCLiWorkerCommand_isHealthy(
-          this.processLocalInfoObj,
-        ).request();
+        const req = await ctrl
+          .baseCLiWorkerCommand_isHealthy(this.processLocalInfoObj)
+          .request();
         const isHealthy = req.body.booleanValue;
         // console.log('isHealthy', { isHealthy });
         if (isHealthy) {
@@ -534,10 +536,12 @@ export abstract class BaseCliWorker<
             calledFrom: 'initializeWorkerMetadata',
           });
 
-        await portControllerInstance.baseCLiWorkerCommand_initializeMetadata(
-          this.serviceID,
-          this.serviceVersion,
-        ).request();
+        await portControllerInstance
+          .baseCLiWorkerCommand_initializeMetadata(
+            this.serviceID,
+            this.serviceVersion,
+          )
+          .request();
         this.saveProcessInfo({
           startTimestamp: null,
         });
@@ -568,7 +572,8 @@ export abstract class BaseCliWorker<
     //#region @backendFunc
     options = options || {};
     Helpers.logInfo(
-      `[${this.serviceID}][${options.calledFrom}] Waiting for process port saved to disk...`,
+      `[${this.serviceID}]${options.calledFrom ? `[${options.calledFrom}]` : ''}` +
+        ` Waiting for process port saved to disk...`,
     );
     Helpers.log(`in ${this.pathToProcessLocalInfoJson}`);
     let portForRemote = this.processLocalInfoObj.port;
