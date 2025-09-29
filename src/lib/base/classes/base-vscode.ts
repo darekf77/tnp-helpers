@@ -24,11 +24,13 @@ export class BaseVscodeHelpers<
     this.recreateExtensions();
     await this.recreateBaseSettings();
     this.recreateWindowTitle();
-    if(!options.skipHiddingTempFiles) {
-      this.toogleFilesVisibilityInVscode({ action: 'hide-files', skipSaving: true });
+    if (!options.skipHiddingTempFiles) {
+      this.toogleFilesVisibilityInVscode({
+        action: 'hide-files',
+        skipSaving: true,
+      });
     }
     this.saveCurrentSettings();
-
   }
   //#endregion
 
@@ -789,6 +791,7 @@ export class BaseVscodeHelpers<
       '.vscode': true,
       browser: true,
       dist: true,
+      ['dist-*']: true,
       'package-lock.json': true,
       'tmp-*': true,
       'src/lib/env/**/*.*': true,
@@ -834,7 +837,7 @@ export class BaseVscodeHelpers<
     action: 'show-files' | 'hide-files';
     skipSaving?: boolean;
   }): void {
-    options = options || {} as any;
+    options = options || ({} as any);
     const { action, skipSaving } = options;
 
     if (action === 'hide-files') {
@@ -844,16 +847,15 @@ export class BaseVscodeHelpers<
           {};
         return settings;
       });
-      if(!skipSaving) {
+      if (!skipSaving) {
         this.saveCurrentSettings();
       }
-
     } else if (action === 'show-files') {
       this.modifyVscode(settings => {
         settings['files.exclude'] = {};
         return settings;
       });
-      if(!skipSaving) {
+      if (!skipSaving) {
         this.saveCurrentSettings();
       }
     }
