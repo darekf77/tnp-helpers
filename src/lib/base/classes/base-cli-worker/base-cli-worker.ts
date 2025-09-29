@@ -12,6 +12,7 @@ import {
   Utils,
   UtilsTerminal,
   UtilsOs,
+  CoreModels,
 } from 'tnp-core/src';
 
 import { Helpers } from '../../../index';
@@ -37,6 +38,30 @@ export abstract class BaseCliWorker<
   readonly terminalUI: TERMINAL_UI = new BaseCliWorkerTerminalUI(this);
   readonly workerContextTemplate: ReturnType<typeof Taon.createContextTemplate>;
   private workerMainContext: ReturnType<typeof Taon.createContext>;
+  // private workerRemoteContextFor: {
+  //   [ipAddressOfTaonInstance: string]: ReturnType<typeof Taon.createContext>;
+  // } = {};
+
+  async getRemoteControllerFor(
+    ipAddressOfTaonInstance: string,
+    port?: number ,
+  ): Promise<REMOTE_CTRL> {
+    // this.workerRemoteContextFor[ipAddressOfTaonInstance]  =
+    const remoteCtx = this.workerContextTemplate();
+    // this.workerRemoteContextFor[ipAddressOfTaonInstance] = remoteCtx;
+    const useHttps = ipAddressOfTaonInstance !== CoreModels.localhostIp127;
+    const protocol = useHttps ? 'https' : 'http';
+
+    const contextForRemoteConnection = await remoteCtx.initialize({
+      overrideRemoteHost: `${protocol}://${ipAddressOfTaonInstance}${port ? `:${port}` : ''}`,
+    });
+
+    const taonProjectsController = contextForRemoteConnection.getInstanceBy(
+      this.controllerClass,
+    );
+    return taonProjectsController;
+  }
+
   private workerRemoteContext: ReturnType<typeof Taon.createContext>;
   readonly controllerClass: new () => REMOTE_CTRL;
   private contextForRemoteConnection: EndpointContext;
