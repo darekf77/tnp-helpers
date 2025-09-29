@@ -17,6 +17,7 @@ import {
 } from '../../index';
 import { BaseProjectType } from '../../models';
 
+import { BaseDocker } from './base-docker';
 import { BaseFileFoldersOperations } from './base-file-folders-operations';
 import { BaseGit } from './base-git';
 import { BaseIgnoreHideHelpers } from './base-ignore-hide';
@@ -83,6 +84,7 @@ export abstract class BaseProject<
   public quickFixes?: BaseQuickFixes;
   public staticPages?: BaseStaticPages;
   public javaJdk?: BaseJavaJdk;
+  public docker?: BaseDocker;
   //#endregion
 
   private __location: string;
@@ -131,6 +133,9 @@ export abstract class BaseProject<
 
     this.javaJdk = new (require('./base-java-jdk')
       .BaseJavaJdk as typeof BaseJavaJdk)(this as any);
+
+    this.docker = new (require('./base-docker')
+      .BaseDocker as typeof BaseDocker)(this as any);
 
     this.vsCodeHelpers = new (require('./base-vscode')
       .BaseVscodeHelpers as typeof BaseVscodeHelpers)(this as any);

@@ -1997,30 +1997,9 @@ ${lastCommitMessage}
           true,
         );
       }
-
-      const envKeyAndComments =
-        UtilsDotFile.getCommentsKeysAsJsonObject(envPath) || {};
-
       const project = this.ins.From(cwd);
-      const envKeyAndCommentsKey = Object.keys(envKeyAndComments);
-      for (const key of envKeyAndCommentsKey) {
-        const comment = envKeyAndComments[key];
-        const tags = UtilsJson.getAttributiesFromComment(comment);
-        if (tags.map(c => c.name).includes(CoreModels.tagForTaskName)) {
-          const tag = tags.find(c => c.name === CoreModels.tagForTaskName);
-          const taskName = tag.value;
-          const taskPort = await project.registerAndAssignPort(taskName);
-          UtilsDotFile.setValueToDotFile(envPath, key, taskPort);
-          UtilsDotFile.setCommentToKeyInDotFile(
-            envPath,
-            key,
-            `${tag.name}="${tag.value}"`,
-          );
-          console.log(
-            `Updating .env "${key}"="${taskPort}" from available ports range.`,
-          );
-        }
-      }
+
+      await project.docker.updateDockerComposePorts();
 
       const env = { ...process.env };
       let closing = false;
@@ -2088,6 +2067,12 @@ ${lastCommitMessage}
           process.exit(0);
         });
       });
+    } else {
+      Helpers.error(
+        `You can preview only docker-compose.yml or compose.yml files`,
+        false,
+        true,
+      );
     }
     //#endregion
   }
@@ -2206,6 +2191,7 @@ ${lastCommitMessage}
   }
   //#endregion
 
+  //#region commands / start transmission
   async startTransmission() {
     await this._removeTransmission();
     const userProfile = process.env.USERPROFILE || os.homedir();
@@ -2282,4 +2268,5 @@ ${lastCommitMessage}
       });
     });
   }
+  //#endregion
 }
