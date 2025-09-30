@@ -65,6 +65,7 @@ import {
   isMethodDeclaration,
 } from 'typescript';
 import type * as ts from 'typescript';
+import { CLASS } from 'typescript-class-helpers/src';
 import type * as vscodeType from 'vscode';
 
 import { Helpers } from './index';
@@ -2936,5 +2937,53 @@ export namespace FilePathMetaData {
     return metaPart;
   };
   //#endregion
+}
+//#endregion
+
+//#region utils cli
+/**
+ * Easy way to connect CLI commands to cli class methods.
+ *
+ * Example:
+ * in clic class
+ * $FirstCli {
+ *
+ *   @UtilsCliMethod.decorator('doSomething')
+ *   doSomething() {
+ *     console.log('doing something');
+ *   }
+ * }
+ *
+ * UtilsCliMethod.getFrom($FirstCli.prototype.doSomething) // "firstcli:dosomething"
+ *
+ */
+export namespace UtilsCliMethod {
+  const CLI_METHOD_KEY = Symbol('cliMethod');
+
+  export const decorator = (methodName: string): MethodDecorator => {
+    return (target, propertyKey, descriptor) => {
+      // If name not given, fallback to property key
+      Reflect.defineMetadata(
+        CLI_METHOD_KEY,
+        `${_.camelCase(CLASS.getName(target?.constructor)).toLowerCase()}` +
+          `:${_.camelCase((methodName as string) ?? (propertyKey as string)).toLowerCase()}`,
+        descriptor.value!,
+      );
+    };
+  };
+
+  export const getFrom = (
+    ClassPrototypeMethodFnHere: Function,
+    globalMethod = false,
+  ): string => {
+    const fullCliMethodName = Reflect.getMetadata(
+      CLI_METHOD_KEY,
+      ClassPrototypeMethodFnHere,
+    );
+    if (globalMethod) {
+      return fullCliMethodName.split(':')[1];
+    }
+    return fullCliMethodName;
+  };
 }
 //#endregion
