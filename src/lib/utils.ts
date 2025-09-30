@@ -2843,9 +2843,9 @@ export namespace UtilsPasswords {
 
 //#region utils filepath metadata
 export namespace FilePathMetaData {
-  const TERMINATOR = '|||||'; // terminates metadata block
-  const KV_SEPARATOR = '|-|'; // key/value separator
-  const PAIR_SEPARATOR = '||--||'; // between pairs
+  const TERMINATOR = 'xxxxx'; // terminates metadata block
+  const KV_SEPARATOR = '...'; // key/value separator
+  const PAIR_SEPARATOR = 'IxIxI'; // between pairs
 
   //#region embed data into filename
   /**
