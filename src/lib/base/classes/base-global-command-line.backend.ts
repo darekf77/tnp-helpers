@@ -2002,7 +2002,6 @@ ${lastCommitMessage}
 
       await project.docker.updateDockerComposePorts();
 
-      const env = { ...process.env };
       let closing = false;
 
       const triggerRevertChangesToEtcHosts = new Subject<void>();
@@ -2012,28 +2011,16 @@ ${lastCommitMessage}
         });
       }
 
-      const child = child_process.spawn(
-        'docker-compose',
-        ['-f', composeFileName, 'up', '--build'],
-        {
-          env,
-          cwd,
-          stdio: 'inherit', // inherit stdio so output shows in terminal
-        },
-      );
+      const child =
+        this.project.docker.getDockerComposeUpExecChildProcess('up');
 
       console.log(
         `
 
 
-
-
-
      ${chalk.bold('PRESS ANY KEY TO STOP')} RUNNING CONTAINER(S) ` +
           `FOR ${chalk.bold.underline(COMPOSE_PROJECT_NAME as string)}
   ${simulateDomain ? `AND SIMULATING DOMAINS: ${allDomains.join(', ')} IN ETC/HOST` : ''}
-
-
 
 
   `,
@@ -2053,15 +2040,8 @@ ${lastCommitMessage}
 
         child.kill('SIGINT');
         console.log('Exiting...');
-        const downProcess = child_process.spawn(
-          'docker-compose',
-          ['-f', composeFileName, 'down'],
-          {
-            env,
-            cwd,
-            stdio: 'inherit',
-          },
-        );
+        const downProcess =
+          this.project.docker.getDockerComposeUpExecChildProcess('down');
 
         downProcess.on('close', code => {
           console.log(`docker-compose down exited with code ${code}`);

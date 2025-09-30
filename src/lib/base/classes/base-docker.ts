@@ -1,4 +1,6 @@
-import { CoreModels, UtilsJson } from 'tnp-core/src';
+import type { ChildProcess, StdioOptions } from 'child_process';
+
+import { child_process, CoreModels, UtilsJson } from 'tnp-core/src';
 
 import { UtilsDotFile, UtilsJava } from '../../utils';
 
@@ -38,6 +40,42 @@ export class BaseDocker<
         );
       }
     }
+    //#endregion
+  }
+  //#endregion
+
+  //#region docker compose up / down
+  getDockerComposeUpExecChildProcess(
+    action: 'up' | 'down',
+    options?: {
+      composeFileName?: string;
+      cwd?: string;
+      env?: NodeJS.ProcessEnv;
+      stdio?: StdioOptions;
+    },
+  ): ChildProcess {
+    //#region @backendFunc
+    const composeFileName = options?.composeFileName || 'docker-compose.yml';
+    const cwd = options?.cwd || this.project.location;
+    const env = {
+      ...process.env,
+      ...(options?.env || {}),
+    };
+    const child = child_process.spawn(
+      'docker-compose',
+      [
+        '-f',
+        composeFileName,
+        ...(action === 'up' ? ['up', '--build'] : ['down']),
+      ],
+      {
+        env,
+        cwd,
+        stdio: options.stdio || 'inherit', // inherit stdio so output shows in terminal
+      },
+    );
+
+    return child;
     //#endregion
   }
   //#endregion
