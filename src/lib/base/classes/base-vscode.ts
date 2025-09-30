@@ -670,6 +670,7 @@ export class BaseVscodeHelpers<
         'Maximum Word Length Exceeded': false,
       },
       'docker.extension.dockerEngineAvailabilityPrompt': false,
+      "chat.commandCenter.enabled": false,
     };
     //#endregion
 

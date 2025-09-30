@@ -498,8 +498,8 @@ export class HelpersFileFolders {
         });
         break;
       } catch (error) {
+        console.log(error);
         if (global['tnpNonInteractive']) {
-          console.log(error);
           Helpers.error(`[${config.frameworkName}-helpers]${options.purpose ? `[${options.purpose}]` : ''} Not able to move files
 
 from: ${from}
@@ -1137,7 +1137,7 @@ to: ${to}
 
   copyFile(
     sourcePath: string | string[],
-    destinationPath: string  |  string[],
+    destinationPath: string | string[],
     options?: {
       transformTextFn?: (input: string) => string;
       debugMode?: boolean;
