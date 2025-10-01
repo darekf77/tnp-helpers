@@ -118,8 +118,11 @@ export abstract class BaseCliWorker<
    * start normally process
    * this will crash if process already started
    */
-  public async startNormallyInCurrentProcess(): Promise<void> {
+  public async startNormallyInCurrentProcess(options?:{
+    actionBeforeTerminalUI?:()=>Promise<void>
+  }): Promise<void> {
     //#region @backendFunc
+    options = options || {};
     Helpers.taskStarted(
       `[${this.serviceID}] Process start in current process...`,
     );
@@ -136,6 +139,10 @@ export abstract class BaseCliWorker<
 
     Helpers.info(`Service started !`);
     this.preventExternalConfigChange();
+
+    if(_.isFunction(options.actionBeforeTerminalUI)) {
+      await options.actionBeforeTerminalUI();
+    }
     this.terminalUI.displaySpecialWorkerReadyMessage();
     await this.terminalUI.infoScreen();
     //#endregion
