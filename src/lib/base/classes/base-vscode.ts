@@ -671,6 +671,7 @@ export class BaseVscodeHelpers<
       },
       'docker.extension.dockerEngineAvailabilityPrompt': false,
       "chat.commandCenter.enabled": false,
+      "terminal.integrated.stickyScroll.enabled": false,
     };
     //#endregion
 
