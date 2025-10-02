@@ -63,8 +63,9 @@ export class BaseDocker<
       ...(options?.env || {}),
     };
     const child = child_process.spawn(
-      'docker-compose',
+      'docker',
       [
+        'compose',
         '-f',
         composeFileName,
         ...(action === 'up' ? ['up', '--build'] : ['down']),

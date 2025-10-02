@@ -2044,7 +2044,7 @@ ${lastCommitMessage}
           this.project.docker.getDockerComposeUpExecChildProcess('down');
 
         downProcess.on('close', code => {
-          console.log(`docker-compose down exited with code ${code}`);
+          console.log(`docker compose down exited with code ${code}`);
           process.exit(0);
         });
       });
