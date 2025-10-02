@@ -55,6 +55,7 @@ export class BaseDocker<
     },
   ): ChildProcess {
     //#region @backendFunc
+    options = options || {};
     const composeFileName = options?.composeFileName || 'docker-compose.yml';
     const cwd = options?.cwd || this.project.location;
     const env = {
