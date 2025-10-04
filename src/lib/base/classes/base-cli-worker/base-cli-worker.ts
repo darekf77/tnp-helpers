@@ -32,7 +32,7 @@ export abstract class BaseCliWorker<
   TERMINAL_UI extends BaseCliWorkerTerminalUI<any>,
 > {
   //#region fields & getters
-  public readonly SPECIAL_WORKER_READY_MESSAGE = '$$$ WORKER_READY $$$';
+  public readonly SPECIAL_WORKER_READY_MESSAGE = CoreModels.SPECIAL_WORKER_READY_MESSAGE;
 
   // @ts-ignore TODO weird inheritance problem
   readonly terminalUI: TERMINAL_UI = new BaseCliWorkerTerminalUI(this);
