@@ -18,7 +18,7 @@ import {
 } from 'tnp-core/src';
 import { crossPlatformPath } from 'tnp-core/src';
 import { UtilsTerminal } from 'tnp-core/src';
-import { UtilsNetwork } from 'tnp-core/src';
+import { UtilsNetwork, UtilsDotFile } from 'tnp-core/src';
 import { child_process } from 'tnp-core/src'; //@backend
 
 import {
@@ -26,7 +26,6 @@ import {
   Helpers,
   LinkedProject,
   PushProcessOptions,
-  UtilsDotFile,
   UtilsJava,
   UtilsVSCode,
   UtilsZip,

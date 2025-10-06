@@ -1,8 +1,13 @@
 import type { ChildProcess, StdioOptions } from 'child_process';
 
-import { child_process, CoreModels, UtilsJson } from 'tnp-core/src';
+import {
+  child_process,
+  CoreModels,
+  UtilsJson,
+  UtilsDotFile,
+} from 'tnp-core/src';
 
-import { UtilsDotFile, UtilsJava } from '../../utils';
+import { UtilsJava } from '../../utils';
 
 import { BaseFeatureForProject } from './base-feature-for-project';
 import { BaseProject } from './base-project';
