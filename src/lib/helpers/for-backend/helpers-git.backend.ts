@@ -955,7 +955,10 @@ export class HelpersGit {
       )}  `,
     );
     let acknowledgeBeforePull = false;
+
     while (true) {
+      const isSsh = Helpers.git.getOriginURL(cwd).includes('git@');
+
       try {
         if (acknowledgeBeforePull) {
           Helpers.pressKeyAndContinue('Press any key to continue pulling...');
@@ -990,6 +993,9 @@ export class HelpersGit {
             again: {
               name: 'Try pull again',
             },
+            normalButSshOrHttpOrigin: {
+              name: `Try pull again with ${isSsh ? 'HTTPS' : 'SSH'} origin ?`,
+            },
             skip: {
               name: 'Skip pulling',
             },
@@ -1011,6 +1017,14 @@ export class HelpersGit {
             },
           );
           acknowledgeBeforePull = whatToDo === 'openInVscode';
+
+          if (whatToDo === 'normalButSshOrHttpOrigin') {
+            if (isSsh) {
+              await Helpers.git.changeRemoveFromSshToHttps(cwd);
+            } else {
+              await Helpers.git.changeRemoteFromHttpsToSSh(cwd);
+            }
+          }
 
           if (whatToDo === 'resetHardLast5Commits') {
             try {
@@ -1127,7 +1141,6 @@ ${cwd}
 
         Helpers.run(command, { cwd }).sync();
         Helpers.info(taskName);
-        Helpers.removeFileIfExists([cwd, tempGitCommitMsgFile]);
         break;
       } catch (err) {
         Helpers.error(
