@@ -1,6 +1,6 @@
 //#region import
 import { config } from 'tnp-config/src';
-import { CommandOutputOptions } from 'tnp-core/src';
+import { CommandOutputOptions, UtilsOs, UtilsTerminal } from 'tnp-core/src';
 import { CoreModels } from 'tnp-core/src';
 import { CLI } from 'tnp-core/src';
 import { path, crossPlatformPath } from 'tnp-core/src';
@@ -908,7 +908,7 @@ Would you like to update current project configuration?`)
         Helpers.logInfo(
           `[${config.frameworkName}-helpers] Retrying to assign port for task "${taskName}"...`,
         );
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await UtilsTerminal.wait(2);
       }
     }
 

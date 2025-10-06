@@ -46,15 +46,16 @@ export abstract class BaseCliWorker<
     ipAddressOfTaonInstance: string,
     port?: number ,
   ): Promise<REMOTE_CTRL> {
-    // this.workerRemoteContextFor[ipAddressOfTaonInstance]  =
-    const remoteCtx = this.workerContextTemplate();
+
     // this.workerRemoteContextFor[ipAddressOfTaonInstance] = remoteCtx;
     const useHttps = ipAddressOfTaonInstance !== CoreModels.localhostIp127;
     const protocol = useHttps ? 'https' : 'http';
 
-    const contextForRemoteConnection = await remoteCtx.initialize({
+    const remoteCtx = this.workerContextTemplate().cloneAsRemote({
       overrideRemoteHost: `${protocol}://${ipAddressOfTaonInstance}${port ? `:${port}` : ''}`,
     });
+
+    const contextForRemoteConnection = await remoteCtx.initialize();
 
     const taonProjectsController = contextForRemoteConnection.getInstanceBy(
       this.controllerClass,
@@ -130,10 +131,10 @@ export abstract class BaseCliWorker<
     await this.preventStartIfAlreadyStarted();
     const port = await this.getServicePort();
 
-    this.workerMainContext = this.workerContextTemplate();
-    await this.workerMainContext.initialize({
+    this.workerMainContext = this.workerContextTemplate().cloneAsNormal({
       overrideHost: `http://localhost:${port}`,
     });
+    await this.workerMainContext.initialize();
 
     await this.initializeWorkerMetadata();
 
@@ -176,11 +177,11 @@ export abstract class BaseCliWorker<
 
     if (!this.contextForRemoteConnection) {
       Helpers.logInfo('Creating new context for remote connection...');
-      this.workerRemoteContext = this.workerContextTemplate();
+      this.workerRemoteContext = this.workerContextTemplate().cloneAsRemote({
+        overrideRemoteHost: `http://localhost:${this.processLocalInfoObj.port}`,
+      })
       this.contextForRemoteConnection =
-        await this.workerRemoteContext.initialize({
-          overrideRemoteHost: `http://localhost:${this.processLocalInfoObj.port}`,
-        });
+        await this.workerRemoteContext.initialize();
     }
 
     const taonProjectsController =
