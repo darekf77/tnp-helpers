@@ -397,11 +397,15 @@ export class BaseNodeModules<
   //#endregion
 
   //#region dedupe packages action
-  dedupePackages(packagesConfig?: DedupePackage[], countOnly = false): void {
+  dedupePackages(
+    packagesConfig?: DedupePackage[],
+    countOnly = false,
+    fake = false,
+  ): void {
     //#region @backendFunc
     // packagesConfig = ['@angular/cdk', 'tnp-models'];
     Helpers.taskStarted(
-      `${countOnly ? 'Counting' : 'Removing'} duplicates in node_modules`,
+      `${countOnly ? 'Counting' : 'Removing'} duplicates in node_modules ${fake ? '(fake process)' : ''}...`,
     );
 
     for (const entry of packagesConfig) {
@@ -447,34 +451,66 @@ export class BaseNodeModules<
         config.folder.node_modules,
       ]);
 
-      const duplicates = foundPaths.filter(p => {
-        const relative = crossPlatformPath(path.relative(nodeModulesRoot, p));
+      const duplicates = foundPaths.filter(foundedRelativePath => {
+        const relative = crossPlatformPath([
+          path.relative(nodeModulesRoot, foundedRelativePath),
+        ]);
+        let root = _.first(relative.split('/'));
+        if (root?.startsWith('@')) {
+          root = root + '/' + relative.split('/')[1];
+        }
+        root = root || '';
 
-        const packageJsonPath = crossPlatformPath([p, 'package.json']);
+        const packageJsonPath = crossPlatformPath([
+          foundedRelativePath,
+          'package.json',
+        ]);
         const packageJsonName = Helpers.readJsonC(packageJsonPath)?.name;
         // console.log({ packageJsonPath, relative, packageName });
         return (
           packageJsonName === packageNameForDuplicationRemoval &&
-          !relative.startsWith(packageNameForDuplicationRemoval) &&
-          !relative.startsWith(config.folder._bin) &&
+          root !== packageNameForDuplicationRemoval &&
+          _.first(root.split('/')) !== config.folder._bin &&
           fse.existsSync(packageJsonPath)
         );
       });
 
-      duplicates.forEach(duplicatePath => {
-        const pathParts = duplicatePath.split('/').filter(Boolean);
-        const nodeModulesIndex = pathParts.lastIndexOf('node_modules');
+      duplicates.forEach(duplicatePathRelative => {
+        // duplicatePathRelative =>
+        // node_modules/some-parent/node_modules/the-package-to-dedupe
 
-        let parentName = '';
-        if (pathParts[nodeModulesIndex + 1].startsWith('@')) {
-          // Scoped package, parent is two levels deeper
-          parentName = pathParts[nodeModulesIndex + 3] || '';
-        } else {
-          // Regular package, parent is one level deeper
-          parentName = pathParts[nodeModulesIndex + 2] || '';
+        const pathParts = duplicatePathRelative.split('/').filter(Boolean);
+
+        const howManyNodeModulesInPath = pathParts.filter(
+          p => p === 'node_modules',
+        ).length;
+
+        if (howManyNodeModulesInPath <= 1) {
+          Helpers.warn(
+            `Skipping first level duplicate: ${duplicatePathRelative}`,
+          );
+          return;
         }
 
-        const parentRealName = duplicatePath.replace(nodeModulesRoot + '/', '');
+        const nodeModulesIndex = pathParts.lastIndexOf('node_modules');
+
+        let parentName: string;
+
+        if (pathParts[nodeModulesIndex - 2]?.startsWith('@')) {
+          parentName = pathParts[nodeModulesIndex - 2];
+        } else {
+          parentName = pathParts[nodeModulesIndex - 1];
+        }
+
+        const duplicatePathAbs = crossPlatformPath([
+          this.cwd,
+          duplicatePathRelative,
+        ]);
+
+        if (!Helpers.exists(duplicatePathAbs)) {
+          Helpers.warn(`Skipping non-existing path: ${duplicatePathAbs}`);
+          return;
+        }
 
         if (
           excludeFrom.some(rule => parentName.includes(rule.replace('!', '')))
@@ -498,13 +534,15 @@ export class BaseNodeModules<
         }
 
         if (countOnly) {
-          Helpers.info(
-            `Found duplicate ${packageNameForDuplicationRemoval} in ${parentRealName}`,
-          );
+          Helpers.info(`Found duplicate ${packageNameForDuplicationRemoval}`);
         } else {
-          Helpers.remove(duplicatePath, true);
-          Helpers.warn(
-            `Removed duplicate ${packageNameForDuplicationRemoval} from ${parentRealName}`,
+          Helpers.info(`Removing path ${duplicatePathAbs}`);
+          if (!fake) {
+            Helpers.removeSymlinks(duplicatePathAbs);
+            Helpers.remove(duplicatePathAbs);
+          }
+          Helpers.info(
+            `Removed duplicate ${packageNameForDuplicationRemoval} `,
           );
         }
       });
