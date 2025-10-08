@@ -486,16 +486,16 @@ export class BaseNodeModules<
 
         const pathParts = duplicatePathRelative.split('/').filter(Boolean);
 
-        const howManyNodeModulesInPath = pathParts.filter(
-          p => p === 'node_modules',
-        ).length;
+        // const howManyNodeModulesInPath = pathParts.filter(
+        //   p => p === 'node_modules',
+        // ).length;
 
-        if (howManyNodeModulesInPath <= 1) {
-          Helpers.warn(
-            `Skipping first level duplicate: ${duplicatePathRelative}`,
-          );
-          return;
-        }
+        // if (howManyNodeModulesInPath <= 1) {
+        //   Helpers.warn(
+        //     `Skipping first level duplicate: ${duplicatePathRelative}`,
+        //   );
+        //   return;
+        // }
 
         const nodeModulesIndex = pathParts.lastIndexOf('node_modules');
 
