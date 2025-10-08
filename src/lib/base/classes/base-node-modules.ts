@@ -455,24 +455,33 @@ export class BaseNodeModules<
         const relative = crossPlatformPath([
           path.relative(nodeModulesRoot, foundedRelativePath),
         ]);
+
+        if (relative?.startsWith('..')) {
+          return false;
+        }
+
         let root = _.first(relative.split('/'));
         if (root?.startsWith('@')) {
           root = root + '/' + relative.split('/')[1];
         }
         root = root || '';
 
-        const packageJsonPath = crossPlatformPath([
-          foundedRelativePath,
+        const packageJsonAbsPath = crossPlatformPath([
+          this.cwd,
+          config.folder.node_modules,
+          relative,
           'package.json',
         ]);
-        const packageJsonName = Helpers.readJsonC(packageJsonPath)?.name;
+        const packageJsonExtractedName =
+          Helpers.readJsonC(packageJsonAbsPath)?.name;
+
         Helpers.info(`Checking root ${chalk.gray(root)}`);
         // console.log({ packageJsonPath, relative, packageName });
         return (
-          packageJsonName === packageNameForDuplicationRemoval &&
+          packageJsonExtractedName === packageNameForDuplicationRemoval &&
           root !== packageNameForDuplicationRemoval &&
           _.first(root.split('/')) !== config.folder._bin &&
-          fse.existsSync(packageJsonPath)
+          fse.existsSync(packageJsonAbsPath)
         );
       });
 
@@ -509,6 +518,7 @@ export class BaseNodeModules<
 
         const duplicatePathAbs = crossPlatformPath([
           this.cwd,
+          config.folder.node_modules,
           duplicatePathRelative,
         ]);
 
