@@ -466,6 +466,7 @@ export class BaseNodeModules<
           'package.json',
         ]);
         const packageJsonName = Helpers.readJsonC(packageJsonPath)?.name;
+        Helpers.info(`Checking root ${chalk.gray(root)}`);
         // console.log({ packageJsonPath, relative, packageName });
         return (
           packageJsonName === packageNameForDuplicationRemoval &&
@@ -478,6 +479,10 @@ export class BaseNodeModules<
       duplicates.forEach(duplicatePathRelative => {
         // duplicatePathRelative =>
         // node_modules/some-parent/node_modules/the-package-to-dedupe
+
+        duplicatePathRelative = crossPlatformPath([
+          path.relative(nodeModulesRoot, duplicatePathRelative),
+        ]);
 
         const pathParts = duplicatePathRelative.split('/').filter(Boolean);
 
