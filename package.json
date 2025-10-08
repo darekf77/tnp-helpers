@@ -1,6 +1,6 @@
 {
   "name": "tnp-helpers",
-  "version": "19.0.57",
+  "version": "19.0.58",
   "scripts": {
     "docs": "python3 -m mkdocs",
     "mkdocs": "python3 -m mkdocs",
