@@ -434,21 +434,23 @@ export class BaseNodeModules<
           `{ $_.FullName -replace '\\\\','/' -like '*/${packageNameForDuplicationRemoval}' } | Select -ExpandProperty FullName"`
         : `find node_modules/ -name "${packageNameForDuplicationRemoval.replace('@', '\\@')}"`;
 
-      console.log(`Executing command: ${chalk.gray(findPathsCommand)}
-in ${chalk.bold(this.cwd)}
-      `);
+      //       console.log(`Executing command: ${chalk.gray(findPathsCommand)}
+      // in ${chalk.bold(this.cwd)}
+      //       `);
 
-      const foundPaths = Helpers.run(findPathsCommand, {
-        output: false,
-        cwd: this.cwd,
-      })
-        .sync()
+      const foundPaths = Helpers.commnadOutputAsString(
+        findPathsCommand,
+        this.cwd,
+        {
+          biggerBuffer: false,
+        },
+      )
         .toString()
         .trim()
         .split('\n')
         .map(p => crossPlatformPath(p.trim()))
         .filter(p => p);
-      // console.log({ foundPaths, packageName });
+      // console.log({ foundPaths, packageNameForDuplicationRemoval });
 
       const nodeModulesRoot = crossPlatformPath([
         this.cwd,
@@ -456,9 +458,14 @@ in ${chalk.bold(this.cwd)}
       ]);
 
       const duplicates = foundPaths.filter(foundedRelativePath => {
-        const relative = crossPlatformPath([
-          path.relative(nodeModulesRoot, foundedRelativePath),
-        ]);
+        // console.log({ foundedRelativePath });
+
+        const relative = foundedRelativePath.startsWith('node_modules/')
+          ? foundedRelativePath.split('/').slice(1).join('/')
+          : crossPlatformPath([
+              foundedRelativePath.replace(nodeModulesRoot + '/', ''),
+            ]);
+        // console.log({ relative });
 
         if (relative?.startsWith('..')) {
           return false;
@@ -479,7 +486,9 @@ in ${chalk.bold(this.cwd)}
         const packageJsonExtractedName =
           Helpers.readJsonC(packageJsonAbsPath)?.name;
 
-        Helpers.info(`Checking root ${chalk.gray(root)}`);
+        // Helpers.info(
+        //   `Checking root ${chalk.gray(root)}, name from package.json: ${chalk.gray(packageJsonExtractedName)} `,
+        // );
         // console.log({ packageJsonPath, relative, packageName });
         return (
           packageJsonExtractedName === packageNameForDuplicationRemoval &&
@@ -489,13 +498,19 @@ in ${chalk.bold(this.cwd)}
         );
       });
 
+      // console.log({ duplicates });
+
       duplicates.forEach(duplicatePathRelative => {
         // duplicatePathRelative =>
         // node_modules/some-parent/node_modules/the-package-to-dedupe
 
-        duplicatePathRelative = crossPlatformPath([
-          path.relative(nodeModulesRoot, duplicatePathRelative),
-        ]);
+        duplicatePathRelative = duplicatePathRelative.startsWith(
+          'node_modules/',
+        )
+          ? duplicatePathRelative.split('/').slice(1).join('/')
+          : crossPlatformPath([
+              duplicatePathRelative.replace(nodeModulesRoot + '/', ''),
+            ]);
 
         const pathParts = duplicatePathRelative.split('/').filter(Boolean);
 
