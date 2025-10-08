@@ -434,6 +434,10 @@ export class BaseNodeModules<
           `{ $_.FullName -replace '\\\\','/' -like '*/${packageNameForDuplicationRemoval}' } | Select -ExpandProperty FullName"`
         : `find node_modules/ -name "${packageNameForDuplicationRemoval.replace('@', '\\@')}"`;
 
+      console.log(`Executing command: ${chalk.gray(findPathsCommand)}
+in ${chalk.bold(this.cwd)}
+      `);
+
       const foundPaths = Helpers.run(findPathsCommand, {
         output: false,
         cwd: this.cwd,
