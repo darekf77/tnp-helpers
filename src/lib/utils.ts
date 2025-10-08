@@ -1637,13 +1637,13 @@ export namespace UtilsQuickFixes {
     contentofSQLWasmJS: string,
   ): string => {
     //#region @backendFunc
-    console.log(`
+    // console.log(`
 
 
-      Applying quick fix for faulty minifed code
+    //   Applying quick fix for faulty minifed code
 
 
-      `);
+    //   `);
     const replace = [
       [
         [
@@ -1668,7 +1668,10 @@ export namespace UtilsQuickFixes {
           ` fs.readFileSync(path.join(__dirname, "../package.json")).toString());`,
         ].join(''),
       ],
-      ['module = undefined;', '/* module = undefined ; */'],
+      [
+        [`module = `, `undefined;`].join(''),
+        [`/* module =`, ` undefined ; */`].join(''),
+      ],
     ];
     replace.forEach(r => {
       contentofSQLWasmJS = contentofSQLWasmJS.replace(r[0], r[1]);
