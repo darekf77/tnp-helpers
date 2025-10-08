@@ -1637,17 +1637,36 @@ export namespace UtilsQuickFixes {
     contentofSQLWasmJS: string,
   ): string => {
     //#region @backendFunc
+    console.log(`
+
+
+      Applying quick fix for faulty minifed code
+
+
+      `);
     const replace = [
       [
-        `var packageJson = JSON.parse(fs.readFileSync(__nccwpck_require__.ab ` +
+        [
+          `var packageJson = JSON.parse(fs.readFileSync`,
+          `(__nccwpck_require__.ab `,
           `+ "package.json").toString());`,
-        `var packageJson = JSON.parse(fs.existsSync(__nccwpck_require__.ab + ` +
+        ].join(''),
+        [
+          `var packageJson = JSON.parse(fs.existsSync`,
+          `(__nccwpck_require__.ab + `,
           `"package.json") && fs.readFileSync(__nccwpck_require__.ab + "package.json").toString());`,
+        ].join(''),
       ],
       [
-        `var packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, "../package.json")).toString());`,
-        `var packageJson = JSON.parse(fs.existsSync(path.join(__dirname, "../package.json")) &&` +
+        [
+          `var packageJson = JSON.parse(fs.readFileSync`,
+          `(path.join(__dirname, "../package.json")).toString());`,
+        ].join(''),
+        [
+          `var packageJson = JSON.parse(fs.existsSync`,
+          `(path.join(__dirname, "../package.json")) &&`,
           ` fs.readFileSync(path.join(__dirname, "../package.json")).toString());`,
+        ].join(''),
       ],
       ['module = undefined;', '/* module = undefined ; */'],
     ];
