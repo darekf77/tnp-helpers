@@ -1639,9 +1639,7 @@ export namespace UtilsQuickFixes {
     //#region @backendFunc
     // console.log(`
 
-
     //   Applying quick fix for faulty minifed code
-
 
     //   `);
     const replace = [
@@ -2558,128 +2556,6 @@ export namespace UtilsPasswords {
   //   const ok = await verifyPassword('super-secret', hash);
   //   console.log('valid?', ok);
   // })();
-}
-//#endregion
-
-//#region utils filepath metadata
-export namespace FilePathMetaData {
-  const TERMINATOR = 'xxxxx'; // terminates metadata block
-  const KV_SEPARATOR = '...'; // key/value separator
-  const PAIR_SEPARATOR = 'IxIxI'; // between pairs
-
-  //#region embed data into filename
-  /**
-   * Embed metadata into filename while preserving the extension.
-   *
-   * Example:
-   * embedData({ version: "1.2.3", envName: "__" }, "project.zip")
-   * -> "version|-|1.2.3||--||envName|-|__|||project.zip"
-   *
-   * keysMap = {
-   *  projectName: "pn",
-   *  envName: "en",
-   *  version: "v"
-   * }
-   */
-  export function embedData<T extends Record<string, any>>(
-    data: T,
-    orgFilename: string,
-    options?: {
-      skipAddingBasenameAtEnd?: boolean; // default false
-      keysMap?: Record<keyof T, string>; // optional mapping of keys
-    },
-  ): string {
-    options = options || {};
-    const ext = path.extname(orgFilename);
-    const base = path.basename(orgFilename, ext);
-
-    const meta = Object.entries(data)
-      .map(([key, value]) => {
-        if (options.keysMap && options.keysMap[key as keyof T]) {
-          key = options.keysMap[key as keyof T];
-        }
-        return `${key}${KV_SEPARATOR}${value ?? ''}`
-      })
-      .join(PAIR_SEPARATOR);
-
-    return `${meta}${TERMINATOR}${
-      options.skipAddingBasenameAtEnd ? '' : base
-    }${ext}`;
-  }
-  //#endregion
-
-  //#region extract data from filename
-  /**
-   * Extract metadata from filename (reverse of embedData).
-   *
-   * Example:
-   * extractData<{ version: string; env: string }>("myfile__version-1.2.3__env-prod.zip")
-   * -> { version: "1.2.3", env: "prod" }
-   *
-   * keysMap = {
-   *  projectName: "pn",
-   *  envName: "en",
-   *  version: "v"
-   * }
-   */
-  export function extractData<T extends Record<string, any>>(
-    filename: string,
-    options?:{
-      keysMap?: Record<keyof T, string>; // optional mapping of keys
-    }
-  ): T {
-    options = options || {};
-    const ext = path.extname(filename);
-    const thereIsNoExt = ext.includes('|') || ext.includes('-');
-    const base = thereIsNoExt ? filename : path.basename(filename, ext);
-
-    // Everything BEFORE the FIRST TERMINATOR
-    const idx = base.lastIndexOf(TERMINATOR);
-    const metaPart = idx >= 0 ? base.substring(0, idx) : base;
-
-    const data: Record<string, string> = {};
-
-    let cursor = 0;
-    while (cursor <= metaPart.length) {
-      const sepIdx = metaPart.indexOf(PAIR_SEPARATOR, cursor);
-      const segment =
-        sepIdx === -1
-          ? metaPart.substring(cursor)
-          : metaPart.substring(cursor, sepIdx);
-
-      if (segment) {
-        const kvIdx = segment.indexOf(KV_SEPARATOR);
-        if (kvIdx > -1) {
-          const key = segment.substring(0, kvIdx);
-          const value = segment.substring(kvIdx + KV_SEPARATOR.length);
-          let finalKey = options.keysMap ? Object.keys(options.keysMap || {})
-          .find(k => options.keysMap[k as keyof T] === key) as keyof T : key;
-          data[finalKey as string] = value;
-        }
-      }
-
-      if (sepIdx === -1) break;
-      cursor = sepIdx + PAIR_SEPARATOR.length;
-    }
-
-    return data as T;
-  }
-  //#endregion
-
-  //#region get only metadata string
-  export const getOnlyMetadataString = (filename: string): string => {
-    const ext = path.extname(filename);
-    const base = path.basename(filename, ext);
-
-    const idx = base.lastIndexOf(TERMINATOR);
-    if (idx === -1) return ''; // no terminator
-
-    const metaPart = base.substring(0, idx);
-    if (!metaPart.trim()) return ''; // empty metadata
-
-    return metaPart;
-  };
-  //#endregion
 }
 //#endregion
 

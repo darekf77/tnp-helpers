@@ -22,7 +22,6 @@ import { UtilsNetwork, UtilsDotFile } from 'tnp-core/src';
 import { child_process } from 'tnp-core/src'; //@backend
 
 import {
-  FilePathMetaData,
   Helpers,
   LinkedProject,
   PushProcessOptions,
@@ -2248,5 +2247,4 @@ ${lastCommitMessage}
     });
   }
   //#endregion
-
 }
