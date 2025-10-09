@@ -1,4 +1,6 @@
 //#region imports
+import type fs from 'fs';
+
 import { config } from 'tnp-config/src';
 import { UtilsOs } from 'tnp-core/src';
 import {
@@ -396,6 +398,71 @@ export class BaseNodeModules<
   }
   //#endregion
 
+  //#region find package dirs
+  /**
+   *
+   * @param rootDir
+   * @param packageName
+   * @returns absolute paths to package dirs
+   */
+  private findPackageDirs(
+    rootDir: string,
+    packageName: string,
+    options: { maxDepth?: number; signal?: AbortSignal } = {},
+  ): string[] {
+    //#region @backendFunc
+    const results: string[] = [];
+    const visited = new Set<string>();
+    const maxDepth = options.maxDepth ?? 10;
+
+    const targetParts = packageName.split('/'); // handle @scope/pkg
+
+    const walk = (dir: string, depth = 0): Promise<void> => {
+      if (options.signal?.aborted) return;
+      if (depth > maxDepth) return;
+      if (visited.has(dir)) return;
+      visited.add(dir);
+
+      let entries: fs.Dirent[];
+      try {
+        entries = fse.readdirSync(dir, { withFileTypes: true });
+      } catch {
+        return; // permission or broken symlink
+      }
+
+      for (const entry of entries) {
+        if (!entry.isDirectory()) continue;
+        const subdir = crossPlatformPath([dir, entry.name]);
+
+        // we only care about node_modules structure
+        if (entry.name === 'node_modules' || dir.endsWith('node_modules')) {
+          // try to match direct package or @scope/pkg structure
+          if (entry.name === targetParts[0] && targetParts.length === 1) {
+            results.push(subdir);
+            continue;
+          }
+
+          if (entry.name === targetParts[0] && targetParts.length > 1) {
+            const scoped = crossPlatformPath([subdir, targetParts[1]]);
+            try {
+              const stat = fse.statSync(scoped);
+              if (stat.isDirectory()) results.push(scoped);
+            } catch {}
+            continue;
+          }
+
+          // otherwise keep descending only within node_modules
+          walk(subdir, depth + 1);
+        }
+      }
+    };
+
+    walk(rootDir);
+    return results;
+    //#endregion
+  }
+  //#endregion
+
   //#region dedupe packages action
   dedupePackages(
     packagesConfig?: DedupePackage[],
@@ -428,43 +495,31 @@ export class BaseNodeModules<
         `[${config.frameworkName}] Checking npm duplicates of ${packageNameForDuplicationRemoval}`,
       );
 
-      const findPathsCommand = UtilsOs.isRunningInWindowsPowerShell()
-        ? `powershell -NoProfile -Command "Get-ChildItem node_modules` +
-          ` -Recurse -Directory | Where-Object ` +
-          `{ $_.FullName -replace '\\\\','/' -like '*/${packageNameForDuplicationRemoval}' } | Select -ExpandProperty FullName"`
-        : `find node_modules/ -name "${packageNameForDuplicationRemoval.replace('@', '\\@')}"`;
-
-      //       console.log(`Executing command: ${chalk.gray(findPathsCommand)}
-      // in ${chalk.bold(this.cwd)}
-      //       `);
-
-      const foundPaths = Helpers.commnadOutputAsString(
-        findPathsCommand,
-        this.cwd,
-        {
-          biggerBuffer: false,
-        },
-      )
-        .toString()
-        .trim()
-        .split('\n')
-        .map(p => crossPlatformPath(p.trim()))
-        .filter(p => p);
-      // console.log({ foundPaths, packageNameForDuplicationRemoval });
-
       const nodeModulesRoot = crossPlatformPath([
         this.cwd,
         config.folder.node_modules,
       ]);
 
-      const duplicates = foundPaths.filter(foundedRelativePath => {
+      Helpers.taskStarted(
+        `Looking for directories ${packageNameForDuplicationRemoval}`,
+      );
+      const foundAbsPaths = this.findPackageDirs(
+        nodeModulesRoot,
+        packageNameForDuplicationRemoval,
+        { maxDepth: 15 },
+      );
+
+      // console.log({foundAbsPaths})
+      Helpers.taskDone(
+        `Looking for directories done. Found: ${foundAbsPaths.length}`,
+      );
+
+      const duplicates = foundAbsPaths.filter(foundedAbsPath => {
         // console.log({ foundedRelativePath });
 
-        const relative = foundedRelativePath.startsWith('node_modules/')
-          ? foundedRelativePath.split('/').slice(1).join('/')
-          : crossPlatformPath([
-              foundedRelativePath.replace(nodeModulesRoot + '/', ''),
-            ]);
+        const relative = crossPlatformPath([
+          foundedAbsPath.replace(nodeModulesRoot + '/', ''),
+        ]);
         // console.log({ relative });
 
         if (relative?.startsWith('..')) {
@@ -486,10 +541,6 @@ export class BaseNodeModules<
         const packageJsonExtractedName =
           Helpers.readJsonC(packageJsonAbsPath)?.name;
 
-        // Helpers.info(
-        //   `Checking root ${chalk.gray(root)}, name from package.json: ${chalk.gray(packageJsonExtractedName)} `,
-        // );
-        // console.log({ packageJsonPath, relative, packageName });
         return (
           packageJsonExtractedName === packageNameForDuplicationRemoval &&
           root !== packageNameForDuplicationRemoval &&
@@ -500,30 +551,8 @@ export class BaseNodeModules<
 
       // console.log({ duplicates });
 
-      duplicates.forEach(duplicatePathRelative => {
-        // duplicatePathRelative =>
-        // node_modules/some-parent/node_modules/the-package-to-dedupe
-
-        duplicatePathRelative = duplicatePathRelative.startsWith(
-          'node_modules/',
-        )
-          ? duplicatePathRelative.split('/').slice(1).join('/')
-          : crossPlatformPath([
-              duplicatePathRelative.replace(nodeModulesRoot + '/', ''),
-            ]);
-
-        const pathParts = duplicatePathRelative.split('/').filter(Boolean);
-
-        // const howManyNodeModulesInPath = pathParts.filter(
-        //   p => p === 'node_modules',
-        // ).length;
-
-        // if (howManyNodeModulesInPath <= 1) {
-        //   Helpers.warn(
-        //     `Skipping first level duplicate: ${duplicatePathRelative}`,
-        //   );
-        //   return;
-        // }
+      duplicates.forEach(duplicatePathAbs => {
+        const pathParts = duplicatePathAbs.split('/').filter(Boolean);
 
         const nodeModulesIndex = pathParts.lastIndexOf('node_modules');
 
@@ -534,12 +563,6 @@ export class BaseNodeModules<
         } else {
           parentName = pathParts[nodeModulesIndex - 1];
         }
-
-        const duplicatePathAbs = crossPlatformPath([
-          this.cwd,
-          config.folder.node_modules,
-          duplicatePathRelative,
-        ]);
 
         if (!Helpers.exists(duplicatePathAbs)) {
           Helpers.warn(`Skipping non-existing path: ${duplicatePathAbs}`);
