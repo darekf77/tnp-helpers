@@ -575,9 +575,9 @@ export class BaseNodeModules<
             Helpers.removeSymlinks(duplicatePathAbs);
             Helpers.remove(duplicatePathAbs);
           }
-          Helpers.info(
-            `Removed duplicate ${packageNameForDuplicationRemoval} `,
-          );
+          // Helpers.info(
+          //   `Removed duplicate ${packageNameForDuplicationRemoval} `,
+          // );
         }
       });
     }
