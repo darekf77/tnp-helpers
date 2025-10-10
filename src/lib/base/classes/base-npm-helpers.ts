@@ -227,6 +227,7 @@ You are not logged in to npm. Press any key and follow instructions...`,
       children: boolean;
     };
     skipQuestionToUser?: boolean;
+    messagePrefix?: string;
   }): Promise<boolean> {
     //#region @backendFunc
     const {
@@ -261,7 +262,7 @@ You are not logged in to npm. Press any key and follow instructions...`,
       projectsInfo = `${itselfString}`;
     }
     Helpers.info(`
-      Projects to release:
+${options.messagePrefix ? `[${options.messagePrefix}] ` : `\t`}Projects to release:
 ${projectsInfo}
       `);
 

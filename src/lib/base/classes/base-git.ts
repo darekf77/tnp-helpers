@@ -285,6 +285,7 @@ export class BaseGit<
     // TODO WIP on that
     tryAutomaticActionFirst?: boolean;
     projectNameAsOutputPrefix?: string;
+    questionPrefixMessage?: string;
   }): Promise<void> {
     //#region @backendFunc
     options = options || {};
@@ -390,7 +391,7 @@ Please provide proper commit message for lastest changes in your project:
         const selected = await UtilsTerminal.select<keyof typeof optionsSelect>(
           {
             choices: optionsSelect,
-            question: `What to do with uncommited changes ?`,
+            question: `${options.questionPrefixMessage ? `[${options.questionPrefixMessage}] ` : ''}What to do with uncommited changes ?`,
             // autocomplete: true,
           },
         );
@@ -1083,7 +1084,9 @@ Please provide proper commit message for lastest changes in your project:
     skipCloneGitChildren = false,
   ): Promise<void> {
     if (!skipCloneGitChildren) {
-      await this.project.linkedProjects.cloneNonexistedLinkedProjects(setOrigin);
+      await this.project.linkedProjects.cloneNonexistedLinkedProjects(
+        setOrigin,
+      );
     }
   }
 
@@ -1479,7 +1482,9 @@ Please provide proper commit message for lastest changes in your project:
     //#region @backendFunc
     this._beforeAnyActionOnGitRoot();
     if (!skipCloneGitChildren) {
-      await this.project.linkedProjects.cloneNonexistedLinkedProjects(setOrigin);
+      await this.project.linkedProjects.cloneNonexistedLinkedProjects(
+        setOrigin,
+      );
     }
 
     //#endregion
