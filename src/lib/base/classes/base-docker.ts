@@ -7,7 +7,7 @@ import {
   UtilsDotFile,
 } from 'tnp-core/src';
 
-import { UtilsJava } from '../../utils';
+import { UtilsDocker, UtilsJava } from '../../utils';
 
 import { BaseFeatureForProject } from './base-feature-for-project';
 import { BaseProject } from './base-project';
@@ -86,4 +86,16 @@ export class BaseDocker<
     //#endregion
   }
   //#endregion
+
+  async removeAllImagesBy_Env_COMPOSE_PROJECT_NAME(): Promise<void> {
+    //#region @backendFunc
+    await UtilsDocker.cleanImagesByDockerLabel(
+      UtilsDocker.DOCKER_LABEL_KEY,
+      UtilsDotFile.getValueFromDotFile(
+        this.project.pathFor('.env'),
+        'COMPOSE_PROJECT_NAME',
+      ).toString(),
+    );
+    //#endregion
+  }
 }

@@ -1,5 +1,6 @@
 //#region imports
 import { scrypt, randomBytes, timingSafeEqual } from 'node:crypto'; // @backend
+import { promisify } from 'node:util'; // @backend
 
 import { config } from 'tnp-config/src';
 import {
@@ -2604,5 +2605,54 @@ export namespace UtilsCliMethod {
     }
     return fullCliMethodName;
   };
+}
+//#endregion
+
+//#region utils docker
+export namespace UtilsDocker {
+  export const DOCKER_LABEL_KEY = 'com.docker.compose.project'; // change to your app name
+
+  //#region clean images by docker label
+  export const cleanImagesByDockerLabel = async (
+    labelKey: string,
+    labelValue: string,
+  ): Promise<void> => {
+    //#region @backendFunc
+    const label = `${labelKey}=${labelValue}`;
+    const execAsync = promisify(child_process.exec);
+
+    try {
+      console.log(`🧹 Cleaning containers with label: ${label}`);
+      const { stdout: containers } = await execAsync(
+        `docker ps -a -q --filter "label=${label}"`,
+      );
+      if (containers.trim()) {
+        await execAsync(
+          `docker rm -f ${containers.trim().replace(/\s+/g, ' ')}`,
+        );
+        console.log(`✅ Removed containers:\n${containers}`);
+      } else {
+        console.log(`ℹ️ No containers found for label: ${label}`);
+      }
+
+      console.log(`🧹 Cleaning images with label: ${label}`);
+      const { stdout: images } = await execAsync(
+        `docker images -q --filter "label=${label}"`,
+      );
+      if (images.trim()) {
+        await execAsync(`docker rmi -f ${images.trim().replace(/\s+/g, ' ')}`);
+        console.log(`✅ Removed images:\n${images}`);
+      } else {
+        console.log(`ℹ️ No images found for label: ${label}`);
+      }
+    } catch (err: any) {
+      console.error(
+        `❌ Error cleaning Docker label ${label}:`,
+        err.message || err,
+      );
+    }
+    //#endregion
+  };
+  //#endregion
 }
 //#endregion
