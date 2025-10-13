@@ -388,12 +388,16 @@ export class BaseReleaseProcess<
     versionToUseResolveFn?: (
       releaseVersionBumpType: CoreModels.ReleaseVersionType,
     ) => string,
+    options?: {
+      quesitonPrefixMessage?: string;
+    },
   ): Promise<CoreModels.ReleaseVersionType> {
     //#region @backendFunc
+    options = options || {};
     if (this.automaticRelease) {
       return 'patch';
     }
-    const options = [
+    const selectMenuReleaseOpt = [
       {
         name: `Patch release (v${
           versionToUseResolveFn
@@ -422,8 +426,8 @@ export class BaseReleaseProcess<
     ];
     const selected =
       await Helpers.consoleGui.select<CoreModels.ReleaseVersionType>(
-        'Select release type',
-        options,
+        `${ options?.quesitonPrefixMessage ? `[${options.quesitonPrefixMessage}] `:''}Select release type`,
+        selectMenuReleaseOpt,
       );
     return selected;
     //#endregion
