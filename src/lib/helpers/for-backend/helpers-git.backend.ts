@@ -717,8 +717,10 @@ export class HelpersGit {
       // Helpers.info(`COMMITING WITH COMMAND: ${commandToExecute}`);
       // process.exit(0)
       Helpers.run(commandToExecute, { cwd }).sync();
+      Helpers.removeFileIfExists(tempCommitnameFile);
     } catch (error) {
       Helpers.log(error);
+      Helpers.removeFileIfExists(tempCommitnameFile);
       Helpers.log(
         `[taon-helpers][git][commit] not able to commit with command: ${commandToExecute}`,
       );
