@@ -2247,4 +2247,13 @@ ${lastCommitMessage}
     });
   }
   //#endregion
+
+  async backupBranch() {
+    await this.project.git.backupBranch(this.firstArg);
+    this._exit();
+  }
+
+  async bb() {
+    await this.backupBranch();
+  }
 }

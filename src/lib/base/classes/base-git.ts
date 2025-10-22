@@ -1090,6 +1090,12 @@ Please provide proper commit message for lastest changes in your project:
     }
   }
 
+  async backupBranch(branchName?: string): Promise<string> {
+    //#region @backendFunc
+    return await Helpers.git.backupBranch(this.project.location, branchName);
+    //#endregion
+  }
+
   //#region methods & getters / push process
   async pushProcess(options: PushProcessOptions = {}): Promise<void> {
     //#region @backendFunc

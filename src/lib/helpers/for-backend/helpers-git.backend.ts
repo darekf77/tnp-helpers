@@ -2043,4 +2043,34 @@ ${cwd}
   }
 
   //#endregion
+
+  async backupBranch(cwd: string, branchName?: string): Promise<string> {
+    //#region @backendFunc
+    const orgBranchName = this.currentBranchName(cwd);
+    if (branchName) {
+      if (branchName !== orgBranchName) {
+        this.checkout(cwd, branchName, {
+          createBranchIfNotExists: false,
+          switchBranchWhenExists: true,
+          fetchBeforeCheckout: true,
+        });
+      }
+    } else {
+      branchName = orgBranchName;
+    }
+    const backupBranchName = `backup/${branchName}-${dateformat(new Date(), 'yyyy-mm-dd-HH-MM-ss')}`;
+    Helpers.log(
+      `[taon-helpers][backupBranch] Creating backup branch: ${backupBranchName} in repo: ${cwd}`,
+    );
+    this.checkout(cwd, backupBranchName, { createBranchIfNotExists: true });
+    Helpers.log(
+      `[taon-helpers][backupBranch] Backup branch created and pushed: ${backupBranchName}`,
+    );
+    this.checkout(cwd, orgBranchName, {
+      createBranchIfNotExists: false,
+      switchBranchWhenExists: true,
+    });
+    return backupBranchName;
+    //#endregion
+  }
 }
