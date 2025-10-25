@@ -2256,4 +2256,81 @@ ${lastCommitMessage}
   async bb() {
     await this.backupBranch();
   }
+
+  async countCodeLines() {
+    await this.countLines();
+  }
+
+  async countLines() {
+    let extensions = (this.args || []).filter(f => !!f).map(ext => `.${ext}`);
+    extensions = extensions.length ? extensions : ['.ts', '.tsx'];
+
+    console.log('Counting SLOC for extensions: ', extensions.join(', '));
+    const sloc = require('sloc');
+    let total = {
+      source: 0,
+      comment: 0,
+      single: 0,
+      block: 0,
+      empty: 0,
+      total: 0,
+    };
+
+    const skip = [
+      'node_modules',
+      '.',
+      'tmp-',
+      'environments',
+      'dist',
+      'browser',
+    ];
+
+    const walk = (folder: string) => {
+      const entries = fse.readdirSync(folder, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(folder, entry.name);
+
+        if (skip.some(s => entry.name.startsWith(s))) {
+          continue;
+        }
+
+        if (entry.isDirectory()) {
+          console.log('Processing: ', path.basename(fullPath));
+          walk(fullPath);
+        } else if (extensions.includes(path.extname(entry.name))) {
+          const code = fse.readFileSync(fullPath, 'utf8');
+          const stats = sloc(code, path.extname(entry.name).slice(1)); // e.g., "ts" or "js"
+          for (const key in total) {
+            total[key] += stats[key] ?? 0;
+          }
+        }
+      }
+    };
+
+    walk(
+      crossPlatformPath([
+        this.cwd,
+        // 'src'
+      ]),
+    );
+
+    console.log('📊 SLOC Results:');
+    console.table(total);
+
+    this._exit?.(); // your existing exit hook
+    return total;
+  }
+
+  isNodeVersionOk() {
+    try {
+      UtilsOs.isNodeVersionOk({
+        throwErrorIfNotOk: true,
+      });
+      console.info(`Node.js version is OK: ${process.version}`);
+      this._exit();
+    } catch (error) {
+      console.error(error);
+      this._exit(1);
+    }
+  }
 }

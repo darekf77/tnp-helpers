@@ -2592,18 +2592,25 @@ export namespace UtilsCliMethod {
     };
   };
 
-  export const getFrom = (
+  export const getFrom = <ARGS_TO_PARSE = any> (
     ClassPrototypeMethodFnHere: Function,
-    globalMethod = false,
+    options?: {
+      globalMethod?: boolean;
+      argsToParse?: ARGS_TO_PARSE;
+    },
   ): string => {
+    options = options || {};
     const fullCliMethodName = Reflect.getMetadata(
       CLI_METHOD_KEY,
       ClassPrototypeMethodFnHere,
     );
-    if (globalMethod) {
-      return fullCliMethodName.split(':')[1];
+    const argsToParse = options.argsToParse ? Object.keys(options.argsToParse)
+    .map( c=> `--${c}=${options.argsToParse}` ).join(' ') : '';
+
+    if (options.globalMethod) {
+      return fullCliMethodName.split(':')[1] + ` ${argsToParse}`;
     }
-    return fullCliMethodName;
+    return fullCliMethodName +  ` ${argsToParse}`;
   };
 }
 //#endregion

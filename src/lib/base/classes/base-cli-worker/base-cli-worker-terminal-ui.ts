@@ -48,10 +48,13 @@ export class BaseCliWorkerTerminalUI<
    */
   protected async header(): Promise<void> {
     //#region @backendFunc
-    UtilsTerminal.drawBigText(await this.headerText(), {
-      align: this.headerTextAlign(),
-      style: this.textHeaderStyle(),
-    });
+    const headerText = await this.headerText();
+    if (headerText) {
+      UtilsTerminal.drawBigText(await this.headerText(), {
+        align: this.headerTextAlign(),
+        style: this.textHeaderStyle(),
+      });
+    }
     //#endregion
   }
   //#endregion

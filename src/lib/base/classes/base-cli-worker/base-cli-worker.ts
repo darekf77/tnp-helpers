@@ -32,7 +32,8 @@ export abstract class BaseCliWorker<
   TERMINAL_UI extends BaseCliWorkerTerminalUI<any>,
 > {
   //#region fields & getters
-  public readonly SPECIAL_WORKER_READY_MESSAGE = CoreModels.SPECIAL_WORKER_READY_MESSAGE;
+  public readonly SPECIAL_WORKER_READY_MESSAGE =
+    CoreModels.SPECIAL_WORKER_READY_MESSAGE;
 
   // @ts-ignore TODO weird inheritance problem
   readonly terminalUI: TERMINAL_UI = new BaseCliWorkerTerminalUI(this);
@@ -42,11 +43,10 @@ export abstract class BaseCliWorker<
   //   [ipAddressOfTaonInstance: string]: ReturnType<typeof Taon.createContext>;
   // } = {};
 
-  async getRemoteControllerFor(
+  async getRemoteContextFor(
     ipAddressOfTaonInstance: string,
-    port?: number ,
-  ): Promise<REMOTE_CTRL> {
-
+    port?: number,
+  ): Promise<EndpointContext> {
     // this.workerRemoteContextFor[ipAddressOfTaonInstance] = remoteCtx;
     const useHttps = ipAddressOfTaonInstance !== CoreModels.localhostIp127;
     const protocol = useHttps ? 'https' : 'http';
@@ -54,9 +54,18 @@ export abstract class BaseCliWorker<
     const remoteCtx = this.workerContextTemplate().cloneAsRemote({
       overrideRemoteHost: `${protocol}://${ipAddressOfTaonInstance}${port ? `:${port}` : ''}`,
     });
-
     const contextForRemoteConnection = await remoteCtx.initialize();
+    return contextForRemoteConnection;
+  }
 
+  async getRemoteControllerFor(
+    ipAddressOfTaonInstance: string,
+    port?: number,
+  ): Promise<REMOTE_CTRL> {
+    const contextForRemoteConnection = await this.getRemoteContextFor(
+      ipAddressOfTaonInstance,
+      port,
+    );
     const taonProjectsController = contextForRemoteConnection.getInstanceBy(
       this.controllerClass,
     );
@@ -119,8 +128,8 @@ export abstract class BaseCliWorker<
    * start normally process
    * this will crash if process already started
    */
-  public async startNormallyInCurrentProcess(options?:{
-    actionBeforeTerminalUI?:()=>Promise<void>
+  public async startNormallyInCurrentProcess(options?: {
+    actionBeforeTerminalUI?: () => Promise<void>;
   }): Promise<void> {
     //#region @backendFunc
     options = options || {};
@@ -141,7 +150,7 @@ export abstract class BaseCliWorker<
     Helpers.info(`Service started !`);
     this.preventExternalConfigChange();
 
-    if(_.isFunction(options.actionBeforeTerminalUI)) {
+    if (_.isFunction(options.actionBeforeTerminalUI)) {
       await options.actionBeforeTerminalUI();
     }
     this.terminalUI.displaySpecialWorkerReadyMessage();
@@ -150,12 +159,10 @@ export abstract class BaseCliWorker<
   }
   //#endregion
 
-  //#region methods / get controller for remote connection
-  async getControllerForRemoteConnection(options?: {
+  async gerContextForRemoteConnection(options?: {
     calledFrom?: string;
     // skipWaitingForWorkerProcessPortToBeSaved?: boolean;
-  }): Promise<REMOTE_CTRL> {
-    //#region @backendFunc
+  }): Promise<EndpointContext> {
     options = options || {};
     // ! TODO this waiting is called for every generated port in app.host.ts
     // ! this may be expensive in future
@@ -179,13 +186,22 @@ export abstract class BaseCliWorker<
       Helpers.logInfo('Creating new context for remote connection...');
       this.workerRemoteContext = this.workerContextTemplate().cloneAsRemote({
         overrideRemoteHost: `http://localhost:${this.processLocalInfoObj.port}`,
-      })
+      });
       this.contextForRemoteConnection =
         await this.workerRemoteContext.initialize();
     }
+    return this.contextForRemoteConnection;
+  }
 
-    const taonProjectsController =
-      this.contextForRemoteConnection.getInstanceBy(this.controllerClass);
+  //#region methods / get controller for remote connection
+  async getControllerForRemoteConnection(options?: {
+    calledFrom?: string;
+    // skipWaitingForWorkerProcessPortToBeSaved?: boolean;
+  }): Promise<REMOTE_CTRL> {
+    //#region @backendFunc
+    options = options || {};
+    const ctx = await this.gerContextForRemoteConnection(options);
+    const taonProjectsController = ctx.getInstanceBy(this.controllerClass);
     return taonProjectsController;
     //#endregion
   }
@@ -279,7 +295,7 @@ export abstract class BaseCliWorker<
    * only for cli start
    * @param cliParams on from cli
    */
-  async cliStartProcedure(cliParams: any) {
+  async cliStartProcedure(cliParams: any): Promise<REMOTE_CTRL> {
     const detached = !!cliParams['detached'] || !!cliParams['detach'];
     //#region @backendFunc
     if (cliParams['restart']) {
@@ -301,6 +317,7 @@ export abstract class BaseCliWorker<
     } else {
       await this.startNormallyInCurrentProcess();
     }
+    return await this.getControllerForRemoteConnection();
     //#endregion
   }
   //#endregion
