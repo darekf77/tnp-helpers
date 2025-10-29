@@ -55,6 +55,7 @@ export class BaseGlobalCommandLine<
   async cwdIsProject(options?: {
     requireProjectWithGitRoot?: boolean;
   }): Promise<boolean> {
+    //#region @backendFunc
     const { requireProjectWithGitRoot } = options || {};
 
     if (!!this.project && !requireProjectWithGitRoot) {
@@ -96,27 +97,33 @@ export class BaseGlobalCommandLine<
       }
     }
     return true;
+    //#endregion
   }
   //#endregion
 
   //#region commands / hosts
   hosts() {
+    //#region @backendFunc
     Helpers.run(
       `code ${crossPlatformPath(UtilsNetwork.getEtcHostsPath())}`,
     ).sync();
     process.exit(0);
+    //#endregion
   }
   //#endregion
 
   //#region commands / count commits
   countCommits() {
+    //#region @backendFunc
     console.log(Helpers.git.countCommits(this.cwd));
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / remove submodules
   removeSubmodules() {
+    //#region @backendFunc
     Helpers.taskStarted('Removing submodules...');
     for (const folderAbsPath of Helpers.foldersFrom(this.cwd, {
       recursive: false,
@@ -129,9 +136,11 @@ export class BaseGlobalCommandLine<
     }
     Helpers.taskDone('Done');
     this._exit();
+    //#endregion
   }
 
   removeSubmodule() {
+    //#region @backendFunc
     Helpers.taskStarted(`Removing submodules.. ${this.firstArg}`);
     if (
       Helpers.exists(crossPlatformPath([this.cwd, this.firstArg || '', '.git']))
@@ -142,26 +151,34 @@ export class BaseGlobalCommandLine<
     }
     Helpers.taskDone('Done');
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / set editor
   async setEditor() {
+    //#region @backendFunc
     await this.ins.configDb.selectCodeEditor();
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / api update
   async upapi() {
+    //#region @backendFunc
     await this.apiUpdate();
+    //#endregion
   }
 
   async apiup() {
+    //#region @backendFunc
     await this.apiUpdate();
+    //#endregion
   }
 
   async apiUpdate() {
+    //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
@@ -177,22 +194,29 @@ export class BaseGlobalCommandLine<
     });
     Helpers.info('Done');
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / chore update
   async cu() {
+    //#region @backendFunc
     await this.update();
+    //#endregion
   }
 
   async choreUpdate() {
+    //#region @backendFunc
     await this.update();
+    //#endregion
   }
   //#endregion
 
   //#region commands / color vscode
   colorvscode() {
+    //#region @backendFunc
     this.settingsVscode();
+    //#endregion
   }
   //#endregion
 
@@ -201,16 +225,22 @@ export class BaseGlobalCommandLine<
    * Generate or update .vscode/settings.json file color settings
    */
   settingsVscode() {
+    //#region @backendFunc
     this.refreshVscodeColors();
+    //#endregion
   }
 
   refreshVscodeColors() {
+    //#region @backendFunc
     this._regenerateVscodeSettingsColors();
     this._exit();
+    //#endregion
   }
 
   protected _regenerateVscodeSettingsColors(overideBottomColor?: string): void {
+    //#region @backendFunc
     UtilsVSCode.regenerateVsCodeSettingsColors(this.cwd, overideBottomColor);
+    //#endregion
   }
   //#endregion
 
@@ -219,6 +249,7 @@ export class BaseGlobalCommandLine<
    * quick git update push
    */
   async update() {
+    //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
@@ -234,9 +265,11 @@ export class BaseGlobalCommandLine<
     });
     Helpers.info('Done');
     this._exit();
+    //#endregion
   }
 
   private async updateProject(project: PROJECT, force = false): Promise<void> {
+    //#region @backendFunc
     try {
       await project.packageJson.bumpPatchVersion();
     } catch (error) {}
@@ -258,17 +291,23 @@ export class BaseGlobalCommandLine<
         }
       }
     }
+    //#endregion
   }
 
   async deepUp(noExit = false) {
+    //#region @backendFunc
     await this.deepUpdate(noExit);
+    //#endregion
   }
 
   async deepUpForce(noExit = false) {
+    //#region @backendFunc
     await this.deepUpdateForce(noExit);
+    //#endregion
   }
 
   async deepUpdateForce(noExit = false) {
+    //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
@@ -280,9 +319,11 @@ export class BaseGlobalCommandLine<
 
     Helpers.info('Done');
     this._exit();
+    //#endregion
   }
 
   async deepUpdate(noExit = false) {
+    //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
@@ -292,25 +333,31 @@ export class BaseGlobalCommandLine<
 
     Helpers.info('Done');
     this._exit();
+    //#endregion
   }
 
   /**
    * Push update
    */
   async up() {
+    //#region @backendFunc
     await this.update();
+    //#endregion
   }
 
   /**
    * Push update
    */
   async pu() {
+    //#region @backendFunc
     await this.update();
+    //#endregion
   }
   //#endregion
 
   //#region commands / develop
   async develop() {
+    //#region @backendFunc
     // Helpers.clearConsole();
     Helpers.taskStarted(`getting all projects...`);
     const founded: BaseProject[] = (
@@ -388,33 +435,43 @@ export class BaseGlobalCommandLine<
       await openInEditor(this.ins.From(res));
     }
     this._exit();
+    //#endregion
   }
 
   async dev() {
+    //#region @backendFunc
     return await this.develop();
+    //#endregion
   }
   //#endregion
 
   //#region commands / repulll
   async repul() {
+    //#region @backendFunc
     await this.repull();
+    //#endregion
   }
 
   async repull() {
+    //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     await this.project.git.resetHard({ HEAD: 10 });
     await this.pull();
+    //#endregion
   }
   //#endregion
 
   //#region commands / pull
   async pul() {
+    //#region @backendFunc
     await this.pull();
+    //#endregion
   }
 
   async pull() {
+    //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
@@ -422,11 +479,13 @@ export class BaseGlobalCommandLine<
       setOrigin: this.params['setOrigin'],
     });
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / pull all
   async pullAll() {
+    //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
@@ -434,11 +493,13 @@ export class BaseGlobalCommandLine<
       setOrigin: this.params['setOrigin'],
     });
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / push and pull
   async pp() {
+    //#region @backendFunc
     const currentBranch = this.project.git.currentBranchName;
     this.project
       .run(
@@ -447,11 +508,13 @@ export class BaseGlobalCommandLine<
       .sync();
     console.log('Done push and pull');
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / reset
   private __resetInfo(branchToReset: string, withChildren: boolean) {
+    //#region @backendFunc
     Helpers.info(
       `
 
@@ -470,16 +533,20 @@ ${
 }
       `,
     );
+    //#endregion
   }
 
   async fetch() {
+    //#region @backendFunc
     try {
       this.project?.git?.fetch();
     } catch (error) {}
     this._exit();
+    //#endregion
   }
 
   async reset() {
+    //#region @backendFunc
     // Helpers.clearConsole();
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
@@ -569,11 +636,13 @@ ${
     }
 
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / soft
   async soft() {
+    //#region @backendFunc
     // TODO when aciton commit
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
@@ -588,11 +657,13 @@ ${
     });
 
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / rebase
   async rebase() {
+    //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
@@ -664,6 +735,7 @@ ${
       Helpers.error('Not able to rebase', true, true);
     }
     this._exit();
+    //#endregion
   }
   //#endregion
 
@@ -672,12 +744,14 @@ ${
    * stash only staged files
    */
   async stash() {
+    //#region @backendFunc
     Helpers.info(`Stashing only staged files...`);
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     this.project.git.stash({ onlyStaged: true });
     this._exit();
+    //#endregion
   }
   //#endregion
 
@@ -686,12 +760,14 @@ ${
    * stash all files
    */
   async stashAll() {
+    //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     this.project.git.stageAllFiles();
     this.project.git.stash();
     this._exit();
+    //#endregion
   }
   //#endregion
 
@@ -701,28 +777,37 @@ ${
    * push force to all orgins
    */
   async pushAllForce() {
+    //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     await this.pushAll(true);
+    //#endregion
   }
 
   async pAllForce() {
+    //#region @backendFunc
     await this.pushAllForce();
+    //#endregion
   }
 
   async pAllf() {
+    //#region @backendFunc
     await this.pushAllForce();
+    //#endregion
   }
 
   async pAll() {
+    //#region @backendFunc
     await this.pushAll();
+    //#endregion
   }
 
   /**
    * push to all origins
    */
   async pushAll(force = false) {
+    //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
@@ -742,16 +827,21 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
       Helpers.taskDone(`Pushed to ${origin}`);
     }
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / push force
   async forcePush() {
+    //#region @backendFunc
     await this.push({ force: true, typeofCommit: 'feature' });
+    //#endregion
   }
 
   async pushForce() {
+    //#region @backendFunc
     await this.push({ force: true, typeofCommit: 'feature' });
+    //#endregion
   }
   //#endregion
 
@@ -768,6 +858,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
       noExit?: boolean;
     } = {},
   ) {
+    //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
@@ -788,11 +879,13 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
       return;
     }
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / push
   async _preventPushPullFromNotCorrectBranch() {
+    //#region @backendFunc
     while (true) {
       const devBranch =
         this.project.git.duringPushWarnIfProjectNotOnSpecyficDevBranch();
@@ -837,21 +930,29 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
       }
       return;
     }
+    //#endregion
   }
 
   async qPush() {
+    //#region @backendFunc
     await this.quickPush();
+    //#endregion
   }
 
   async quickPush() {
+    //#region @backendFunc
     await this.push({ skipLint: true });
+    //#endregion
   }
 
   async repushauto() {
+    //#region @backendFunc
     await this.rePush(true);
+    //#endregion
   }
 
   async rePush(skipQuesion = false) {
+    //#region @backendFunc
     const lastCommitMessage = this.project.git.lastCommitMessage();
 
     this.project.git.resetSoftHEAD();
@@ -873,9 +974,11 @@ ${lastCommitMessage}
       force: true,
     });
     this._exit();
+    //#endregion
   }
 
   async push(options: PushProcessOptions = {}): Promise<void> {
+    //#region @backendFunc
     // console.log('args', this.args);
     // console.log(`argsWithParams "${this.argsWithParams}"` );
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
@@ -920,21 +1023,25 @@ ${lastCommitMessage}
       return;
     }
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / melt
   public async melt() {
+    //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     await this.meltUpdateCommits({ hideInfo: true });
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / melt
   public async meltUp() {
+    //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
@@ -961,11 +1068,13 @@ ${lastCommitMessage}
     await processProject(this.project);
     Helpers.info('All projects are up to date with remote');
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / melt
   public async meltAll() {
+    //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
@@ -974,6 +1083,7 @@ ${lastCommitMessage}
       await this.__meltCommitsFunc(child, { hideInfo: true });
     }
     this._exit();
+    //#endregion
   }
   //#endregion
 
@@ -982,6 +1092,7 @@ ${lastCommitMessage}
     project: BaseProject,
     options?: { hideInfo?: boolean },
   ) {
+    //#region @backendFunc
     options = options || {};
     const meltedCommits = project.git.meltActionCommits();
     if (meltedCommits > 0) {
@@ -991,27 +1102,37 @@ ${lastCommitMessage}
     } else {
       Helpers.logInfo(`No commits to melt for project ${project.genericName}`);
     }
+    //#endregion
   }
 
   private async meltUpdateCommits(options?: { hideInfo?: boolean }) {
+    //#region @backendFunc
     await this.__meltCommitsFunc(this.project, options);
+    //#endregion
   }
   //#endregion
 
   //#region commands / push feature
   async pf() {
+    //#region @backendFunc
     await this.pushFeature();
+    //#endregion
   }
 
   async pRel() {
+    //#region @backendFunc
     await this.pushRelease();
+    //#endregion
   }
 
   async pRelease() {
+    //#region @backendFunc
     await this.pushRelease();
+    //#endregion
   }
 
   async pushRelease() {
+    //#region @backendFunc
     await this.meltUpdateCommits();
     await this.push({
       typeofCommit: 'release',
@@ -1020,144 +1141,198 @@ ${lastCommitMessage}
         `${_.first(this.project.releaseProcess.getReleaseWords())} ` +
         `version ${this.project.packageJson.version}`,
     });
+    //#endregion
   }
 
   async mPush() {
+    //#region @backendFunc
     await this.meltPush();
+    //#endregion
   }
 
   async fmPush() {
+    //#region @backendFunc
     await this.forceMeltPush();
+    //#endregion
   }
 
   async mfPush() {
+    //#region @backendFunc
     await this.forceMeltPush();
+    //#endregion
   }
 
   async mforcePush() {
+    //#region @backendFunc
     await this.forceMeltPush();
+    //#endregion
   }
 
   async meltforcePush() {
+    //#region @backendFunc
     await this.forceMeltPush();
+    //#endregion
   }
 
   async forceMeltPush() {
+    //#region @backendFunc
     await this.meltPush(true);
+    //#endregion
   }
 
   async meltPush(force = false) {
+    //#region @backendFunc
     await this.meltUpdateCommits();
     await this.push({
       mergeUpdateCommits: true,
       force,
     });
+    //#endregion
   }
 
   async pushFeature() {
+    //#region @backendFunc
     await this.meltUpdateCommits();
     await this.push({ typeofCommit: 'feature', commitMessageRequired: true });
+    //#endregion
   }
   //#endregion
 
   //#region commands / push fix
   async pushFix() {
+    //#region @backendFunc
     await this.meltUpdateCommits();
     await this.push({ typeofCommit: 'bugfix', commitMessageRequired: true });
+    //#endregion
   }
   pfix() {
+    //#region @backendFunc
     this.pushFix();
+    //#endregion
   }
   //#endregion
 
   //#region commands / push chore
   async pushChore() {
+    //#region @backendFunc
     await this.meltUpdateCommits();
     await this.push({ typeofCommit: 'chore', commitMessageRequired: true });
+    //#endregion
   }
 
   async pc() {
+    //#region @backendFunc
     await this.pushChore();
+    //#endregion
   }
   //#endregion
 
   //#region commands / push refactor
   async pushRefactor() {
+    //#region @backendFunc
     await this.meltUpdateCommits();
     await this.push({ typeofCommit: 'refactor', commitMessageRequired: true });
+    //#endregion
   }
 
   async pushref() {
+    //#region @backendFunc
     await this.pushRefactor();
+    //#endregion
   }
 
   async pref() {
+    //#region @backendFunc
     await this.pushRefactor();
+    //#endregion
   }
   //#endregion
 
   //#region commands / push style
   async pushStyle() {
+    //#region @backendFunc
     await this.meltUpdateCommits();
     await this.push({ typeofCommit: 'style', commitMessageRequired: true });
+    //#endregion
   }
   async pstyl() {
+    //#region @backendFunc
     await this.pushStyle();
+    //#endregion
   }
 
   async pstyle() {
+    //#region @backendFunc
     await this.pushStyle();
+    //#endregion
   }
   //#endregion
 
   //#region commands / push docs
   async pushDocs() {
+    //#region @backendFunc
     await this.meltUpdateCommits();
     await this.push({ typeofCommit: 'docs', commitMessageRequired: true });
+    //#endregion
   }
 
   async pd() {
+    //#region @backendFunc
     await this.pushDocs();
+    //#endregion
   }
 
   async pdocs() {
+    //#region @backendFunc
     await this.pushDocs();
+    //#endregion
   }
   //#endregion
 
   //#region commands / push test
   async pushTest() {
+    //#region @backendFunc
     await this.meltUpdateCommits();
     await this.push({ typeofCommit: 'test', commitMessageRequired: true });
+    //#endregion
   }
 
   async pTest() {
+    //#region @backendFunc
     await this.pushTest();
+    //#endregion
   }
   async pTests() {
+    //#region @backendFunc
     await this.pushTest();
+    //#endregion
   }
   //#endregion
 
   //#region commands / push perf
   async pushPerf() {
+    //#region @backendFunc
     await this.meltUpdateCommits();
     await this.push({
       typeofCommit: 'performance',
       commitMessageRequired: true,
     });
+    //#endregion
   }
   //#endregion
 
   //#region commands / push ci
   async pushCi() {
+    //#region @backendFunc
     await this.meltUpdateCommits();
     await this.push({ typeofCommit: 'ci', commitMessageRequired: true });
+    //#endregion
   }
   //#endregion
 
   //#region commands / select branch
   async branch() {
+    //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
@@ -1179,18 +1354,22 @@ ${lastCommitMessage}
     } catch (error) {}
     this.project.git.checkout(branchName);
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / push build
   async pushBuild() {
+    //#region @backendFunc
     await this.meltUpdateCommits();
     await this.push({ typeofCommit: 'build', commitMessageRequired: true });
+    //#endregion
   }
   //#endregion
 
   //#region commands / set origin
   async SET_ORIGIN() {
+    //#region @backendFunc
     let newOriginNameOrUrl: string = this.firstArg;
     if (newOriginNameOrUrl === 'ssh') {
       newOriginNameOrUrl = Helpers.git.originHttpToSsh(
@@ -1214,11 +1393,13 @@ ${lastCommitMessage}
     }
 
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / rename origin
   async RENAME_ORIGIN() {
+    //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
@@ -1230,21 +1411,25 @@ ${lastCommitMessage}
       Helpers.error(`This folder is not a git repo... `, false, true);
     }
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / last hash tag
   async LAST_TAG_HASH() {
+    //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     Helpers.info(this.project.git.lastTagHash());
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / last tag
   async LAST_TAG() {
+    //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
@@ -1256,15 +1441,18 @@ ${lastCommitMessage}
 
 `);
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / check tag exists
   CHECK_TAG_EXISTS() {
+    //#region @backendFunc
     Helpers.info(
       `tag "${this.firstArg}"  exits = ${Helpers.git.checkTagExists(this.firstArg)} `,
     );
     this._exit();
+    //#endregion
   }
   //#endregion
 
@@ -1273,10 +1461,12 @@ ${lastCommitMessage}
    * TODO move somewhere
    */
   async lint() {
+    //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     await this.project.lint();
+    //#endregion
   }
   //#endregion
 
@@ -1285,11 +1475,13 @@ ${lastCommitMessage}
    * TODO move somewhere
    */
   async version() {
+    //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: false }))) {
       return;
     }
     console.log('Current project verison: ' + this.project.packageJson.version);
     this._exit();
+    //#endregion
   }
   //#endregion
 
@@ -1298,17 +1490,20 @@ ${lastCommitMessage}
    * TODO move somewhere
    */
   async init() {
+    //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: false }))) {
       return;
     }
     await this.project.init();
     this._exit();
+    //#endregion
   }
 
   /**
    * init parent and first level children
    */
   async initAll() {
+    //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: false }))) {
       return;
     }
@@ -1317,6 +1512,7 @@ ${lastCommitMessage}
       await child.init();
     }
     this._exit();
+    //#endregion
   }
   //#endregion
 
@@ -1325,11 +1521,13 @@ ${lastCommitMessage}
    * TODO move somewhere
    */
   async struct() {
+    //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: false }))) {
       return;
     }
     await this.project.struct();
     this._exit();
+    //#endregion
   }
   //#endregion
 
@@ -1338,6 +1536,7 @@ ${lastCommitMessage}
    * TODO move somewhere
    */
   async info() {
+    //#region @backendFunc
     if (
       !(await this.cwdIsProject({
         requireProjectWithGitRoot: false,
@@ -1349,11 +1548,13 @@ ${lastCommitMessage}
     Helpers.info(await this.project.info());
     await this.project.linkedProjects.saveAllLinkedProjectsToDB();
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / info
   async modified() {
+    //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
@@ -1376,42 +1577,50 @@ ${lastCommitMessage}
         : 'Nothing modifed',
     );
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / update
   async refresh(): Promise<void> {
+    //#region @backendFunc
     await this.project.refreshChildrenProjects({
       askUserAboutUpdate: true,
     });
     this._exit(0);
+    //#endregion
   }
   //#endregion
 
   //#region commands / changes
   async changes() {
+    //#region @backendFunc
     Helpers.info(await this.project.git.changesSummary());
     Helpers.terminalLine();
     for (const chil of this.project.children) {
       Helpers.info(await chil.git.changesSummary());
     }
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / all tags
   async allTags() {
+    //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     const allTags = await Helpers.git.getAllTags(this.cwd);
     console.log(allTags);
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / remove tag
   async removeTag() {
+    //#region @backendFunc
     let tagToRemove = this.firstArg;
     if (!tagToRemove) {
       const allTags = await Helpers.git.getAllTags(this.cwd);
@@ -1426,39 +1635,51 @@ ${lastCommitMessage}
 
     Helpers.git.removeTag(this.cwd, tagToRemove);
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / branch name
   BRANCH_NAME() {
+    //#region @backendFunc
     console.log(
       `current branch name: "${Helpers.git.currentBranchName(process.cwd())}"`,
     );
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / remotes
   REMOTES() {
+    //#region @backendFunc
     console.log(Helpers.git.allOrigins(this.cwd));
     this._exit();
+    //#endregion
   }
 
   async SET_REMOTE_SSH() {
+    //#region @backendFunc
     await Helpers.git.changeRemoteFromHttpsToSSh(this.cwd);
     this._exit();
+    //#endregion
   }
 
   async SET_REMOTE_http() {
+    //#region @backendFunc
     await Helpers.git.changeRemoveFromSshToHttps(this.cwd);
     this._exit();
+    //#endregion
   }
 
   async SET_REMOTE_https() {
+    //#region @backendFunc
     await this.SET_REMOTE_http();
+    //#endregion
   }
 
   protected _resolveChildFromArg() {
+    //#region @backendFunc
     const { resolved: projFromArg, clearedCommand } =
       Helpers.cliTool.resolveItemFromArgsBegin<PROJECT>(this.args, arg =>
         this.ins.From([this.cwd, arg]),
@@ -1468,81 +1689,103 @@ ${lastCommitMessage}
       this.cwd = projFromArg.location;
       this.project = projFromArg;
     }
+    //#endregion
   }
 
   origin() {
+    //#region @backendFunc
     this._resolveChildFromArg();
     console.log(Helpers.git.getOriginURL(this.cwd));
     this._exit();
+    //#endregion
   }
 
   remote() {
+    //#region @backendFunc
     console.log(Helpers.git.getOriginURL(this.cwd));
     this._exit();
+    //#endregion
   }
 
   originHttp() {
+    //#region @backendFunc
     console.log(
       Helpers.git.originSshToHttp(Helpers.git.getOriginURL(this.cwd)),
     );
     this._exit();
+    //#endregion
   }
 
   originHttps() {
+    //#region @backendFunc
     console.log(
       Helpers.git.originSshToHttp(Helpers.git.getOriginURL(this.cwd)),
     );
     this._exit();
+    //#endregion
   }
 
   originssh() {
+    //#region @backendFunc
     console.log(
       Helpers.git.originHttpToSsh(Helpers.git.getOriginURL(this.cwd)),
     );
     this._exit();
+    //#endregion
   }
 
   origins() {
+    //#region @backendFunc
     this.REMOTES();
+    //#endregion
   }
   //#endregion
 
   //#region commands / git config
   gitConfig() {
+    //#region @backendFunc
     const root = Helpers.git.findGitRoot(this.cwd);
     Helpers.run(`code ${crossPlatformPath([root, '.git', 'config'])}`).sync();
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / lastCommitHash
   LAST_COMMIT_HASH() {
+    //#region @backendFunc
     console.log(Helpers.git.lastCommitHash(this.cwd));
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / commit message by hash
   async COMMIT_MESSAGE_BY_HASH() {
+    //#region @backendFunc
     const hash = this.firstArg;
     console.log(await this.project.git.getCommitMessageByHash(hash));
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / last 5 commit hashes
 
   async LAST_5_COMMITS() {
+    //#region @backendFunc
     for (let index = 0; index < 5; index++) {
       const hash = await this.project.git.getCommitHashByIndex(index);
       console.log(hash);
     }
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / update deps from
   async updateDepsFrom() {
+    //#region @backendFunc
     let locations: string[] =
       this.args.join(' ').trim() === '' ? [] : this.args;
 
@@ -1557,45 +1800,59 @@ ${lastCommitMessage}
     this.project.packageJson.updateDepsFrom(locations);
 
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region is terminal supported
   isSupportedTaonTerminal() {
+    //#region @backendFunc
     console.log(`Terminal is supported: ${Helpers.isSupportedTaonTerminal}`);
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region is terminal running inside cmd
   isRunningInWindowsCmd() {
+    //#region @backendFunc
     console.log(
       `Is terminal running insdie cmd.exe: ${UtilsOs.isRunningInWindowsCmd()}`,
     );
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region is running inside powershell
   isRunningInWindowsPowerShell() {
+    //#region @backendFunc
     console.log(
       `Is terminal running insdie powershell: ${UtilsOs.isRunningInWindowsPowerShell()}`,
     );
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region prox ext
   async INSTALL_PROJECT_EXTENSIONS(): Promise<void> {
+    //#region @backendFunc
     await this.INSTALL_PROJ_EXT();
+    //#endregion
   }
   async INSTALL_PROJECT_EXT(): Promise<void> {
+    //#region @backendFunc
     await this.INSTALL_PROJ_EXT();
+    //#endregion
   }
   async INS_PROJ_EXT(): Promise<void> {
+    //#region @backendFunc
     await this.INSTALL_PROJ_EXT();
+    //#endregion
   }
   async INSTALL_PROJ_EXT(): Promise<void> {
+    //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: false }))) {
       return;
     }
@@ -1612,11 +1869,13 @@ ${lastCommitMessage}
       true,
     );
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region proj db
   async projdb() {
+    //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: false }))) {
       return;
     }
@@ -1630,6 +1889,7 @@ ${lastCommitMessage}
       `code ${this.project.linkedProjects.projectsDbLocation}`,
     ).sync();
     this._exit();
+    //#endregion
   }
   //#endregion
 
@@ -1637,12 +1897,14 @@ ${lastCommitMessage}
   private __filterBranchesByPattern(
     branchPatternOrBranchName: string,
   ): string[] {
+    //#region @backendFunc
     const branches = Helpers.arrays.uniqArray(
       this.project.git.getBranchesNamesBy(branchPatternOrBranchName) ||
         this.project.getMainBranches(),
     );
     // console.log('branches', branches);
     return branches;
+    //#endregion
   }
   //#endregion
 
@@ -1651,6 +1913,7 @@ ${lastCommitMessage}
     branches: string[],
     task: 'rebase' | 'reset' | 'checkout',
   ) {
+    //#region @backendFunc
     const actionWithoutChildren =
       task === 'reset' && !this.project.git.resetIsRestingAlsoChildren();
     const childrenMsg = actionWithoutChildren
@@ -1665,11 +1928,13 @@ ${lastCommitMessage}
         return { name: b, value: b };
       }),
     );
+    //#endregion
   }
   //#endregion
 
   //#region commands / clone
   async clone() {
+    //#region @backendFunc
     let url = this.firstArg;
     const originType: 'ssh' | 'http' = this.params['setOrigin'];
 
@@ -1686,61 +1951,77 @@ ${lastCommitMessage}
       cwd: this.cwd,
     });
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / gh temp
   async ghSave() {
+    //#region @backendFunc
     await new GhTempCode(this.cwd, this.project).init().save();
     this._exit();
+    //#endregion
   }
   async ghRestore() {
+    //#region @backendFunc
     await new GhTempCode(this.cwd, this.project).init().restore();
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / start cli service ports worker
 
   async ports() {
+    //#region @backendFunc
     await this.ins.portsWorker.terminalUI.infoScreen();
+    //#endregion
   }
 
   /**
    * tnp startCliServicePortsWorker --restart
    */
   async startCliServicePortsWorker() {
+    //#region @backendFunc
     await this.ins.portsWorker.cliStartProcedure(this.params);
+    //#endregion
   }
   //#endregion
 
   //#region commands / wait for any key
   async waitForUserAnyKey() {
+    //#region @backendFunc
     console.log('Press any key to exit...');
     await UtilsTerminal.waitForUserAnyKey(async () => {
       console.log('Exiting...');
       this._exit();
     });
+    //#endregion
   }
   //#endregion
 
   //#region commands / pause terminal
   pauseTerminal() {
+    //#region @backendFunc
     Helpers.pressKeyAndContinue();
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / sleep terminal
   sleepTerminal() {
+    //#region @backendFunc
     Helpers.info(`Sleeping terminal for 1 second... before exit`);
     Helpers.sleep(1);
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / gh pages init
   async ghPagesInit() {
+    //#region @backendFunc
     await this.project.init();
     await this.project.staticPages.init(
       this.params['provider'] || 'github',
@@ -1750,14 +2031,17 @@ ${lastCommitMessage}
       cwd: this.project.staticPages.mainFolderAbsPath,
     }).sync();
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / is port in use
   async isPortInUse() {
+    //#region @backendFunc
     const port = parseInt(this.firstArg);
     console.log(`Port ${port} is in use: ${await UtilsOs.isPortInUse(port)}`);
     this._exit();
+    //#endregion
   }
   //#endregion
 
@@ -1825,10 +2109,13 @@ ${lastCommitMessage}
 
   //#region commands / proc info
   procInfo() {
+    //#region @backendFunc
     this.processInfo();
+    //#endregion
   }
 
   processInfo() {
+    //#region @backendFunc
     Helpers.info(`
 
     Is running in CLI mode: ${UtilsOs.isRunningInCliMode()}
@@ -1844,23 +2131,29 @@ ${lastCommitMessage}
 
       `);
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / last git tag
   lastGitTag() {
+    //#region @backendFunc
     console.log('Latest tag');
     console.log(this.project?.git.lastTagVersionName);
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / check ports
   async checkPort() {
+    //#region @backendFunc
     await this.checkPorts();
+    //#endregion
   }
 
   async checkPorts() {
+    //#region @backendFunc
     const ports = this.args
       .join(' ')
       .replace(/\,/, '')
@@ -1881,42 +2174,52 @@ ${lastCommitMessage}
       );
     }
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / remove symlinks
   removeSymlinksDryRun() {
+    //#region @backendFunc
     Helpers.removeSymlinks(this.project.nodeModules.path, {
       dryRun: true,
     });
+    //#endregion
   }
   //#endregion
 
   //#region commands / select java
   async selectJava() {
+    //#region @backendFunc
     const selectedJava = await UtilsJava.selectJdkVersion();
     UtilsJava.updateJavaHomePath(selectedJava);
+    //#endregion
   }
   //#endregion
 
   //#region commands / select tomcat
   async selectTomcat() {
+    //#region @backendFunc
     const selectedTomcat = await UtilsJava.selectTomcatVersion();
     UtilsJava.updateTomcatHomePath(selectedTomcat);
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / ln
   LN() {
+    //#region @backendFunc
     const [source, dest] = this.args;
     Helpers.createSymLink(source, dest);
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / copy
   copy() {
+    //#region @backendFunc
     let [from, to] = this.args;
     from = path.isAbsolute(from)
       ? crossPlatformPath(from)
@@ -1944,6 +2247,7 @@ ${lastCommitMessage}
 
     Helpers.taskDone(`Copied`);
     this._exit();
+    //#endregion
   }
   //#endregion
 
@@ -1959,6 +2263,7 @@ ${lastCommitMessage}
 
   //#region commands / preview
   async preview(): Promise<void> {
+    //#region @backendFunc
     //#region handle preview of docker compose
     if (
       [fileName.docker_compose_yml, fileName.compose_yml].includes(
@@ -2064,6 +2369,7 @@ ${lastCommitMessage}
       );
     }
     //#endregion
+    //#endregion
   }
   //#endregion
 
@@ -2098,6 +2404,7 @@ ${lastCommitMessage}
 
   //#region commands / dump packages versions
   dumpPackagesVersions(): void {
+    //#region @backendFunc
     const getData = (location: string) => {
       const version = Helpers.readValueFromJson(
         crossPlatformPath([location, fileName.package_json]),
@@ -2130,11 +2437,13 @@ ${lastCommitMessage}
     Helpers.writeJson([this.cwd, 'packages-versions.json'], pkgs);
     Helpers.info(`packages-versions.json created with ${pkgs.length} packages`);
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / zip
   async zip() {
+    //#region @backendFunc
     let folderPath = crossPlatformPath(this.firstArg);
     if (!path.isAbsolute(folderPath)) {
       folderPath = crossPlatformPath([this.cwd, this.firstArg]);
@@ -2158,11 +2467,13 @@ ${lastCommitMessage}
     });
     Helpers.info(`Created zip file: ${zipFilePath}`);
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / unzip
   async unzip() {
+    //#region @backendFunc
     let folderPath = crossPlatformPath(this.firstArg);
     if (!path.isAbsolute(folderPath)) {
       folderPath = crossPlatformPath([this.cwd, this.firstArg]);
@@ -2177,11 +2488,13 @@ ${lastCommitMessage}
     await UtilsZip.unzipArchive(folderPath);
     Helpers.info(`Created zip file: ${folderPath.replace('.zip', '')}`);
     this._exit();
+    //#endregion
   }
   //#endregion
 
   //#region commands / start transmission
   async startTransmission() {
+    //#region @backendFunc
     await this._removeTransmission();
     const userProfile = process.env.USERPROFILE || os.homedir();
     const downloadsDir = path.join(userProfile, 'Downloads');
@@ -2234,9 +2547,11 @@ ${lastCommitMessage}
       }
       this._exit();
     });
+    //#endregion
   }
 
   async _removeTransmission() {
+    //#region @backendFunc
     return new Promise<void>(resolve => {
       const args = ['rm', '-f', 'transmission'];
 
@@ -2256,26 +2571,34 @@ ${lastCommitMessage}
         resolve();
       });
     });
+    //#endregion
   }
   //#endregion
 
   //#region commands  / backup branch
   async backupBranch() {
+    //#region @backendFunc
     await this.project.git.backupBranch(this.firstArg);
     this._exit();
+    //#endregion
   }
 
   async bb() {
+    //#region @backendFunc
     await this.backupBranch();
+    //#endregion
   }
   //#endregion
 
   //#region commands / count code lines
   async countCodeLines() {
+    //#region @backendFunc
     await this.countLines();
+    //#endregion
   }
 
   async countLines() {
+    //#region @backendFunc
     let extensions = (this.args || []).filter(f => !!f).map(ext => `.${ext}`);
     extensions = extensions.length ? extensions : ['.ts', '.tsx'];
 
@@ -2333,11 +2656,13 @@ ${lastCommitMessage}
 
     this._exit?.(); // your existing exit hook
     return total;
+    //#endregion
   }
   //#endregion
 
   //#region commands / is node version ok
   isNodeVersionOk() {
+    //#region @backendFunc
     try {
       UtilsOs.isNodeVersionOk({
         throwErrorIfNotOk: true,
@@ -2348,6 +2673,7 @@ ${lastCommitMessage}
       console.error(error);
       this._exit(1);
     }
+    //#endregion
   }
   //#endregion
 }

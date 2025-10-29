@@ -19,9 +19,5 @@ export * from './base-cli-worker';
 export * from './base-process-manager';
 export * from './base-command-line-feature';
 export * from './base-file-folders-operations';
-
-//#region @backend
-export * from './base-start-config.backend';
-
-export * from './base-global-command-line.backend';
-//#endregion
+export * from './base-start-config.backend'; // @backend
+export * from './base-global-command-line';
