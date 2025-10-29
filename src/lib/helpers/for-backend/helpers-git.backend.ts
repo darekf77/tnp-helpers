@@ -172,7 +172,7 @@ export class HelpersGit {
       return false;
     }
     const command = `git show-ref --tags ${tag}`.trim();
-    const result = (Helpers.commnadOutputAsString(command, cwd) || '') !== '';
+    const result = (Helpers.commandOutputAsString(command, cwd) || '') !== '';
     return result;
   }
   //#endregion
@@ -185,7 +185,7 @@ export class HelpersGit {
     }
     try {
       if (process.platform === 'win32' && UtilsOs.isRunningInWindowsCmd()) {
-        let tagOnCMd = Helpers.commnadOutputAsString(
+        let tagOnCMd = Helpers.commandOutputAsString(
           `for /f %i in ('git rev-list --tags --max-count=1') do @git describe --tags %i`,
         );
         console.log({ tagOnCMd });
@@ -193,7 +193,7 @@ export class HelpersGit {
         return tagOnCMd ? tagOnCMd : '';
       }
 
-      const latestCommit = Helpers.commnadOutputAsString(
+      const latestCommit = Helpers.commandOutputAsString(
         `git rev-list --tags --max-count=1`,
         cwd,
       )
@@ -204,7 +204,7 @@ export class HelpersGit {
         return '';
       }
 
-      const tag = Helpers.commnadOutputAsString(
+      const tag = Helpers.commandOutputAsString(
         `git describe --tags ${latestCommit}`,
         cwd,
       )
@@ -297,7 +297,7 @@ export class HelpersGit {
     //#region @backendFunc
     try {
       // Execute git status command to get the list of changes
-      const output = Helpers.commnadOutputAsString(
+      const output = Helpers.commandOutputAsString(
         'git status --porcelain',
         cwd,
         {
@@ -543,7 +543,7 @@ export class HelpersGit {
       let currentLocalBranch = this.currentBranchName(cwd);
       let value = Number(
         this.isInsideGitRepo(cwd) &&
-          Helpers.commnadOutputAsString(
+          Helpers.commandOutputAsString(
             `git rev-list --count ${currentLocalBranch}`,
             cwd,
           ).trim(),
@@ -608,7 +608,7 @@ export class HelpersGit {
       }
       const command = `git branch -a`;
       // console.log({ command, cwd })
-      const branchNamesFromStdout = Helpers.commnadOutputAsString(
+      const branchNamesFromStdout = Helpers.commandOutputAsString(
         command,
         cwd,
         {
@@ -743,7 +743,7 @@ export class HelpersGit {
     let url = '';
     try {
       // git config --get remote.origin.url
-      url = Helpers.commnadOutputAsString(
+      url = Helpers.commandOutputAsString(
         `git config --get remote.${
           differentOriginName ? differentOriginName : 'origin'
         }.url`,
@@ -1575,7 +1575,7 @@ ${cwd}
     }
     let isHttpCommand = url.startsWith('http://') || url.startsWith('https://');
 
-    let commnad = isHttpCommand
+    let command = isHttpCommand
       ? `git -c http.sslVerify=false clone ${url} ${path.basename(
           cloneFolderPath,
         )}`
@@ -1584,16 +1584,16 @@ ${cwd}
     Helpers.info(`
 
     Cloning:
-    ${commnad}
+    ${command}
 
     `);
     if (throwErrors) {
-      Helpers.run(commnad, { cwd }).sync();
+      Helpers.run(command, { cwd }).sync();
     } else {
       while (true) {
         isHttpCommand = url.startsWith('http://') || url.startsWith('https://');
 
-        commnad = isHttpCommand
+        command = isHttpCommand
           ? `git -c http.sslVerify=false clone ${url} ${path.basename(
               cloneFolderPath,
             )}`
@@ -1601,7 +1601,7 @@ ${cwd}
 
         Helpers.info(`Cloning from url: ${CLI.chalk.bold(url)}..`);
         try {
-          Helpers.run(commnad, { cwd, output: false }).sync();
+          Helpers.run(command, { cwd, output: false }).sync();
           break;
         } catch (error) {
           if (error?.stderr?.toString()?.search('remote: Not Found') !== -1) {
@@ -1783,7 +1783,7 @@ ${cwd}
   stagedFiles(cwd: string, outputRelatieve = false): string[] {
     cwd = crossPlatformPath(cwd).replace(/\/$/, '');
     const command = `git diff --name-only --cached`.trim();
-    const result = Helpers.commnadOutputAsString(command, cwd, {}) || '';
+    const result = Helpers.commandOutputAsString(command, cwd, {}) || '';
     return (result ? result.split('\n') : []).map(relative => {
       if (outputRelatieve) {
         return crossPlatformPath(relative);
@@ -1795,7 +1795,7 @@ ${cwd}
 
   //#region get list of changes files from commit
   async getChangedFiles(cwd: string, commitHash: string): Promise<string[]> {
-    const output = await Helpers.commnadOutputAsStringAsync(
+    const output = await Helpers.commandOutputAsStringAsync(
       'git diff-tree --no-commit-id --name-only -r ${commitHash}',
       cwd,
     );

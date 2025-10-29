@@ -722,7 +722,7 @@ export abstract class BaseProject<
     //#endregion
   ) {
     //#region @backendFunc
-    return Helpers.commnadOutputAsString(command, this.location, options);
+    return Helpers.commandOutputAsString(command, this.location, options);
     //#endregion
   }
   //#endregion
@@ -1181,7 +1181,7 @@ Would you like to update current project configuration?`)
   //#region getters & methods / run command and get string
   public runCommandGetString(this: BaseProject, command: string) {
     //#region @backendFunc
-    return Helpers.commnadOutputAsString(command, this.location, {
+    return Helpers.commandOutputAsString(command, this.location, {
       biggerBuffer: false,
     });
     //#endregion
