@@ -1,8 +1,5 @@
 {
   "files.exclude": {
-    "0": true,
-    "1": true,
-    "2": true,
     "_changelog": true,
     ".sass-cache": true,
     ".sourcemaps": true,
@@ -38,6 +35,8 @@
     ".prettierrc.json": true,
     ".eslintrc.json": true,
     ".npmrc": true,
+    ".prettierignore": true,
+    ".prettierrc": true,
     "run.js": true,
     "index.d.ts": true,
     "index.js": true,

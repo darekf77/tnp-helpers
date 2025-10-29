@@ -20,7 +20,7 @@ export type BaseWorkerTerminalActionReturnType = {
 };
 
 export class BaseCliWorkerTerminalUI<
-  WORKER extends BaseCliWorker<BaseCliWorkerController, any>,
+  WORKER extends BaseCliWorker<BaseCliWorkerController<any>, any>,
 > {
   constructor(protected worker: WORKER) {}
 
@@ -48,10 +48,13 @@ export class BaseCliWorkerTerminalUI<
    */
   protected async header(): Promise<void> {
     //#region @backendFunc
-    UtilsTerminal.drawBigText(await this.headerText(), {
-      align: this.headerTextAlign(),
-      style: this.textHeaderStyle(),
-    });
+    const headerText = await this.headerText();
+    if (headerText) {
+      UtilsTerminal.drawBigText(await this.headerText(), {
+        align: this.headerTextAlign(),
+        style: this.textHeaderStyle(),
+      });
+    }
     //#endregion
   }
   //#endregion
@@ -65,7 +68,7 @@ export class BaseCliWorkerTerminalUI<
         ` (version: ${this.worker.serviceVersion}) started..
       Check info here http://localhost:${chalk.bold(
         this.worker.processLocalInfoObj?.port?.toString(),
-      )}/${'info' as keyof BaseCliWorkerController}
+      )}/${'info' as keyof BaseCliWorkerController<any>}
       Worker started by ${chalk.bold(config.frameworkName)}
       (cwd: ${crossPlatformPath(process.cwd())})
         `,

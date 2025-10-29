@@ -6,8 +6,9 @@ import { BaseCliWorkerConfig } from './base-cli-worker-config';
 @Taon.Controller({
   className: 'BaseCliWorkerController',
 })
-export abstract class BaseCliWorkerController<UPLOAD_FILE_QUERY_PARAMS = {}> extends Taon.Base
-  .Controller<UPLOAD_FILE_QUERY_PARAMS> {
+export abstract class BaseCliWorkerController<
+  UPLOAD_FILE_QUERY_PARAMS = {},
+> extends Taon.Base.Controller<UPLOAD_FILE_QUERY_PARAMS> {
   /**
    * service id
    */
@@ -35,7 +36,11 @@ export abstract class BaseCliWorkerController<UPLOAD_FILE_QUERY_PARAMS = {}> ext
     //#region @backendFunc
     return async () => {
       console.log(`Killing worker "${this.cliWorkerServiceId}"...`);
-      setTimeout(() => {
+      setTimeout(async () => {
+        console.log(
+          `Destroying context worker "${this.cliWorkerServiceId}"...`,
+        );
+        await this.ctx.destroy();
         Helpers.clearConsole();
         process.exit(0);
       }, 1000); // TODO may be change to 0

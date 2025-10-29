@@ -1,5 +1,4 @@
 //#region imports
-// @ts-ignore
 import { EndpointContext, Taon } from 'taon/src';
 import { config } from 'tnp-config/src';
 import {
@@ -28,11 +27,12 @@ const START_PORT_FOR_SERVICES = 3600;
 //#endregion
 
 export abstract class BaseCliWorker<
-  REMOTE_CTRL extends BaseCliWorkerController,
-  TERMINAL_UI extends BaseCliWorkerTerminalUI<any>,
+  REMOTE_CTRL extends BaseCliWorkerController<any>,
+  TERMINAL_UI extends BaseCliWorkerTerminalUI<any> = any,
 > {
   //#region fields & getters
-  public readonly SPECIAL_WORKER_READY_MESSAGE = CoreModels.SPECIAL_WORKER_READY_MESSAGE;
+  public readonly SPECIAL_WORKER_READY_MESSAGE =
+    CoreModels.SPECIAL_WORKER_READY_MESSAGE;
 
   // @ts-ignore TODO weird inheritance problem
   readonly terminalUI: TERMINAL_UI = new BaseCliWorkerTerminalUI(this);
@@ -42,11 +42,10 @@ export abstract class BaseCliWorker<
   //   [ipAddressOfTaonInstance: string]: ReturnType<typeof Taon.createContext>;
   // } = {};
 
-  async getRemoteControllerFor(
+  async getRemoteContextFor(
     ipAddressOfTaonInstance: string,
-    port?: number ,
-  ): Promise<REMOTE_CTRL> {
-
+    port?: number,
+  ): Promise<EndpointContext> {
     // this.workerRemoteContextFor[ipAddressOfTaonInstance] = remoteCtx;
     const useHttps = ipAddressOfTaonInstance !== CoreModels.localhostIp127;
     const protocol = useHttps ? 'https' : 'http';
@@ -54,9 +53,18 @@ export abstract class BaseCliWorker<
     const remoteCtx = this.workerContextTemplate().cloneAsRemote({
       overrideRemoteHost: `${protocol}://${ipAddressOfTaonInstance}${port ? `:${port}` : ''}`,
     });
-
     const contextForRemoteConnection = await remoteCtx.initialize();
+    return contextForRemoteConnection;
+  }
 
+  async getRemoteControllerFor(
+    ipAddressOfTaonInstance: string,
+    port?: number,
+  ): Promise<REMOTE_CTRL> {
+    const contextForRemoteConnection = await this.getRemoteContextFor(
+      ipAddressOfTaonInstance,
+      port,
+    );
     const taonProjectsController = contextForRemoteConnection.getInstanceBy(
       this.controllerClass,
     );
@@ -119,8 +127,8 @@ export abstract class BaseCliWorker<
    * start normally process
    * this will crash if process already started
    */
-  public async startNormallyInCurrentProcess(options?:{
-    actionBeforeTerminalUI?:()=>Promise<void>
+  public async startNormallyInCurrentProcess(options?: {
+    actionBeforeTerminalUI?: () => Promise<void>;
   }): Promise<void> {
     //#region @backendFunc
     options = options || {};
@@ -130,6 +138,14 @@ export abstract class BaseCliWorker<
     await this.killWorkerWithLowerVersion();
     await this.preventStartIfAlreadyStarted();
     const port = await this.getServicePort();
+
+    this.saveProcessInfo({
+      port,
+      serviceID: this.serviceID,
+      pid: process.pid,
+      startTimestamp: Date.now(),
+      version: this.serviceVersion,
+    });
 
     this.workerMainContext = this.workerContextTemplate().cloneAsNormal({
       overrideHost: `http://localhost:${port}`,
@@ -141,21 +157,26 @@ export abstract class BaseCliWorker<
     Helpers.info(`Service started !`);
     this.preventExternalConfigChange();
 
-    if(_.isFunction(options.actionBeforeTerminalUI)) {
+    if (_.isFunction(options.actionBeforeTerminalUI)) {
       await options.actionBeforeTerminalUI();
     }
-    this.terminalUI.displaySpecialWorkerReadyMessage();
-    await this.terminalUI.infoScreen();
+    if (this.terminalUI) {
+      this.terminalUI.displaySpecialWorkerReadyMessage();
+      await this.terminalUI.infoScreen();
+    } else {
+      console.log(`
+      [${config.frameworkName}-helpers] No terminal UI configured. Not displaying anything.
+      `);
+    }
     //#endregion
   }
   //#endregion
 
-  //#region methods / get controller for remote connection
-  async getControllerForRemoteConnection(options?: {
+  //#region methods / get context for remote connection
+  async gerContextForRemoteConnection(options?: {
     calledFrom?: string;
     // skipWaitingForWorkerProcessPortToBeSaved?: boolean;
-  }): Promise<REMOTE_CTRL> {
-    //#region @backendFunc
+  }): Promise<EndpointContext> {
     options = options || {};
     // ! TODO this waiting is called for every generated port in app.host.ts
     // ! this may be expensive in future
@@ -179,13 +200,23 @@ export abstract class BaseCliWorker<
       Helpers.logInfo('Creating new context for remote connection...');
       this.workerRemoteContext = this.workerContextTemplate().cloneAsRemote({
         overrideRemoteHost: `http://localhost:${this.processLocalInfoObj.port}`,
-      })
+      });
       this.contextForRemoteConnection =
         await this.workerRemoteContext.initialize();
     }
+    return this.contextForRemoteConnection;
+  }
+  //#endregion
 
-    const taonProjectsController =
-      this.contextForRemoteConnection.getInstanceBy(this.controllerClass);
+  //#region methods / get controller for remote connection
+  async getControllerForRemoteConnection(options?: {
+    calledFrom?: string;
+    // skipWaitingForWorkerProcessPortToBeSaved?: boolean;
+  }): Promise<REMOTE_CTRL> {
+    //#region @backendFunc
+    options = options || {};
+    const ctx = await this.gerContextForRemoteConnection(options);
+    const taonProjectsController = ctx.getInstanceBy(this.controllerClass);
     return taonProjectsController;
     //#endregion
   }
@@ -279,7 +310,7 @@ export abstract class BaseCliWorker<
    * only for cli start
    * @param cliParams on from cli
    */
-  async cliStartProcedure(cliParams: any) {
+  async cliStartProcedure(cliParams: any): Promise<REMOTE_CTRL> {
     const detached = !!cliParams['detached'] || !!cliParams['detach'];
     //#region @backendFunc
     if (cliParams['restart']) {
@@ -301,6 +332,7 @@ export abstract class BaseCliWorker<
     } else {
       await this.startNormallyInCurrentProcess();
     }
+    return await this.getControllerForRemoteConnection();
     //#endregion
   }
   //#endregion
@@ -647,13 +679,6 @@ export abstract class BaseCliWorker<
       startFrom: START_PORT_FOR_SERVICES,
     });
 
-    this.saveProcessInfo({
-      port,
-      serviceID: this.serviceID,
-      pid: process.pid,
-      startTimestamp: Date.now(),
-      version: this.serviceVersion,
-    });
     Helpers.logInfo(`Done getting free port for service...`);
     return port;
     //#endregion

@@ -20,6 +20,7 @@ import { crossPlatformPath } from 'tnp-core/src';
 import { UtilsTerminal } from 'tnp-core/src';
 import { UtilsNetwork, UtilsDotFile } from 'tnp-core/src';
 import { child_process } from 'tnp-core/src'; //@backend
+import { UtilsCliClassMethod } from 'tnp-core/src';
 
 import {
   Helpers,
@@ -1713,6 +1714,16 @@ ${lastCommitMessage}
   }
   //#endregion
 
+  //#region commands / wait for any key
+  async waitForUserAnyKey() {
+    console.log('Press any key to exit...');
+    await UtilsTerminal.waitForUserAnyKey(async () => {
+      console.log('Exiting...');
+      this._exit();
+    });
+  }
+  //#endregion
+
   //#region commands / pause terminal
   pauseTerminal() {
     Helpers.pressKeyAndContinue();
@@ -1720,7 +1731,7 @@ ${lastCommitMessage}
   }
   //#endregion
 
-  //#region commands / pause terminal
+  //#region commands / sleep terminal
   sleepTerminal() {
     Helpers.info(`Sleeping terminal for 1 second... before exit`);
     Helpers.sleep(1);
@@ -2248,6 +2259,7 @@ ${lastCommitMessage}
   }
   //#endregion
 
+  //#region commands  / backup branch
   async backupBranch() {
     await this.project.git.backupBranch(this.firstArg);
     this._exit();
@@ -2256,4 +2268,86 @@ ${lastCommitMessage}
   async bb() {
     await this.backupBranch();
   }
+  //#endregion
+
+  //#region commands / count code lines
+  async countCodeLines() {
+    await this.countLines();
+  }
+
+  async countLines() {
+    let extensions = (this.args || []).filter(f => !!f).map(ext => `.${ext}`);
+    extensions = extensions.length ? extensions : ['.ts', '.tsx'];
+
+    console.log('Counting SLOC for extensions: ', extensions.join(', '));
+    const sloc = require('sloc');
+    let total = {
+      source: 0,
+      comment: 0,
+      single: 0,
+      block: 0,
+      empty: 0,
+      total: 0,
+    };
+
+    const skip = [
+      'node_modules',
+      '.',
+      'tmp-',
+      'environments',
+      'dist',
+      'browser',
+    ];
+
+    const walk = (folder: string) => {
+      const entries = fse.readdirSync(folder, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(folder, entry.name);
+
+        if (skip.some(s => entry.name.startsWith(s))) {
+          continue;
+        }
+
+        if (entry.isDirectory()) {
+          console.log('Processing: ', path.basename(fullPath));
+          walk(fullPath);
+        } else if (extensions.includes(path.extname(entry.name))) {
+          const code = fse.readFileSync(fullPath, 'utf8');
+          const stats = sloc(code, path.extname(entry.name).slice(1)); // e.g., "ts" or "js"
+          for (const key in total) {
+            total[key] += stats[key] ?? 0;
+          }
+        }
+      }
+    };
+
+    walk(
+      crossPlatformPath([
+        this.cwd,
+        // 'src'
+      ]),
+    );
+
+    console.log('📊 SLOC Results:');
+    console.table(total);
+
+    this._exit?.(); // your existing exit hook
+    return total;
+  }
+  //#endregion
+
+  //#region commands / is node version ok
+  isNodeVersionOk() {
+    try {
+      UtilsOs.isNodeVersionOk({
+        throwErrorIfNotOk: true,
+      });
+      console.info(`Node.js version is OK: ${process.version}`);
+      this._exit();
+    } catch (error) {
+      console.error(error);
+      this._exit(1);
+    }
+  }
+  //#endregion
 }
