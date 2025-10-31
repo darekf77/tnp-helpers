@@ -2676,4 +2676,12 @@ ${lastCommitMessage}
     //#endregion
   }
   //#endregion
+
+  //#region commands / pwd
+  pwd(): void {
+    config.frameworkName = 'taon';
+    console.log(crossPlatformPath(this.cwd));
+    this._exit();
+  }
+  //#endregion
 }
