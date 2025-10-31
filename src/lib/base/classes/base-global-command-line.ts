@@ -2597,6 +2597,12 @@ ${lastCommitMessage}
     //#endregion
   }
 
+  async countCode() {
+    //#region @backendFunc
+    await this.countLines();
+    //#endregion
+  }
+
   async countLines() {
     //#region @backendFunc
     let extensions = (this.args || []).filter(f => !!f).map(ext => `.${ext}`);
@@ -2632,7 +2638,7 @@ ${lastCommitMessage}
         }
 
         if (entry.isDirectory()) {
-          console.log('Processing: ', path.basename(fullPath));
+          // console.log('Processing: ', path.basename(fullPath));
           walk(fullPath);
         } else if (extensions.includes(path.extname(entry.name))) {
           const code = fse.readFileSync(fullPath, 'utf8');
