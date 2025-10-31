@@ -2690,4 +2690,25 @@ ${lastCommitMessage}
     this._exit();
   }
   //#endregion
+
+  //#region commands / less-more big text files preview
+  async more() {
+    //#region @backendFunc
+    const pathToFile = path.isAbsolute(this.firstArg)
+      ? crossPlatformPath(this.firstArg)
+      : crossPlatformPath([this.cwd, this.firstArg]);
+    console.log(`Displaying file: ${pathToFile}`);
+    await UtilsTerminal.previewLongListGitLogLike(
+      Helpers.readFile(pathToFile) || '< empty log file >',
+    );
+    this._exit();
+    //#endregion
+  }
+
+  async less() {
+    //#region @backendFunc
+    await this.more();
+    //#endregion
+  }
+  //#endregion
 }
