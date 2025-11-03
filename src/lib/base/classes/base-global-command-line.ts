@@ -2501,7 +2501,9 @@ ${lastCommitMessage}
     const configDir = path.join(userProfile, 'transmission-config');
 
     await UtilsProcess.killProcessOnPort(9091);
-    const ctrl = await this.ins.portsWorker.getControllerForRemoteConnection();
+    const ctrl = await this.ins.portsWorker.getControllerForRemoteConnection({
+      calledFrom: `${config.frameworkName} startTransmission`,
+    });
 
     const data = await ctrl
       .registerAndAssignPort('transmission service for whole system')

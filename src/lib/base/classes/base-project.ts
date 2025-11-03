@@ -881,14 +881,14 @@ Would you like to update current project configuration?`)
   //#region methods & getters / register and assign port
   public async registerAndAssignPort(
     taskName: string,
-    options?: { startFrom?: number },
+    options: { startFrom?: number } = {},
   ): Promise<number> {
     //#region @backendFunc
     taskName = this.getUniqueForTask(taskName);
-    options = options || {};
+    options = options || ({} as any);
     // console.log('taskNmae', taskName);
     const ctrl = await this.ins.portsWorker.getControllerForRemoteConnection({
-      calledFrom: 'registerAndAssignPort',
+      calledFrom: `${taskName} -> registerAndAssignPort`,
       // skipWaitingForWorkerProcessPortToBeSaved: true,
     });
     while (true) {

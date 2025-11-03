@@ -44,7 +44,7 @@ export class HelpersGit {
           output: false,
         }).sync();
       } catch (error) {
-        Helpers.throw(`Not able to tag project`);
+        throw new Error(`Not able to tag project`);
       }
     }
     // const lastCommitHash = this.project.git.lastCommitHash();
@@ -67,7 +67,7 @@ export class HelpersGit {
           askToRetry: !isCiProcess,
         }))
       ) {
-        Helpers.throw(`Not able to push to git repository`);
+        throw `Not able to push to git repository`;
       }
       Helpers.info('Pushing to git repository done.');
     }

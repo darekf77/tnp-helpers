@@ -52,19 +52,22 @@ export abstract class BaseCliWorkerController<
   //#region api methods / info
   @Taon.Http.HTML({
     pathIsGlobal: true,
-    // overrideContentType: 'text/html',
-    // overridResponseType: 'text',
+    path: '/info',
   })
-  info(): Taon.Response<string> {
+  info(): Taon.ResponseHtml {
     //#region @backendFunc
     return async () => {
-      return (
-        `Service "${this.cliWorkerServiceId}" is ` +
-        `running healthy on port ${this.ctx.uriPort},
-      version: ${this.cliWorkerServiceVersion},
-      pid: ${process.pid}
-      `
-      );
+      return `
+<html>
+<head><title>Service Info</title></head>
+<body>
+    <h1>Service "${this.cliWorkerServiceId}" is</h1><br>
+    <h1>running healthy on port ${this.ctx.uriPort} </h1><br>
+    <h4>version: ${this.cliWorkerServiceVersion}</h4><br>
+    <h4>pid: ${process.pid}</h4><br>
+</body>
+<html>
+      `;
     };
     //#endregion
   }

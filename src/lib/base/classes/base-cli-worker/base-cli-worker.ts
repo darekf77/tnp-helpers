@@ -14,7 +14,7 @@ import {
   CoreModels,
 } from 'tnp-core/src';
 
-import { Helpers } from '../../../index';
+import { BaseCliWorkerOptionCallable, Helpers } from '../../../index';
 
 import { BaseCliWorkerConfig } from './base-cli-worker-config';
 import type { BaseCliWorkerController } from './base-cli-worker-controller';
@@ -173,11 +173,10 @@ export abstract class BaseCliWorker<
   //#endregion
 
   //#region methods / get context for remote connection
-  async gerContextForRemoteConnection(options?: {
-    calledFrom?: string;
-    // skipWaitingForWorkerProcessPortToBeSaved?: boolean;
-  }): Promise<EndpointContext> {
-    options = options || {};
+  async gerContextForRemoteConnection(
+    options: BaseCliWorkerOptionCallable,
+  ): Promise<EndpointContext> {
+    options = options || ({} as any);
     // ! TODO this waiting is called for every generated port in app.host.ts
     // ! this may be expensive in future
     // if (!options.skipWaitingForWorkerProcessPortToBeSaved) {
@@ -209,12 +208,11 @@ export abstract class BaseCliWorker<
   //#endregion
 
   //#region methods / get controller for remote connection
-  async getControllerForRemoteConnection(options?: {
-    calledFrom?: string;
-    // skipWaitingForWorkerProcessPortToBeSaved?: boolean;
-  }): Promise<REMOTE_CTRL> {
+  async getControllerForRemoteConnection(
+    options: BaseCliWorkerOptionCallable,
+  ): Promise<REMOTE_CTRL> {
     //#region @backendFunc
-    options = options || {};
+    options = options || ({} as any);
     const ctx = await this.gerContextForRemoteConnection(options);
     const taonProjectsController = ctx.getInstanceBy(this.controllerClass);
     return taonProjectsController;
@@ -332,7 +330,9 @@ export abstract class BaseCliWorker<
     } else {
       await this.startNormallyInCurrentProcess();
     }
-    return await this.getControllerForRemoteConnection();
+    return await this.getControllerForRemoteConnection({
+      calledFrom: 'cliStartProcedure',
+    });
     //#endregion
   }
   //#endregion
@@ -494,7 +494,9 @@ export abstract class BaseCliWorker<
         // console.log('this.processLocalInfoObj', this.processLocalInfoObj);
         const req = await ctrl
           .baseCLiWorkerCommand_isHealthy(this.processLocalInfoObj)
-          .request();
+          .request({
+            // timeout: 1000,
+          });
         const isHealthy = req.body.booleanValue;
         // console.log('isHealthy', { isHealthy });
         if (isHealthy) {
@@ -569,8 +571,7 @@ export abstract class BaseCliWorker<
       healthCheckRequestTrys: Infinity, // wait infinity until started
     });
     if (!isServiceHealthy) {
-      Helpers.throw(`Not able to start service "${this.serviceID}"...`);
-      return;
+      throw `Not able to start service "${this.serviceID}"...`;
     }
     Helpers.logInfo(`Healthy service "${chalk.bold(this.serviceID)}" started.`);
     //#endregion
@@ -638,18 +639,18 @@ export abstract class BaseCliWorker<
   //#endregion
 
   //#region wait for process port saved to disk
-  protected async waitForProcessPortSavedToDisk(options?: {
-    calledFrom?: string;
-  }): Promise<void> {
+  protected async waitForProcessPortSavedToDisk(
+    options: BaseCliWorkerOptionCallable,
+  ): Promise<void> {
     //#region @backendFunc
-    options = options || {};
+    options = options || ({} as any);
     Helpers.logInfo(
-      `[${this.serviceID}]${options.calledFrom ? `[${options.calledFrom}]` : ''}` +
+      `[${this.serviceID}][${[options.calledFrom]}]` +
         ` Waiting for process port saved to disk...`,
     );
     Helpers.log(`in ${this.pathToProcessLocalInfoJson}`);
     let portForRemote = this.processLocalInfoObj.port;
-    const MAX_TRYS = 10;
+    const MAX_TRYS = 30;
     let i = 0;
     if (!portForRemote) {
       while (!portForRemote) {
@@ -657,18 +658,19 @@ export abstract class BaseCliWorker<
         portForRemote = this.processLocalInfoObj.port;
         if (portForRemote) {
           Helpers.taskDone(
-            `[${this.serviceID}][${this.serviceVersion}] port assigned: ${portForRemote}`,
+            `[${this.serviceID}][${this.serviceVersion}][${options.calledFrom}]
+             port assigned: ${portForRemote}`,
           );
           break;
         } else {
           Helpers.logInfo(
-            `[${this.serviceID}][${this.serviceVersion}] waiting/checking again for port...`,
+            `[${this.serviceID}][${this.serviceVersion}][${options.calledFrom}]
+             waiting/checking again for port...`,
           );
           if (i > MAX_TRYS) {
-            Helpers.throw(
-              `Can't get port for remote connection..` +
-                ` worker process did not start correctly`,
-            );
+            throw `[${this.serviceID}][${this.serviceVersion}][${options.calledFrom}]
+              Can't get port for remote connection..
+              worker process did not start correctly`;
           }
           await UtilsTerminal.wait(1);
         }
