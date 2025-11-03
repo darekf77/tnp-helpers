@@ -61,9 +61,9 @@ export abstract class BaseCliWorkerController<
 <html>
 <head><title>Service Info</title></head>
 <body>
-    <h1>Service "${this.cliWorkerServiceId}" is</h1><br>
-    <h1>running healthy on port ${this.ctx.uriPort} </h1><br>
-    <h4>version: ${this.cliWorkerServiceVersion}</h4><br>
+    <h1>Service "${this.cliWorkerServiceId}" is</h1>
+    <h1>running healthy on port ${this.ctx.uriPort} </h1>
+    <h4>version: ${this.cliWorkerServiceVersion}</h4>
     <h4>pid: ${process.pid}</h4><br>
 </body>
 <html>
