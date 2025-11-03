@@ -360,6 +360,9 @@ export abstract class BaseCliWorker<
   //#region prevent prevent start if already started
   protected async preventStartIfAlreadyStarted(): Promise<void> {
     //#region @backendFunc
+    if (!this.processLocalInfoObj.pid || !this.processLocalInfoObj.port) {
+      return;
+    }
     try {
       const isHealthy = await this.isServiceHealthy({
         healthCheckRequestTrys: 2, // check only twice
@@ -379,6 +382,10 @@ export abstract class BaseCliWorker<
   //#region prevent kill worker with lower version
   protected async killWorkerWithLowerVersion(): Promise<void> {
     //#region @backendFunc
+    if (!this.processLocalInfoObj.pid) {
+      Helpers.logInfo(`No pid found - skipping version check...`);
+      return;
+    }
     Helpers.taskStarted(
       `[${this.serviceID}] Checking if current working version is up to date...`,
     );
