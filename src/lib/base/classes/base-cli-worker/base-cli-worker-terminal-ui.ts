@@ -68,7 +68,7 @@ export class BaseCliWorkerTerminalUI<
         ` (version: ${this.worker.serviceVersion}) started..
       Check info here http://localhost:${chalk.bold(
         this.worker.processLocalInfoObj?.port?.toString(),
-      )}/${'info' as keyof BaseCliWorkerController<any>}
+      )}/api/${this.worker.workerContextTemplate().contextName}/${'info' as keyof BaseCliWorkerController<any>}
       Worker started by ${chalk.bold(config.frameworkName)}
       (cwd: ${crossPlatformPath(process.cwd())})
         `,
@@ -116,7 +116,8 @@ export class BaseCliWorkerTerminalUI<
         action: async () => {
           const openInBrowser = require('open');
           openInBrowser(
-            `http://localhost:${this.worker.processLocalInfoObj.port}/info`,
+            `http://localhost:${this.worker.processLocalInfoObj.port}` +
+              `/api/${this.worker.workerContextTemplate().contextName}/info`,
           );
         },
       },

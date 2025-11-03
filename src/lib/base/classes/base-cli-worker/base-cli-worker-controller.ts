@@ -50,7 +50,7 @@ export abstract class BaseCliWorkerController<
   //#endregion
 
   //#region api methods / info
-  @Taon.Http.GET({
+  @Taon.Http.HTML({
     pathIsGlobal: true,
     // overrideContentType: 'text/html',
     // overridResponseType: 'text',
