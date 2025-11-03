@@ -2711,4 +2711,175 @@ ${lastCommitMessage}
     //#endregion
   }
   //#endregion
+
+  //#region commands / mp3
+  /**
+   *  npm install --global bin-version-check-cli
+   *  npm i -g yt-dlp
+   *  choco install ffmpeg
+   */
+  MP3(args) {
+    //#region @backendFunc
+    const downloadPath = crossPlatformPath([
+      UtilsOs.getRealHomeDir(),
+      'Downloads',
+      'mp3-from-websites',
+    ]);
+    if (!Helpers.exists(downloadPath)) {
+      Helpers.mkdirp(downloadPath);
+    }
+
+    Helpers.run(
+      `cd ${downloadPath} && yt-dlp --verbose --extract-audio --audio-format mp3 ` +
+        args,
+      {
+        output: true,
+        cwd: downloadPath,
+      },
+    ).sync();
+    this._exit();
+    //#endregion
+  }
+  //#endregion
+
+  //#region commands / mp4
+  MP4(args) {
+    //#region @backendFunc
+    const downloadPath = crossPlatformPath([
+      UtilsOs.getRealHomeDir(),
+      'Downloads',
+      'mp4-from-websites',
+    ]);
+    // yt-dlp --print filename -o "%(uploader)s-%(upload_date)s-%(title)s.%(ext)s"
+    Helpers.run(
+      'yt-dlp --verbose  -S "res:1080,fps" -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" ' +
+        args,
+      {
+        output: true,
+        cwd: downloadPath,
+      },
+    ).sync();
+    this._exit();
+    //#endregion
+  }
+  //#endregion
+
+  //#region commands / gif from video
+  gif(): void {
+    //#region @backendFunc
+    const cwdToProcess = path.isAbsolute(this.firstArg)
+      ? path.dirname(this.firstArg)
+      : this.cwd;
+    const basenameToProcess = path.basename(this.firstArg);
+    const gifDownloadPath = crossPlatformPath([
+      UtilsOs.getRealHomeDir(),
+      'Downloads',
+      'gif-from-videos',
+      basenameToProcess.replace(path.extname(basenameToProcess), '.gif'),
+    ]);
+    const palleteBasename = `${_.kebabCase(path.basename(gifDownloadPath))}-palette.png`;
+    Helpers.removeFileIfExists([cwdToProcess, palleteBasename]);
+    const quality = `fps=10,scale=960`;
+    Helpers.info(`Preparing gif from video (creating palette)...`);
+    Helpers.run(
+      `ffmpeg -i ${basenameToProcess} -vf "${quality}:-1:flags=lanczos,palettegen"` +
+        ` ${palleteBasename} `,
+      {
+        output: true,
+        cwd: cwdToProcess,
+      },
+    ).sync();
+    Helpers.info(`Preparing gif from video (creating video)...`);
+    Helpers.run(
+      `ffmpeg -i ${basenameToProcess} -i ` +
+        ` ${palleteBasename}  -filter_complex ` +
+        `"${quality}:-1:flags=lanczos[x];[x][1:v]paletteuse" ${path.basename(gifDownloadPath)}`,
+      {
+        output: true,
+        cwd: cwdToProcess,
+      },
+    ).sync();
+
+    Helpers.removeFileIfExists(gifDownloadPath);
+    Helpers.move(
+      crossPlatformPath([cwdToProcess, path.basename(gifDownloadPath)]),
+      gifDownloadPath,
+    );
+
+    Helpers.taskDone(`Done creating gif from video:
+
+      ${gifDownloadPath}
+
+      `);
+    Helpers.openFolderInFileExplorer(path.dirname(gifDownloadPath));
+    this._exit();
+    //#endregion
+  }
+  //#endregion
+
+  //#region commands / kill zscaller
+  killZs() {
+    //#region @backendFunc
+    this.killZscaller();
+    //#endregion
+  }
+
+  startZs() {
+    //#region @backendFunc
+    this.startZscaller();
+    //#endregion
+  }
+
+  zsKill() {
+    //#region @backendFunc
+    this.killZscaller();
+    //#endregion
+  }
+
+  zsStart() {
+    //#region @backendFunc
+    this.startZscaller();
+    //#endregion
+  }
+
+  startZscaller() {
+    //#region @backendFunc
+    const commands = [
+      // `open -a /Applications/Zscaler/Zscaler.app --hide`,
+      `open -a /Applications/Zscaler/Zscaler.app`,
+      `sudo find /Library/LaunchDaemons -name '*zscaler*' -exec launchctl load {} \\;`,
+    ];
+    for (const cmd of commands) {
+      try {
+        Helpers.run(cmd, {
+          // stdio that will let me pass password in child process
+          stdio: 'inherit',
+        }).sync();
+      } catch (error) {}
+    }
+    Helpers.info(`Zscaller started`);
+    this._exit();
+    //#endregion
+  }
+
+  killZscaller() {
+    //#region @backendFunc
+    const commands = [
+      `find /Library/LaunchAgents -name '*zscaler*' -exec launchctl unload {} \\;`,
+      `sudo find /Library/LaunchDaemons -name '*zscaler*' -exec launchctl unload {} \\;`,
+      `sudo killall -9 Zscaler ZscalerTunnel ZscalerAppServices`,
+    ];
+    for (const cmd of commands) {
+      try {
+        Helpers.run(cmd, {
+          // stdio that will let me pass password in child process
+          stdio: 'inherit',
+        }).sync();
+      } catch (error) {}
+    }
+    Helpers.info(`Zscaller killed`);
+    this._exit();
+    //#endregion
+  }
+  //#endregion
 }
