@@ -887,9 +887,11 @@ Would you like to update current project configuration?`)
     taskName = this.getUniqueForTask(taskName);
     options = options || ({} as any);
     // console.log('taskNmae', taskName);
-    const ctrl = await this.ins.portsWorker.getControllerForRemoteConnection({
-      calledFrom: `${taskName} -> registerAndAssignPort`,
-      // skipWaitingForWorkerProcessPortToBeSaved: true,
+    const ctrl = await this.ins.portsWorker.getRemoteControllerFor({
+      methodOptions: {
+        calledFrom: `${taskName} -> registerAndAssignPort`,
+        // skipWaitingForWorkerProcessPortToBeSaved: true,
+      },
     });
     while (true) {
       try {

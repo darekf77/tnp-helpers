@@ -135,7 +135,7 @@ export class BaseCliWorkerTerminalUI<
               message: 'Are you sure you want to shut down service?',
             })
           ) {
-            await this.worker.kill();
+             await this.worker.kill();
             process.exit(0);
           }
         },

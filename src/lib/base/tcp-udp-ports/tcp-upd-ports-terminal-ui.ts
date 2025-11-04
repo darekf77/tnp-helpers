@@ -56,8 +56,10 @@ export class TcpUdpPortsTerminalUI extends BaseCliWorkerTerminalUI<PortsWorker> 
   //#region methods / add port process
   protected async addPortTerminalUiProcess(): Promise<void> {
     //#region @backendFunc
-    const ctrl = await this.worker.getControllerForRemoteConnection({
-      calledFrom: 'addPortTerminalUiProcess',
+    const ctrl = await this.worker.getRemoteControllerFor({
+      methodOptions: {
+        calledFrom: 'addPortTerminalUiProcess',
+      },
     });
     let portToAdd: number = await this.getNewPortToAdd();
 
@@ -69,11 +71,12 @@ export class TcpUdpPortsTerminalUI extends BaseCliWorkerTerminalUI<PortsWorker> 
       try {
         await UtilsTerminal.pressAnyKeyToContinueAsync();
         const addedPort = (
-          await ctrl.addTakeByOsPort(portToAdd, encodeURIComponent(uniqueId))
+          await ctrl
+            .addTakeByOsPort(portToAdd, encodeURIComponent(uniqueId))
             .request()
         ).body.json;
         await UtilsTerminal.pressAnyKeyToContinueAsync({
-          message: `Port added successfully. Press any key to continue...`,
+          message: `Port ${addedPort.port} added successfully. Press any key to continue...`,
         });
         return;
       } catch (error) {
@@ -115,8 +118,10 @@ export class TcpUdpPortsTerminalUI extends BaseCliWorkerTerminalUI<PortsWorker> 
   //#region methods / delete port process
   protected async deletePortTerminalUiProcess(): Promise<void> {
     //#region @backendFunc
-    const ctrl = await this.worker.getControllerForRemoteConnection({
-      calledFrom: 'deletePortTerminalUiProcess',
+    const ctrl = await this.worker.getRemoteControllerFor({
+      methodOptions: {
+        calledFrom: 'deletePortTerminalUiProcess',
+      },
     });
     const portsTakeByOs = (
       await ctrl.getPortsByStatus('assigned-taken-by-os').request()
@@ -148,8 +153,10 @@ export class TcpUdpPortsTerminalUI extends BaseCliWorkerTerminalUI<PortsWorker> 
   //#region methods / edit port process
   protected async editPortTerminalUiProcess(): Promise<void> {
     //#region @backendFunc
-    const ctrl = await this.worker.getControllerForRemoteConnection({
-      calledFrom: 'editPortTerminalUiProcess',
+    const ctrl = await this.worker.getRemoteControllerFor({
+      methodOptions: {
+        calledFrom: 'editPortTerminalUiProcess',
+      },
     });
     const portsTakeByOs = (
       await ctrl.getPortsByStatus('assigned-taken-by-os').request()
@@ -170,13 +177,15 @@ export class TcpUdpPortsTerminalUI extends BaseCliWorkerTerminalUI<PortsWorker> 
       });
       try {
         const updatePort = (
-          await ctrl.updatePortUniqueId(
-            selectedPort.port,
-            encodeURIComponent(newDescription),
-          ).request()
+          await ctrl
+            .updatePortUniqueId(
+              selectedPort.port,
+              encodeURIComponent(newDescription),
+            )
+            .request()
         ).body.json;
         await UtilsTerminal.pressAnyKeyToContinueAsync({
-          message: `Port edited successfully. Press any key to continue...`,
+          message: `Port ${updatePort.port} edited successfully. Press any key to continue...`,
         });
         return;
       } catch (error) {
@@ -243,8 +252,10 @@ export class TcpUdpPortsTerminalUI extends BaseCliWorkerTerminalUI<PortsWorker> 
   //#region methods / display menu with items
   protected async displayItemsForPortsStatus(status: PortStatus) {
     //#region @backendFunc
-    const controller = await this.worker.getControllerForRemoteConnection({
-      calledFrom: `displayItemsForPortsStatus:${status}`,
+    const controller = await this.worker.getRemoteControllerFor({
+      methodOptions: {
+        calledFrom: `displayItemsForPortsStatus:${status}`,
+      },
     });
     const portsData = await controller.getPortsByStatus(status).request();
     const ports = portsData.body.json.map(c => c.titleOnList);
@@ -268,8 +279,10 @@ export class TcpUdpPortsTerminalUI extends BaseCliWorkerTerminalUI<PortsWorker> 
   //#region methods / get new port to add
   private async getNewPortToAdd(): Promise<number> {
     //#region @backendFunc
-    const ctrl = await this.worker.getControllerForRemoteConnection({
-      calledFrom: 'getNewPortToAdd',
+    const ctrl = await this.worker.getRemoteControllerFor({
+      methodOptions: {
+        calledFrom: 'getNewPortToAdd',
+      },
     });
     let portToAdd: number;
     while (true) {

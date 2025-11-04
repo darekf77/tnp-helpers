@@ -2,6 +2,7 @@ import { Taon } from 'taon/src';
 import { Helpers } from 'tnp-core/src';
 
 import { BaseCliWorkerConfig } from './base-cli-worker-config';
+import { BaseCliWorkerUtils } from './base-cli-worker.utils';
 
 @Taon.Controller({
   className: 'BaseCliWorkerController',
@@ -32,7 +33,10 @@ export abstract class BaseCliWorkerController<
 
   //#region api methods / kill
   @Taon.Http.GET()
-  baseCLiWorkerCommand_kill(): Taon.Response<void> {
+  baseCLiWorkerCommand_kill(
+    @Taon.Http.Param.Query('dontRemoveConfigFile')
+    dontRemoveConfigFile?: boolean,
+  ): Taon.Response<void> {
     //#region @backendFunc
     return async () => {
       console.log(`Killing worker "${this.cliWorkerServiceId}"...`);
@@ -41,6 +45,13 @@ export abstract class BaseCliWorkerController<
           `Destroying context worker "${this.cliWorkerServiceId}"...`,
         );
         await this.ctx.destroy();
+        if (!dontRemoveConfigFile) {
+          Helpers.removeFileIfExists(
+            BaseCliWorkerUtils.getPathToProcessLocalInfoJson(
+              this.cliWorkerServiceId,
+            ),
+          );
+        }
         Helpers.clearConsole();
         process.exit(0);
       }, 1000); // TODO may be change to 0

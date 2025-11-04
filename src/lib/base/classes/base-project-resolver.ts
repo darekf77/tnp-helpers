@@ -40,7 +40,7 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
     //   Helpers.throw(`cliToolName is not provided`);
     // }
     this.portsWorker = new PortsWorker(
-      'ports-worker',
+      'ports-worker', // BaseGlobalCommandLine.prototype.startCliServicePortsWorker
       `${this.cliToolName} startCliServicePortsWorker --skipCoreCheck`,
       CURRENT_PACKAGE_VERSION,
     );

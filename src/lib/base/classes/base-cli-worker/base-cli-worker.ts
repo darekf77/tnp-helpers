@@ -14,11 +14,19 @@ import {
   CoreModels,
 } from 'tnp-core/src';
 
-import { BaseCliWorkerOptionCallable, Helpers } from '../../../index';
+import {
+  //  BaseCliWorkerOptionCallable,
+  Helpers,
+} from '../../../index';
 
 import { BaseCliWorkerConfig } from './base-cli-worker-config';
 import type { BaseCliWorkerController } from './base-cli-worker-controller';
 import { BaseCliWorkerTerminalUI } from './base-cli-worker-terminal-ui';
+import {
+  BaseCliMethodOptions,
+  BaseCLiWorkerStartMode,
+} from './base-cli-worker.models';
+import { BaseCliWorkerUtils } from './base-cli-worker.utils';
 //#endregion
 
 //#region constants
@@ -37,69 +45,8 @@ export abstract class BaseCliWorker<
   // @ts-ignore TODO weird inheritance problem
   readonly terminalUI: TERMINAL_UI = new BaseCliWorkerTerminalUI(this);
   readonly workerContextTemplate: ReturnType<typeof Taon.createContextTemplate>;
-  private workerMainContext: ReturnType<typeof Taon.createContext>;
-  // private workerRemoteContextFor: {
-  //   [ipAddressOfTaonInstance: string]: ReturnType<typeof Taon.createContext>;
-  // } = {};
 
-  async getRemoteContextFor(
-    ipAddressOfTaonInstance: string,
-    port?: number,
-  ): Promise<EndpointContext> {
-    // this.workerRemoteContextFor[ipAddressOfTaonInstance] = remoteCtx;
-    const useHttps = ipAddressOfTaonInstance !== CoreModels.localhostIp127;
-    const protocol = useHttps ? 'https' : 'http';
-
-    const remoteCtx = this.workerContextTemplate().cloneAsRemote({
-      overrideRemoteHost: `${protocol}://${ipAddressOfTaonInstance}${port ? `:${port}` : ''}`,
-    });
-    const contextForRemoteConnection = await remoteCtx.initialize();
-    return contextForRemoteConnection;
-  }
-
-  async getRemoteControllerFor(
-    ipAddressOfTaonInstance: string,
-    port?: number,
-  ): Promise<REMOTE_CTRL> {
-    const contextForRemoteConnection = await this.getRemoteContextFor(
-      ipAddressOfTaonInstance,
-      port,
-    );
-    const taonProjectsController = contextForRemoteConnection.getInstanceBy(
-      this.controllerClass,
-    );
-    return taonProjectsController;
-  }
-
-  private workerRemoteContext: ReturnType<typeof Taon.createContext>;
   readonly controllerClass: new () => REMOTE_CTRL;
-  private contextForRemoteConnection: EndpointContext;
-
-  //#region fields & getters / path to process local info
-  protected get pathToProcessLocalInfoJson(): string {
-    //#region @backendFunc
-    // console.log('os.userInfo()', os.userInfo());
-    return crossPlatformPath([
-      UtilsOs.getRealHomeDir(),
-      `.taon`,
-      '__workers-service-process-info__',
-      `${this.serviceID}.json`,
-    ]);
-    //#endregion
-  }
-  //#endregion
-
-  //#region fields & getters / process local info json object
-  public get processLocalInfoObj(): BaseCliWorkerConfig {
-    //#region @backendFunc
-    const configJson = Helpers.readJson5(this.pathToProcessLocalInfoJson) || {};
-    if (_.isObject(configJson)) {
-      return _.merge(new BaseCliWorkerConfig(), configJson);
-    }
-    return new BaseCliWorkerConfig();
-    //#endregion
-  }
-  //#endregion
 
   //#endregion
 
@@ -120,23 +67,305 @@ export abstract class BaseCliWorker<
   ) {}
   //#endregion
 
-  //#region methods / start normally in current process
+  //#region public
+
+  //#region public fields & getters / process local info json object
+  public get processLocalInfoObj(): BaseCliWorkerConfig {
+    //#region @backendFunc
+    const configJson = Helpers.readJson5(this.pathToProcessLocalInfoJson) || {};
+    if (_.isObject(configJson)) {
+      return _.merge(new BaseCliWorkerConfig(), configJson);
+    }
+    return new BaseCliWorkerConfig();
+    //#endregion
+  }
+  //#endregion
+
+  //#region public methods / get remote controller
+  public async getRemoteControllerFor<ctrl = REMOTE_CTRL>(options?: {
+    methodOptions: Partial<BaseCliMethodOptions>;
+    /**
+     * Optionally get other controller from remote context
+     */
+    controllerClass?: new () => ctrl;
+  }): Promise<ctrl> {
+    options = options || ({} as any);
+    options.methodOptions = BaseCliMethodOptions.from(options.methodOptions);
+    const remoteEndpointContext = await this.getRemoteContextFor(options);
+
+    const taonProjectsController = remoteEndpointContext.getInstanceBy(
+      options.controllerClass
+        ? (options.controllerClass as any)
+        : this.controllerClass,
+    );
+    return taonProjectsController as any;
+  }
+  //#endregion
+
+  //#region public methods / kill
+  /**
+   * stop if started
+   */
+  public async kill(options?: {
+    methodOptions?: Partial<BaseCliMethodOptions>;
+    dontRemoveConfigFile?: boolean;
+  }): Promise<void> {
+    //#region @backendFunc
+    options = options || ({} as any);
+    options.methodOptions = BaseCliMethodOptions.from(options.methodOptions);
+
+    Helpers.log(`Killing service "${this.serviceID}"...`);
+    if (this.processLocalInfoObj.isEmpty) {
+      Helpers.log(
+        `Service "${this.serviceID}" not started - nothing to kill...`,
+      );
+      return;
+    }
+    const ctrl = await this.getRemoteControllerFor({
+      methodOptions: options.methodOptions.clone(opt => {
+        opt.calledFrom = `${opt.calledFrom}.kill`;
+        return opt;
+      }),
+    });
+    try {
+      await ctrl
+        .baseCLiWorkerCommand_kill(options.dontRemoveConfigFile)
+        .request();
+      Helpers.log(`Service "${this.serviceID}" killed...`);
+    } catch (error) {
+      Helpers.log(error);
+      Helpers.log(`Service "${this.serviceID}" not killed...   `);
+    }
+    //#endregion
+  }
+  //#endregion
+
+  //#region public methods / restart
+  /**
+   * kill detached process and start again
+   * @param options.detached - default true
+   */
+  async restart(options?: {
+    methodOptions?: BaseCliMethodOptions;
+  }): Promise<void> {
+    options = options || ({} as any);
+    options.methodOptions = BaseCliMethodOptions.from(options.methodOptions);
+
+    await this.kill({
+      methodOptions: options.methodOptions,
+    });
+    //longer because os is disposing process previous process
+    Helpers.info(
+      `Restarting service "${this.serviceID}" ` +
+        `in ${options.methodOptions.cliParams.mode} mode...`,
+    );
+
+    if (
+      options.methodOptions.cliParams.mode ===
+      BaseCLiWorkerStartMode.IN_CURRENT_PROCESS
+    ) {
+      await this.startNormallyInCurrentProcess({
+        methodOptions: options.methodOptions,
+      });
+    } else {
+      await this.startDetached({
+        methodOptions: options.methodOptions,
+      });
+    }
+  }
+  //#endregion
+
+  //#region public methods / cli start
+  /**
+   * only for cli start
+   * @param cliParams on from cli
+   */
+  async cliStartProcedure(options: {
+    methodOptions?: Partial<BaseCliMethodOptions>;
+  }): Promise<REMOTE_CTRL> {
+    //#region @backendFunc
+    options = options || ({} as any);
+    const methodOptions = BaseCliMethodOptions.from(options.methodOptions);
+    if (methodOptions.cliParams.restart) {
+      Helpers.logInfo(`--- RESTARTING ----`);
+      await this.restart({
+        methodOptions,
+      });
+      process.exit(0);
+    }
+
+    if (methodOptions.cliParams.kill) {
+      await this.kill({
+        methodOptions,
+      });
+      process.exit(0);
+    }
+
+    if (
+      options.methodOptions.cliParams.mode ===
+      BaseCLiWorkerStartMode.IN_CURRENT_PROCESS
+    ) {
+      await this.startNormallyInCurrentProcess({
+        methodOptions,
+      });
+    } else {
+      await this.startDetachedIfNeedsToBeStarted({
+        methodOptions,
+      });
+    }
+    return await this.getRemoteControllerFor({
+      methodOptions: methodOptions.clone(opt => {
+        opt.calledFrom = `${opt.calledFrom}.cliStartProcedure`;
+        return opt;
+      }),
+    });
+    //#endregion
+  }
+  //#endregion
+
+  //#endregion
+
+  //#region protected
+
+  //#region protected methods / get remote context
+  protected async getRemoteContextFor(options?: {
+    methodOptions?: Partial<BaseCliMethodOptions>;
+  }): Promise<EndpointContext> {
+    options = options || ({} as any);
+    options.methodOptions = BaseCliMethodOptions.from(options.methodOptions);
+
+    const ipAddressOfTaonInstance =
+      options.methodOptions.connectionOptions.ipAddressOfTaonInstance ||
+      CoreModels.localhostDomain;
+    // on localhost read data from  processLocalInfoObj json
+    let port =
+      options.methodOptions.connectionOptions.port ||
+      this.processLocalInfoObj.port;
+    // TODO @LAST throw errror when port is not available
+    // -> this can happen in method killWorkerWithLowerVersion()
+    // -> this can happen in method preventStartIfAlreadyStarted()
+    if (ipAddressOfTaonInstance === CoreModels.localhostDomain && !port) {
+      if (this.workerIsStarting) {
+        try {
+          await this.waitForProcessPortSavedToDisk({
+            methodOptions: options.methodOptions.clone(opt => {
+              opt.calledFrom = `${opt.calledFrom}.getRemoteContextFor.localhost`;
+              return opt;
+            }),
+          });
+        } catch (error) {
+          console.error(
+            `[getRemoteContextFor] Error while waiting for process port saved to disk`,
+          );
+        }
+      }
+
+      if (this.processLocalInfoPortNotInited) {
+        throw new Error(
+          `Can't connect to remote context on localhost - port is not defined.
+        This can happen when the worker process is not started yet.
+      `,
+        );
+      } else {
+        port = this.processLocalInfoObj.port;
+      }
+    }
+
+    // this.workerRemoteContextFor[ipAddressOfTaonInstance] = remoteCtx;
+    const useHttps = ipAddressOfTaonInstance !== CoreModels.localhostDomain;
+    const protocol = useHttps ? 'https' : 'http';
+    const overrideRemoteHost = `${protocol}://${ipAddressOfTaonInstance}${
+      port ? `:${port}` : ''
+    }`;
+
+    const remoteCtx = this.workerContextTemplate().cloneAsRemote({
+      overrideRemoteHost,
+    });
+    // @LAST chache remote context per ipAddressOfTaonInstance
+
+    const remoteEndpoitnContext = await remoteCtx.initialize();
+    return remoteEndpoitnContext;
+  }
+  //#endregion
+
+  //#region protected fields & getters / path to process local info
+  protected get pathToProcessLocalInfoJson(): string {
+    //#region @backendFunc
+    // console.log('os.userInfo()', os.userInfo());
+    return BaseCliWorkerUtils.getPathToProcessLocalInfoJson(this.serviceID);
+    //#endregion
+  }
+  //#endregion
+
+  //#region protected fields & getters / should wait for process port saved to disk
+  protected get processLocalInfoPortNotInited(): boolean {
+    return (
+      !this.processLocalInfoObj.port ||
+      isNaN(Number(this.processLocalInfoObj.port))
+    );
+  }
+  //#endregion
+
+  //#region protected fields & getters / worker is starting
+  protected get workerIsStarting(): boolean {
+    return !!this.processLocalInfoObj.startTimestamp;
+  }
+  //#endregion
+
+  //#region protected methods / start if needs to be started
+  protected async startDetachedIfNeedsToBeStarted(options?: {
+    methodOptions?: Partial<BaseCliMethodOptions>;
+  }): Promise<void> {
+    //#region @backendFunc
+    options = options || ({} as any);
+    options.methodOptions = BaseCliMethodOptions.from(options.methodOptions);
+
+    if (this.processLocalInfoObj.isEmpty) {
+      // not started ever yet
+      await this.startDetached({
+        methodOptions: options.methodOptions,
+      });
+      return;
+    }
+
+    const serviceIsHealthy = await this.isServiceHealthy({
+      healthCheckRequestTrys: 1, // just quick check
+      methodOptions: options.methodOptions,
+    });
+    if (!serviceIsHealthy) {
+      await this.startDetached({
+        methodOptions: options.methodOptions,
+      });
+      return;
+    }
+    Helpers.log(`Service "${this.serviceID}" is already started/healthy...`);
+    //#endregion
+  }
+  //#endregion
+
+  //#region protected methods / start normally in current process
   /**
    * <strong>IMPORTANT USE ONLY IN DEVELOPMENT !!!</strong>
    * for production use startDetachedIfNeedsToBeStarted()
    * start normally process
    * this will crash if process already started
    */
-  public async startNormallyInCurrentProcess(options?: {
+  protected async startNormallyInCurrentProcess(options?: {
+    methodOptions?: Partial<BaseCliMethodOptions>;
     actionBeforeTerminalUI?: () => Promise<void>;
   }): Promise<void> {
     //#region @backendFunc
-    options = options || {};
+    options = options || ({} as any);
+    options.methodOptions = BaseCliMethodOptions.from(options.methodOptions);
     Helpers.taskStarted(
       `[${this.serviceID}] Process start in current process...`,
     );
-    await this.killWorkerWithLowerVersion();
-    await this.preventStartIfAlreadyStarted();
+    await this.killWorkerWithLowerVersion({
+      methodOptions: options.methodOptions,
+    });
+    await this.preventStartIfAlreadyStarted({
+      methodOptions: options.methodOptions,
+    });
     const port = await this.getServicePort();
 
     this.saveProcessInfo({
@@ -147,12 +376,14 @@ export abstract class BaseCliWorker<
       version: this.serviceVersion,
     });
 
-    this.workerMainContext = this.workerContextTemplate().cloneAsNormal({
+    const workerMainContext = this.workerContextTemplate().cloneAsNormal({
       overrideHost: `http://localhost:${port}`,
     });
-    await this.workerMainContext.initialize();
+    await workerMainContext.initialize();
 
-    await this.initializeWorkerMetadata();
+    await this.initializeWorkerMetadata({
+      methodOptions: options.methodOptions,
+    });
 
     Helpers.info(`Service started !`);
     this.preventExternalConfigChange();
@@ -172,173 +403,8 @@ export abstract class BaseCliWorker<
   }
   //#endregion
 
-  //#region methods / get context for remote connection
-  async gerContextForRemoteConnection(
-    options: BaseCliWorkerOptionCallable,
-  ): Promise<EndpointContext> {
-    options = options || ({} as any);
-    // ! TODO this waiting is called for every generated port in app.host.ts
-    // ! this may be expensive in future
-    // if (!options.skipWaitingForWorkerProcessPortToBeSaved) {
-    await this.waitForProcessPortSavedToDisk(options);
-    // }
-
-    if (
-      this.contextForRemoteConnection &&
-      !_.isNaN(this.contextForRemoteConnection.port) &&
-      !_.isNaN(this.processLocalInfoObj.port) &&
-      this.contextForRemoteConnection.port !== this.processLocalInfoObj.port
-    ) {
-      Helpers.logInfo('Destroying old context for remote connection...');
-      // debugger;
-      await this.contextForRemoteConnection.destroy();
-      delete this.contextForRemoteConnection;
-    }
-
-    if (!this.contextForRemoteConnection) {
-      Helpers.logInfo('Creating new context for remote connection...');
-      this.workerRemoteContext = this.workerContextTemplate().cloneAsRemote({
-        overrideRemoteHost: `http://localhost:${this.processLocalInfoObj.port}`,
-      });
-      this.contextForRemoteConnection =
-        await this.workerRemoteContext.initialize();
-    }
-    return this.contextForRemoteConnection;
-  }
-  //#endregion
-
-  //#region methods / get controller for remote connection
-  async getControllerForRemoteConnection(
-    options: BaseCliWorkerOptionCallable,
-  ): Promise<REMOTE_CTRL> {
-    //#region @backendFunc
-    options = options || ({} as any);
-    const ctx = await this.gerContextForRemoteConnection(options);
-    const taonProjectsController = ctx.getInstanceBy(this.controllerClass);
-    return taonProjectsController;
-    //#endregion
-  }
-  //#endregion
-
-  //#region public methods / start if needs to be started
-  public async startDetachedIfNeedsToBeStarted(options?: {
-    useCurrentWindowForDetach?: boolean;
-  }) {
-    //#region @backendFunc
-
-    if (this.processLocalInfoObj.isEmpty) {
-      // not started ever yet
-      await this.startDetached(options);
-      return;
-    }
-
-    const serviceIsHealthy = await this.isServiceHealthy({
-      healthCheckRequestTrys: 1, // just quick check
-    });
-    if (!serviceIsHealthy) {
-      await this.startDetached(options);
-      return;
-    }
-    Helpers.log(`Service "${this.serviceID}" is already started/healthy...`);
-    //#endregion
-  }
-  //#endregion
-
-  //#region public methods / kill
-  /**
-   * stop if started
-   */
-  async kill(options?: { dontRemoveConfigFile?: boolean }) {
-    //#region @backendFunc
-    options = options || {};
-    Helpers.log(`Killing service "${this.serviceID}"...`);
-    if (this.processLocalInfoObj.isEmpty) {
-      Helpers.log(
-        `Service "${this.serviceID}" not started - nothing to kill...`,
-      );
-      return;
-    }
-    const ctrl = await this.getControllerForRemoteConnection({
-      calledFrom: 'kill',
-    });
-    try {
-      if (!options.dontRemoveConfigFile) {
-        Helpers.removeFileIfExists(this.pathToProcessLocalInfoJson);
-      }
-      await ctrl.baseCLiWorkerCommand_kill().request();
-      Helpers.log(`Service "${this.serviceID}" killed...`);
-    } catch (error) {
-      Helpers.log(error);
-      Helpers.log(`Service "${this.serviceID}" not killed...   `);
-    }
-    //#endregion
-  }
-  //#endregion
-
-  //#region public methods / restart
-  /**
-   * kill detached process and start again
-   * @param options.detached - default true
-   */
-  async restart(options?: {
-    detached?: boolean;
-    useCurrentWindowForDetach?: boolean;
-  }) {
-    options = options || {};
-    options.detached = _.isUndefined(options.detached) ? true : false;
-    await this.kill();
-    //longer because os is disposing process previous process
-
-    if (options.detached) {
-      Helpers.info(
-        `Restarting service "${this.serviceID}" in detached mode...`,
-      );
-      await this.startDetached(options);
-    } else {
-      Helpers.info(
-        `Restarting service "${this.serviceID}" in current process...`,
-      );
-      await this.startNormallyInCurrentProcess();
-    }
-  }
-  //#endregion
-
-  //#region public methods / cli start
-  /**
-   * only for cli start
-   * @param cliParams on from cli
-   */
-  async cliStartProcedure(cliParams: any): Promise<REMOTE_CTRL> {
-    const detached = !!cliParams['detached'] || !!cliParams['detach'];
-    //#region @backendFunc
-    if (cliParams['restart']) {
-      Helpers.logInfo(`--- RESTARTING ----`);
-      await this.restart({
-        detached,
-      });
-      process.exit(0);
-    }
-
-    if (cliParams['kill']) {
-      await this.kill();
-      process.exit(0);
-    }
-
-    if (detached) {
-      await this.startDetachedIfNeedsToBeStarted();
-      process.exit(0);
-    } else {
-      await this.startNormallyInCurrentProcess();
-    }
-    return await this.getControllerForRemoteConnection({
-      calledFrom: 'cliStartProcedure',
-    });
-    //#endregion
-  }
-  //#endregion
-
-  //#region prevent external config change
-  protected preventExternalConfigChange() {
+  //#region protected methods / prevent external config change
+  protected preventExternalConfigChange(): void {
     //#region @backendFunc
     Helpers.info(`watching: ${this.pathToProcessLocalInfoJson}`);
     const currentConfig = this.processLocalInfoObj;
@@ -357,14 +423,19 @@ export abstract class BaseCliWorker<
   }
   //#endregion
 
-  //#region prevent prevent start if already started
-  protected async preventStartIfAlreadyStarted(): Promise<void> {
+  //#region protected methods / prevent prevent start if already started
+  protected async preventStartIfAlreadyStarted(options?: {
+    methodOptions?: Partial<BaseCliMethodOptions>;
+  }): Promise<void> {
     //#region @backendFunc
-    if (!this.processLocalInfoObj.pid || !this.processLocalInfoObj.port) {
+    options = options || ({} as any);
+    options.methodOptions = BaseCliMethodOptions.from(options.methodOptions);
+    if (!this.processLocalInfoObj.pid || this.processLocalInfoPortNotInited) {
       return;
     }
     try {
       const isHealthy = await this.isServiceHealthy({
+        methodOptions: options.methodOptions,
         healthCheckRequestTrys: 2, // check only twice
       });
       if (isHealthy) {
@@ -379,9 +450,13 @@ export abstract class BaseCliWorker<
   }
   //#endregion
 
-  //#region prevent kill worker with lower version
-  protected async killWorkerWithLowerVersion(): Promise<void> {
+  //#region protected methods / prevent kill worker with lower version
+  protected async killWorkerWithLowerVersion(options?: {
+    methodOptions?: Partial<BaseCliMethodOptions>;
+  }): Promise<void> {
     //#region @backendFunc
+    options = options || ({} as any);
+    options.methodOptions = BaseCliMethodOptions.from(options.methodOptions);
     if (!this.processLocalInfoObj.pid) {
       Helpers.logInfo(`No pid found - skipping version check...`);
       return;
@@ -390,8 +465,11 @@ export abstract class BaseCliWorker<
       `[${this.serviceID}] Checking if current working version is up to date...`,
     );
     try {
-      const ctrl = await this.getControllerForRemoteConnection({
-        calledFrom: 'killWorkerWithLowerVersion',
+      const ctrl = await this.getRemoteControllerFor({
+        methodOptions: options.methodOptions.clone(opt => {
+          opt.calledFrom = `${opt.calledFrom}.killWorkerWithLowerVersion`;
+          return opt;
+        }),
       });
       Helpers.logInfo(
         `[${this.serviceID}] Checking if current working version is up to date...`,
@@ -412,10 +490,13 @@ export abstract class BaseCliWorker<
         );
         await this.kill({
           dontRemoveConfigFile: true,
+          methodOptions: options.methodOptions,
         });
         await UtilsTerminal.wait(1);
       }
-    } catch (error) {}
+    } catch (error) {
+      Helpers.logInfo(`Probably no need to kill worker with lower version`);
+    }
     Helpers.taskDone(
       `[${this.serviceID}] Current working version is up to date !`,
     );
@@ -423,7 +504,7 @@ export abstract class BaseCliWorker<
   }
   //#endregion
 
-  //#region is service healthy
+  //#region protected methods / is service healthy
   /**
    * This has 2 purposes:
    * - infinite check when when detached process finished starting
@@ -431,19 +512,23 @@ export abstract class BaseCliWorker<
    */
   protected async isServiceHealthy(options: {
     healthCheckRequestTrys?: number;
+    methodOptions?: Partial<BaseCliMethodOptions>;
   }): Promise<boolean> {
     //#region @backendFunc
-    options = options || {};
+    options = options || ({} as any);
+    options.methodOptions = BaseCliMethodOptions.from(options.methodOptions);
     const healthCheckRequestTrys = options.healthCheckRequestTrys || 1;
+
+    //#region timestamp checking
     let i = 0; // 15 seconds to start worker
     while (true) {
       i++;
       Helpers.logInfo(
-        `[${this.serviceID}][timestamp-checking] Checking if service "${this.serviceID}" is starting...`,
+        `[${this.serviceID}][timestamp-checking][${options.methodOptions.calledFrom}]
+         Checking if service "${this.serviceID}" is starting...`,
       );
-      const workerIsStarting = !!this.processLocalInfoObj.startTimestamp;
 
-      if (!workerIsStarting) {
+      if (!this.workerIsStarting) {
         // initialized worker does not have startTimestamp
         break;
       }
@@ -466,6 +551,7 @@ export abstract class BaseCliWorker<
       );
       await UtilsTerminal.wait(1);
     }
+    //#endregion
 
     i = 0;
 
@@ -474,8 +560,7 @@ export abstract class BaseCliWorker<
     while (true) {
       i++;
       try {
-        // const isWaitingNotChecking = i >= isWaitingNotCheckingWhen;
-        // TODO: check why this is may not work
+        //#region initial message
         if (isWaitingNotCheckingWhen === i) {
           Helpers.info(
             `[${this.serviceID}] Waiting for service "${this.serviceID}" ` +
@@ -487,8 +572,14 @@ export abstract class BaseCliWorker<
               `is healthy...`,
           );
         }
-        const ctrl = await this.getControllerForRemoteConnection({
-          calledFrom: 'isServiceHealthy',
+        //#endregion
+
+        //#region request check
+        const ctrl = await this.getRemoteControllerFor({
+          methodOptions: options.methodOptions.clone(opt => {
+            opt.calledFrom = `${opt.calledFrom}.isServiceHealthy`;
+            return opt;
+          }),
         });
         Helpers.log(`Sending is healthy request...`);
         // console.log('this.processLocalInfoObj', this.processLocalInfoObj);
@@ -508,14 +599,13 @@ export abstract class BaseCliWorker<
             `Service "${this.serviceID}" is not healthy (response is false)...`,
           );
         }
+        //#endregion
+
         if (isHealthy || i === healthCheckRequestTrys) {
           return isHealthy;
-        } else {
-          Helpers.log('Trying again...');
-          await UtilsTerminal.wait(1);
-          continue;
         }
       } catch (error) {
+        //#region error handling
         if (i >= isWaitingNotCheckingWhen && error?.message) {
           console.error(error.message);
         }
@@ -523,32 +613,39 @@ export abstract class BaseCliWorker<
         Helpers.log(
           `Service "${this.serviceID}" is not healthy (can't check health)...`,
         );
+
         if (i === healthCheckRequestTrys) {
           return false;
-        } else {
-          Helpers.log('Trying again...');
-          await UtilsTerminal.wait(1);
-          continue;
         }
+        //#endregion
       }
+      Helpers.log('Trying again...');
+      await UtilsTerminal.wait(1);
     }
     //#endregion
   }
   //#endregion
 
-  //#region start detached
+  //#region protected methods / start detached
   /**
    * start if not started detached process
    */
   protected async startDetached(options?: {
-    useCurrentWindowForDetach?: boolean;
+    methodOptions?: Partial<BaseCliMethodOptions>;
   }): Promise<void> {
     //#region @backendFunc
-    options = options || {};
+    options = options || ({} as any);
 
-    if (options.useCurrentWindowForDetach) {
+    options.methodOptions = BaseCliMethodOptions.from(options.methodOptions);
+
+    if (
+      options.methodOptions.cliParams.mode ===
+      BaseCLiWorkerStartMode.CHILD_PROCESS
+    ) {
       Helpers.logInfo(
-        `[${this.serviceID}][startDetached]  Starting in current terminal "${chalk.bold(this.startCommand)}"...`,
+        `[${this.serviceID}][startDetached] ` +
+          ` Starting in current terminal
+          "${chalk.bold(this.startCommand)}"...`,
       );
       await UtilsProcess.startAsyncChildProcessCommandUntil(this.startCommand, {
         untilOptions: {
@@ -559,7 +656,9 @@ export abstract class BaseCliWorker<
       });
     } else {
       Helpers.logInfo(
-        `[${this.serviceID}][startDetached] Starting in new terminal "${chalk.bold(this.startCommand)}"...`,
+        `[${this.serviceID}][startDetached] ` +
+          `Starting in new terminal
+          "${chalk.bold(this.startCommand)}"...`,
       );
       await UtilsProcess.startInNewTerminalWindow(this.startCommand);
     }
@@ -568,6 +667,7 @@ export abstract class BaseCliWorker<
       `"${chalk.bold(this.serviceID)}" - waiting until healthy (Infinite health check trys )...`,
     );
     const isServiceHealthy = await this.isServiceHealthy({
+      methodOptions: options.methodOptions,
       healthCheckRequestTrys: Infinity, // wait infinity until started
     });
     if (!isServiceHealthy) {
@@ -578,8 +678,8 @@ export abstract class BaseCliWorker<
   }
   //#endregion
 
-  //#region save process info
-  private saveProcessInfo(processConfig: Partial<BaseCliWorkerConfig>) {
+  //#region protected methods / save process info
+  private saveProcessInfo(processConfig: Partial<BaseCliWorkerConfig>): void {
     //#region @backendFunc
     processConfig = processConfig || ({} as any);
     if (Helpers.exists(this.pathToProcessLocalInfoJson)) {
@@ -599,15 +699,21 @@ export abstract class BaseCliWorker<
   }
   //#endregion
 
-  //#region initialize worker
-  protected async initializeWorkerMetadata() {
+  //#region protected methods / initialize worker
+  protected async initializeWorkerMetadata(options?: {
+    methodOptions?: Partial<BaseCliMethodOptions>;
+  }): Promise<void> {
     //#region @backendFunc
+    options = options || ({} as any);
+    options.methodOptions = BaseCliMethodOptions.from(options.methodOptions);
     while (true) {
       try {
-        const portControllerInstance =
-          await this.getControllerForRemoteConnection({
-            calledFrom: 'initializeWorkerMetadata',
-          });
+        const portControllerInstance = await this.getRemoteControllerFor({
+          methodOptions: options.methodOptions.clone(opt => {
+            opt.calledFrom = `${opt.calledFrom}.initializeWorkerMetadata`;
+            return opt;
+          }),
+        });
 
         await portControllerInstance
           .baseCLiWorkerCommand_initializeMetadata(
@@ -638,41 +744,41 @@ export abstract class BaseCliWorker<
   }
   //#endregion
 
-  //#region wait for process port saved to disk
-  protected async waitForProcessPortSavedToDisk(
-    options: BaseCliWorkerOptionCallable,
-  ): Promise<void> {
+  //#region protected methods / wait for process port saved to disk
+  protected async waitForProcessPortSavedToDisk(options: {
+    methodOptions: BaseCliMethodOptions;
+  }): Promise<void> {
     //#region @backendFunc
     options = options || ({} as any);
+    options.methodOptions = BaseCliMethodOptions.from(options.methodOptions);
     Helpers.logInfo(
-      `[${this.serviceID}][${[options.calledFrom]}]` +
+      `[${this.serviceID}][${[options.methodOptions.calledFrom]}]` +
         ` Waiting for process port saved to disk...`,
     );
     Helpers.log(`in ${this.pathToProcessLocalInfoJson}`);
-    let portForRemote = this.processLocalInfoObj.port;
+
     const MAX_TRYS = 30;
     let i = 0;
-    if (!portForRemote) {
-      while (!portForRemote) {
+    if (this.processLocalInfoPortNotInited) {
+      while (this.processLocalInfoPortNotInited) {
         i++;
-        portForRemote = this.processLocalInfoObj.port;
-        if (portForRemote) {
-          Helpers.taskDone(
-            `[${this.serviceID}][${this.serviceVersion}][${options.calledFrom}]
-             port assigned: ${portForRemote}`,
-          );
-          break;
-        } else {
+        if (this.processLocalInfoPortNotInited) {
           Helpers.logInfo(
-            `[${this.serviceID}][${this.serviceVersion}][${options.calledFrom}]
+            `[${this.serviceID}][${this.serviceVersion}][${options.methodOptions.calledFrom}]
              waiting/checking again for port...`,
           );
           if (i > MAX_TRYS) {
-            throw `[${this.serviceID}][${this.serviceVersion}][${options.calledFrom}]
+            throw `[${this.serviceID}][${this.serviceVersion}][${options.methodOptions.calledFrom}]
               Can't get port for remote connection..
               worker process did not start correctly`;
           }
           await UtilsTerminal.wait(1);
+        } else {
+          Helpers.taskDone(
+            `[${this.serviceID}][${this.serviceVersion}][${options.methodOptions.calledFrom}]
+             port assigned: ${this.processLocalInfoObj.port}`,
+          );
+          break;
         }
       }
     }
@@ -680,8 +786,8 @@ export abstract class BaseCliWorker<
   }
   //#endregion
 
-  //#region get free port
-  public async getServicePort(): Promise<number> {
+  //#region protected methods / get free port
+  protected async getServicePort(): Promise<number> {
     //#region @backendFunc
     Helpers.logInfo(`Getting free port for service...`);
     const port = await Utils.getFreePort({
@@ -692,5 +798,7 @@ export abstract class BaseCliWorker<
     return port;
     //#endregion
   }
+  //#endregion
+
   //#endregion
 }

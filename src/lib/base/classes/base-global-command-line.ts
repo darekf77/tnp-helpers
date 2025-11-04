@@ -23,6 +23,7 @@ import { child_process } from 'tnp-core/src'; //@backend
 import { UtilsCliClassMethod } from 'tnp-core/src';
 
 import {
+  BaseCLiWorkerStartMode,
   Helpers,
   LinkedProject,
   PushProcessOptions,
@@ -1981,9 +1982,17 @@ ${lastCommitMessage}
   /**
    * tnp startCliServicePortsWorker --restart
    */
-  async startCliServicePortsWorker() {
+  async startCliServicePortsWorker(): Promise<void> {
     //#region @backendFunc
-    await this.ins.portsWorker.cliStartProcedure(this.params);
+    await this.ins.portsWorker.cliStartProcedure({
+      methodOptions: {
+        calledFrom: 'terminal command',
+        cliParams: {
+          ...this.params,
+          mode: BaseCLiWorkerStartMode.IN_CURRENT_PROCESS,
+        },
+      },
+    });
     //#endregion
   }
   //#endregion
@@ -2501,8 +2510,10 @@ ${lastCommitMessage}
     const configDir = path.join(userProfile, 'transmission-config');
 
     await UtilsProcess.killProcessOnPort(9091);
-    const ctrl = await this.ins.portsWorker.getControllerForRemoteConnection({
-      calledFrom: `${config.frameworkName} startTransmission`,
+    const ctrl = await this.ins.portsWorker.getRemoteControllerFor({
+      methodOptions: {
+        calledFrom: `${config.frameworkName} startTransmission`,
+      },
     });
 
     const data = await ctrl
