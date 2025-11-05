@@ -294,7 +294,10 @@ export abstract class BaseCliWorker<
     }
 
     // this.workerRemoteContextFor[ipAddressOfTaonInstance] = remoteCtx;
-    const useHttps = ipAddressOfTaonInstance !== CoreModels.localhostDomain;
+    const useHttps =
+      ipAddressOfTaonInstance !== CoreModels.localhostDomain &&
+      ipAddressOfTaonInstance !== CoreModels.localhostIp127;
+
     const protocol = useHttps ? 'https' : 'http';
     const overrideRemoteHost = `${protocol}://${ipAddressOfTaonInstance}${
       port ? `:${port}` : ''
