@@ -42,6 +42,14 @@ export abstract class BaseCliWorker<
   public readonly SPECIAL_WORKER_READY_MESSAGE =
     CoreModels.SPECIAL_WORKER_READY_MESSAGE;
 
+  /**
+   * dependency workers that should be started before this worker
+   */
+  public readonly dependencyWorkers = new Map<
+    string,
+    BaseCliWorker<any, any>
+  >();
+
   // @ts-ignore TODO weird inheritance problem
   readonly terminalUI: TERMINAL_UI = new BaseCliWorkerTerminalUI(this);
   readonly workerContextTemplate: ReturnType<typeof Taon.createContextTemplate>;
@@ -114,7 +122,17 @@ export abstract class BaseCliWorker<
     options = options || ({} as any);
     options.methodOptions = BaseCliMethodOptions.from(options.methodOptions);
 
-    Helpers.log(`Killing service "${this.serviceID}"...`);
+    if (this.dependencyWorkers.size > 0) {
+      for (const [serviceId, worker] of this.dependencyWorkers) {
+        Helpers.info(`Killing dependency worker "${serviceId}"...`);
+        await worker.kill({
+          methodOptions: options.methodOptions,
+          dontRemoveConfigFile: options.dontRemoveConfigFile,
+        });
+      }
+    }
+
+    Helpers.info(`Killing service "${this.serviceID}"...`);
     if (this.processLocalInfoObj.isEmpty) {
       Helpers.log(
         `Service "${this.serviceID}" not started - nothing to kill...`,
@@ -182,7 +200,11 @@ export abstract class BaseCliWorker<
    */
   async cliStartProcedure(options: {
     methodOptions?: Partial<BaseCliMethodOptions>;
-  }): Promise<REMOTE_CTRL> {
+  }): Promise<{
+    controller: REMOTE_CTRL;
+    worker: BaseCliWorker<any, any>;
+    serviceId: string;
+  }> {
     //#region @backendFunc
     options = options || ({} as any);
     const methodOptions = BaseCliMethodOptions.from(options.methodOptions);
@@ -213,12 +235,14 @@ export abstract class BaseCliWorker<
         methodOptions,
       });
     }
-    return await this.getRemoteControllerFor({
+    const controller = await this.getRemoteControllerFor({
       methodOptions: methodOptions.clone(opt => {
         opt.calledFrom = `${opt.calledFrom}.cliStartProcedure`;
         return opt;
       }),
     });
+
+    return { controller, worker: this, serviceId: this.serviceID };
     //#endregion
   }
   //#endregion
@@ -241,9 +265,7 @@ export abstract class BaseCliWorker<
     let port =
       options.methodOptions.connectionOptions.port ||
       this.processLocalInfoObj.port;
-    // TODO @LAST throw errror when port is not available
-    // -> this can happen in method killWorkerWithLowerVersion()
-    // -> this can happen in method preventStartIfAlreadyStarted()
+
     if (ipAddressOfTaonInstance === CoreModels.localhostDomain && !port) {
       if (this.workerIsStarting) {
         try {
