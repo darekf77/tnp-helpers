@@ -53,8 +53,10 @@ export abstract class BaseCliWorkerController<
           );
         }
         Helpers.clearConsole();
-        process.exit(0);
-      }, 1000); // TODO may be change to 0
+        setTimeout(() => {
+          process.exit(0);
+        });
+      }); // TODO may be change to 0
     };
     //#endregion
   }
