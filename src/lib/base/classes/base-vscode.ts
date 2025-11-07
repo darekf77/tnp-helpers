@@ -608,7 +608,10 @@ export class BaseVscodeHelpers<
       'debug.onTaskErrors': 'abort',
       'editor.wordBasedSuggestions': false,
       'typescript.tsdk': 'node_modules/typescript/lib',
-      'terminal.integrated.tabs.enabled': false,
+       /**
+        * terminal tabs quick switcher (actually good idea)
+        */
+      'terminal.integrated.tabs.enabled': true,
       'workbench.editor.enablePreview': true,
       'security.workspace.trust.banner': 'never',
       'telemetry.enableTelemetry': false,

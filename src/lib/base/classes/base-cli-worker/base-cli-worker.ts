@@ -580,7 +580,7 @@ export abstract class BaseCliWorker<
 
     i = 0;
 
-    const isWaitingNotCheckingWhen = 20;
+    const isWaitingNotCheckingWhen = 40;
 
     while (true) {
       i++;

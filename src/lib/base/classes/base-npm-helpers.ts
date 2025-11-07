@@ -266,7 +266,7 @@ ${options.messagePrefix ? `[${options.messagePrefix}] ` : `\t`}Projects to relea
 ${projectsInfo}
       `);
 
-    let message = `Proceed with release ?`;
+    let message = `${options.messagePrefix ? `[${options.messagePrefix}] ` : ``}Proceed with release ?`;
 
     return skipQuestionToUser
       ? true
