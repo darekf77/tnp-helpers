@@ -135,7 +135,7 @@ export class BaseCliWorkerTerminalUI<
               message: 'Are you sure you want to shut down service?',
             })
           ) {
-             await this.worker.kill();
+            await this.worker.kill();
             process.exit(0);
           }
         },
@@ -146,6 +146,7 @@ export class BaseCliWorkerTerminalUI<
   //#endregion
 
   //#region protected methods / info screen
+  private headerDisplayed = false;
   public async infoScreen(options?: {
     exitIsOnlyReturn?: boolean;
   }): Promise<void> {
@@ -154,11 +155,25 @@ export class BaseCliWorkerTerminalUI<
       if (!UtilsTerminal.isVerboseModeTaon()) {
         UtilsTerminal.clearConsole();
       }
-
-      await this.header();
-
-      await this.infoMessageBelowHeader();
       const choices = this.getWorkerTerminalActions(options);
+      if (this.headerDisplayed) {
+        await this.infoMessageBelowHeader();
+      } else {
+        this.headerDisplayed = true;
+        await this.header();
+        await UtilsTerminal.pressAnyKeyToContinueAsync({
+          message:
+            `\nWelcome to ${
+              chalk.bold(this.worker.serviceID) +
+              chalk.bold('@') +
+              chalk.bold(this.worker.serviceVersion)
+            } Terminal UI.` + `\n
+            Press any key to continue...`,
+        });
+        UtilsTerminal.clearConsole();
+        await this.infoMessageBelowHeader();
+      }
+
       const choice = await UtilsTerminal.select<keyof typeof choices>({
         choices,
         question: 'Choose action',
