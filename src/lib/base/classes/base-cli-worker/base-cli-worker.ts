@@ -38,6 +38,8 @@ export abstract class BaseCliWorker<
   REMOTE_CTRL extends BaseCliWorkerController<any>,
   TERMINAL_UI extends BaseCliWorkerTerminalUI<any> = any,
 > {
+  private static workers = new Map<string, BaseCliWorker<any, any>>();
+
   //#region fields & getters
   public readonly SPECIAL_WORKER_READY_MESSAGE =
     CoreModels.SPECIAL_WORKER_READY_MESSAGE;
@@ -53,6 +55,20 @@ export abstract class BaseCliWorker<
   // @ts-ignore TODO weird inheritance problem
   readonly terminalUI: TERMINAL_UI = new BaseCliWorkerTerminalUI(this);
   readonly workerContextTemplate: ReturnType<typeof Taon.createContextTemplate>;
+
+  getWorkerInfoGuiUrl(
+    domain = CoreModels.localhostDomain,
+    useHttps = false,
+  ): string {
+    //#region @backendFunc
+    return (
+      `${useHttps ? 'https' : 'http'}://${domain}:` +
+      `${this.processLocalInfoObj?.port?.toString()}` +
+      `/api/${this.workerContextTemplate().contextName}` +
+      `/${'info' as keyof BaseCliWorkerController<any>}`
+    );
+    //#endregion
+  }
 
   readonly controllerClass: new () => REMOTE_CTRL;
 
@@ -72,10 +88,18 @@ export abstract class BaseCliWorker<
      * unique id for service
      */
     public readonly serviceVersion: string,
-  ) {}
+  ) {
+    BaseCliWorker.workers.set(this.serviceID, this);
+  }
   //#endregion
 
   //#region public
+
+  public getAllWorkersStartedInSystemFromCurrentCli(): BaseCliWorker<any, any>[] {
+    //#region @backendFunc
+    return Array.from(BaseCliWorker.workers.values());
+    //#endregion
+  }
 
   //#region public fields & getters / process local info json object
   public get processLocalInfoObj(): BaseCliWorkerConfig {
@@ -717,7 +741,8 @@ export abstract class BaseCliWorker<
     Helpers.log(
       `Saving process info to "${this.pathToProcessLocalInfoJson}"...`,
     );
-    Helpers.log(processConfig);
+    // Helpers.log(processConfig);
+    processConfig.pathToFile = this.pathToProcessLocalInfoJson;
 
     Helpers.writeJson(this.pathToProcessLocalInfoJson, processConfig);
     //#endregion

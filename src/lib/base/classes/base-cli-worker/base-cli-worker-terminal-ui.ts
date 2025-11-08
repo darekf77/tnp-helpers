@@ -66,9 +66,7 @@ export class BaseCliWorkerTerminalUI<
       `
       Service ${chalk.bold.red(this.worker.serviceID)}` +
         ` (version: ${this.worker.serviceVersion}) started..
-      Check info here http://localhost:${chalk.bold(
-        this.worker.processLocalInfoObj?.port?.toString(),
-      )}/api/${this.worker.workerContextTemplate().contextName}/${'info' as keyof BaseCliWorkerController<any>}
+      Check info here ${this.worker.getWorkerInfoGuiUrl()}
       Worker started by ${chalk.bold(config.frameworkName)}
       (cwd: ${crossPlatformPath(process.cwd())})
         `,
@@ -115,10 +113,7 @@ export class BaseCliWorkerTerminalUI<
         name: 'Open browser with service info',
         action: async () => {
           const openInBrowser = require('open');
-          openInBrowser(
-            `http://localhost:${this.worker.processLocalInfoObj.port}` +
-              `/api/${this.worker.workerContextTemplate().contextName}/info`,
-          );
+          openInBrowser(this.worker.getWorkerInfoGuiUrl());
         },
       },
       exit: {
@@ -167,7 +162,8 @@ export class BaseCliWorkerTerminalUI<
               chalk.bold(this.worker.serviceID) +
               chalk.bold('@') +
               chalk.bold(this.worker.serviceVersion)
-            } Terminal UI.` + `\n
+            } Terminal UI.` +
+            `\n
             Press any key to continue...`,
         });
         UtilsTerminal.clearConsole();

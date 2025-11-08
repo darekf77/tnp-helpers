@@ -1273,7 +1273,7 @@ export namespace UtilsTypescript {
       tags
         .map(t => (Array.isArray(t) ? t[0] : t))
         .filter(Boolean)
-        .map(Utils.escapeStringForRegEx)
+        .map(t => Utils.escapeStringForRegEx(t))
         .join('|'),
       'i',
     );

@@ -8,6 +8,10 @@ export class BaseCliWorkerConfig {
   }
 
   /**
+   * path to file where config is stored
+   */
+  pathToFile: string;
+  /**
    * port taken by service
    */
   port: number;
