@@ -17,9 +17,8 @@ import { HelpersCliTool } from './for-backend/helpers-cli-tool.backend';
 import { HelpersNpm } from './for-backend/helpers-npm.backend';
 import { HelpersTerminal } from './for-backend/helpers-system-terminal.backend';
 
-
 import { HelpersPath } from './for-backend/helpers-path.backend';
-import { HelpersNetwork } from './for-backend/helpers-network.backend';
+
 import { HelpersJSON5 } from './helpers-json5.backend';
 import { CLI } from 'tnp-core/src';
 import { HelpersVscode } from './for-backend/helpers-vscode.backend';
@@ -83,7 +82,6 @@ export class HelpersTaon extends CoreHelpers {
     public npm = new HelpersNpm(),
 
     public path = new HelpersPath(),
-    public network = new HelpersNetwork(),
     public json5 = new HelpersJSON5(),
     public vscode = new HelpersVscode(),
     public consoleGui = new HelpersConsoleGui(),
@@ -179,7 +177,7 @@ export class HelpersTaon extends CoreHelpers {
       replaceWithNothing.push('electron');
     }
 
-    if(strategy === 'node-app') {
+    if (strategy === 'node-app') {
       externals.push('sql.js');
     }
 
@@ -306,65 +304,6 @@ export class HelpersTaon extends CoreHelpers {
         true,
       );
     }
-    //#endregion
-  }
-  //#endregion
-
-  //#region methods & getters / get local ip addresses
-  /**
-   * TODO fix this methods
-   */
-  async localIpAddress() {
-    //#region @backendFunc
-    if (process.platform === 'win32') {
-      const command = 'ipconfig';
-
-      // Execute the command
-      // exec(command, (error, stdout, stderr) => {
-      //   if (error) {
-      //     console.error(`Error executing command: ${error}`);
-      //     return;
-      //   }
-
-      //   // Find the IP address for the specified interface
-      //   const interfaceName = 'Ethernet'; // Change this to the name of your interface
-      //   const ipRegex = /IPv4 Address[.\s]+:\s+([0-9.]+)/g; // Regular expression to match IPv4 addresses
-      //   let match;
-      //   while ((match = ipRegex.exec(stdout)) !== null) {
-      //     const ipAddress = match[1];
-      //     console.log(`IPv4 Address for ${interfaceName}: ${ipAddress}`);
-      //   }
-      // });
-    }
-    return Helpers.getStringFrom(
-      'ipconfig getifaddr en0',
-      `ip v4 address of first ethernet interface`,
-    );
-    //#endregion
-  }
-  //#endregion
-
-  //#region methods & getters / get all local ip addresses
-
-  allLocalIpAddresses(): URL[] {
-    //#region @backendFunc
-    const { networkInterfaces } = require('os');
-    const nets = networkInterfaces();
-    const results = Object.create(null); // Or just '{}', an empty object
-    const ips = [];
-    for (const name of Object.keys(nets)) {
-      for (const net of nets[name]) {
-        // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
-        if (net.family === 'IPv4' && !net.internal) {
-          if (!results[name]) {
-            results[name] = [];
-          }
-          ips.push(net.address);
-          results[name].push(net.address);
-        }
-      }
-    }
-    return ips.map(a => UtilsNetwork.urlParse(a));
     //#endregion
   }
   //#endregion

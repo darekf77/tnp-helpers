@@ -2895,4 +2895,65 @@ ${lastCommitMessage}
     //#endregion
   }
   //#endregion
+
+  //#region commands / has command
+  async hasCommand(): Promise<void> {
+    //#region @backendFunc
+    if (!this.firstArg) {
+      Helpers.error(`You need to provide command name to check`, false, true);
+    }
+    const hasSudo = await UtilsOs.commandExistsAsync(this.firstArg);
+    console.log(`[ASYNC] Your os has "${this.firstArg}" command: ${hasSudo}`);
+    this._exit();
+    //#endregion
+  }
+
+  hasCommandSync(): void {
+    //#region @backendFunc
+    if (!this.firstArg) {
+      Helpers.error(`You need to provide command name to check`, false, true);
+    }
+    const hasSudo = UtilsOs.commandExistsSync(this.firstArg);
+    console.log(
+      `[sync version] Your os has "${this.firstArg}" command: ${hasSudo}`,
+    );
+    this._exit();
+    //#endregion
+  }
+  //#endregion
+
+  //#region commands / open origins in vscode
+  async publicIpAddress(): Promise<void> {
+    const ip = await UtilsNetwork.getCurrentPublicIpAddress();
+    console.log(`Your public IP address is: ${ip}`);
+    this._exit();
+  }
+
+  async publicIp(): Promise<void> {
+    //#region @backendFunc
+    await this.publicIpAddress();
+    //#endregion
+  }
+
+  //#region commands / open origins in vscode
+  async localIps(): Promise<void> {
+    const firstActiveLocalIp =
+      await UtilsNetwork.getFirstIpV4LocalActiveIpAddress();
+
+    console.log(
+      `Your first active local IP address is: ${firstActiveLocalIp} `,
+    );
+
+    const ips = await UtilsNetwork.getLocalIpAddresses();
+    for (let index = 0; index < ips.length; index++) {
+      const ip = ips[index];
+      // console.log(ip);
+      console.log(
+        `${index + 1}. Local IP address is: ` +
+          `${ip.address}, type: ${ip.type}`,
+      );
+    }
+    this._exit();
+  }
+  //#endregion
 }
