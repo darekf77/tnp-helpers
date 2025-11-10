@@ -34,6 +34,12 @@ const WORKER_INIT_START_TIME_LIMIT = 25; // 15 seconds max to start worker
 const START_PORT_FOR_SERVICES = 3600;
 //#endregion
 
+export interface BaseCliWorkerGuiUrlOptions {
+  domain?: string;
+  port?: number | null;
+  useHttps?: boolean;
+}
+
 export abstract class BaseCliWorker<
   REMOTE_CTRL extends BaseCliWorkerController<any>,
   TERMINAL_UI extends BaseCliWorkerTerminalUI<any> = any,
@@ -56,14 +62,18 @@ export abstract class BaseCliWorker<
   readonly terminalUI: TERMINAL_UI = new BaseCliWorkerTerminalUI(this);
   readonly workerContextTemplate: ReturnType<typeof Taon.createContextTemplate>;
 
-  getWorkerInfoGuiUrl(
-    domain = CoreModels.localhostDomain,
-    useHttps = false,
-  ): string {
+  getWorkerInfoGuiUrl(options?: BaseCliWorkerGuiUrlOptions): string {
     //#region @backendFunc
+    options = options || ({} as any);
+    options.domain = options.domain || CoreModels.localhostDomain;
+    options.useHttps = _.isBoolean(options.useHttps) ? options.useHttps : false;
     return (
-      `${useHttps ? 'https' : 'http'}://${domain}:` +
-      `${this.processLocalInfoObj?.port?.toString()}` +
+      `${options.useHttps ? 'https' : 'http'}://${options.domain}` +
+      `${
+        !_.isUndefined(options.port)
+          ? `${options.port === null ? '' : `:${options.port}`}`
+          : `:${this.processLocalInfoObj.port}`
+      }` +
       `/api/${this.workerContextTemplate().contextName}` +
       `/${'info' as keyof BaseCliWorkerController<any>}`
     );
@@ -95,7 +105,10 @@ export abstract class BaseCliWorker<
 
   //#region public
 
-  public getAllWorkersStartedInSystemFromCurrentCli(): BaseCliWorker<any, any>[] {
+  public static getAllWorkersStartedInSystemFromCurrentCli(): BaseCliWorker<
+    any,
+    any
+  >[] {
     //#region @backendFunc
     return Array.from(BaseCliWorker.workers.values());
     //#endregion

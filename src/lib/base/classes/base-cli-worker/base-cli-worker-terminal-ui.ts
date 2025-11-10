@@ -8,7 +8,10 @@ import {
 } from 'tnp-core/src';
 import { _, chalk } from 'tnp-core/src';
 
-import type { BaseCliWorker } from './base-cli-worker';
+import type {
+  BaseCliWorker,
+  BaseCliWorkerGuiUrlOptions,
+} from './base-cli-worker';
 import type { BaseCliWorkerController } from './base-cli-worker-controller';
 //#endregion
 
@@ -60,13 +63,16 @@ export class BaseCliWorkerTerminalUI<
   //#endregion
 
   //#region protected methods / info message below header
-  async infoMessageBelowHeader(): Promise<void> {
+  async infoMessageBelowHeader(
+    options?: BaseCliWorkerGuiUrlOptions,
+  ): Promise<void> {
     //#region @backendFunc
+    options = options || {};
     Helpers.info(
       `
       Service ${chalk.bold.red(this.worker.serviceID)}` +
         ` (version: ${this.worker.serviceVersion}) started..
-      Check info here ${this.worker.getWorkerInfoGuiUrl()}
+      Check info here ${this.worker.getWorkerInfoGuiUrl(options)}
       Worker started by ${chalk.bold(config.frameworkName)}
       (cwd: ${crossPlatformPath(process.cwd())})
         `,

@@ -2922,7 +2922,7 @@ ${lastCommitMessage}
   }
   //#endregion
 
-  //#region commands / open origins in vscode
+  //#region commands / public ip address
   async publicIpAddress(): Promise<void> {
     const ip = await UtilsNetwork.getCurrentPublicIpAddress();
     console.log(`Your public IP address is: ${ip}`);
@@ -2934,6 +2934,7 @@ ${lastCommitMessage}
     await this.publicIpAddress();
     //#endregion
   }
+  //#endregion
 
   //#region commands / open origins in vscode
   async localIps(): Promise<void> {
@@ -2956,4 +2957,13 @@ ${lastCommitMessage}
     this._exit();
   }
   //#endregion
+
+  async isOnline() {
+    //#region @backendFunc
+    console.log(
+      `Is online: ${await UtilsNetwork.checkIfServerPings(this.firstArg)}`,
+    );
+    this._exit();
+    //#endregion
+  }
 }
