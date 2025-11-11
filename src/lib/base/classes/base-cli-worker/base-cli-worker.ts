@@ -1,4 +1,5 @@
 //#region imports
+import { BehaviorSubject } from 'rxjs';
 import { EndpointContext, Taon } from 'taon/src';
 import { config } from 'tnp-config/src';
 import {
@@ -44,6 +45,22 @@ export abstract class BaseCliWorker<
   REMOTE_CTRL extends BaseCliWorkerController<any>,
   TERMINAL_UI extends BaseCliWorkerTerminalUI<any> = any,
 > {
+
+  /**
+   * Indicates if worker is part of cloud
+   * and should use cloud ip address
+   */
+  public static readonly isCloudEnable: Pick<
+    BehaviorSubject<boolean>,
+    'next' | 'getValue'
+  > = new BehaviorSubject(false);
+
+  /**
+   * Cloud ip address of the worker (if part of cloud)
+   */
+  public static readonly  cloudIp: Pick<BehaviorSubject<string | null>, 'next' | 'getValue'> =
+    new BehaviorSubject<string | null>(null);
+
   private static workers = new Map<string, BaseCliWorker<any, any>>();
 
   //#region fields & getters
@@ -82,6 +99,15 @@ export abstract class BaseCliWorker<
     options = options || ({} as any);
     options.domain = options.domain || CoreModels.localhostDomain;
     options.useHttps = _.isBoolean(options.useHttps) ? options.useHttps : false;
+    // console.log({
+    //   isCloudEnable: BaseCliWorker.isCloudEnable.getValue(),
+    //   cloudIp: BaseCliWorker.cloudIp.getValue(),
+    // })
+    if (BaseCliWorker.isCloudEnable.getValue()) {
+      options.domain = BaseCliWorker.cloudIp.getValue();
+      options.useHttps = true;
+      options.port = null;
+    }
     return (
       `${options.useHttps ? 'https' : 'http'}://${options.domain}` +
       `${
