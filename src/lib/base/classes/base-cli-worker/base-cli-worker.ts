@@ -62,6 +62,21 @@ export abstract class BaseCliWorker<
   readonly terminalUI: TERMINAL_UI = new BaseCliWorkerTerminalUI(this);
   readonly workerContextTemplate: ReturnType<typeof Taon.createContextTemplate>;
 
+  /**
+   * Name of the worker context
+   */
+  get contextName(): string {
+    return this.workerContextTemplate().contextName;
+  }
+
+  /**
+   * Port where worker is running
+   * (getter only accessible from host machine)
+   */
+  get port(): number | undefined {
+    return this.processLocalInfoObj.port;
+  }
+
   getWorkerInfoGuiUrl(options?: BaseCliWorkerGuiUrlOptions): string {
     //#region @backendFunc
     options = options || ({} as any);
