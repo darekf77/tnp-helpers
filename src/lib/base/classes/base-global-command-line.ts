@@ -775,9 +775,9 @@ ${
   //#region commands / push all origins
 
   /**
-   * push force to all orgins
+   * push force to all origins
    */
-  async pushAllForce() {
+  async pushAllForce(): Promise<void> {
     //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
@@ -786,19 +786,19 @@ ${
     //#endregion
   }
 
-  async pAllForce() {
+  async pAllForce(): Promise<void> {
     //#region @backendFunc
     await this.pushAllForce();
     //#endregion
   }
 
-  async pAllf() {
+  async pAllf(): Promise<void> {
     //#region @backendFunc
     await this.pushAllForce();
     //#endregion
   }
 
-  async pAll() {
+  async pAll(): Promise<void> {
     //#region @backendFunc
     await this.pushAll();
     //#endregion
@@ -807,7 +807,7 @@ ${
   /**
    * push to all origins
    */
-  async pushAll(force = false) {
+  async pushAll(force = false): Promise<void> {
     //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
@@ -833,13 +833,13 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
   //#endregion
 
   //#region commands / push force
-  async forcePush() {
+  async forcePush(): Promise<void> {
     //#region @backendFunc
     await this.push({ force: true, typeofCommit: 'feature' });
     //#endregion
   }
 
-  async pushForce() {
+  async pushForce(): Promise<void> {
     //#region @backendFunc
     await this.push({ force: true, typeofCommit: 'feature' });
     //#endregion
@@ -858,7 +858,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
       commitMessageRequired?: boolean;
       noExit?: boolean;
     } = {},
-  ) {
+  ): Promise<void> {
     //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
@@ -885,7 +885,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
   //#endregion
 
   //#region commands / push
-  async _preventPushPullFromNotCorrectBranch() {
+  async _preventPushPullFromNotCorrectBranch(): Promise<void> {
     //#region @backendFunc
     while (true) {
       const devBranch =
@@ -934,25 +934,25 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
     //#endregion
   }
 
-  async qPush() {
+  async qPush(): Promise<void> {
     //#region @backendFunc
     await this.quickPush();
     //#endregion
   }
 
-  async quickPush() {
+  async quickPush(): Promise<void> {
     //#region @backendFunc
     await this.push({ skipLint: true });
     //#endregion
   }
 
-  async repushauto() {
+  async repushauto(): Promise<void> {
     //#region @backendFunc
     await this.rePush(true);
     //#endregion
   }
 
-  async rePush(skipQuesion = false) {
+  async rePush(skipQuesion = false): Promise<void> {
     //#region @backendFunc
     const lastCommitMessage = this.project.git.lastCommitMessage();
 
@@ -1029,7 +1029,7 @@ ${lastCommitMessage}
   //#endregion
 
   //#region commands / melt
-  public async melt() {
+  public async melt(): Promise<void> {
     //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
@@ -2360,7 +2360,9 @@ ${lastCommitMessage}
         triggerRevertChangesToEtcHosts.next();
         console.log('Stopping container...');
 
+        // TODO probably UtilsProcess.killProcess() better
         child.kill('SIGINT');
+
         console.log('Exiting...');
         const downProcess =
           project.docker.getDockerComposeUpExecChildProcess('down');
@@ -2958,6 +2960,7 @@ ${lastCommitMessage}
   }
   //#endregion
 
+  //#region commands / is online
   async isOnline() {
     //#region @backendFunc
     console.log(
@@ -2966,4 +2969,5 @@ ${lastCommitMessage}
     this._exit();
     //#endregion
   }
+  //#endregion
 }

@@ -8,12 +8,15 @@ interface BaseCliWorkerOptionCallable {
   calledFrom: string;
 }
 
-class BaseCliWorkerConfigGetContextOptions {
+export class BaseCliWorkerConfigGetContextOptions {
   /**
    * default localhost
    */
   declare ipAddressOfTaonInstance?: string;
-  declare port?: number;
+  /**
+   * if null nothing is used as port (ip address will be clean)
+   */
+  declare port?: number | null;
 }
 
 /**
