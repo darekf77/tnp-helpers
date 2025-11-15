@@ -1,4 +1,5 @@
 //#region imports
+import { ChildProcess, StdioOptions } from 'node:child_process';
 import { scrypt, randomBytes, timingSafeEqual } from 'node:crypto'; // @backend
 import { promisify } from 'node:util'; // @backend
 
@@ -9,6 +10,7 @@ import {
   fse,
   os,
   path,
+  UtilsDotFile,
   UtilsOs,
   UtilsTerminal,
 } from 'tnp-core/src';
@@ -2562,16 +2564,29 @@ export namespace UtilsPasswords {
 
 //#region utils docker
 export namespace UtilsDocker {
+  const DOCKER_TAON_PROJECT_LABEL_KEY = 'com.docker.compose.taon.project'; // change to your app name
+
+  const DOCKER_TAON_PROJECT_LABEL_VALUE = 'true'; // change to your app name
+
   export const DOCKER_LABEL_KEY = 'com.docker.compose.project'; // change to your app name
+  export const DOCKER_TAON_PROJECT_LABEL = `${DOCKER_TAON_PROJECT_LABEL_KEY}=${DOCKER_TAON_PROJECT_LABEL_VALUE}`;
 
   //#region clean images by docker label
-  export const cleanImagesByDockerLabel = async (
+  export const cleanImagesAndContainersByDockerLabel = async (
     labelKey: string,
     labelValue: string,
   ): Promise<void> => {
     //#region @backendFunc
     const label = `${labelKey}=${labelValue}`;
     const execAsync = promisify(child_process.exec);
+
+    if (!(await UtilsOs.isDockerAvailable())) {
+      Helpers.warn(
+        'Docker is not available in the system. Skipping cleanup.',
+        false,
+      );
+      return;
+    }
 
     try {
       console.log(`🧹 Cleaning containers with label: ${label}`);
@@ -2606,5 +2621,58 @@ export namespace UtilsDocker {
     //#endregion
   };
   //#endregion
+
+  //#region get docker compose up/down child process
+  export const getDockerComposeUpExecChildProcess = (
+    action: 'up' | 'down',
+    options?: {
+      composeFileName?: string;
+      cwd?: string;
+      env?: NodeJS.ProcessEnv;
+      skipBuild?: boolean;
+      stdio?: StdioOptions;
+    },
+  ): ChildProcess => {
+    //#region @backendFunc
+    options = options || {};
+    const composeFileName = options?.composeFileName || 'docker-compose.yml';
+    const cwd = options?.cwd || process.cwd();
+    const env = {
+      ...process.env,
+      ...(options?.env || {}),
+    };
+    const child = child_process.spawn(
+      'docker',
+      [
+        'compose',
+        '-f',
+        composeFileName,
+        ...(action === 'up'
+          ? options.skipBuild
+            ? ['up']
+            : ['up', '--build']
+          : ['down']),
+      ],
+      {
+        env,
+        cwd,
+        stdio: options.stdio || 'inherit', // inherit stdio so output shows in terminal
+      },
+    );
+
+    return child;
+    //#endregion
+  };
+  //#endregion
+
+  export const removeAllTaonContainersAndImagesFromDocker =
+    async (): Promise<void> => {
+      //#region @backendFunc
+      await UtilsDocker.cleanImagesAndContainersByDockerLabel(
+        DOCKER_TAON_PROJECT_LABEL_KEY,
+        DOCKER_TAON_PROJECT_LABEL_VALUE,
+      );
+      //#endregion
+    };
 }
 //#endregion

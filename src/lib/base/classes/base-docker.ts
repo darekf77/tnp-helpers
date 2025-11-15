@@ -5,6 +5,9 @@ import {
   CoreModels,
   UtilsJson,
   UtilsDotFile,
+  Helpers,
+  path,
+  _,
 } from 'tnp-core/src';
 
 import { UtilsDocker, UtilsJava } from '../../utils';
@@ -56,40 +59,33 @@ export class BaseDocker<
       composeFileName?: string;
       cwd?: string;
       env?: NodeJS.ProcessEnv;
+      skipBuild?: boolean;
       stdio?: StdioOptions;
     },
   ): ChildProcess {
     //#region @backendFunc
     options = options || {};
-    const composeFileName = options?.composeFileName || 'docker-compose.yml';
-    const cwd = options?.cwd || this.project.location;
-    const env = {
-      ...process.env,
-      ...(options?.env || {}),
-    };
-    const child = child_process.spawn(
-      'docker',
-      [
-        'compose',
-        '-f',
-        composeFileName,
-        ...(action === 'up' ? ['up', '--build'] : ['down']),
-      ],
-      {
-        env,
-        cwd,
-        stdio: options.stdio || 'inherit', // inherit stdio so output shows in terminal
-      },
-    );
+    options.cwd = options?.cwd || this.project.location;
+    options.skipBuild = !!options?.skipBuild;
 
-    return child;
+    if (!options.composeFileName) {
+      options.composeFileName = _.first(
+        Helpers.getFilesFrom(options.cwd, {
+          followSymlinks: false,
+          recursive: false,
+        })
+          .filter(f => f.endsWith('compose.yml'))
+          .map(f => path.basename(f)),
+      );
+    }
+    return UtilsDocker.getDockerComposeUpExecChildProcess(action, options);
     //#endregion
   }
   //#endregion
 
   async removeAllImagesBy_Env_COMPOSE_PROJECT_NAME(): Promise<void> {
     //#region @backendFunc
-    await UtilsDocker.cleanImagesByDockerLabel(
+    await UtilsDocker.cleanImagesAndContainersByDockerLabel(
       UtilsDocker.DOCKER_LABEL_KEY,
       UtilsDotFile.getValueFromDotFile(
         this.project.pathFor('.env'),
