@@ -1,3 +1,4 @@
+//#region imports
 import type { ChildProcess, StdioOptions } from 'child_process';
 
 import {
@@ -5,12 +6,18 @@ import {
   CoreModels,
   UtilsJson,
   UtilsDotFile,
+  Helpers,
+  path,
+  _,
+  crossPlatformPath,
 } from 'tnp-core/src';
+import { UtilsOs } from 'tnp-core/src';
 
 import { UtilsDocker, UtilsJava } from '../../utils';
 
 import { BaseFeatureForProject } from './base-feature-for-project';
 import { BaseProject } from './base-project';
+//#endregion
 
 export class BaseDocker<
   PROJECT extends BaseProject = any,
@@ -50,46 +57,24 @@ export class BaseDocker<
   //#endregion
 
   //#region docker compose up / down
-  getDockerComposeUpExecChildProcess(
-    action: 'up' | 'down',
-    options?: {
-      composeFileName?: string;
-      cwd?: string;
-      env?: NodeJS.ProcessEnv;
-      stdio?: StdioOptions;
-    },
+  getDockerComposeActionChildProcess(
+    action: UtilsDocker.DockerComposeActionType,
+    options?: UtilsDocker.DockerComposeActionOptions,
   ): ChildProcess {
     //#region @backendFunc
     options = options || {};
-    const composeFileName = options?.composeFileName || 'docker-compose.yml';
-    const cwd = options?.cwd || this.project.location;
-    const env = {
-      ...process.env,
-      ...(options?.env || {}),
-    };
-    const child = child_process.spawn(
-      'docker',
-      [
-        'compose',
-        '-f',
-        composeFileName,
-        ...(action === 'up' ? ['up', '--build'] : ['down']),
-      ],
-      {
-        env,
-        cwd,
-        stdio: options.stdio || 'inherit', // inherit stdio so output shows in terminal
-      },
-    );
+    options.cwd = options?.cwd || this.project.location;
 
-    return child;
+
+    return UtilsDocker.getDockerComposeActionChildProcess(action, options);
     //#endregion
   }
   //#endregion
 
+  //#region remove all images by COMPOSE_PROJECT_NAME from .env
   async removeAllImagesBy_Env_COMPOSE_PROJECT_NAME(): Promise<void> {
     //#region @backendFunc
-    await UtilsDocker.cleanImagesByDockerLabel(
+    await UtilsDocker.cleanImagesAndContainersByDockerLabel(
       UtilsDocker.DOCKER_LABEL_KEY,
       UtilsDotFile.getValueFromDotFile(
         this.project.pathFor('.env'),
@@ -98,4 +83,5 @@ export class BaseDocker<
     );
     //#endregion
   }
+  //#endregion
 }

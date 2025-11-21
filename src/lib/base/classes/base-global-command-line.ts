@@ -2334,7 +2334,7 @@ ${lastCommitMessage}
         });
       }
 
-      const child = project.docker.getDockerComposeUpExecChildProcess('up');
+      const child = project.docker.getDockerComposeActionChildProcess('up');
 
       console.log(
         `
@@ -2365,7 +2365,7 @@ ${lastCommitMessage}
 
         console.log('Exiting...');
         const downProcess =
-          project.docker.getDockerComposeUpExecChildProcess('down');
+          project.docker.getDockerComposeActionChildProcess('down');
 
         downProcess.on('close', code => {
           console.log(`docker compose down exited with code ${code}`);

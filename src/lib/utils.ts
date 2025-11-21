@@ -1,4 +1,5 @@
 //#region imports
+import { ChildProcess, StdioOptions } from 'node:child_process';
 import { scrypt, randomBytes, timingSafeEqual } from 'node:crypto'; // @backend
 import { promisify } from 'node:util'; // @backend
 
@@ -9,6 +10,7 @@ import {
   fse,
   os,
   path,
+  UtilsDotFile,
   UtilsOs,
   UtilsTerminal,
 } from 'tnp-core/src';
@@ -2562,16 +2564,31 @@ export namespace UtilsPasswords {
 
 //#region utils docker
 export namespace UtilsDocker {
-  export const DOCKER_LABEL_KEY = 'com.docker.compose.project'; // change to your app name
+  //#region utils docker  / constants
+  const DOCKER_TAON_PROJECT_LABEL_KEY = 'com.docker.compose.taon.project'; // change to your app name
 
-  //#region clean images by docker label
-  export const cleanImagesByDockerLabel = async (
+  const DOCKER_TAON_PROJECT_LABEL_VALUE = 'true'; // change to your app name
+
+  export const DOCKER_LABEL_KEY = 'com.docker.compose.project'; // change to your app name
+  export const DOCKER_TAON_PROJECT_LABEL = `${DOCKER_TAON_PROJECT_LABEL_KEY}=${DOCKER_TAON_PROJECT_LABEL_VALUE}`;
+  //#endregion
+
+  //#region utils docker / clean images by docker label
+  export const cleanImagesAndContainersByDockerLabel = async (
     labelKey: string,
     labelValue: string,
   ): Promise<void> => {
     //#region @backendFunc
     const label = `${labelKey}=${labelValue}`;
     const execAsync = promisify(child_process.exec);
+
+    if (!(await UtilsOs.isDockerAvailable())) {
+      Helpers.warn(
+        'Docker is not available in the system. Skipping cleanup.',
+        false,
+      );
+      return;
+    }
 
     try {
       console.log(`🧹 Cleaning containers with label: ${label}`);
@@ -2601,6 +2618,210 @@ export namespace UtilsDocker {
       console.error(
         `❌ Error cleaning Docker label ${label}:`,
         err.message || err,
+      );
+    }
+    //#endregion
+  };
+  //#endregion
+
+  //#region utils docker / models
+  export interface DockerComposeActionOptions {
+    composeFileName?: string;
+    cwd?: string;
+    env?: NodeJS.ProcessEnv;
+    skipBuild?: boolean;
+    stdio?: StdioOptions;
+    useFirstYmlFound?: boolean;
+  }
+
+  export type DockerComposeActionType = 'up' | 'down';
+  //#endregion
+
+  //#region utils docker / get docker compose up/down command
+  /**
+   * @returns cmd + args array
+   * you can use with child_process.spawn
+   * const [cmd, ...args] = getDockerComposeActionCommand('up');
+   * child.spawn(cmd, args, { ... });
+   *
+   * @param action 'up' | 'down'
+   */
+  export const getDockerComposeActionCommand = (
+    action: DockerComposeActionType,
+    options?: Omit<
+      DockerComposeActionOptions,
+      'cwd' | 'env' | 'stdio' | 'useFirstYmlFound'
+    >,
+  ): string[] => {
+    options = options || {};
+    options.skipBuild = !!options?.skipBuild;
+
+    const composeFileName = options?.composeFileName || 'docker-compose.yml';
+
+    return ['docker', 'compose', '-f', composeFileName].concat(
+      action === 'up'
+        ? options.skipBuild
+          ? ['up']
+          : ['up', '--build']
+        : ['down'],
+    );
+  };
+  //#endregion
+
+  //#region utils docker /  get docker compose up/down child process
+  export const getDockerComposeActionChildProcess = (
+    action: DockerComposeActionType,
+    options?: DockerComposeActionOptions,
+  ): ChildProcess => {
+    //#region @backendFunc
+    options = options || {};
+
+    const cwd = options?.cwd || process.cwd();
+    const env = {
+      ...process.env,
+      ...(options?.env || {}),
+    };
+
+    if (options.useFirstYmlFound) {
+      const foundYml = Helpers.getFilesFrom(cwd, { recursive: false }).find(
+        f => f.endsWith('.yml') || f.endsWith('.yaml'),
+      );
+      options.composeFileName = foundYml ? path.basename(foundYml) : void 0;
+    }
+
+    const [cmd, ...args] = UtilsDocker.getDockerComposeActionCommand(
+      action,
+      options,
+    );
+    const child = child_process.spawn(cmd, args, {
+      env,
+      cwd,
+      stdio: options.stdio || 'inherit', // inherit stdio so output shows in terminal
+    });
+
+    return child;
+    //#endregion
+  };
+  //#endregion
+
+  //#region utils docker / remove all taon containers and images from docker
+  export const removeAllTaonContainersAndImagesFromDocker =
+    async (): Promise<void> => {
+      //#region @backendFunc
+      await UtilsDocker.cleanImagesAndContainersByDockerLabel(
+        DOCKER_TAON_PROJECT_LABEL_KEY,
+        DOCKER_TAON_PROJECT_LABEL_VALUE,
+      );
+      //#endregion
+    };
+  //#endregion
+
+  //#region utils docker / link podman as docker if necessary
+  /**
+   * @TODO @REFACTOR use async stuff
+   */
+  export const linkPodmanAsDockerIfNecessary = async (): Promise<void> => {
+    //#region @backendFunc
+    const isWin = process.platform === 'win32';
+    const isMac = process.platform === 'darwin';
+    const isLinux = process.platform === 'linux';
+
+    const hasDocker = await UtilsOs.commandExistsAsync('docker');
+    const hasPodman = await UtilsOs.commandExistsAsync('podman');
+
+    // Rule: if docker already exists → do nothing
+    if (hasDocker) {
+      console.log(
+        'docker command already exists. Skipping Podman → docker linking.',
+      );
+      return;
+    }
+
+    // Rule: if no podman → nothing to do
+    if (!hasPodman) {
+      console.log('podman not found. Cannot create docker alias.');
+      return;
+    }
+
+    console.log(
+      'podman found, docker not found → creating docker → podman link...',
+    );
+
+    try {
+      if (isLinux || isMac) {
+        // Find podman binary path
+        const podmanPath =
+          Helpers.commandOutputAsString('command -v podman').trim();
+        const dockerPath = crossPlatformPath(
+          path.resolve('/usr/local/bin/docker'),
+        );
+
+        // Remove old symlink if broken
+        Helpers.removeFileIfExists(dockerPath);
+
+        Helpers.createSymLink(podmanPath, dockerPath);
+
+        console.log(`Created symlink: ${dockerPath} → ${podmanPath}`);
+      } else if (isWin) {
+        // Windows: Best effort via Podman Desktop or WSL
+        // Option 1: Try to use Podman Desktop's podman.exe (common location)
+        const commonPaths = [
+          `${process.env.LOCALAPPDATA}\\Programs\\Podman\\podman.exe`,
+          `${process.env.ProgramFiles}\\RedHat\\Podman\\podman.exe`,
+        ];
+
+        let podmanExe = commonPaths.find(p => Helpers.exists(p));
+        if (!podmanExe) {
+          // Fallback: ask WSL for podman path
+          try {
+            podmanExe = Helpers.commandOutputAsString(
+              'wsl podman --version',
+            ).includes('podman version')
+              ? 'wsl podman'.trim()
+              : null;
+          } catch {
+            podmanExe = null;
+          }
+        }
+
+        if (!podmanExe) {
+          console.log(
+            'Could not locate podman.exe or WSL podman. Skipping Windows shim.',
+          );
+          return;
+        }
+
+        // Create docker.bat in a user-writable PATH directory
+        const userBin = crossPlatformPath(
+          path.resolve(process.env.USERPROFILE || '', 'bin'),
+        );
+        const dockerBatPath = crossPlatformPath(
+          path.resolve(userBin, 'docker.bat'),
+        );
+
+        // Ensure directory exists and is in PATH
+        child_process.execSync(`mkdir "${userBin}" 2>nul`, {
+          shell: 'cmd.exe',
+        });
+        const pathAdd = `setx PATH "%PATH%;${userBin}"`;
+        child_process.execSync(pathAdd, { shell: 'cmd.exe', stdio: 'ignore' });
+
+        const batContent = podmanExe.startsWith('wsl')
+          ? `@echo off\r\nwsl podman %*`
+          : `@echo off\r\n"${podmanExe}" %*`;
+
+        require('fs').writeFileSync(dockerBatPath, batContent);
+        console.log(`Created docker.bat shim → ${dockerBatPath}`);
+        console.log(
+          'Note: You may need to restart your terminal for PATH to update.',
+        );
+      }
+
+      console.log('Successfully linked docker → podman');
+    } catch (err) {
+      console.error(
+        'Failed to create docker → podman link:',
+        err instanceof Error ? err.message : err,
       );
     }
     //#endregion

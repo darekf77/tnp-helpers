@@ -119,8 +119,11 @@ export class BaseIgnoreHideHelpers<
       '.prettierc',
       'angular.json',
       '.prettierrc.json',
+      '.eslintrc.js',
       '.eslintrc.json',
       '.npmrc',
+      '.yarnrc',
+      '.idea',
       ...this.project.linter.getLintFiles(),
     ];
   }
@@ -132,6 +135,7 @@ export class BaseIgnoreHideHelpers<
     return [
       'tsconfig*',
       'webpack.*',
+      '.eslintrc*',
       'tslint.*',
       linkeProjectPrefix ? `${linkeProjectPrefix}*` : void 0,
     ].filter(f => !!f) as string[];
