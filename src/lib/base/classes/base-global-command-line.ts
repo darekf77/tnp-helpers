@@ -2970,4 +2970,22 @@ ${lastCommitMessage}
     //#endregion
   }
   //#endregion
+
+  //#region commands / configure bash and shell
+  async configureBash() {
+    await UtilsTerminal.configureBashOrShell();
+  }
+
+  async configureShell() {
+    await UtilsTerminal.configureBashOrShell();
+  }
+
+  confBash() {
+    this.configureBash();
+  }
+
+  confShell() {
+    this.configureShell();
+  }
+  //#endregion
 }
