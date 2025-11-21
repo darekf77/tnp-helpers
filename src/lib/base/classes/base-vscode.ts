@@ -376,7 +376,7 @@ export class BaseVscodeHelpers<
   //#endregion
 
   //#region apply proper global settings
-  async applyProperGlobalSettings(): Promise<void> {
+  public static async applyProperGlobalSettings(): Promise<void> {
     //#region @backendFunc
     const keybindingPathLinux = path.join(
       crossPlatformPath(os.userInfo().homedir),
@@ -611,7 +611,7 @@ export class BaseVscodeHelpers<
        /**
         * terminal tabs quick switcher (actually good idea)
         */
-      'terminal.integrated.tabs.enabled': true,
+      'terminal.integrated.tabs.enabled': false,
       'workbench.editor.enablePreview': true,
       'security.workspace.trust.banner': 'never',
       'telemetry.enableTelemetry': false,
@@ -675,6 +675,11 @@ export class BaseVscodeHelpers<
       'docker.extension.dockerEngineAvailabilityPrompt': false,
       "chat.commandCenter.enabled": false,
       "terminal.integrated.stickyScroll.enabled": false,
+
+      // disable intro AI panel
+      "chat.editor.open": "never",
+      "chat.editor.experimental.introPanel": false,
+      "chat.welcome.show": false
     };
     //#endregion
 
