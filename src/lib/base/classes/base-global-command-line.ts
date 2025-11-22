@@ -2973,11 +2973,13 @@ ${lastCommitMessage}
 
   //#region commands / configure bash and shell
   async configureBash() {
-    await UtilsTerminal.configureBashOrShell();
+    // ! TODO @UNCOMMENT
+    // await UtilsTerminal.configureBashOrShell();
   }
 
   async configureShell() {
-    await UtilsTerminal.configureBashOrShell();
+    // ! TODO @UNCOMMENT
+    // await UtilsTerminal.configureBashOrShell();
   }
 
   confBash() {

@@ -1037,6 +1037,7 @@ to: ${to}
               const exitOnError = global['tnpNonInteractive'];
               Helpers.log(error);
               if (!options!.dontAskOnError) {
+                console.trace(`[taon-helper] Not able to copy folder`)
                 Helpers.error(
                   `[taon-helper] Not able to copy folder:
                 from: ${crossPlatformPath(sourceDir)}

@@ -111,6 +111,24 @@ export class BaseNodeModules<
   }
   //#endregion
 
+  //#region link node_modules to other project
+  copyToProject(project: BaseProject) {
+    //#region @backendFunc
+    Helpers.taskStarted(`Copying node_modules folder to project ${project.name}/node_modules`);
+    const source = this.realPath;
+    let dest = project.pathFor(config.folder.node_modules);
+    dest = this.preventWrongLinkDestination(dest);
+    Helpers.removeSymlinks(dest);
+    Helpers.remove(dest, true);
+    Helpers.copy(source, dest, {
+      recursive: true,
+      overwrite: true,
+    });
+    Helpers.taskDone(`Done copying node_modules folder to project ${project.name}/node_modules`);
+    //#endregion
+  }
+  //#endregion
+
   //#region link to project or location
   linkToLocation(location: string): void {
     //#region @backendFunc
@@ -173,7 +191,10 @@ export class BaseNodeModules<
     Helpers.taskStarted(
       `
       [${dateformat(new Date(), 'dd-mm-yyyy HH:MM:ss')}]
-      Reinstalling node modules in ${this.cwd} with ${options.useYarn ? 'yarn' : 'npm'}
+      Reinstalling node modules in:
+${this.cwd}
+
+with ${options.useYarn ? 'yarn' : 'npm'}
 
       `,
     );
