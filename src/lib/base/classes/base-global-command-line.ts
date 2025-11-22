@@ -301,6 +301,12 @@ export class BaseGlobalCommandLine<
     //#endregion
   }
 
+  async upAll(noExit = false) {
+    //#region @backendFunc
+    await this.deepUpdate(noExit);
+    //#endregion
+  }
+
   async deepUpForce(noExit = false) {
     //#region @backendFunc
     await this.deepUpdateForce(noExit);
