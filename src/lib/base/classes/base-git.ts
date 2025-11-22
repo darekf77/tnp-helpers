@@ -365,8 +365,11 @@ Please provide proper commit message for lastest changes in your project:
           addToLastCommitAndPush: {
             name: `Add to last commit ("${lastCommitName}") and ${hadMeltedActionCommits ? 'force ' : ''}push`,
           },
-          commitAsChoreUpdateAndPush: {
-            name: `Commit as "chore: update" and ${hadMeltedActionCommits ? 'force ' : ''}push`,
+          commitAsChoreUpdateAndPushNormal: {
+            name: `Commit as "chore: update" and normal push`,
+          },
+          commitAsChoreUpdateAndPushForce: {
+            name: `Commit as "chore: update" and force push`,
           },
           discard: {
             name: `Discard all changes`,
@@ -429,13 +432,23 @@ Please provide proper commit message for lastest changes in your project:
         if (selected === 'exit') {
           process.exit(0);
         }
-        if (selected === 'commitAsChoreUpdateAndPush') {
+        if (selected === 'commitAsChoreUpdateAndPushNormal') {
           this.project.git.stageAllFiles();
           this.project.git.commit('chore: update');
 
           await this.project.git.pushCurrentBranch({
             askToRetry: true,
-            force: hadMeltedActionCommits,
+            force: false,
+          });
+          return;
+        }
+        if (selected === 'commitAsChoreUpdateAndPushForce') {
+          this.project.git.stageAllFiles();
+          this.project.git.commit('chore: update');
+
+          await this.project.git.pushCurrentBranch({
+            askToRetry: true,
+            force: true,
           });
           return;
         }
