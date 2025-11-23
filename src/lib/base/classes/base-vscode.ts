@@ -680,7 +680,9 @@ export class BaseVscodeHelpers<
       "chat.editor.open": "never",
       "chat.editor.experimental.introPanel": false,
       "chat.welcome.show": false,
-        
+
+      "telemetry.telemetryLevel": "off",
+
     };
     //#endregion
 
