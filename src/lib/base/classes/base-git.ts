@@ -374,8 +374,11 @@ Please provide proper commit message for lastest changes in your project:
           discard: {
             name: `Discard all changes`,
           },
-          discardAndPush: {
-            name: `Discard all changes and ${hadMeltedActionCommits ? 'force ' : ''}push`,
+          discardAndPushNormal: {
+            name: `Discard all changes and normal push`,
+          },
+          discardAndPushForce: {
+            name: `Discard all changes and force push`,
           },
           push: {
             name: `Just ${hadMeltedActionCommits ? 'force ' : ''}push changes...`,
@@ -413,13 +416,13 @@ Please provide proper commit message for lastest changes in your project:
         if (selected === 'skip') {
           return;
         }
-        if (selected === 'discardAndPush') {
+        if (selected === 'discardAndPushNormal' || selected === 'discardAndPushForce') {
           try {
             this.project.git.resetHard({ HEAD: 0 });
           } catch (error) {}
           await this.project.git.pushCurrentBranch({
             askToRetry: true,
-            force: hadMeltedActionCommits,
+            force: selected === 'discardAndPushForce',
           });
           return;
         }
