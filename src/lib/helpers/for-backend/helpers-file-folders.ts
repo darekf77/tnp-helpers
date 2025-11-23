@@ -945,13 +945,21 @@ to: ${to}
     }
 
     if (options.copySymlinksAsFilesDeleteUnexistedLinksFromSourceFirst) {
-      const files = Helpers.filesFrom(sourceDir, true, true);
+      Helpers.taskDone('Deleting unexisted symlinks from source before copy');
+      const files = Helpers.getFilesFrom(sourceDir, {
+        recursive: true,
+        followSymlinks: false,
+      }).filter(f => Helpers.isUnexistedLink(f));
       for (let index = 0; index < files.length; index++) {
         const file = files[index];
-        if (Helpers.isUnexistedLink(file)) {
-          Helpers.remove(file, true);
-        }
+        Helpers.logWarn(`Removing link: ${file}`);
+        try {
+          fse.unlinkSync(file);
+        } catch (error) {}
       }
+      Helpers.taskDone(
+        'Deleting unexisted symlinks from source before copy done',
+      );
     }
 
     if (
@@ -1037,7 +1045,7 @@ to: ${to}
               const exitOnError = global['tnpNonInteractive'];
               Helpers.log(error);
               if (!options!.dontAskOnError) {
-                console.trace(`[taon-helper] Not able to copy folder`)
+                console.trace(`[taon-helper] Not able to copy folder`);
                 Helpers.error(
                   `[taon-helper] Not able to copy folder:
                 from: ${crossPlatformPath(sourceDir)}
