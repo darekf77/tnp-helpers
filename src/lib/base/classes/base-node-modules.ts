@@ -112,7 +112,7 @@ export class BaseNodeModules<
   //#endregion
 
   //#region link node_modules to other project
-  copyToProject(project: BaseProject) {
+  copyToProject(project: BaseProject): void {
     //#region @backendFunc
     Helpers.taskStarted(`Copying node_modules folder to project ${project.name}/node_modules`);
     const source = this.realPath;
@@ -123,6 +123,7 @@ export class BaseNodeModules<
     Helpers.copy(source, dest, {
       recursive: true,
       overwrite: true,
+      copySymlinksAsFiles: false,
     });
     Helpers.taskDone(`Done copying node_modules folder to project ${project.name}/node_modules`);
     //#endregion
