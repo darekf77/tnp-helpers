@@ -679,7 +679,8 @@ export class BaseVscodeHelpers<
       // disable intro AI panel
       "chat.editor.open": "never",
       "chat.editor.experimental.introPanel": false,
-      "chat.welcome.show": false
+      "chat.welcome.show": false,
+        
     };
     //#endregion
 
