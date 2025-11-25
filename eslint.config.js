@@ -56,6 +56,12 @@ module.exports = [
         "always",
         { exceptAfterSingleLine: false }
       ],
+
+      // "padding-line-between-statements": [
+      //   "warn",
+      //   { "blankLine": "always", "prev": "export", "next": "export" }
+      // ],
+
       // '@angular-eslint/component-selector': [
       //   'warn',
       //   {
