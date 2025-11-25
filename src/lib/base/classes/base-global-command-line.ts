@@ -2997,6 +2997,7 @@ ${lastCommitMessage}
   }
   //#endregion
 
+  //#region commands / git reset all
   gitResetAll() {
     //#region @backendFunc
     Helpers.taskStarted(
@@ -3012,4 +3013,5 @@ ${lastCommitMessage}
     this._exit();
     //#endregion
   }
+  //#endregion
 }

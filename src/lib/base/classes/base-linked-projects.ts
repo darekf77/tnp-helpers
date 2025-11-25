@@ -119,11 +119,16 @@ export class BaseLinkedProjects<
   //#endregion
 
   //#region methods & getters  / add linked project
-  addLinkedProject(linkedProj: LinkedProject | string) {
+  addLinkedProject(
+    linkedProj: LinkedProject | string,
+    options?: { skipFormat?: boolean },
+  ) {
+    //#region @backendFunc
+    options = options || {};
     const linkedProject: LinkedProject = _.isString(linkedProj)
       ? LinkedProject.fromName(linkedProj)
       : linkedProj;
-    //#region @backendFunc
+
     const linkedProjectsConfig = this.getLinkedProjectsConfig();
     const linkedProjectToAdd = LinkedProject.from(linkedProject);
 
@@ -156,24 +161,34 @@ export class BaseLinkedProjects<
     }
 
     linkedProjectsConfig.projects.push(linkedProjectToAdd);
-    this.setLinkedProjectsConfig(linkedProjectsConfig);
+    this.setLinkedProjectsConfig(linkedProjectsConfig, options);
     //#endregion
   }
   //#endregion
 
   //#region methods & getters  / add linked projects
-  addLinkedProjects(linkedProjs: LinkedProject[]) {
+  addLinkedProjects(
+    linkedProjs: LinkedProject[],
+    options?: { skipFormat?: boolean },
+  ) {
     //#region @backendFunc
+    options = options || {};
     for (const linkedProj of linkedProjs) {
-      this.addLinkedProject(linkedProj);
+      this.addLinkedProject(linkedProj, options);
     }
     //#endregion
   }
   //#endregion
 
   //#region methods & getters  / set linked projects config
-  setLinkedProjectsConfig(linkedPorjectsConfig: Partial<LinkedPorjectsConfig>) {
+  setLinkedProjectsConfig(
+    linkedPorjectsConfig: Partial<LinkedPorjectsConfig>,
+    options?: {
+      skipFormat?: boolean;
+    },
+  ) {
     //#region @backendFunc
+    options = options || {};
     if (!Helpers.exists(this.linkedProjectsConfigPath)) {
       return;
     }
@@ -209,10 +224,18 @@ export class BaseLinkedProjects<
     Helpers.writeJson(this.linkedProjectsConfigTempPath, linkedPorjectsConfig);
     Helpers.writeFile(this.linkedProjectsConfigPath, newContent);
     // TODO to many formatting request because of jsonc
-    UtilsTypescript.formatFile(this.linkedProjectsConfigPath);
+    if (!options.skipFormat) {
+      this.formatConfigFile();
+    }
     //#endregion
   }
   //#endregion
+
+  public formatConfigFile() {
+    //#region @backendFunc
+    UtilsTypescript.formatFile(this.linkedProjectsConfigPath);
+    //#endregion
+  }
 
   //#region methods & getters  / get linked projects config path
   private get linkedProjectsConfigPath() {

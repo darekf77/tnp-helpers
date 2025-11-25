@@ -865,7 +865,23 @@ ${linkedProjects.map(l => `- ${l.relativeClonePath}`).join('\n')}
 Would you like to update current project configuration?`)
         : true
     ) {
-      this.linkedProjects.addLinkedProjects(linkedProjects);
+      const { prefix, resetOnlyChildren, skipRecrusivePush } =
+        this.linkedProjects.getLinkedProjectsConfig();
+      this.linkedProjects.setLinkedProjectsConfig({
+        projects: [],
+        prefix,
+        resetOnlyChildren,
+        skipRecrusivePush,
+      });
+
+      this.linkedProjects.addLinkedProjects(
+        linkedProjects.map(c => {
+          c.repoUrl = Helpers.git.originSshToHttp(c.repoUrl);
+          return c;
+        }),
+        { skipFormat: true },
+      );
+      this.linkedProjects.formatConfigFile();
     }
     await this.init();
     Helpers.info(`Linked projects updated`);
