@@ -808,6 +808,7 @@ export class BaseVscodeHelpers<
       'package-lock.json': true,
       'tmp-*': true,
       'src/lib/env/**/*.*': true,
+      '*.rest': true,
     };
 
     Object.keys(settings['search.exclude']).forEach(k => {
