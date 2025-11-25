@@ -2996,4 +2996,20 @@ ${lastCommitMessage}
     this.configureShell();
   }
   //#endregion
+
+  gitResetAll() {
+    //#region @backendFunc
+    Helpers.taskStarted(
+      `Resetting git repo in project and all children to last commit...`,
+    );
+    this.project.git.resetHard();
+    const children = this.project.children;
+    for (const child of children) {
+      Helpers.info(`Resetting child project: ${child.name}`);
+      child.git.resetHard();
+    }
+    Helpers.taskDone(`Git reset --hard completed in project and all children`);
+    this._exit();
+    //#endregion
+  }
 }
