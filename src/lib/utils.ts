@@ -515,16 +515,19 @@ export namespace UtilsTypescript {
     //#region @backendFunc
     absPathToFile = crossPlatformPath(absPathToFile);
     if (Helpers.exists(absPathToFile)) {
-      const { execSync } = require('child_process');
       Helpers.logInfo(`Fixing file with eslint: ${absPathToFile}`);
+
       try {
-        execSync(
+        // use local eslint first
+        child_process.execSync(
           `npx --yes eslint --fix ${path.basename(absPathToFile as string)}`,
           {
             cwd: path.dirname(absPathToFile as string),
+            stdio: 'inherit',
           },
         );
       } catch (error) {}
+
       Helpers.taskDone(`Eslint file fix done.`);
     }
     //#endregion
@@ -539,14 +542,13 @@ export namespace UtilsTypescript {
       Helpers.info(`Fixing files with eslint in: ${absPathToFolder}`);
       const lintFixFn = () => {
         try {
-          Helpers.run(`npx --yes eslint --fix . `, {
+          child_process.execSync(`npx --yes eslint --fix . `, {
             cwd: absPathToFolder,
-            output: false,
-            silence: true,
-          }).sync();
+            stdio: 'inherit',
+          });
         } catch (error) {}
       };
-      lintFixFn();
+      lintFixFn(); // TODO QUICK_FIX
       lintFixFn(); // sometimes it needs to be run twice
       Helpers.info(`Eslint fixing files done.`);
     }
@@ -1125,99 +1127,40 @@ export namespace UtilsTypescript {
   };
   //#endregion
 
-  //#region fix standalone ng 19
   /**
    * Transition methods ng18 => ng19
-   * Remove standalone:true from component decorator
-   * and add standalone: false if not exists
+   * Adds standalone: false if not exists in component decorator
    */
   export function transformComponentStandaloneOption(
     sourceText: string,
   ): string {
     //#region @backendFunc
-    const sourceFile = createSourceFile(
-      'temp.ts',
-      sourceText,
-      ScriptTarget.Latest,
-      true,
-      ScriptKind.TS,
-    );
-    const printer = createPrinter({ newLine: NewLineKind.LineFeed });
+    return sourceText.replace(
+      /@Component\s*\(\s*\{([\s\S]*?)\}\s*\)/g,
+      (full, propsBlock) => {
+        let props = propsBlock;
 
-    // @ts-ignore
-    const transformerFactory: TransformerFactory<ts.SourceFile> = context => {
-      const { factory } = context;
+        // 1. Remove standalone: true
+        // props = props.replace(/\s*standalone\s*:\s*true\s*,?/g, '');
 
-      const visit: ts.Visitor = node => {
-        if (
-          isDecorator(node) &&
-          isCallExpression(node.expression) &&
-          isIdentifier(node.expression.expression) &&
-          node.expression.expression.text === 'Component'
-        ) {
-          const args = node.expression.arguments;
-          if (args.length === 1 && isObjectLiteralExpression(args[0])) {
-            const originalProps = args[0].properties;
-            const newProps: ts.ObjectLiteralElementLike[] = [];
+        // 2. Check if standalone exists after removal
+        const hasStandalone = /standalone\s*:/.test(props);
 
-            let hasStandalone = false;
-            let standaloneIsTrue = false;
-
-            for (const prop of originalProps) {
-              if (
-                isPropertyAssignment(prop) &&
-                isIdentifier(prop.name) &&
-                prop.name.text === 'standalone'
-              ) {
-                hasStandalone = true;
-                if (prop.initializer.kind === SyntaxKind.TrueKeyword) {
-                  standaloneIsTrue = true;
-                  continue; // skip it
-                }
-              }
-              newProps.push(prop);
-            }
-
-            if (!hasStandalone) {
-              // add standalone: false
-              newProps.push(
-                factory.createPropertyAssignment(
-                  factory.createIdentifier('standalone'),
-                  factory.createFalse(),
-                ),
-              );
-            }
-
-            const newArgs = [
-              factory.updateObjectLiteralExpression(args[0], newProps),
-            ];
-
-            const newExpression = factory.updateCallExpression(
-              node.expression,
-              node.expression.expression,
-              undefined,
-              newArgs,
-            );
-
-            return factory.updateDecorator(node, newExpression);
+        // 3. Insert standalone: false if missing
+        if (!hasStandalone) {
+          // If block is empty or only whitespace
+          if (/^\s*$/.test(props)) {
+            props = `\n  standalone: false\n`;
+          } else {
+            props += `\n  standalone: false`;
           }
         }
 
-        return visitEachChild(node, visit, context);
-      };
-
-      return node => visitNode(node, visit);
-    };
-
-    const result = transform(sourceFile, [transformerFactory]);
-    const transformedSourceFile = result.transformed[0];
-    const resultText = printer.printFile(transformedSourceFile);
-
-    result.dispose();
-    return resultText;
+        return `@Component({${props}})`;
+      },
+    );
     //#endregion
   }
-  //#endregion
 
   //#region escape @ in html text
   const escapeAtInHtmlText = (fileContent: string): string => {
@@ -1327,7 +1270,7 @@ export namespace UtilsTypescript {
     fileContent: string,
   ): string => {
     //#region @backendFunc
-const importRegion = `//#re` + `gion`;
+    const importRegion = `//#re` + `gion`;
     const importRegionStart = `${importRegion} imports`;
     const importRegionEnd = `//#end` + `region`;
 
@@ -1390,14 +1333,14 @@ const importRegion = `//#re` + `gion`;
 
     return [
       ...before,
-firstRegionLine,
+      firstRegionLine,
       importRegionStart,
       ...importBlock,
       importRegionEnd,
       ...after,
     ]
       .filter(f => f !== undefined)
-.join('\n');
+      .join('\n');
     //#endregion
   };
   //#endregion

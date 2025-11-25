@@ -75,6 +75,10 @@ trim_trailing_whitespace = false
 **/*.md
 tmp-*
 **/tmp-*
+tsconfig*
+.vscode/launch*
+taon-config-standalone.schema.json
+taon-config-container.schema.json
 **/src/assets/**/*.*
 /.build
 /projects
