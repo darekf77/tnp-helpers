@@ -1,5 +1,5 @@
 //#region imports
-import { config } from 'tnp-config/src';
+import { config } from 'tnp-core/src';
 import { fse } from 'tnp-core/src';
 import { path, crossPlatformPath } from 'tnp-core/src';
 import { _ } from 'tnp-core/src';

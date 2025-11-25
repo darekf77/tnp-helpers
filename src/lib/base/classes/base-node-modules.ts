@@ -1,7 +1,7 @@
 //#region imports
 import type fs from 'fs';
 
-import { config } from 'tnp-config/src';
+import { config } from 'tnp-core/src';
 import { UtilsOs } from 'tnp-core/src';
 import {
   CoreModels,

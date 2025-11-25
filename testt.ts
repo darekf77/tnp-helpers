@@ -47,7 +47,7 @@ export const getContextFromContent = (fileContent: string): string[] => {
 // Usage Example:
 const fileContent = `
 import {taon} from 'taon';
-const PortsContext = createContext(() => ({ }));
+const TaonPortsContext = createContext(() => ({ }));
 
 var AppContext = Taon.createContext(() => ({ }));
 

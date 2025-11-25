@@ -1,7 +1,7 @@
 import {
   _, Helpers
 } from 'tnp-core/src';
-import { config } from 'tnp-config/src';
+import { config } from 'tnp-core/src';
 import * as json5 from 'json5';
 import * as json5Writer from 'json10-writer/src';
 import * as glob from 'glob';

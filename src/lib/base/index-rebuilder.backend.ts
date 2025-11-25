@@ -1,6 +1,6 @@
 // import { _, path } from 'tnp-core/src';
 // import { Helpers } from 'tnp-helpers/src';
-// import { config } from 'tnp-config/src';
+// import { config } from 'tnp-core/src';
 // import { crossPlatformPath } from 'tnp-core/src';
 // import { IncCompiler } from 'incremental-compiler/src';
 // import { BaseProject as Project } from './base-project';

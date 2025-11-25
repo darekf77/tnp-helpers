@@ -23,7 +23,7 @@ import { HelpersJSON5 } from './helpers-json5.backend';
 import { CLI } from 'tnp-core/src';
 import { HelpersVscode } from './for-backend/helpers-vscode.backend';
 //#endregion
-import { config } from 'tnp-config/src';
+import { config } from 'tnp-core/src';
 import { Helpers, UtilsQuickFixes } from '../index';
 import { CLASS } from 'typescript-class-helpers/src';
 import { CoreHelpers, CoreModels } from 'tnp-core/src';

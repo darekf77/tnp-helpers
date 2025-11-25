@@ -1,4 +1,4 @@
-import { folderName } from 'tnp-config/src';
+import { folderName } from 'tnp-core/src';
 import { _, path } from 'tnp-core/src';
 
 import { Helpers } from '../../index';

@@ -1,7 +1,7 @@
 //#region imports
 import { BehaviorSubject } from 'rxjs';
 import { EndpointContext, Taon } from 'taon/src';
-import { config } from 'tnp-config/src';
+import { config } from 'tnp-core/src';
 import {
   chalk,
   crossPlatformPath,
@@ -21,7 +21,7 @@ import {
 } from '../../../index';
 
 import { BaseCliWorkerConfig } from './base-cli-worker-config';
-import type { BaseCliWorkerController } from './base-cli-worker-controller';
+import type { TaonBaseCliWorkerController } from './base-cli-worker-controller';
 import { BaseCliWorkerTerminalUI } from './base-cli-worker-terminal-ui';
 import {
   BaseCliMethodOptions,
@@ -42,7 +42,7 @@ export interface BaseCliWorkerGuiUrlOptions {
 }
 
 export abstract class BaseCliWorker<
-  REMOTE_CTRL extends BaseCliWorkerController<any>,
+  REMOTE_CTRL extends TaonBaseCliWorkerController<any>,
   TERMINAL_UI extends BaseCliWorkerTerminalUI<any> = any,
 > {
 
@@ -116,7 +116,7 @@ export abstract class BaseCliWorker<
           : `:${this.processLocalInfoObj.port}`
       }` +
       `/api/${this.workerContextTemplate().contextName}` +
-      `/${'info' as keyof BaseCliWorkerController<any>}`
+      `/${'info' as keyof TaonBaseCliWorkerController<any>}`
     );
     //#endregion
   }

@@ -1,20 +1,20 @@
-import { BaseContext, Taon } from 'taon/src';
+import { TaonBaseContext, Taon } from 'taon/src';
 import { os, UtilsOs } from 'tnp-core/src';
 import { crossPlatformPath, path, Helpers } from 'tnp-core/src';
 
-import { MIGRATIONS_CLASSES_FOR_PortsContext } from '../../../migrations';
+import { MIGRATIONS_CLASSES_FOR_TaonPortsContext } from '../../../migrations';
 import { getBaseCliWorkerDatabaseConfig } from '../classes/base-cli-worker/base-cli-worker-database-config';
 
-import { PortsController } from './ports.controller';
+import { TaonPortsController } from './ports.controller';
 import { Port } from './ports.entity';
 
-export const PortsContextTemplate = Taon.createContextTemplate(() => ({
-  contextName: 'PortsContext',
+export const TaonPortsContextTemplate = Taon.createContextTemplate(() => ({
+  contextName: 'TaonPortsContext',
   appId: 'dev.taon.taon-ports-worker',
-  contexts: { BaseContext },
-  controllers: { PortsController },
+  contexts: { TaonBaseContext },
+  controllers: { TaonPortsController },
   entities: { Port },
-  migrations: { ...MIGRATIONS_CLASSES_FOR_PortsContext },
+  migrations: { ...MIGRATIONS_CLASSES_FOR_TaonPortsContext },
   skipWritingServerRoutes: true,
   ...getBaseCliWorkerDatabaseConfig('ports-worker', 'DROP_DB+MIGRATIONS'),
   logs: {

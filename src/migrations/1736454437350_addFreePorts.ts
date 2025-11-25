@@ -2,15 +2,15 @@
 import { Taon } from 'taon/src';
 import { QueryRunner } from 'taon-typeorm/src';
 import { _ } from 'tnp-core/src';
-import { Port, PortsController } from '../lib';
+import { Port, TaonPortsController } from '../lib';
 
 @Taon.Migration({
-  className: 'PortsContext_1736454437350_addFreePorts',
+  className: 'TaonPortsContext_1736454437350_addFreePorts',
 })
-export class PortsContext_1736454437350_addFreePorts extends Taon.Base
+export class TaonPortsContext_1736454437350_addFreePorts extends Taon.Base
   .Migration {
-  protected portsController: PortsController =
-    this.injectController(PortsController);
+  protected portsController: TaonPortsController =
+    this.injectController(TaonPortsController);
 
   async up(queryRunner: QueryRunner): Promise<any> {
     const portsTableRepo = await queryRunner.manager.getRepository(Port);

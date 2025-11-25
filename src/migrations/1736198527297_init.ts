@@ -23,9 +23,9 @@ export class MainContext_1736198527297_init extends Taon.Base.Migration {
 }
 
 @Taon.Migration({
-  className: 'PortsContext_1736198527297_init',
+  className: 'TaonPortsContext_1736198527297_init',
 })
-export class PortsContext_1736198527297_init extends Taon.Base.Migration {
+export class TaonPortsContext_1736198527297_init extends Taon.Base.Migration {
   /**
    * remove this method if you are ready to run this migration
    */

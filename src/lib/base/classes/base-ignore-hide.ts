@@ -1,5 +1,5 @@
 //#region imports
-import { fileName, folderName } from 'tnp-config/src';
+import { fileName, folderName } from 'tnp-core/src';
 import { _, path, Utils } from 'tnp-core/src';
 
 import { Helpers } from '../../index';

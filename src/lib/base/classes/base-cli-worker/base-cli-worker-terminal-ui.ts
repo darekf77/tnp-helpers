@@ -1,5 +1,5 @@
 //#region imports
-import { config } from 'tnp-config/src';
+import { config } from 'tnp-core/src';
 import {
   CoreModels,
   crossPlatformPath,
@@ -12,7 +12,7 @@ import type {
   BaseCliWorker,
   BaseCliWorkerGuiUrlOptions,
 } from './base-cli-worker';
-import type { BaseCliWorkerController } from './base-cli-worker-controller';
+import type { TaonBaseCliWorkerController } from './base-cli-worker-controller';
 //#endregion
 
 export type BaseWorkerTerminalActionReturnType = {
@@ -23,7 +23,7 @@ export type BaseWorkerTerminalActionReturnType = {
 };
 
 export class BaseCliWorkerTerminalUI<
-  WORKER extends BaseCliWorker<BaseCliWorkerController<any>, any>,
+  WORKER extends BaseCliWorker<TaonBaseCliWorkerController<any>, any>,
 > {
   constructor(protected worker: WORKER) {}
 

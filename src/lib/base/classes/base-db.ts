@@ -7,7 +7,7 @@ import type { BaseProjectResolver } from "./base-project-resolver";
 import { Low } from "../../lowdb";
 import { os } from "tnp-core/src";
 import { JSONFilePreset } from "../../lowdb/node";
-import { config } from "tnp-config/src";
+import { config } from "tnp-core/src";
 //#endregion
 //#endregion
 

@@ -5,9 +5,9 @@ import { BaseCliWorkerConfig } from './base-cli-worker-config';
 import { BaseCliWorkerUtils } from './base-cli-worker.utils';
 
 @Taon.Controller({
-  className: 'BaseCliWorkerController',
+  className: 'TaonBaseCliWorkerController',
 })
-export abstract class BaseCliWorkerController<
+export abstract class TaonBaseCliWorkerController<
   UPLOAD_FILE_QUERY_PARAMS = {},
 > extends Taon.Base.Controller<UPLOAD_FILE_QUERY_PARAMS> {
   /**

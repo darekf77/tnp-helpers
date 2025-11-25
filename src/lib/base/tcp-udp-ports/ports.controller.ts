@@ -2,15 +2,15 @@
 import { Taon } from 'taon/src';
 import { _, UtilsOs } from 'tnp-core/src';
 
-import { BaseCliWorkerController } from '../classes/base-cli-worker';
+import { TaonBaseCliWorkerController } from '../classes/base-cli-worker';
 
 import { Port, PortStatus } from './ports.entity';
 //#endregion
 
 @Taon.Controller({
-  className: 'PortsController',
+  className: 'TaonPortsController',
 })
-export class PortsController extends BaseCliWorkerController {
+export class TaonPortsController extends TaonBaseCliWorkerController {
   //#region fields
   public START_PORT = 3000;
   public END_PORT = 20000;

@@ -1,5 +1,5 @@
 //#region import
-import { config, FilesNames } from 'tnp-config/src';
+import { config, FilesNames } from 'tnp-core/src';
 import { chalk } from 'tnp-core/src';
 import { CoreModels } from 'tnp-core/src';
 import { path, crossPlatformPath } from 'tnp-core/src';

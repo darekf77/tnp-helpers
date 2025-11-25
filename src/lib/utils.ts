@@ -3,7 +3,7 @@ import { ChildProcess, StdioOptions } from 'node:child_process';
 import { scrypt, randomBytes, timingSafeEqual } from 'node:crypto'; // @backend
 import { promisify } from 'node:util'; // @backend
 
-import { config } from 'tnp-config/src';
+import { config } from 'tnp-core/src';
 import {
   child_process,
   crossPlatformPath,

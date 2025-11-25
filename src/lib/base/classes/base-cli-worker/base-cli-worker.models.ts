@@ -1,4 +1,4 @@
-import { BaseClass } from 'taon/src';
+import { TaonBaseClass } from 'taon/src';
 import { _ } from 'tnp-core/src';
 
 interface BaseCliWorkerOptionCallable {
@@ -39,7 +39,7 @@ export class BaseCLiWorkerStartParams {
 }
 
 export class BaseCliMethodOptions
-  extends BaseClass<BaseCliMethodOptions>
+  extends TaonBaseClass<BaseCliMethodOptions>
   implements BaseCliWorkerOptionCallable
 {
   static from(opt?: Partial<BaseCliMethodOptions>): BaseCliMethodOptions {

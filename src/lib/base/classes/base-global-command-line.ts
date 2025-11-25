@@ -2,7 +2,7 @@
 import * as readline from 'readline'; // @backend
 
 import { Subject } from 'rxjs';
-import { config, fileName, folderName } from 'tnp-config/src';
+import { config, fileName, folderName } from 'tnp-core/src';
 import {
   chalk,
   _,

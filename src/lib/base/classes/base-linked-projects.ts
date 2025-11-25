@@ -1,6 +1,6 @@
 //#region import
 import { load } from 'json10-writer/src';
-import { config } from 'tnp-config/src';
+import { config } from 'tnp-core/src';
 import { _, chalk, crossPlatformPath, path, UtilsTerminal } from 'tnp-core/src';
 
 import {

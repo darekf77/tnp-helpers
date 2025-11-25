@@ -1,7 +1,7 @@
 //#region imports
 import * as ini from 'ini';
 import simpleGit from 'simple-git';
-import { config } from 'tnp-config/src';
+import { config } from 'tnp-core/src';
 import {
   _,
   path,

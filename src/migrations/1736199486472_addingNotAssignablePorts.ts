@@ -2,7 +2,7 @@
 import { Taon } from 'taon/src';
 import { _ } from 'tnp-core/src';
 import { QueryRunner } from 'taon-typeorm/src';
-import { Port, PortsController } from '../lib';
+import { Port, TaonPortsController } from '../lib';
 
 const portsWithDescription = {
   3000: 'Commonly used for development servers',
@@ -25,12 +25,12 @@ const portsWithDescription = {
 };
 
 @Taon.Migration({
-  className: 'PortsContext_1736199486472_addingNotAssignablePorts',
+  className: 'TaonPortsContext_1736199486472_addingNotAssignablePorts',
 })
-export class PortsContext_1736199486472_addingNotAssignablePorts extends Taon
+export class TaonPortsContext_1736199486472_addingNotAssignablePorts extends Taon
   .Base.Migration {
-  protected portsController: PortsController =
-    this.injectController(PortsController);
+  protected portsController: TaonPortsController =
+    this.injectController(TaonPortsController);
 
   private readonly commonPortsFrom3000to6000: number[] =
     Object.keys(portsWithDescription).map(Number);

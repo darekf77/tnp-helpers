@@ -1,5 +1,5 @@
 //#region imports
-import { config } from 'tnp-config/src';
+import { config } from 'tnp-core/src';
 import { CoreModels, chalk, dateformat, _, UtilsTerminal } from 'tnp-core/src';
 
 import { Helpers } from '../../index';

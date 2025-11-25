@@ -3,7 +3,7 @@ import { promisify } from 'util';
 
 import type { CopyOptionsSync } from 'fs-extra';
 import * as glob from 'glob';
-import { config, extAllowedToReplace } from 'tnp-config/src';
+import { config, extAllowedToReplace } from 'tnp-core/src';
 import {
   _,
   path,

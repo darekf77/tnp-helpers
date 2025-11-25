@@ -2,7 +2,7 @@ import {
   config,
   notAllowedNames,
   notAllowedProjectNames,
-} from 'tnp-config/src';
+} from 'tnp-core/src';
 import { _, crossPlatformPath, path } from 'tnp-core/src';
 
 import { Helpers } from '../index';

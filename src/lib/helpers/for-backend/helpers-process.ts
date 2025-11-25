@@ -6,7 +6,7 @@ import * as spawn from 'cross-spawn';
 import * as dateformat from 'dateformat';
 import * as fuzzy from 'fuzzy';
 import { Log, Level } from 'ng2-logger/src';
-import { config } from 'tnp-config/src';
+import { config } from 'tnp-core/src';
 import {
   _,
   os,
