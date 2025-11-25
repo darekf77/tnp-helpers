@@ -1327,8 +1327,23 @@ export namespace UtilsTypescript {
     fileContent: string,
   ): string => {
     //#region @backendFunc
-    const importRegionStart = `//#re` + `gion imports`;
+const importRegion = `//#re` + `gion`;
+    const importRegionStart = `${importRegion} imports`;
     const importRegionEnd = `//#end` + `region`;
+
+    if (fileContent.startsWith(importRegionStart)) {
+      return fileContent; // already wrapped
+    }
+
+    let firstRegionLine: string | undefined = undefined;
+    if (fileContent.startsWith(importRegion)) {
+      const lines = fileContent.split(/\r?\n/);
+
+      if (lines[0].includes('@notF' + 'orNpm')) {
+        firstRegionLine = lines[0];
+        fileContent = lines.slice(1).join('\n');
+      }
+    }
 
     const sourceFile = createSourceFile(
       'temp.ts',
@@ -1356,7 +1371,7 @@ export namespace UtilsTypescript {
     }
 
     if (importDeclarations.length === 0) {
-      return fileContent; // nothing to wrap
+      return fileContent + (firstRegionLine ? `\n${firstRegionLine}` : ''); // nothing to wrap
     }
 
     const firstImportStart = importDeclarations[0].getFullStart();
@@ -1375,11 +1390,14 @@ export namespace UtilsTypescript {
 
     return [
       ...before,
+firstRegionLine,
       importRegionStart,
       ...importBlock,
       importRegionEnd,
       ...after,
-    ].join('\n');
+    ]
+      .filter(f => f !== undefined)
+.join('\n');
     //#endregion
   };
   //#endregion
