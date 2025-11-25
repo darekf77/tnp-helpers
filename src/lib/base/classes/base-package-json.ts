@@ -115,6 +115,11 @@ export class BasePackageJson extends BaseJsonFileReader<PackageJson> {
     return this.data?.repository;
   }
 
+  setRepository(repository: PackageJson['repository']) {
+    this.data.repository = repository;
+    this.saveToDisk('setting repository');
+  }
+
   /**
    * set the WHOLE dependencies object
    * THIS WILL NOT MERGE -> IT WILL REPLACE WHOLE DEPENDENCIES OBJECT
