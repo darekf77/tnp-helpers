@@ -2,7 +2,13 @@
 import * as readline from 'readline'; // @backend
 
 import { Subject } from 'rxjs';
-import { config, fileName, folderName } from 'tnp-core/src';
+import {
+  config,
+  fileName,
+  folderName,
+  UtilsEtcHosts,
+  UtilsExecProc,
+} from 'tnp-core/src';
 import {
   chalk,
   _,
@@ -21,6 +27,8 @@ import { UtilsTerminal } from 'tnp-core/src';
 import { UtilsNetwork, UtilsDotFile } from 'tnp-core/src';
 import { child_process } from 'tnp-core/src'; //@backend
 import { UtilsCliClassMethod } from 'tnp-core/src';
+import { win32Path } from 'tnp-core/src';
+import { UtilsSudo } from 'tnp-core/src';
 
 import {
   BaseCLiWorkerStartMode,
@@ -47,6 +55,37 @@ export class BaseGlobalCommandLine<
 > extends BaseCommandLineFeature<PARAMS, PROJECT, PROJECT_RESOLVER> {
   public _(): void {
     Helpers.error('Please select git command');
+  }
+
+  /**
+   * @returns true is sudo was used to restart the process
+   */
+  protected async _runAsSudoIfNotElevated({
+    globalCommandName,
+  }: {
+    globalCommandName?: string;
+  }): Promise<boolean> {
+    //#region @backendFunc
+    if (!(await isElevated())) {
+      if (process.platform === 'win32') {
+        await UtilsExecProc.spawnAdminSudo(
+          `${config.frameworkName} ${globalCommandName}`,
+        );
+      } else {
+        let pathOfExecutableNode =
+          await UtilsProcess.getPathOfExecutable('node');
+        let pathOfExecutable = await UtilsProcess.getPathOfExecutable(
+          config.frameworkName,
+        );
+        await UtilsExecProc.spawnAdminSudo(
+          `${pathOfExecutableNode} ${pathOfExecutable} ${globalCommandName}`,
+        );
+      }
+
+      return true;
+    }
+    return false;
+    //#endregion
   }
 
   //#region commands / prevent cwd is not project
@@ -1212,6 +1251,7 @@ ${lastCommitMessage}
     await this.push({ typeofCommit: 'bugfix', commitMessageRequired: true });
     //#endregion
   }
+
   pfix() {
     //#region @backendFunc
     this.pushFix();
@@ -1262,6 +1302,7 @@ ${lastCommitMessage}
     await this.push({ typeofCommit: 'style', commitMessageRequired: true });
     //#endregion
   }
+
   async pstyl() {
     //#region @backendFunc
     await this.pushStyle();
@@ -1309,6 +1350,7 @@ ${lastCommitMessage}
     await this.pushTest();
     //#endregion
   }
+
   async pTests() {
     //#region @backendFunc
     await this.pushTest();
@@ -1848,16 +1890,19 @@ ${lastCommitMessage}
     await this.INSTALL_PROJ_EXT();
     //#endregion
   }
+
   async INSTALL_PROJECT_EXT(): Promise<void> {
     //#region @backendFunc
     await this.INSTALL_PROJ_EXT();
     //#endregion
   }
+
   async INS_PROJ_EXT(): Promise<void> {
     //#region @backendFunc
     await this.INSTALL_PROJ_EXT();
     //#endregion
   }
+
   async INSTALL_PROJ_EXT(): Promise<void> {
     //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: false }))) {
@@ -1969,6 +2014,7 @@ ${lastCommitMessage}
     this._exit();
     //#endregion
   }
+
   async ghRestore() {
     //#region @backendFunc
     await new GhTempCode(this.cwd, this.project).init().restore();
@@ -2267,10 +2313,15 @@ ${lastCommitMessage}
   //#endregion
 
   //#region commands / simulate domain
-  async simulateDomain() {
+  async simulateDomain(): Promise<void> {
     //#region @backendFunc
     // UtilsTerminal.clearConsole();
-    await UtilsNetwork.simulateDomain(this.args);
+    const commandEvaluatedAsSudo = await this._runAsSudoIfNotElevated({
+      globalCommandName: 'simulateDomain',
+    });
+    if (!commandEvaluatedAsSudo) {
+      await UtilsEtcHosts.simulateDomain(this.args);
+    }
     this._exit();
     //#endregion
   }
@@ -3014,4 +3065,21 @@ ${lastCommitMessage}
     //#endregion
   }
   //#endregion
+
+  async isElevated() {
+    //#region @backendFunc
+    console.log(
+      `Is running with elevated privileges (sudo/admin): ${await isElevated()}`,
+    );
+    this._exit();
+    //#endregion
+  }
+
+  async sudoCheck() {
+    const sudoStatus = await UtilsSudo.getStatus();
+    console.log('is command available', sudoStatus.isAvailable);
+    console.log('is inline sudo enable', sudoStatus.isInline);
+    console.log('is this command elevated (sudo or admin)', await isElevated());
+    this._exit();
+  }
 }
