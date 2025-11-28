@@ -680,6 +680,7 @@ export class BaseVscodeHelpers<
       "chat.editor.open": "never",
       "chat.editor.experimental.introPanel": false,
       "chat.welcome.show": false,
+      "workbench.secondarySideBar.defaultVisibility": "hidden",
 
       "telemetry.telemetryLevel": "off",
 
