@@ -551,6 +551,13 @@ export class BaseVscodeHelpers<
     };
     //#endregion
 
+    const settingsLinux = {
+      // proper alt behavior for vscode on linux
+      'window.titleBarStyle': 'custom',
+      'window.customMenuBarAltFocus': false,
+      'window.enableMenuBarMnemonics': false,
+    };
+
     //#region global / setting for all
 
     let settings = {
@@ -608,9 +615,9 @@ export class BaseVscodeHelpers<
       'debug.onTaskErrors': 'abort',
       'editor.wordBasedSuggestions': false,
       'typescript.tsdk': 'node_modules/typescript/lib',
-       /**
-        * terminal tabs quick switcher (actually good idea)
-        */
+      /**
+       * terminal tabs quick switcher (actually good idea)
+       */
       'terminal.integrated.tabs.enabled': false,
       'workbench.editor.enablePreview': true,
       'security.workspace.trust.banner': 'never',
@@ -673,17 +680,16 @@ export class BaseVscodeHelpers<
         'Maximum Word Length Exceeded': false,
       },
       'docker.extension.dockerEngineAvailabilityPrompt': false,
-      "chat.commandCenter.enabled": false,
-      "terminal.integrated.stickyScroll.enabled": false,
+      'chat.commandCenter.enabled': false,
+      'terminal.integrated.stickyScroll.enabled': false,
 
       // disable intro AI panel
-      "chat.editor.open": "never",
-      "chat.editor.experimental.introPanel": false,
-      "chat.welcome.show": false,
-      "workbench.secondarySideBar.defaultVisibility": "hidden",
+      'chat.editor.open': 'never',
+      'chat.editor.experimental.introPanel': false,
+      'chat.welcome.show': false,
+      'workbench.secondarySideBar.defaultVisibility': 'hidden',
 
-      "telemetry.telemetryLevel": "off",
-
+      'telemetry.telemetryLevel': 'off',
     };
     //#endregion
 
@@ -709,6 +715,7 @@ export class BaseVscodeHelpers<
       settings = _.merge(settings, windowsSettings);
     }
     if (process.platform === 'linux') {
+      settings = _.merge(settings, settingsLinux);
       settingspath = settingspathLinux;
     }
     //#endregion
