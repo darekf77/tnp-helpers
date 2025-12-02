@@ -3108,7 +3108,11 @@ ${lastCommitMessage}
         true,
       );
     }
-    const exists = await UtilsOs.pythonModuleExists(moduleName);
+    let exists = await UtilsOs.pythonModuleExists(moduleName);
+    if(!exists) {
+      Helpers.warn(`Module not found in global python packages, checking pipx packages...`);
+      exists = await UtilsOs.pipxPackageExists(moduleName);
+    }
     console.log(
       `Python module "${moduleName}" exists: ${exists ? 'YES' : 'NO'}`,
     );
