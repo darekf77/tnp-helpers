@@ -3096,4 +3096,24 @@ ${lastCommitMessage}
     this._exit();
   }
   //#endregion
+
+  //#region commands / python modules exists
+  async pythonModuleExists() {
+    //#region @backendFunc
+    const moduleName = this.firstArg;
+    if (!moduleName) {
+      Helpers.error(
+        `You need to provide python module name to check`,
+        false,
+        true,
+      );
+    }
+    const exists = await UtilsOs.pythonModuleExists(moduleName);
+    console.log(
+      `Python module "${moduleName}" exists: ${exists ? 'YES' : 'NO'}`,
+    );
+    this._exit();
+    //#endregion
+  }
+  //#endregion
 }
