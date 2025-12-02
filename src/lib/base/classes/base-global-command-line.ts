@@ -3020,8 +3020,18 @@ ${lastCommitMessage}
   //#region commands / is online
   async isOnline() {
     //#region @backendFunc
+    const pingIsOK = await UtilsNetwork.checkIfServerPings(this.firstArg);
+    const checkIfServerIsOnline = await UtilsNetwork.checkIfServerOnline(
+      this.firstArg,
+    );
+
     console.log(
-      `Is online: ${await UtilsNetwork.checkIfServerPings(this.firstArg)}`,
+      `Server ${this.firstArg}
+
+    is ping ok ?: ${pingIsOK}
+    is socket connection ok ? : ${checkIfServerIsOnline}
+
+    `,
     );
     this._exit();
     //#endregion
@@ -3066,6 +3076,7 @@ ${lastCommitMessage}
   }
   //#endregion
 
+  //#region commands / is elevated
   async isElevated() {
     //#region @backendFunc
     console.log(
@@ -3074,7 +3085,9 @@ ${lastCommitMessage}
     this._exit();
     //#endregion
   }
+  //#endregion
 
+  //#region commands / sudo check
   async sudoCheck() {
     const sudoStatus = await UtilsSudo.getStatus();
     console.log('is command available', sudoStatus.isAvailable);
@@ -3082,4 +3095,5 @@ ${lastCommitMessage}
     console.log('is this command elevated (sudo or admin)', await isElevated());
     this._exit();
   }
+  //#endregion
 }

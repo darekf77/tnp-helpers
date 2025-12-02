@@ -3,7 +3,7 @@ import { ChildProcess, StdioOptions } from 'node:child_process';
 import { scrypt, randomBytes, timingSafeEqual } from 'node:crypto'; // @backend
 import { promisify } from 'node:util'; // @backend
 
-import { config } from 'tnp-core/src';
+import { chalk, chokidar, config } from 'tnp-core/src';
 import {
   child_process,
   crossPlatformPath,
@@ -2790,3 +2790,246 @@ export namespace UtilsDocker {
   //#endregion
 }
 //#endregion
+
+//#region utils file sync
+/**
+ * ! TODO @IN_PROGRESS @LAST
+ */
+export namespace UtilsFileSync {
+  //#region constants
+  // ───── SAFETY SETTINGS ─────────────────────────────
+  // Minimum realistic photo/video size (in bytes) before we even try
+  const MIN_PHOTO_SIZE = 50_000; // ~50 KB — anything smaller is probably placeholder
+  const MIN_VIDEO_SIZE = 500_000; // ~500 KB
+
+  // How long we wait after the file stops growing before processing
+  const STABILIZATION_MS = 5000; // 5 seconds is bulletproof
+
+  //#region @backend
+  const execAsync = promisify(child_process.exec);
+  //#endregion
+  //#endregion
+
+  //#region models
+  interface FoldersSyncOptions {
+    androidFolder: string;
+    macPhotosLibrary: string;
+    tempConvertFolder: string;
+    /**
+     * If true, skips the terminal menu confirmation on startup
+     * (default: false) - perfect for automated scripts
+     */
+    skipTerminalMenu?: boolean;
+    /**
+     * for testing purposes only
+     */
+    onlyProcessFiles?: string[]; // optional list of filenames to only process (for testing)
+  }
+
+  interface WacherData extends FoldersSyncOptions {
+    processed: Set<string>;
+    pending: Map<string, NodeJS.Timeout>;
+  }
+  //#endregion
+
+  //#region for folders
+  export const forFolders = async (
+    folder: FoldersSyncOptions,
+  ): Promise<void> => {
+    //#region @backendFunc
+
+    const hasFFmpeg = await UtilsOs.commandExistsAsync('ffmpeg');
+    if (!hasFFmpeg) {
+      Helpers.error(
+        `FFmpeg is not installed or not available in PATH. Please install FFmpeg to use the safe watcher.`,
+      );
+      return;
+    }
+    const hasFFprobe = await UtilsOs.commandExistsAsync('ffprobe');
+    if (!hasFFprobe) {
+      Helpers.error(
+        `FFprobe is not installed or not available in PATH. Please install FFprobe to use the safe watcher.`,
+      );
+      return;
+    }
+
+    //#region watcher setup
+    await fse.mkdir(folder.tempConvertFolder, { recursive: true });
+
+    const processed = new Set<string>();
+    const pending = new Map<string, NodeJS.Timeout>();
+
+    const watcherData: WacherData = {
+      ...folder,
+      processed,
+      pending,
+    };
+    //#endregion
+
+    //#region terminal menu
+    Helpers.info(
+      `Starting safe watcher with the following settings:
+    ${chalk.bold('Android folder')}:\n${folder.androidFolder}
+    ${chalk.bold('MacOS Photos library')}:\n${folder.macPhotosLibrary}
+    Temporary conversion folder:\n${folder.tempConvertFolder}
+
+    `,
+    );
+
+    if (!folder.skipTerminalMenu) {
+      const proceed = await UtilsTerminal.confirm({
+        message: `Proceed with starting the watcher?`,
+      });
+    }
+
+    //#endregion
+
+    // ───── MAIN WATCHER ─────────────────────────────────
+    chokidar
+      .watch(folder.androidFolder, {
+        //#region watcher options
+        ignored: /(^|[\/\\])\../,
+        persistent: true,
+        ignoreInitial: false,
+        awaitWriteFinish: {
+          stabilityThreshold: STABILIZATION_MS,
+          pollInterval: 500,
+        },
+        // On Windows 11 + MTP devices, native events are unreliable → force polling
+        usePolling: true,
+        interval: 2000,
+        binaryInterval: 3000,
+        //#endregion
+      })
+      .on('add', filePath => {
+        //#region handle add
+        // Clear any old timer
+        if (pending.has(filePath)) clearTimeout(pending.get(filePath));
+
+        // Wait until the file stops growing for STABILIZATION_MS
+        const timer = setTimeout(() => {
+          pending.delete(filePath);
+          safeProcess(filePath);
+        }, STABILIZATION_MS + 1000);
+
+        pending.set(filePath, timer);
+        //#endregion
+      })
+      .on('change', filePath => {
+        //#region handle change
+        // File is still being written → reset timer
+        if (pending.has(filePath)) clearTimeout(pending.get(filePath));
+        pending.set(
+          filePath,
+          setTimeout(() => {
+            pending.delete(filePath);
+            safeProcess(filePath);
+          }, STABILIZATION_MS),
+        );
+        //#endregion
+      });
+
+    //#region log startup info
+    console.log(`Safe watcher started`);
+    console.log(`Android folder : ${watcherData.androidFolder}`);
+    console.log(`macOS Photos   : ${watcherData.macPhotosLibrary}`);
+    console.log(
+      `Waiting ${STABILIZATION_MS / 1000}s after file stops growing...`,
+    );
+    //#endregion
+
+    //#endregion
+  };
+  //#endregion
+
+  //#region is hevc
+  async function isHevc(file: string): Promise<boolean> {
+    //#region @backendFunc
+    try {
+      const { stdout } = await execAsync(
+        `ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of csv=p=0 "${file}"`,
+      );
+      const codec = stdout.trim(); // ← remove newline
+      return codec === 'hevc' || codec === 'hvc1'; // both mean HEVC/H.265
+    } catch {
+      return false;
+    }
+    //#endregion
+  }
+  //#endregion
+
+  //#region safe process
+  const safeProcess = async (
+    filePath: string,
+    wacherData?: WacherData,
+  ): Promise<void> => {
+    //#region @backendFunc
+    if (wacherData.processed.has(filePath)) return;
+
+    const ext = path.extname(filePath).toLowerCase();
+    const stat = await fse.stat(filePath);
+
+    // ───── REJECT OBVIOUS PLACEHOLDERS ─────────────────
+    if (stat.size < 10_000) {
+      console.log(
+        `Skipped tiny/placeholder file: ${path.basename(filePath)} (${stat.size} bytes)`,
+      );
+      wacherData.processed.add(filePath);
+      return;
+    }
+
+    // ───── REJECT TOO-SMALL PHOTOS/VIDEOS ───────────────
+    const isVideo = /\.(mp4|mov|avi|mkv|webm)$/i.test(ext);
+    const minSize = isVideo ? MIN_VIDEO_SIZE : MIN_PHOTO_SIZE;
+
+    if (stat.size < minSize) {
+      console.log(
+        `Still downloading or placeholder → ${path.basename(filePath)} (${(stat.size / 1024 / 1024).toFixed(1)} MB)`,
+      );
+      return; // don't mark as processed yet — wait for it to grow
+    }
+
+    wacherData.processed.add(filePath);
+    const filename = path.basename(filePath);
+
+    try {
+      if (ext === '.heic' || ext === '.heif') {
+        // HEIC can be copied directly — Apple Photos loves them
+        await fse.copyFile(
+          filePath,
+          path.join(wacherData.macPhotosLibrary, filename),
+        );
+        console.log(
+          `HEIC copied: ${filename} (${(stat.size / 1024 / 1024).toFixed(1)} MB)`,
+        );
+      } else if (isVideo && (await isHevc(filePath))) {
+        const outName = filename.replace(/\.[^.]+$/, '_iphone.mp4');
+        const tempOut = path.join(wacherData.tempConvertFolder, outName);
+        console.log(
+          `Converting HEVC → H.264: ${filename} (${(stat.size / 1024 / 1024).toFixed(1)} MB)`,
+        );
+        await execAsync(
+          `ffmpeg -i "${filePath}" -c:v libx264 -preset veryfast -crf 18 -pix_fmt yuv420p -movflags +faststart -c:a aac -b:a 192k "${tempOut}" -y`,
+        );
+        await fse.copyFile(
+          tempOut,
+          path.join(wacherData.macPhotosLibrary, outName),
+        );
+        console.log(`Converted: ${outName}`);
+      } else {
+        await fse.copyFile(
+          filePath,
+          path.join(wacherData.macPhotosLibrary, filename),
+        );
+        console.log(
+          `Copied: ${filename} (${(stat.size / 1024 / 1024).toFixed(1)} MB)`,
+        );
+      }
+    } catch (err) {
+      console.error(`Failed ${filename}:`, (err as Error).message);
+      wacherData.processed.delete(filePath); // retry later if it was a temporary error
+    }
+    //#endregion
+  };
+  //#endregion
+}
