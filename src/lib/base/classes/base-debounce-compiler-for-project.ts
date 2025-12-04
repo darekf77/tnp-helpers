@@ -9,10 +9,12 @@ export abstract class BaseDebounceCompilerForProject<
   PROJECT extends BaseProject = BaseProject,
 > extends BaseCompilerForProject<ADDITIONAL_DATA, PROJECT> {
   protected initialParams: ADDITIONAL_DATA;
+
   /**
    * default debounce time is 1s
    */
   protected debounceTime = 1000;
+
   abstract action({
     changeOfFiles,
     asyncEvent,
@@ -37,13 +39,19 @@ export abstract class BaseDebounceCompilerForProject<
     this.exitedFilesAbsPathes = absFilesPathes;
     return await this.action({
       changeOfFiles: absFilesPathes.map(
-        fileAbsolutePath => new ChangeOfFile(fileAbsolutePath, 'change'),
+        fileAbsolutePath =>
+          ({
+            fileAbsolutePath,
+            eventName: 'change',
+            datetime: new Date(),
+          }) as ChangeOfFile,
       ),
       asyncEvent: false,
     });
   }
 
   private lastAsyncFilesChanges: ChangeOfFile[] = [];
+
   private debounceAction = _.debounce(() => {
     const changeOfFiles = this.lastAsyncFilesChanges;
     this.lastAsyncFilesChanges = [];

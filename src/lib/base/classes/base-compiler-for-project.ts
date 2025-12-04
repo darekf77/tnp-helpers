@@ -1,24 +1,26 @@
 //#region imports
-//#region @backend
+import {
+  BaseClientCompiler,
+  BaseClientCompilerOptions,
+} from 'incremental-compiler/src';
 import { path, crossPlatformPath } from 'tnp-core/src';
-//#endregion
-import { IncCompiler } from 'incremental-compiler/src';
 import { _ } from 'tnp-core/src';
-import { BaseProject } from './base-project';
-import { Helpers } from 'tnp-helpers/src';
 import { config } from 'tnp-core/src';
+import { Helpers } from 'tnp-helpers/src';
+
+import { BaseProject } from './base-project';
 //#endregion
 
 export abstract class BaseCompilerForProject<
   ADDITIONAL_DATA = any,
   PROJECT extends BaseProject = BaseProject,
-> extends IncCompiler.Base<ADDITIONAL_DATA> {
+> extends BaseClientCompiler<ADDITIONAL_DATA> {
   //#region check folder compiler
   protected checkFolderCompiler(
     project: PROJECT,
-    options: IncCompiler.Models.BaseClientCompilerOptions,
+    options: BaseClientCompilerOptions,
     dontCheck = false,
-  ) {
+  ): BaseClientCompilerOptions {
     //#region @backendFunc
     if (_.isUndefined(options)) {
       return options;
@@ -34,7 +36,9 @@ export abstract class BaseCompilerForProject<
       f = crossPlatformPath(f);
       if (!dontCheck) {
         if (
-          f.startsWith(path.join(project.location, config.folder.node_modules))
+          f.startsWith(
+            crossPlatformPath([project.location, config.folder.node_modules]),
+          )
         ) {
           Helpers.error(
             `[checkFolderCompiler] Please don't watch node_module folder for ${project.location}`,
@@ -64,7 +68,7 @@ export abstract class BaseCompilerForProject<
 
   constructor(
     public project: PROJECT,
-    options?: IncCompiler.Models.BaseClientCompilerOptions,
+    options?: BaseClientCompilerOptions,
     allowFolderOutSideProject = false,
   ) {
     super();
