@@ -1,2 +1,2 @@
 
-🔲 electron app app connected to taon service
+🔲 move all helpers to utils

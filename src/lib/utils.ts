@@ -1452,8 +1452,11 @@ export namespace UtilsTypescript {
 //#region utils http
 export namespace UtilsHttp {
   //#region utils http / start http server
-  export const startHttpServer = async (cwd: string, port: number) => {
+  export const startHttpServer = async (cwd: string, port: number,options?:{
+    startMessage?:string
+  }) => {
     //#region @backendFunc
+    options = options || {};
     const express = require('express');
     const app = express();
 
@@ -1465,15 +1468,16 @@ export namespace UtilsHttp {
       res.status(404).send('File not found');
     });
 
+    Helpers.taskStarted(`Starting server.. http://localhost:${port}`);
     // Start the server
     const server = app.listen(port, () => {
-      console.log(
+      Helpers.taskDone(
+        options.startMessage ||
         `Server started at http://localhost:${port}, serving files from ${cwd}`,
       );
     });
 
     return new Promise<void>((resolve, reject) => {
-      console.log(`Server started at http://localhost:${port}`);
 
       // Handle Ctrl+C (SIGINT) gracefully
       process.on('SIGINT', () => {
@@ -2854,7 +2858,7 @@ export namespace UtilsFileSync {
     }
 
     //#region watcher setup
-    await fse.mkdir(folder.tempConvertFolder, { recursive: true });
+    await fse.mkdirp(folder.tempConvertFolder);
 
     const processed = new Set<string>();
     const pending = new Map<string, NodeJS.Timeout>();
