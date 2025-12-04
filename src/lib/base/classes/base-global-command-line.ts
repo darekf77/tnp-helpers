@@ -288,16 +288,14 @@ export class BaseGlobalCommandLine<
   /**
    * quick git update push
    */
-  async update() {
+  async _update(commitMessage: string) {
     //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     Helpers.info('Updating & push project...');
     try {
-      this.project.git.addAndCommit(
-        `chore: ${!!this.firstArg ? this.firstArg : 'update'}`,
-      );
+      this.project.git.addAndCommit(commitMessage);
     } catch (error) {}
     await this.project.git.pushCurrentBranch({
       askToRetry: true,
@@ -305,6 +303,18 @@ export class BaseGlobalCommandLine<
     });
     Helpers.info('Done');
     this._exit();
+    //#endregion
+  }
+
+  async update() {
+    //#region @backendFunc
+    await this._update(`chore: ${!!this.firstArg ? this.firstArg : 'update'}`);
+    //#endregion
+  }
+
+  async docsUp() {
+    //#region @backendFunc
+    await this._update(`docs: ${!!this.firstArg ? this.firstArg : 'update'}`);
     //#endregion
   }
 
@@ -3109,8 +3119,10 @@ ${lastCommitMessage}
       );
     }
     let exists = await UtilsOs.pythonModuleExists(moduleName);
-    if(!exists) {
-      Helpers.warn(`Module not found in global python packages, checking pipx packages...`);
+    if (!exists) {
+      Helpers.warn(
+        `Module not found in global python packages, checking pipx packages...`,
+      );
       exists = await UtilsOs.pipxPackageExists(moduleName);
     }
     console.log(
