@@ -1519,6 +1519,18 @@ export namespace UtilsMd {
     //#endregion
   };
 
+  export const getAssetsFromFile = (absPathToFile: string): string[] => {
+    //#region @backendFunc
+    if(!Helpers.exists(absPathToFile)){
+      return [];
+    }
+    if(path.extname('absPathToFile').toLowerCase() !== '.md'){
+      return [];
+    }
+    return getAssets(Helpers.readFile(absPathToFile));
+    //#endregion
+  }
+
   /**
    * Extract links to other Markdown files from a given Markdown content.
    * @param mdfileContent
