@@ -1208,7 +1208,6 @@ export namespace UtilsTypescript {
     tags: string[],
     // debug = false,
   ): string {
-    //#region @websqlFunc
     const sourceFile = createSourceFile(
       'temp.ts',
       tsFileContent,
@@ -1266,7 +1265,6 @@ export namespace UtilsTypescript {
     const result = lines.join('\n');
     // debug && console.log(result)
     return result;
-    //#endregion
   }
   //#endregion
 
