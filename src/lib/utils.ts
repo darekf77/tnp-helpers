@@ -1147,12 +1147,17 @@ export namespace UtilsTypescript {
         const hasStandalone = /standalone\s*:/.test(props);
 
         // 3. Insert standalone: false if missing
-        if (!hasStandalone) {
-          // If block is empty or only whitespace
-          if (/^\s*$/.test(props)) {
-            props = `\n  standalone: false\n`;
-          } else {
-            props += `\n  standalone: false`;
+        if (hasStandalone) {
+          // do nothing
+        } else {
+          const hasImports = /imports\s*:/.test(props);
+          if (!hasImports) {
+            // If block is empty or only whitespace
+            if (/^\s*$/.test(props)) {
+              props = `\n  standalone: false\n`;
+            } else {
+              props += `\n  standalone: false`;
+            }
           }
         }
 
@@ -1452,9 +1457,13 @@ export namespace UtilsTypescript {
 //#region utils http
 export namespace UtilsHttp {
   //#region utils http / start http server
-  export const startHttpServer = async (cwd: string, port: number,options?:{
-    startMessage?:string
-  }) => {
+  export const startHttpServer = async (
+    cwd: string,
+    port: number,
+    options?: {
+      startMessage?: string;
+    },
+  ) => {
     //#region @backendFunc
     options = options || {};
     const express = require('express');
@@ -1473,12 +1482,11 @@ export namespace UtilsHttp {
     const server = app.listen(port, () => {
       Helpers.taskDone(
         options.startMessage ||
-        `Server started at http://localhost:${port}, serving files from ${cwd}`,
+          `Server started at http://localhost:${port}, serving files from ${cwd}`,
       );
     });
 
     return new Promise<void>((resolve, reject) => {
-
       // Handle Ctrl+C (SIGINT) gracefully
       process.on('SIGINT', () => {
         server.close(() => resolve());
@@ -1521,15 +1529,15 @@ export namespace UtilsMd {
 
   export const getAssetsFromFile = (absPathToFile: string): string[] => {
     //#region @backendFunc
-    if(!Helpers.exists(absPathToFile)){
+    if (!Helpers.exists(absPathToFile)) {
       return [];
     }
-    if(path.extname('absPathToFile').toLowerCase() !== '.md'){
+    if (path.extname('absPathToFile').toLowerCase() !== '.md') {
       return [];
     }
     return getAssets(Helpers.readFile(absPathToFile));
     //#endregion
-  }
+  };
 
   /**
    * Extract links to other Markdown files from a given Markdown content.
