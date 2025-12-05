@@ -288,7 +288,7 @@ export class BaseGlobalCommandLine<
   /**
    * quick git update push
    */
-  async _update(commitMessage: string) {
+  async _update(commitMessage: string, force = false) {
     //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
@@ -300,9 +300,23 @@ export class BaseGlobalCommandLine<
     await this.project.git.pushCurrentBranch({
       askToRetry: true,
       forcePushNoQuestion: true,
+      force,
     });
     Helpers.info('Done');
     this._exit();
+    //#endregion
+  }
+
+  async forceup() {
+    await this.forceUpdate();
+  }
+
+  async forceUpdate() {
+    //#region @backendFunc
+    await this._update(
+      `chore: ${!!this.firstArg ? this.firstArg : 'update'}`,
+      true,
+    );
     //#endregion
   }
 
