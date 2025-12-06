@@ -909,7 +909,10 @@ Would you like to update current project configuration?`)
         // skipWaitingForWorkerProcessPortToBeSaved: true,
       },
     });
+    const showErrorAfterAttempts = 3;
+    let attempts = 0;
     while (true) {
+      attempts++;
       try {
         const data = await ctrl
           .registerAndAssignPort(
@@ -922,10 +925,14 @@ Would you like to update current project configuration?`)
         Helpers.logWarn(
           `[${config.frameworkName}-helpers] Error while registering port for task "${taskName}":`,
         );
+        const errorMsg = `[${config.frameworkName}-helpers] Retrying to assign port for task "${taskName}"...`;
+        if (attempts >= showErrorAfterAttempts) {
+          Helpers.warn(errorMsg);
+        } else {
+          Helpers.logWarn(errorMsg);
+        }
         // Helpers.logError(error, true, true);
-        Helpers.logInfo(
-          `[${config.frameworkName}-helpers] Retrying to assign port for task "${taskName}"...`,
-        );
+
         await UtilsTerminal.wait(2);
       }
     }
