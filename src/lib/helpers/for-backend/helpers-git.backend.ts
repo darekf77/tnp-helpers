@@ -272,7 +272,10 @@ export class HelpersGit {
       if (tagName) {
         return tagName;
       }
-    } catch (e) {}
+    } catch (e) {
+      Helpers.warn(`[taon-helpers][lastTagNameForMajorVersion] Not able to get last tag hash`
+        +` for major version ${majorVersion} for repository in ${cwd}`);
+    }
     try {
       if (process.platform === 'win32') {
         tagName = child_process.execSync(cm3, { cwd }).toString().trim();
@@ -283,7 +286,10 @@ export class HelpersGit {
       if (tagName) {
         return tagName;
       }
-    } catch (e) {}
+    } catch (e) {
+      Helpers.warn(`[taon-helpers][lastTagNameForMajorVersion] Not able to get last tag hash`
+        +` for major version ${majorVersion} for repository in ${cwd}`);
+    }
     return '';
   }
   //#endregion
