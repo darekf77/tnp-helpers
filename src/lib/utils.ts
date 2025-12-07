@@ -3,7 +3,7 @@ import { ChildProcess, StdioOptions } from 'node:child_process';
 import { scrypt, randomBytes, timingSafeEqual } from 'node:crypto'; // @backend
 import { promisify } from 'node:util'; // @backend
 
-import { chalk, chokidar, config } from 'tnp-core/src';
+import { chalk, chokidar, config, UtilsFilesFoldersSync } from 'tnp-core/src';
 import {
   child_process,
   crossPlatformPath,
@@ -1563,6 +1563,27 @@ export namespace UtilsMd {
     return Array.from(links); // Convert Set to Array and return
     //#endregion
   };
+
+
+  export const moveAssetsPathsToLevelFromFile = (
+    absFilePath: string,
+    level = 1,
+  ): string | undefined => {
+    //#region @backendFunc
+    if(!Helpers.exists(absFilePath)){
+      return undefined;
+    }
+    if(path.extname(absFilePath).toLowerCase() !== '.md'){
+      return UtilsFilesFoldersSync.readFile(absFilePath,{
+        readImagesWithoutEncodingUtf8: true,
+      });
+    }
+    return UtilsMd.moveAssetsPathesToLevel(
+      UtilsFilesFoldersSync.readFile(absFilePath),
+      level,
+    );
+    //#endregion
+  }
 
   /**
    * Move asset paths to a higher directory level by adding "../" before each path.
