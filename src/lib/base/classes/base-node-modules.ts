@@ -291,17 +291,6 @@ with ${options.useYarn ? 'yarn' : 'npm'}
     //#region @backendFunc
     let node_modules_path = this.path;
 
-    if (Helpers.exists(node_modules_path)) {
-      try {
-        const real_node_modules_path = crossPlatformPath(
-          fse.realpathSync(
-            crossPlatformPath([this.cwd, config.folder.node_modules]),
-          ),
-        );
-        node_modules_path = real_node_modules_path;
-      } catch (error) {}
-    }
-
     if (Helpers.isUnexistedLink(node_modules_path)) {
       try {
         Helpers.logWarn(
@@ -311,6 +300,17 @@ with ${options.useYarn ? 'yarn' : 'npm'}
         fse.unlinkSync(node_modules_path);
       } catch (error) {}
       return true;
+    }
+
+    if (Helpers.exists(node_modules_path)) {
+      try {
+        const real_node_modules_path = crossPlatformPath(
+          fse.realpathSync(
+            crossPlatformPath([this.cwd, config.folder.node_modules]),
+          ),
+        );
+        node_modules_path = real_node_modules_path;
+      } catch (error) {}
     }
 
     if (!Helpers.exists(node_modules_path)) {
