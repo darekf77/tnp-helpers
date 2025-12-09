@@ -284,144 +284,198 @@ export class BaseGlobalCommandLine<
   }
   //#endregion
 
-  //#region commands / quick git update
-  /**
-   * quick git update push
-   */
-  async _update(commitMessage: string, force = false) {
+  private async updateProject(
+    project: PROJECT,
+    options?: {
+      updateType?: 'deep' | 'first-level' | 'only-this';
+      force?: boolean;
+      commitType?: TypeOfCommit;
+    },
+  ): Promise<void> {
     //#region @backendFunc
-    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
-      return;
+    options = options || {};
+    options.force = !!options.force;
+    options.updateType = options.updateType || 'only-this';
+    options.commitType = options.commitType || 'chore';
+
+    while (project.git.hasActionCommitsToMelt) {
+      const choices = {
+        openInCode: { name: 'Open in code editor' },
+        continue: { name: 'Continue' },
+        skipUpdate: { name: 'Skip project update' },
+        meltNow: { name: 'Melt action commits now' },
+      };
+
+      const resp = await UtilsTerminal.select<keyof typeof choices>({
+        choices,
+        question: `Project ${chalk.bold(project.genericName)} has action commits to melt. What you want to do ?`,
+      });
+      if (resp === 'continue') {
+        continue;
+      }
+      if (resp === 'openInCode') {
+        project.run('code . ').sync();
+        continue;
+      }
+      if (resp === 'skipUpdate') {
+        return;
+      }
+      if (resp === 'meltNow') {
+        project.git.meltActionCommits();
+        Helpers.info(`Changes after melting:`);
+        await project.git.changesSummary({
+          prefix: project.location,
+        });
+        await UtilsTerminal.pressAnyKeyToContinueAsync({
+          message: `Press any key to continue...`,
+        });
+      }
     }
-    Helpers.info('Updating & push project...');
-    try {
-      this.project.git.addAndCommit(commitMessage);
-    } catch (error) {}
-    await this.project.git.pushCurrentBranch({
-      askToRetry: true,
-      forcePushNoQuestion: true,
-      force,
-    });
-    Helpers.info('Done');
-    this._exit();
-    //#endregion
-  }
 
-  async forceup() {
-    await this.forceUpdate();
-  }
-
-  async forceUpdate() {
-    //#region @backendFunc
-    await this._update(
-      `chore: ${!!this.firstArg ? this.firstArg : 'update'}`,
-      true,
-    );
-    //#endregion
-  }
-
-  async update() {
-    //#region @backendFunc
-    await this._update(`chore: ${!!this.firstArg ? this.firstArg : 'update'}`);
-    //#endregion
-  }
-
-  async docsUp() {
-    //#region @backendFunc
-    await this._update(`docs: ${!!this.firstArg ? this.firstArg : 'update'}`);
-    //#endregion
-  }
-
-  private async updateProject(project: PROJECT, force = false): Promise<void> {
-    //#region @backendFunc
     try {
       await project.packageJson.bumpPatchVersion();
     } catch (error) {}
     try {
       project.git.addAndCommit(
-        `chore: ${!!this.firstArg ? this.args.join(' ') : 'update'}`,
+        `${options.commitType}: ${!!this.firstArg ? this.args.join(' ') : 'update'}`,
       );
     } catch (error) {}
     await project.git.pushCurrentBranch({
       askToRetry: true,
       forcePushNoQuestion: true,
-      force,
+      force: options.force,
     });
 
-    if (!project.isMonorepo) {
+    if (!project.isMonorepo && options.updateType !== 'only-this') {
+      if (options.updateType === 'first-level') {
+        options.updateType = 'only-this';
+      }
       for (const child of project.children) {
         if (child.git.isGitRoot) {
-          await this.updateProject(child, force);
+          await this.updateProject(child, options);
         }
       }
     }
     //#endregion
   }
 
-  async deepUp(noExit = false) {
-    //#region @backendFunc
-    await this.deepUpdate(noExit);
-    //#endregion
-  }
-
-  async upAll(noExit = false) {
-    //#region @backendFunc
-    await this.deepUpdate(noExit);
-    //#endregion
-  }
-
-  async deepUpForce(noExit = false) {
-    //#region @backendFunc
-    await this.deepUpdateForce(noExit);
-    //#endregion
-  }
-
-  async deepUpdateForce(noExit = false) {
-    //#region @backendFunc
+  //#region commands / force update
+  async forceUpdate(): Promise<void> {
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
-    Helpers.info(
-      '(force) Deep updating & force pushing project with children...',
-    );
-
-    await this.updateProject(this.project, true);
-
-    Helpers.info('Done');
+    await this.updateProject(this.project, {
+      force: true,
+    });
     this._exit();
-    //#endregion
-  }
-
-  async deepUpdate(noExit = false) {
-    //#region @backendFunc
-    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
-      return;
-    }
-    Helpers.info('Deep updating & pushing project with children...');
-
-    await this.updateProject(this.project);
-
-    Helpers.info('Done');
-    this._exit();
-    //#endregion
   }
 
   /**
-   * Push update
+   * alias for forceupdate
+   */
+  async forceup() {
+    await this.forceUpdate();
+  }
+  //#endregion
+
+  //#region commands / update
+  async update(): Promise<void> {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
+      return;
+    }
+    await this.updateProject(this.project);
+    this._exit();
+  }
+
+  /**
+   * alias for update
    */
   async up() {
-    //#region @backendFunc
     await this.update();
-    //#endregion
   }
 
   /**
-   * Push update
+   * alias for update
    */
   async pu() {
-    //#region @backendFunc
     await this.update();
-    //#endregion
+  }
+  //#endregion
+
+  //#region commands / docs update
+  async docsUpdate(): Promise<void> {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
+      return;
+    }
+    await this.updateProject(this.project, {
+      commitType: 'docs',
+    });
+    this._exit();
+  }
+
+  /**
+   * alias for docsUpdate
+   */
+  async docsUp() {
+    await this.docsUpdate();
+  }
+  //#endregion
+
+  //#region commands / deep update
+  async deepUpdate(): Promise<void> {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
+      return;
+    }
+    await this.updateProject(this.project, {
+      updateType: 'deep',
+    });
+    this._exit();
+  }
+
+  /**
+   * alias for deepupdate
+   */
+  async deepUp() {
+    await this.deepUpdate();
+  }
+  //#endregion
+
+  //#region commands / update all
+  async updateAll(): Promise<void> {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
+      return;
+    }
+    await this.updateProject(this.project, {
+      updateType: 'first-level',
+    });
+    this._exit();
+  }
+
+  /**
+   * alias for updateAll
+   */
+  async upAll() {
+    await this.updateAll();
+  }
+  //#endregion
+
+  //#region commands / deep update force
+  async deepUpdateForce(): Promise<void> {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
+      return;
+    }
+    await this.updateProject(this.project, {
+      updateType: 'deep',
+      force: true,
+    });
+    this._exit();
+  }
+
+  /**
+   * alias for deepUpdateForce
+   */
+  async deepUpForce() {
+    await this.deepUpdateForce();
   }
   //#endregion
 

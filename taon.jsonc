@@ -15,7 +15,8 @@
   "appId": "com.domain.example.tnp-helpers",
 
   "autoReleaseConfigAllowedItems": [{
-    "artifactName": "npm-lib-and-cli-tool"
+    "artifactName": "npm-lib-and-cli-tool",
+    "taskName": "npm"
   }],
 
   "resources": [],

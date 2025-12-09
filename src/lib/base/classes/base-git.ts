@@ -416,7 +416,10 @@ Please provide proper commit message for lastest changes in your project:
         if (selected === 'skip') {
           return;
         }
-        if (selected === 'discardAndPushNormal' || selected === 'discardAndPushForce') {
+        if (
+          selected === 'discardAndPushNormal' ||
+          selected === 'discardAndPushForce'
+        ) {
           try {
             this.project.git.resetHard({ HEAD: 0 });
           } catch (error) {}
@@ -1621,8 +1624,10 @@ Please provide proper commit message for lastest changes in your project:
   //#endregion
 
   //#region methods & getters / get changes summary
-  async changesSummary(): Promise<string> {
+  async changesSummary(options?: { prefix?: string }): Promise<string> {
     //#region @backendFunc
+    options = options || {};
+
     const fillStringWithSpaceUpTo = (
       str: string,
       length: number,
@@ -1630,9 +1635,14 @@ Please provide proper commit message for lastest changes in your project:
     ) => {
       return str + specialCharacter.repeat(length - str.length);
     };
+
+    options.prefix =
+      options.prefix ??
+      `${fillStringWithSpaceUpTo(`[${this.project.name}]`, 40, '.')} `;
+
     return await Helpers.git.changesSummary(
       this.project.location,
-      `${fillStringWithSpaceUpTo(`[${this.project.name}]`, 40, '.')} `,
+      options.prefix,
     );
     //#endregion
   }
