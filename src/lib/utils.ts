@@ -1564,26 +1564,25 @@ export namespace UtilsMd {
     //#endregion
   };
 
-
   export const moveAssetsPathsToLevelFromFile = (
     absFilePath: string,
     level = 1,
   ): string | undefined => {
     //#region @backendFunc
-    if(!Helpers.exists(absFilePath)){
+    if (!Helpers.exists(absFilePath)) {
       return undefined;
     }
-    if(path.extname(absFilePath).toLowerCase() !== '.md'){
-      return UtilsFilesFoldersSync.readFile(absFilePath,{
+    if (path.extname(absFilePath).toLowerCase() !== '.md') {
+      return UtilsFilesFoldersSync.readFile(absFilePath, {
         readImagesWithoutEncodingUtf8: true,
       });
     }
-    return UtilsMd.moveAssetsPathesToLevel(
+    return UtilsMd.moveAssetsPathsToLevel(
       UtilsFilesFoldersSync.readFile(absFilePath),
       level,
     );
     //#endregion
-  }
+  };
 
   /**
    * Move asset paths to a higher directory level by adding "../" before each path.
@@ -1592,42 +1591,36 @@ export namespace UtilsMd {
    * @param level - The number of levels to go up (default is 1).
    * @returns The modified content with updated asset paths.
    */
-  export const moveAssetsPathesToLevel = (
+  export const moveAssetsPathsToLevel = (
     mdfileContent: string,
     level = 1,
   ): string => {
     //#region @backendFunc
     mdfileContent = mdfileContent || '';
     // Regular expressions for detecting assets
-    const markdownImgRegex = /(!\[.*?\]\()(\.\/|\.\.\/.*?)(\))/g; // Matches ![alt](./path or ../path)
-    const htmlImgRegex = /(<img.*?src=["'])(\.\/|\.\.\/.*?)(["'])/g; // Matches <img src="./path or ../path">
+    if (!mdfileContent) return '';
 
-    // Calculate how many "../" segments to prepend based on the level
     const prefix = '../'.repeat(level);
 
-    // Replace the paths in Markdown images
-    const updatedMarkdown = mdfileContent.replace(
-      markdownImgRegex,
-      (_, prefixText, path, suffix) => {
-        // Add the "../" prefix and normalize the path
-        return `${prefixText}${prefix}${path
-          .replace(/^\.\//, '')
-          .replace(/^\.\.\//, '')}${suffix}`;
-      },
-    );
+    // Markdown images: ![alt](path)
+    const markdownRegex = /(!\[.*?]\()(\.\/|(?:\.\.\/)+)([^\s)]+?)(\))/g;
 
-    // Replace the paths in HTML images
-    const updatedHtml = updatedMarkdown.replace(
-      htmlImgRegex,
-      (_, prefixText, path, suffix) => {
-        // Add the "../" prefix and normalize the path
-        return `${prefixText}${prefix}${path
-          .replace(/^\.\//, '')
-          .replace(/^\.\.\//, '')}${suffix}`;
-      },
-    );
+    // HTML images: <img ... src="path" ...>
+    // More flexible: capture src="anything starting with ./ or ../"
+    const htmlRegex =
+      /(<img\b[^>]*?\ssrc=["'])(\.\/|(?:\.\.\/)+)([^"']+)(["'][^>]*>)/gi;
 
-    return updatedHtml;
+    const result = mdfileContent
+      // First handle Markdown images
+      .replace(markdownRegex, (match, before, rel, path, after) => {
+        return `${before}${prefix}${path}${after}`;
+      })
+      // Then handle HTML images
+      .replace(htmlRegex, (match, before, rel, path, after) => {
+        return `${before}${prefix}${path}${after}`;
+      });
+
+    return result;
     //#endregion
   };
 }
