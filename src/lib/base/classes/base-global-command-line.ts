@@ -323,9 +323,11 @@ export class BaseGlobalCommandLine<
       if (resp === 'meltNow') {
         project.git.meltActionCommits();
         Helpers.info(`Changes after melting:`);
-        await project.git.changesSummary({
-          prefix: project.location,
-        });
+        console.log(
+          await project.git.changesSummary({
+            prefix: `${project.location}/`,
+          }),
+        );
         await UtilsTerminal.pressAnyKeyToContinueAsync({
           message: `Press any key to continue...`,
         });
