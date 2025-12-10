@@ -1039,7 +1039,6 @@ export namespace UtilsTypescript {
   export const recognizeImportsFromContent = (
     fileContent: string,
   ): TsImportExport[] => {
-    //#region @backendFunc
     if (!fileContent) {
       return [];
     }
@@ -1123,7 +1122,6 @@ export namespace UtilsTypescript {
     forEachChild(sourceFile, visit);
 
     return results;
-    //#endregion
   };
   //#endregion
 
