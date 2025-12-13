@@ -1,4 +1,4 @@
-import { config } from 'tnp-core/src';
+import { config, dotTaonFolder } from 'tnp-core/src';
 import { crossPlatformPath, os, path, UtilsOs } from 'tnp-core/src';
 
 import { Helpers } from '../index';
@@ -14,13 +14,16 @@ export class GhTempCode {
     private cwd: string,
     private project: BaseProject,
   ) {}
+
   // TODO save it in db
   private GHTEMP_CODE_REPO_PATH = 'git@github.com:darekf77/ghtemp-code.git';
+
   private get cwdRepo() {
     //#region @backendFunc
-    return crossPlatformPath([UtilsOs.getRealHomeDir(), `.taon`]);
+    return crossPlatformPath([UtilsOs.getRealHomeDir(), dotTaonFolder]);
     //#endregion
   }
+
   private get tempPathRepo() {
     return crossPlatformPath([this.cwdRepo, 'ghtemp-code']);
   }
@@ -41,6 +44,7 @@ export class GhTempCode {
     return this;
     //#endregion
   }
+
   async save() {
     //#region @backendFunc
     const changes = [

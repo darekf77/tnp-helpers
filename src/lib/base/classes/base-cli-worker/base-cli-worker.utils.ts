@@ -5,6 +5,7 @@ import {
   path,
   Helpers,
   UtilsJson,
+  dotTaonFolder,
 } from 'tnp-core/src';
 
 import { BaseCliWorkerConfig } from './base-cli-worker-config';
@@ -15,7 +16,7 @@ export namespace BaseCliWorkerUtils {
     // console.log('os.userInfo()', os.userInfo());
     return crossPlatformPath([
       UtilsOs.getRealHomeDir(),
-      `.taon`,
+      dotTaonFolder,
       '__workers-service-process-info__',
       `${serviceID}.json`,
     ]);

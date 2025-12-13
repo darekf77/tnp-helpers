@@ -1,25 +1,26 @@
 //#region imports
-import { Helpers, UtilsOs, crossPlatformPath } from "tnp-core/src";
+import {
+  Helpers,
+  UtilsOs,
+  crossPlatformPath,
+  dotTaonFolder,
+} from 'tnp-core/src';
+import { os } from 'tnp-core/src';
+import { config } from 'tnp-core/src';
 
-import type { BaseProjectResolver } from "./base-project-resolver";
+import { Low } from '../../lowdb'; // @backend
+import { JSONFilePreset } from '../../lowdb/node'; // @backend
 
-//#region @backend
-import { Low } from "../../lowdb";
-import { os } from "tnp-core/src";
-import { JSONFilePreset } from "../../lowdb/node";
-import { config } from "tnp-core/src";
-//#endregion
+import type { BaseProjectResolver } from './base-project-resolver';
 //#endregion
 
 export class BaseDb<DB extends object> {
-
   constructor(
     private ins: BaseProjectResolver,
     private dbName: string,
     private defaultDb: DB,
-  ) {
+  ) {}
 
-  }
   //#region @backend
   private lowDB: Low<DB>;
   //#endregion
@@ -32,10 +33,13 @@ export class BaseDb<DB extends object> {
 
   get projectsDbLocation() {
     //#region @backendFunc
-    const userFolder = crossPlatformPath([UtilsOs.getRealHomeDir(), `.taon/apps/${this.dbName}-db/${this.ins.cliToolName}`]);
+    const userFolder = crossPlatformPath([
+      UtilsOs.getRealHomeDir(),
+      `${dotTaonFolder}/apps/${this.dbName}-db/${this.ins.cliToolName}`,
+    ]);
     try {
       Helpers.mkdirp(userFolder);
-    } catch (error) { }
+    } catch (error) {}
     return crossPlatformPath([userFolder, 'db.json']);
     //#endregion
   }
@@ -49,7 +53,11 @@ export class BaseDb<DB extends object> {
     try {
       this.lowDB = await JSONFilePreset(dbLocation, this.defaultDb);
     } catch (error) {
-      Helpers.error(`[taon-helpers] Cannot use db.json file for projects in location, restoring default db.`, true, true)
+      Helpers.error(
+        `[taon-helpers] Cannot use db.json file for projects in location, restoring default db.`,
+        true,
+        true,
+      );
       Helpers.writeJson(dbLocation, this.defaultDb);
       this.lowDB = await JSONFilePreset(dbLocation, this.defaultDb);
     }
@@ -60,5 +68,4 @@ export class BaseDb<DB extends object> {
     return void 0;
   }
   //#endregion
-
 }

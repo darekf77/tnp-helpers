@@ -1,5 +1,5 @@
 import { Models } from 'taon/src';
-import { crossPlatformPath, Helpers, path, UtilsOs } from 'tnp-core/src';
+import { crossPlatformPath, dotTaonFolder, Helpers, path, UtilsOs } from 'tnp-core/src';
 
 /**
  * Get taon service database config
@@ -15,7 +15,7 @@ export const getBaseCliWorkerDatabaseConfig = (
   //#region @backendFunc
   const serviceLocation = crossPlatformPath([
     UtilsOs.getRealHomeDir(),
-    `.taon/databases-for-services/${serviceNameUniqueInSystem}.sqlite`,
+    `${dotTaonFolder}/databases-for-services/${serviceNameUniqueInSystem}.sqlite`,
   ]);
   if (!Helpers.exists(path.dirname(serviceLocation))) {
     Helpers.mkdirp(path.dirname(serviceLocation));
