@@ -88,7 +88,8 @@ export class BaseVscodeHelpers<
       //#region @backend
       // 'Angular.ng-template', // high cpu usage
       'EditorConfig.EditorConfig',
-      'GitHub.copilot',
+      // 'GitHub.copilot', => deprecated
+      'GitHub.copilot-chat',
       'IBM.output-colorizer',
       'Mikael.Angular-BeastCode',
       'SimonSiefke.svg-preview',
@@ -800,6 +801,9 @@ export class BaseVscodeHelpers<
       // 'tslint.autoFixOnSave': false,
       // 'tslint.enable': false,
       // 'tslint.alwaysShowRuleFailuresAsWarnings': false,
+      'github.copilot.nextEditSuggestions.enabled': true,
+      'github.copilot.chat.languageContext.inline.typescript.enabled': true,
+      'github.copilot.chat.languageContext.typescript.enabled': true,
     };
 
     settings['search.useIgnoreFiles'] = false;
