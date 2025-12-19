@@ -2319,6 +2319,43 @@ ${lastCommitMessage}
   }
   //#endregion
 
+  symlink() {
+    //#region @backendFunc
+    let [fromArg, toArg] = this.args;
+    if (!path.isAbsolute(fromArg)) {
+      fromArg = crossPlatformPath([
+        this.cwd,
+        fromArg.replace('./', '').replace('.\\', ''),
+      ]);
+    }
+    if (!path.isAbsolute(toArg)) {
+      toArg = crossPlatformPath([
+        this.cwd,
+        toArg.replace('./', '').replace('.\\', ''),
+      ]);
+    }
+    if (Helpers.isUnexistedLink(fromArg)) {
+      Helpers.error(
+        `Source path "${fromArg}" is an unexisted link`,
+        false,
+        true,
+      );
+    }
+    if (!Helpers.exists(fromArg)) {
+      Helpers.error(`Source path "${fromArg}" does not exist`, false, true);
+    }
+    fromArg = crossPlatformPath(fse.realpathSync(fromArg));
+
+    if (path.basename(fromArg) !== path.basename(toArg)) {
+      toArg = crossPlatformPath([toArg, path.basename(fromArg)]);
+    }
+
+    Helpers.createSymLink(fromArg, toArg);
+    Helpers.info(`Symlink created from "${fromArg}" to "${toArg}"`);
+    this._exit();
+    //#endregion
+  }
+
   //#region commands / remove symlinks
   removeSymlinksDryRun() {
     //#region @backendFunc
