@@ -1,6 +1,7 @@
 //#region imports
 import * as readline from 'readline'; // @backend
 
+import { MagicRenamer } from 'magic-renamer/src'; // @backend
 import { Subject } from 'rxjs';
 import {
   config,
@@ -1521,6 +1522,17 @@ ${lastCommitMessage}
       Helpers.error(`This folder is not a git repo... `, false, true);
     }
 
+    this._exit();
+    //#endregion
+  }
+  //#endregion
+
+  //#region copy and rename (vscode option)
+  async $COPY_AND_RENAME() {
+    //#region @backendFunc
+    // console.log(`>> ${args} <<`)
+    const ins = MagicRenamer.Instance(this.cwd);
+    await ins.start(this.args.join(' '));
     this._exit();
     //#endregion
   }
