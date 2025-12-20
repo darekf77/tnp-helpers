@@ -1532,7 +1532,7 @@ ${lastCommitMessage}
     //#region @backendFunc
     // console.log(`>> ${args} <<`)
     const ins = MagicRenamer.Instance(this.cwd);
-    await ins.start(this.args.join(' '));
+    await ins.start(this.argsWithParams);
     this._exit();
     //#endregion
   }

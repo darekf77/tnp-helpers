@@ -801,9 +801,9 @@ export class BaseVscodeHelpers<
       // 'tslint.autoFixOnSave': false,
       // 'tslint.enable': false,
       // 'tslint.alwaysShowRuleFailuresAsWarnings': false,
-      'github.copilot.nextEditSuggestions.enabled': true,
-      'github.copilot.chat.languageContext.inline.typescript.enabled': true,
-      'github.copilot.chat.languageContext.typescript.enabled': true,
+      // 'github.copilot.nextEditSuggestions.enabled': true,
+      // 'github.copilot.chat.languageContext.inline.typescript.enabled': true,
+      // 'github.copilot.chat.languageContext.typescript.enabled': true,
     };
 
     settings['search.useIgnoreFiles'] = false;

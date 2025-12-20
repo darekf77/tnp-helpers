@@ -3,6 +3,7 @@ import { ChildProcess, StdioOptions } from 'node:child_process';
 import { scrypt, randomBytes, timingSafeEqual } from 'node:crypto'; // @backend
 import { promisify } from 'node:util'; // @backend
 
+import * as semver from 'semver'; // @backend
 import { chalk, chokidar, config, UtilsFilesFoldersSync } from 'tnp-core/src';
 import {
   child_process,
@@ -76,13 +77,13 @@ import { Helpers } from './index';
 
 //#region utils npm
 export namespace UtilsNpm {
-  //#region is special version
+  //#region utils npm / is special version
   export const isSpecialVersion = (version: string) => {
     return CoreModels.NpmSpecialVersions.includes(version);
   };
   //#endregion
 
-  //#region clear version
+  //#region utils npm /  clear version
   export const clearVersion = (
     version: string,
     options: {
@@ -93,6 +94,7 @@ export namespace UtilsNpm {
       removeSuffix?: boolean;
     },
   ) => {
+    options = options || {};
     const { removePrefixes, removeSuffix } = options || {};
 
     if (!version || isSpecialVersion(version)) {
@@ -118,7 +120,7 @@ export namespace UtilsNpm {
   };
   //#endregion
 
-  //#region fix major version number
+  //#region utils npm / fix major version number
   export const fixMajorVerNumber = (version: string) => {
     if (!version || isSpecialVersion(version)) {
       return version;
@@ -139,6 +141,222 @@ export namespace UtilsNpm {
     }`;
   };
   //#endregion
+
+  //#region utils npm / get latest version from npm
+  type LatestType =
+    | 'major'
+    | 'minor'
+    | 'patch'
+    | { majorUpTo?: number; minorUpTo?: number };
+
+    export const getLatestVersionFromNpm = async (
+      packageName: string,
+      options?: {
+        currentPackageVersion?: string;
+        latestType?: LatestType;
+        skipAlphaBetaNext?: boolean;
+      }
+    ): Promise<string> => {
+      //#region @backendFunc
+      let {
+        currentPackageVersion,
+        latestType = 'major',
+        skipAlphaBetaNext = true,
+      } = options ?? {};
+
+      const res = await fetch(`https://registry.npmjs.org/${packageName}`);
+      if (!res.ok) {
+        throw new Error(`Failed to fetch npm metadata for ${packageName}`);
+      }
+
+      const json = await res.json();
+
+      let versions = Object.keys(json.versions)
+        .filter(v => semver.valid(v))
+        .sort(semver.compare);
+
+      if (skipAlphaBetaNext) {
+        versions = versions.filter(v => !semver.prerelease(v));
+      }
+
+      if (!versions.length) {
+        throw new Error(`No valid versions found for ${packageName}`);
+      }
+
+      // MAJOR → ignore current version
+      if (latestType === 'major' || !currentPackageVersion) {
+        return versions.at(-1)!;
+      }
+
+      currentPackageVersion = clearVersion(currentPackageVersion, {
+        removePrefixes: true,
+        removeSuffix: true,
+      });
+
+      const current = semver.parse(currentPackageVersion);
+      if (!current) {
+        throw new Error(`Invalid currentPackageVersion: ${currentPackageVersion}`);
+      }
+
+      // MINOR → lock major
+      if (latestType === 'minor') {
+        const filtered = versions.filter(
+          v => semver.major(v) === current.major
+        );
+
+        if (!filtered.length) {
+          throw new Error(`No versions found for ${packageName} with major ${current.major}`);
+        }
+
+        return filtered.at(-1)!;
+      }
+
+      // PATCH → lock major + minor
+      if (latestType === 'patch') {
+        const filtered = versions.filter(
+          v =>
+            semver.major(v) === current.major &&
+            semver.minor(v) === current.minor
+        );
+
+        if (!filtered.length) {
+          throw new Error(
+            `No versions found for ${packageName} ${current.major}.${current.minor}.x`
+          );
+        }
+
+        return filtered.at(-1)!;
+      }
+
+      throw new Error(`Unsupported latestType: ${latestType}`);
+      //#endregion
+    };
+  //#endregion
+
+  //#region utils npm / check if package version available
+  export const checkIfPackageVersionAvailable = async (
+    pkgName: string,
+    pkgVersion: string,
+  ): Promise<boolean> => {
+    //#region @backendFunc
+    const res = await fetch(
+      `https://registry.npmjs.org/${pkgName}/${pkgVersion}`,
+    );
+    return res.status === 200;
+    //#endregion
+  };
+  //#endregion
+
+  //#region utils npm / get last major versions
+  export const getLastMajorVersions = async (
+    pkgName: string,
+  ): Promise<string[]> => {
+    //#region @backendFunc
+    try {
+      const res = await fetch(`https://registry.npmjs.org/${pkgName}`);
+      const json = await res.json();
+      return Object.keys(json.versions).filter(v =>
+        v.startsWith(json['dist-tags'].latest.split('.')[0]),
+      );
+    } catch (error) {
+      return [];
+    }
+    //#endregion
+  };
+  //#endregion
+
+  //#region helpers / get last minor versions for major
+  export const getLastMinorVersionsForMajor = async (
+    majorVer: number,
+    pkgName: string,
+  ): Promise<string[]> => {
+    //#region @backendFunc
+    try {
+      const res = await fetch(`https://registry.npmjs.org/${pkgName}`);
+      const json = await res.json();
+      return Object.keys(json.versions).filter(v =>
+        v.startsWith(`${majorVer}.`),
+      );
+    } catch (error) {
+      return [];
+    }
+    //#endregion
+  };
+  //#endregion
+
+  //#region helpers / get version object
+  export interface VersionObjectNpm {
+    major: number;
+    minor: number;
+    patch: number;
+  }
+  export const getVerObj = (version: string): VersionObjectNpm => {
+    //#region @backendFunc
+    return version
+      .replace('^', '')
+      .replace('~', '')
+      .split('.')
+      .map(Number)
+      .reduce((acc, c, i) => {
+        if (i === 0) {
+          return { ...acc, ['major']: c };
+        } else if (i === 1) {
+          return { ...acc, ['minor']: c };
+        } else {
+          return { ...acc, ['patch']: c };
+        }
+      }, {}) as any;
+    //#endregion
+  };
+  //#endregion
+
+  /**
+   * @deprecated TODO remvoe
+   */
+  export const getLastVersions = async (
+    pkgName: string,
+    currentVerObj: VersionObjectNpm,
+    latestVerObj: VersionObjectNpm,
+  ): Promise<string[]> => {
+    //#region @backendFunc
+    let someLastVersion = Utils.uniqArray([
+      ...(await UtilsNpm.getLastMajorVersions(pkgName)),
+      ...(await UtilsNpm.getLastMinorVersionsForMajor(
+        latestVerObj.major - 1,
+        pkgName,
+      )),
+      ...(await UtilsNpm.getLastMinorVersionsForMajor(
+        latestVerObj.major - 2,
+        pkgName,
+      )),
+      ...(await UtilsNpm.getLastMinorVersionsForMajor(
+        currentVerObj.major,
+        pkgName,
+      )),
+      ...(await UtilsNpm.getLastMinorVersionsForMajor(
+        currentVerObj.major - 1,
+        pkgName,
+      )),
+      ...(await UtilsNpm.getLastMinorVersionsForMajor(
+        currentVerObj.major - 2,
+        pkgName,
+      )),
+    ])
+      .sort((a, b) => {
+        const aVerObj = UtilsNpm.getVerObj(a);
+        const bVerObj = UtilsNpm.getVerObj(b);
+        if (aVerObj.major === bVerObj.major) {
+          if (aVerObj.minor === bVerObj.minor) {
+            return aVerObj.patch - bVerObj.patch;
+          }
+          return aVerObj.minor - bVerObj.minor;
+        }
+        return aVerObj.major - bVerObj.major;
+      })
+      .reverse();
+    return someLastVersion;
+    //#endregion
+  };
 }
 //#endregion
 
@@ -369,8 +587,8 @@ export namespace UtilsTypescript {
                 node.declarationList.flags & NodeFlags.Const
                   ? 'const'
                   : node.declarationList.flags & NodeFlags.Let
-                    ? 'let'
-                    : 'var',
+                  ? 'let'
+                  : 'var',
               name: declaration.name.text,
             });
           }
@@ -877,10 +1095,12 @@ export namespace UtilsTypescript {
      * for external modification
      */
     embeddedPathToFileResult: string;
+
     /**
      * for external modification
      */
     packageName: string;
+
     /**
      * for external modification
      */
@@ -888,6 +1108,7 @@ export namespace UtilsTypescript {
 
     //#region generated/readonly files
     readonly type: 'export' | 'import' | 'async-import' | 'require';
+
     /**
      * ORIGNAL
      * Name of the file that is being imported/exported
@@ -895,16 +1116,23 @@ export namespace UtilsTypescript {
      * 'my-file' or "my-file" or `my-file`
      */
     readonly embeddedPathToFile: string;
+
     /**
      * same as cleanEmbeddedPathToFile but without quotes (parenthesis), example:
      * my-file or my-file or my-file
      */
     readonly cleanEmbeddedPathToFile: string;
+
     readonly startRow: number;
+
     readonly startCol: number;
+
     readonly endRow: number;
+
     readonly endCol: number;
+
     readonly parenthesisType: 'single' | 'double' | 'tics';
+
     readonly importElements: string[] = [];
     //#endregion
 
@@ -985,8 +1213,8 @@ export namespace UtilsTypescript {
       return this.parenthesisType === 'single'
         ? `'${str}'`
         : this.parenthesisType === 'double'
-          ? `"${str}"`
-          : `\`${str}\``;
+        ? `"${str}"`
+        : `\`${str}\``;
       //#endregion
     }
   }
@@ -3006,7 +3234,9 @@ export namespace UtilsFileSync {
     // ───── REJECT OBVIOUS PLACEHOLDERS ─────────────────
     if (stat.size < 10_000) {
       console.log(
-        `Skipped tiny/placeholder file: ${path.basename(filePath)} (${stat.size} bytes)`,
+        `Skipped tiny/placeholder file: ${path.basename(filePath)} (${
+          stat.size
+        } bytes)`,
       );
       wacherData.processed.add(filePath);
       return;
@@ -3018,7 +3248,11 @@ export namespace UtilsFileSync {
 
     if (stat.size < minSize) {
       console.log(
-        `Still downloading or placeholder → ${path.basename(filePath)} (${(stat.size / 1024 / 1024).toFixed(1)} MB)`,
+        `Still downloading or placeholder → ${path.basename(filePath)} (${(
+          stat.size /
+          1024 /
+          1024
+        ).toFixed(1)} MB)`,
       );
       return; // don't mark as processed yet — wait for it to grow
     }
@@ -3034,13 +3268,19 @@ export namespace UtilsFileSync {
           path.join(wacherData.macPhotosLibrary, filename),
         );
         console.log(
-          `HEIC copied: ${filename} (${(stat.size / 1024 / 1024).toFixed(1)} MB)`,
+          `HEIC copied: ${filename} (${(stat.size / 1024 / 1024).toFixed(
+            1,
+          )} MB)`,
         );
       } else if (isVideo && (await isHevc(filePath))) {
         const outName = filename.replace(/\.[^.]+$/, '_iphone.mp4');
         const tempOut = path.join(wacherData.tempConvertFolder, outName);
         console.log(
-          `Converting HEVC → H.264: ${filename} (${(stat.size / 1024 / 1024).toFixed(1)} MB)`,
+          `Converting HEVC → H.264: ${filename} (${(
+            stat.size /
+            1024 /
+            1024
+          ).toFixed(1)} MB)`,
         );
         await execAsync(
           `ffmpeg -i "${filePath}" -c:v libx264 -preset veryfast -crf 18 -pix_fmt yuv420p -movflags +faststart -c:a aac -b:a 192k "${tempOut}" -y`,
