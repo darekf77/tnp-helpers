@@ -347,7 +347,6 @@
     "tnp": "~21.0.0",
     "tnp-core": "~21.0.0",
     "tnp-helpers": "~21.0.0",
-    "tnp-models": "~21.0.0",
     "tough-cookie": "~6.0.0",
     "ts-debug": "1.3.0",
     "ts-json-schema-generator": "~2.4.0",

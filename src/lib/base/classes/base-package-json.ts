@@ -464,13 +464,17 @@ export class BasePackageJson extends BaseJsonFileReader<PackageJson> {
   updateDependency({
     packageName,
     version,
+    createNewEntryIfNotExist
   }: {
     packageName: string;
     version: string | null;
+    createNewEntryIfNotExist?: boolean;
   }): void {
     //#region @backendFunc
+    let exists = false;
     for (const depsName of PackageJsonDependencyObjArr) {
       if (this.data[depsName] && this.data[depsName][packageName]) {
+        exists = true;
         if (version === null) {
           delete this.data[depsName][packageName];
         } else {
@@ -478,6 +482,11 @@ export class BasePackageJson extends BaseJsonFileReader<PackageJson> {
         }
       }
     }
+    if(createNewEntryIfNotExist && !exists && version !== null  ) {
+      this.data['dependencies'] = this.data['dependencies'] || {};
+      this.data['dependencies'][packageName] = version;
+    }
+
     this.saveToDisk();
     //#endregion
   }
