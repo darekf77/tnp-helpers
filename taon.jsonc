@@ -3,7 +3,6 @@
   "version": "v21",
 
   "dependenciesNamesForNpmLib": [
-    "tnp-models",
     "task.js",
     "json10-writer",
     "lowdb",
