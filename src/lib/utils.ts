@@ -77,6 +77,13 @@ import { Helpers } from './index';
 
 //#region utils npm
 export namespace UtilsNpm {
+
+  export const isProperVersion= (npmVersion:string) => {
+    //#region @backendFunc
+    return semver.valid(npmVersion) !== null;
+    //#endregion
+  }
+
   //#region utils npm / is special version
   export const isSpecialVersion = (version: string) => {
     return CoreModels.NpmSpecialVersions.includes(version);
