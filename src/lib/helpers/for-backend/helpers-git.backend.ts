@@ -20,6 +20,7 @@ import { Helpers } from '../../index';
 const tempGitCommitMsgFile = 'tmp-git-commit-name.txt';
 
 export class HelpersGit {
+
   //#region tag and push to git repo
   async tagAndPushToGitRepo(
     cwd: string,
@@ -30,6 +31,7 @@ export class HelpersGit {
       skipTag?: boolean; // if true, it will not tag the commit
     },
   ): Promise<void> {
+
     //#region @backendFunc
     const { newVersion, autoReleaseUsingConfig, isCiProcess } = options;
     const tagName = `v${newVersion}`;
@@ -72,11 +74,13 @@ export class HelpersGit {
       Helpers.info('Pushing to git repository done.');
     }
     //#endregion
+
   }
   //#endregion
 
   //#region getters & methods / get all tags
   async getAllTags(cwd: string) {
+
     //#region @backendFunc
     const git = simpleGit(cwd);
     try {
@@ -87,6 +91,7 @@ export class HelpersGit {
       return [];
     }
     //#endregion
+
   }
   //#endregion
 
@@ -101,6 +106,7 @@ export class HelpersGit {
 
   //#region getters & methods / remove tag
   removeTag(cwd: string, tagName: string) {
+
     //#region @backendFunc
     try {
       child_process.execSync(`git tag -d ${tagName}`, { cwd });
@@ -112,6 +118,7 @@ export class HelpersGit {
       );
     }
     //#endregion
+
   }
   //#endregion
 
@@ -300,6 +307,7 @@ export class HelpersGit {
     deleted: string[];
     created: string[];
   } {
+
     //#region @backendFunc
     try {
       // Execute git status command to get the list of changes
@@ -369,6 +377,7 @@ export class HelpersGit {
       Helpers.error('[taon-helpers][git] Error:' + error.message, false, true);
     }
     //#endregion
+
   }
   //#endregion
 
@@ -420,6 +429,7 @@ export class HelpersGit {
 
   //#region get commit message by hash
   async getCommitMessageByHash(cwd: string, hash: string): Promise<string> {
+
     //#region @backendFunc
     try {
       const git = simpleGit(cwd);
@@ -440,6 +450,7 @@ export class HelpersGit {
       throw error;
     }
     //#endregion
+
   }
   //#endregion
 
@@ -450,6 +461,7 @@ export class HelpersGit {
    * @param index zero means last commit
    */
   async getCommitMessageByIndex(cwd: string, index: number): Promise<string> {
+
     //#region @backendFunc
     try {
       const git = simpleGit(cwd);
@@ -474,6 +486,7 @@ export class HelpersGit {
       return '';
     }
     //#endregion
+
   }
   //#endregion
 
@@ -484,6 +497,7 @@ export class HelpersGit {
    * @param index zero means last commit
    */
   async getCommitHashByIndex(cwd: string, index: number): Promise<string> {
+
     //#region @backendFunc
     try {
       const git = simpleGit(cwd);
@@ -508,6 +522,7 @@ export class HelpersGit {
       return '';
     }
     //#endregion
+
   }
   //#endregion
 
@@ -886,6 +901,7 @@ export class HelpersGit {
       HEAD?: number;
     },
   ): void {
+
     //#region @backendFunc
     const { HEAD } = options || {};
     Helpers.info(
@@ -903,6 +919,7 @@ export class HelpersGit {
       );
     }
     //#endregion
+
   }
   //#endregion
 
@@ -996,6 +1013,7 @@ export class HelpersGit {
           throw e;
         }
         if (askToRetry) {
+
           //#region ask to retry question
           const pullOptions = {
             again: {
@@ -1056,6 +1074,7 @@ export class HelpersGit {
             process.exit(0);
           }
           //#endregion
+
         }
       }
     }
@@ -1220,6 +1239,7 @@ ${cwd}
 
   //#region get default branch for repo
   defaultRepoBranch(cwd: string): string {
+
     //#region @backendFunc
     Helpers.log('[defaultRepoBranch] ' + cwd, 1);
     try {
@@ -1240,6 +1260,7 @@ ${cwd}
       return '';
     }
     //#endregion
+
   }
   //#endregion
 
@@ -1348,6 +1369,7 @@ ${cwd}
   //#endregion
 
   cleanRepoFromAnyFilesExceptDotGitFolder(cwd: string): void {
+
     //#region @backendFunc
     const entries = fse.readdirSync(cwd);
 
@@ -1375,6 +1397,7 @@ ${cwd}
       }
     }
     //#endregion
+
   }
 
   //#region checkout
@@ -1466,6 +1489,7 @@ ${cwd}
    *
    */
   getRemoteProvider(cwd: string): string {
+
     //#region @backendFunc
     const remoteUrl = this.getOriginURL(cwd);
     if (!remoteUrl) {
@@ -1496,6 +1520,7 @@ ${cwd}
       return null;
     }
     //#endregion
+
   }
   //#endregion
 
@@ -1933,6 +1958,7 @@ ${cwd}
     cwd: string,
     hash: string,
   ): Promise<string[]> {
+
     //#region @backendFunc
     try {
       const git = simpleGit(cwd);
@@ -1943,6 +1969,7 @@ ${cwd}
       throw error;
     }
     //#endregion
+
   }
   //#endregion
 
@@ -1957,6 +1984,7 @@ ${cwd}
     cwd: string,
     index: number,
   ): Promise<string[]> {
+
     //#region @backendFunc
     try {
       const git = simpleGit(cwd);
@@ -1974,11 +2002,13 @@ ${cwd}
       throw error;
     }
     //#endregion
+
   }
   //#endregion
 
   //#region get changes summary
   async changesSummary(cwd: string, prefix = ''): Promise<string> {
+
     //#region @backendFunc
     try {
       const git = simpleGit(cwd);
@@ -1993,6 +2023,7 @@ ${cwd}
       return ' --- No changes ---';
     }
     //#endregion
+
   }
   //#endregion
 
@@ -2051,6 +2082,7 @@ ${cwd}
   //#endregion
 
   async backupBranch(cwd: string, branchName?: string): Promise<string> {
+
     //#region @backendFunc
     const orgBranchName = this.currentBranchName(cwd);
     if (branchName) {
@@ -2078,5 +2110,6 @@ ${cwd}
     });
     return backupBranchName;
     //#endregion
+
   }
 }

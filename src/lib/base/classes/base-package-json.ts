@@ -216,7 +216,7 @@ export class BasePackageJson extends BaseJsonFileReader<PackageJson> {
   /**
    * @returns object witl all deps from package json
    */
-  protected allDepsFromPackageJson(packageJson: PackageJson) {
+  allDepsFromPackageJson(packageJson: PackageJson) {
     return _.cloneDeep(
       _.merge({
         ...PackageJsonDependencyObjArr.reduce((acc, depObj) => {
@@ -464,7 +464,7 @@ export class BasePackageJson extends BaseJsonFileReader<PackageJson> {
   updateDependency({
     packageName,
     version,
-    createNewEntryIfNotExist
+    createNewEntryIfNotExist,
   }: {
     packageName: string;
     version: string | null;
@@ -482,7 +482,7 @@ export class BasePackageJson extends BaseJsonFileReader<PackageJson> {
         }
       }
     }
-    if(createNewEntryIfNotExist && !exists && version !== null  ) {
+    if (createNewEntryIfNotExist && !exists && version !== null) {
       this.data['dependencies'] = this.data['dependencies'] || {};
       this.data['dependencies'][packageName] = version;
     }

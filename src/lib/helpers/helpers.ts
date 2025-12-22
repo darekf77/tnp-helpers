@@ -5,6 +5,7 @@ import { HelpersStringsRegexes } from './helpers-strings-regexes';
 import { HelpersStrings } from './helpers-strings';
 import { HelpersProcess } from './for-backend/helpers-process';
 import { HelpersFileFolders } from './for-backend/helpers-file-folders';
+
 //#region @backend
 import { HelpersConsoleGui } from './for-backend/helpers-console-gui';
 import { os, crossPlatformPath } from 'tnp-core/src';
@@ -23,15 +24,18 @@ import { HelpersJSON5 } from './helpers-json5.backend';
 import { CLI } from 'tnp-core/src';
 import { HelpersVscode } from './for-backend/helpers-vscode.backend';
 //#endregion
+
 import { config } from 'tnp-core/src';
 import { Helpers, UtilsQuickFixes } from '../index';
 import { CLASS } from 'typescript-class-helpers/src';
 import { CoreHelpers, CoreModels } from 'tnp-core/src';
 import { HelpersNumber } from './helpers-numbers';
+
 //#region @browser
 import { HelpersBrowser } from './for-browser/helpers-browser';
 import { HelpersAngular } from './for-browser/angular.helper';
 //#endregion
+
 //#endregion
 
 //#region class mixing helper
@@ -63,6 +67,7 @@ export function applyMixins(derivedCtor: any, baseCtors: any[]) {
 //#endregion
 
 export class HelpersTaon extends CoreHelpers {
+
   //#region staic
   private static _instance: HelpersTaon & CoreHelpers;
   public static get Instance(): HelpersTaon {
@@ -75,6 +80,7 @@ export class HelpersTaon extends CoreHelpers {
 
   //#region constructor
   private constructor(
+
     //#region @backend
     public cliTool = new HelpersCliTool(),
     public terminal = new HelpersTerminal(),
@@ -86,13 +92,16 @@ export class HelpersTaon extends CoreHelpers {
     public vscode = new HelpersVscode(),
     public consoleGui = new HelpersConsoleGui(),
     //#endregion
+
     public arrays = new HelpersArrayObj(),
     public strings = new HelpersStrings(),
     public numbers = new HelpersNumber(),
+
     //#region @browser
     public browser = HelpersBrowser.instance,
     public ng = HelpersAngular,
     //#endregion
+
   ) {
     super();
   }
@@ -129,6 +138,7 @@ export class HelpersTaon extends CoreHelpers {
       minify?: boolean;
     },
   ): Promise<void> {
+
     //#region @backendFunc
     let {
       beforeWrite,
@@ -265,6 +275,7 @@ export class HelpersTaon extends CoreHelpers {
     Helpers.writeFile(outputFilePath, output);
     Helpers.taskDone('[ncc] Bundling done');
     //#endregion
+
   }
 
   /**
@@ -272,10 +283,12 @@ export class HelpersTaon extends CoreHelpers {
    * use Utils.uniqArray from tnp-core
    */
   uniqArray<T = any>(array: any[], uniqueProperty?: keyof T): T[] {
+
     //#region @backendFunc
     // @ts-ignore
     return Helpers.arrays.uniqArray<T>(array, uniqueProperty);
     //#endregion
+
   }
   //#endregion
 
@@ -288,14 +301,17 @@ export class HelpersTaon extends CoreHelpers {
 
   //#region methods & getters / slash
   slash(pathFromWindowsOrUnixType: string) {
+
     //#region @backendFunc
     return crossPlatformPath(pathFromWindowsOrUnixType);
     //#endregion
+
   }
   //#endregion
 
   //#region methods & getters / is elevated
   async isElevated() {
+
     //#region @backend
     if (!(await isElevated())) {
       Helpers.error(
@@ -305,6 +321,7 @@ export class HelpersTaon extends CoreHelpers {
       );
     }
     //#endregion
+
   }
   //#endregion
 
@@ -324,11 +341,13 @@ export class HelpersTaon extends CoreHelpers {
     if (Helpers.isBrowser) {
       Helpers.info(`Execution time: ${end.toString()}ms for "${description}"`);
     }
+
     //#region @backend
     Helpers.info(
       `Execution time: ${CLI.chalk.bold(end.toString())}ms for "${CLI.chalk.bold(description)}"`,
     );
     //#endregion
+
     return end;
   }
   //#endregion
@@ -345,11 +364,13 @@ export class HelpersTaon extends CoreHelpers {
     if (Helpers.isBrowser) {
       Helpers.info(`Execution time: ${end.toString()}ms for "${description}"`);
     }
+
     //#region @backend
     Helpers.info(
       `Execution time: ${CLI.chalk.bold(end.toString())}ms for "${CLI.chalk.bold(description)}"`,
     );
     //#endregion
+
     return end;
   }
   //#endregion
@@ -421,6 +442,7 @@ export class HelpersTaon extends CoreHelpers {
       globals?: any;
     },
   ) {
+
     //#region @backend
     let { maxesForWorkes, workerLimit, globals } = options || {};
     if (_.isUndefined(globals)) {
@@ -499,20 +521,24 @@ export class HelpersTaon extends CoreHelpers {
     }
     return await Promise.all(promises);
     //#endregion
+
   }
   //#endregion
 
   //#region methods & getters / check environment
   checkEnvironment(deps?: CoreModels.GlobalDependencies) {
+
     //#region @backendFunc
     return CLI.checkEnvironment(deps);
     //#endregion
+
   }
   //#endregion
 
   //#region methods & getters / apply mixins
   public applyMixins = applyMixins;
   //#endregion
+
 }
 
 //#region class mixins
@@ -527,4 +553,5 @@ applyMixins(HelpersTaon, [
   HelpersFileFolders,
 ]);
 //#endregion
+
 // prettier-ignore-end

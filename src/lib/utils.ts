@@ -77,12 +77,13 @@ import { Helpers } from './index';
 
 //#region utils npm
 export namespace UtilsNpm {
+  export const isProperVersion = (npmVersion: string) => {
 
-  export const isProperVersion= (npmVersion:string) => {
     //#region @backendFunc
     return semver.valid(npmVersion) !== null;
     //#endregion
-  }
+
+  };
 
   //#region utils npm / is special version
   export const isSpecialVersion = (version: string) => {
@@ -156,88 +157,92 @@ export namespace UtilsNpm {
     | 'patch'
     | { majorUpTo?: number; minorUpTo?: number };
 
-    export const getLatestVersionFromNpm = async (
-      packageName: string,
-      options?: {
-        currentPackageVersion?: string;
-        latestType?: LatestType;
-        skipAlphaBetaNext?: boolean;
-      }
-    ): Promise<string> => {
-      //#region @backendFunc
-      let {
-        currentPackageVersion,
-        latestType = 'major',
-        skipAlphaBetaNext = true,
-      } = options ?? {};
+  export const getLatestVersionFromNpm = async (
+    packageName: string,
+    options?: {
+      currentPackageVersion?: string;
+      latestType?: LatestType;
+      skipAlphaBetaNext?: boolean;
+    },
+  ): Promise<string> => {
 
-      const res = await fetch(`https://registry.npmjs.org/${packageName}`);
-      if (!res.ok) {
-        throw new Error(`Failed to fetch npm metadata for ${packageName}`);
-      }
+    //#region @backendFunc
+    let {
+      currentPackageVersion,
+      latestType = 'major',
+      skipAlphaBetaNext = true,
+    } = options ?? {};
 
-      const json = await res.json();
+    const res = await fetch(`https://registry.npmjs.org/${packageName}`);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch npm metadata for ${packageName}`);
+    }
 
-      let versions = Object.keys(json.versions)
-        .filter(v => semver.valid(v))
-        .sort(semver.compare);
+    const json = await res.json();
 
-      if (skipAlphaBetaNext) {
-        versions = versions.filter(v => !semver.prerelease(v));
-      }
+    let versions = Object.keys(json.versions)
+      .filter(v => semver.valid(v))
+      .sort(semver.compare);
 
-      if (!versions.length) {
-        throw new Error(`No valid versions found for ${packageName}`);
-      }
+    if (skipAlphaBetaNext) {
+      versions = versions.filter(v => !semver.prerelease(v));
+    }
 
-      // MAJOR → ignore current version
-      if (latestType === 'major' || !currentPackageVersion) {
-        return versions.at(-1)!;
-      }
+    if (!versions.length) {
+      throw new Error(`No valid versions found for ${packageName}`);
+    }
 
-      currentPackageVersion = clearVersion(currentPackageVersion, {
-        removePrefixes: true,
-        removeSuffix: true,
-      });
+    // MAJOR → ignore current version
+    if (latestType === 'major' || !currentPackageVersion) {
+      return versions.at(-1)!;
+    }
 
-      const current = semver.parse(currentPackageVersion);
-      if (!current) {
-        throw new Error(`Invalid currentPackageVersion: ${currentPackageVersion}`);
-      }
+    currentPackageVersion = clearVersion(currentPackageVersion, {
+      removePrefixes: true,
+      removeSuffix: true,
+    });
 
-      // MINOR → lock major
-      if (latestType === 'minor') {
-        const filtered = versions.filter(
-          v => semver.major(v) === current.major
+    const current = semver.parse(currentPackageVersion);
+    if (!current) {
+      throw new Error(
+        `Invalid currentPackageVersion: ${currentPackageVersion}`,
+      );
+    }
+
+    // MINOR → lock major
+    if (latestType === 'minor') {
+      const filtered = versions.filter(v => semver.major(v) === current.major);
+
+      if (!filtered.length) {
+        throw new Error(
+          `No versions found for ${packageName} with major ${current.major}`,
         );
-
-        if (!filtered.length) {
-          throw new Error(`No versions found for ${packageName} with major ${current.major}`);
-        }
-
-        return filtered.at(-1)!;
       }
 
-      // PATCH → lock major + minor
-      if (latestType === 'patch') {
-        const filtered = versions.filter(
-          v =>
-            semver.major(v) === current.major &&
-            semver.minor(v) === current.minor
+      return filtered.at(-1)!;
+    }
+
+    // PATCH → lock major + minor
+    if (latestType === 'patch') {
+      const filtered = versions.filter(
+        v =>
+          semver.major(v) === current.major &&
+          semver.minor(v) === current.minor,
+      );
+
+      if (!filtered.length) {
+        throw new Error(
+          `No versions found for ${packageName} ${current.major}.${current.minor}.x`,
         );
-
-        if (!filtered.length) {
-          throw new Error(
-            `No versions found for ${packageName} ${current.major}.${current.minor}.x`
-          );
-        }
-
-        return filtered.at(-1)!;
       }
 
-      throw new Error(`Unsupported latestType: ${latestType}`);
-      //#endregion
-    };
+      return filtered.at(-1)!;
+    }
+
+    throw new Error(`Unsupported latestType: ${latestType}`);
+    //#endregion
+
+  };
   //#endregion
 
   //#region utils npm / check if package version available
@@ -245,12 +250,14 @@ export namespace UtilsNpm {
     pkgName: string,
     pkgVersion: string,
   ): Promise<boolean> => {
+
     //#region @backendFunc
     const res = await fetch(
       `https://registry.npmjs.org/${pkgName}/${pkgVersion}`,
     );
     return res.status === 200;
     //#endregion
+
   };
   //#endregion
 
@@ -258,6 +265,7 @@ export namespace UtilsNpm {
   export const getLastMajorVersions = async (
     pkgName: string,
   ): Promise<string[]> => {
+
     //#region @backendFunc
     try {
       const res = await fetch(`https://registry.npmjs.org/${pkgName}`);
@@ -269,6 +277,7 @@ export namespace UtilsNpm {
       return [];
     }
     //#endregion
+
   };
   //#endregion
 
@@ -277,6 +286,7 @@ export namespace UtilsNpm {
     majorVer: number,
     pkgName: string,
   ): Promise<string[]> => {
+
     //#region @backendFunc
     try {
       const res = await fetch(`https://registry.npmjs.org/${pkgName}`);
@@ -288,6 +298,7 @@ export namespace UtilsNpm {
       return [];
     }
     //#endregion
+
   };
   //#endregion
 
@@ -298,6 +309,7 @@ export namespace UtilsNpm {
     patch: number;
   }
   export const getVerObj = (version: string): VersionObjectNpm => {
+
     //#region @backendFunc
     return version
       .replace('^', '')
@@ -314,6 +326,7 @@ export namespace UtilsNpm {
         }
       }, {}) as any;
     //#endregion
+
   };
   //#endregion
 
@@ -325,6 +338,7 @@ export namespace UtilsNpm {
     currentVerObj: VersionObjectNpm,
     latestVerObj: VersionObjectNpm,
   ): Promise<string[]> => {
+
     //#region @backendFunc
     let someLastVersion = Utils.uniqArray([
       ...(await UtilsNpm.getLastMajorVersions(pkgName)),
@@ -363,12 +377,14 @@ export namespace UtilsNpm {
       .reverse();
     return someLastVersion;
     //#endregion
+
   };
 }
 //#endregion
 
 //#region utils typescript
 export namespace UtilsTypescript {
+
   //#region remove region by name
   /**
    * Remove TypeScript region blocks by their name, including nested regions.
@@ -381,6 +397,7 @@ export namespace UtilsTypescript {
     sourceCode: string,
     regionName: string,
   ): string => {
+
     //#region @backendFunc
     // Create a source file using TypeScript's compiler API
     const sourceFile = createSourceFile(
@@ -424,6 +441,7 @@ export namespace UtilsTypescript {
 
     return modifiedCode;
     //#endregion
+
   };
 
   /**
@@ -437,6 +455,7 @@ export namespace UtilsTypescript {
     statements: NodeArray<Statement>,
     regionName: string,
   ): Statement[] => {
+
     //#region @backendFunc
     const result: Statement[] = [];
     const stack: { insideTargetRegion: boolean; level: number }[] = [];
@@ -498,6 +517,7 @@ export namespace UtilsTypescript {
 
     return result;
     //#endregion
+
   };
   //#endregion
 
@@ -505,12 +525,14 @@ export namespace UtilsTypescript {
 
   //#region helper function to check if a node is exported
   const isExported = (node: Node): boolean => {
+
     //#region @backendFunc
     return (
       (getCombinedModifierFlags(node as Declaration) & ModifierFlags.Export) !==
         0 || node.parent?.kind === SyntaxKind.SourceFile // For top-level exports
     );
     //#endregion
+
   };
   //#endregion
 
@@ -536,6 +558,7 @@ export namespace UtilsTypescript {
    * Function to extract exports from a TypeScript file
    */
   export const exportsFromFile = (filePath: string): ExportInfo[] => {
+
     //#region @backendFunc
     if (!filePath.endsWith('.ts')) {
       return [];
@@ -543,12 +566,14 @@ export namespace UtilsTypescript {
     const file = Helpers.readFile(filePath);
     return exportsFromContent(file);
     //#endregion
+
   };
 
   /**
    * Function to extract exports from a TypeScript file
    */
   export const exportsFromContent = (fileContent: string): ExportInfo[] => {
+
     //#region @backendFunc
     // Read the content of the file
     const sourceCode = fileContent;
@@ -580,6 +605,7 @@ export namespace UtilsTypescript {
 
     //#region function to recursively check each node in the AST
     const checkNode = (node: Node) => {
+
       //#region @backendFunc
       // Determine the type and name of export based on node type
       if (isClassDeclaration(node) && node.name && isExported(node)) {
@@ -594,8 +620,8 @@ export namespace UtilsTypescript {
                 node.declarationList.flags & NodeFlags.Const
                   ? 'const'
                   : node.declarationList.flags & NodeFlags.Let
-                  ? 'let'
-                  : 'var',
+                    ? 'let'
+                    : 'var',
               name: declaration.name.text,
             });
           }
@@ -615,6 +641,7 @@ export namespace UtilsTypescript {
       // Recursively check each child node
       forEachChild(node, checkNode);
       //#endregion
+
     };
     //#endregion
 
@@ -623,6 +650,7 @@ export namespace UtilsTypescript {
 
     return exports;
     //#endregion
+
   };
   //#endregion
 
@@ -633,6 +661,7 @@ export namespace UtilsTypescript {
   export const extractDefaultClassNameFromString = (
     sourceCode: string,
   ): string | undefined => {
+
     //#region @backendFunc
     const sourceFile = createSourceFile(
       'temp.ts',
@@ -655,9 +684,11 @@ export namespace UtilsTypescript {
     checkNode(sourceFile);
     return defaultClassName;
     //#endregion
+
   };
 
   export const extractClassNameFromString = (sourceCode: string): string[] => {
+
     //#region @backendFunc
     const sourceFile = createSourceFile(
       'temp.ts',
@@ -677,11 +708,13 @@ export namespace UtilsTypescript {
     checkNode(sourceFile);
     return classNames;
     //#endregion
+
   };
 
   export const extractClassNamesFromFile = (
     absoluteFilePath: string,
   ): string[] => {
+
     //#region @backendFunc
     if (!absoluteFilePath.endsWith('.ts')) {
       return [];
@@ -689,18 +722,22 @@ export namespace UtilsTypescript {
     const sourceCode = Helpers.readFile(absoluteFilePath);
     return extractClassNameFromString(sourceCode);
     //#endregion
+
   };
 
   export const extractDefaultClassNameFromFile = (absoluteFilePath: string) => {
+
     //#region @backendFunc
     const sourceCode = Helpers.readFile(absoluteFilePath);
     return extractDefaultClassNameFromString(sourceCode);
     //#endregion
+
   };
   //#endregion
 
   //#region format file(s) with prettier
   export const formatFile = (absPathToFile: string | string[]): void => {
+
     //#region @backendFunc
     absPathToFile = crossPlatformPath(absPathToFile);
     if (Helpers.exists(absPathToFile)) {
@@ -716,9 +753,11 @@ export namespace UtilsTypescript {
       Helpers.taskDone(`Formatting file done.`);
     }
     //#endregion
+
   };
 
   export const formatAllFilesInsideFolder = (absPathToFolder: string): void => {
+
     //#region @backendFunc
     if (Helpers.exists(absPathToFolder)) {
       if (!Helpers.isFolder(absPathToFolder)) {
@@ -732,11 +771,13 @@ export namespace UtilsTypescript {
       }
     }
     //#endregion
+
   };
   //#endregion
 
   //#region lint file(s) with eslint
   export const eslintFixFile = (absPathToFile: string | string[]): void => {
+
     //#region @backendFunc
     absPathToFile = crossPlatformPath(absPathToFile);
     if (Helpers.exists(absPathToFile)) {
@@ -756,11 +797,13 @@ export namespace UtilsTypescript {
       Helpers.taskDone(`Eslint file fix done.`);
     }
     //#endregion
+
   };
 
   export const eslintFixAllFilesInsideFolder = (
     absPathToFolder: string | string[],
   ): void => {
+
     //#region @backendFunc
     absPathToFolder = crossPlatformPath(absPathToFolder);
     if (Helpers.exists(absPathToFolder)) {
@@ -778,11 +821,13 @@ export namespace UtilsTypescript {
       Helpers.info(`Eslint fixing files done.`);
     }
     //#endregion
+
   };
   //#endregion
 
   //#region extract Taon contexts from file
   export const getTaonContextFromContent = (fileContent: string): string[] => {
+
     //#region @backendFunc
     const sourceFile = createSourceFile(
       'tempFile.ts',
@@ -836,14 +881,17 @@ export namespace UtilsTypescript {
 
     return contextNames;
     //#endregion
+
   };
 
   export const getTaonContextsNamesFromFile = (
     tsAbsFilePath: string,
   ): string[] => {
+
     //#region @backendFunc
     return getTaonContextFromContent(Helpers.readFile(tsAbsFilePath));
     //#endregion
+
   };
 
   //#endregion
@@ -852,6 +900,7 @@ export namespace UtilsTypescript {
   export const extractAngularComponentSelectors = (
     fileAbsPath: string,
   ): { className: string; selector: string }[] => {
+
     //#region @backendFunc
     const sourceFile = createSourceFile(
       fileAbsPath,
@@ -900,6 +949,7 @@ export namespace UtilsTypescript {
     visit(sourceFile);
     return selectors;
     //#endregion
+
   };
   //#endregion
 
@@ -908,6 +958,7 @@ export namespace UtilsTypescript {
     oneLineComment: string,
     absDestFilePath: string,
   ) => {
+
     //#region @backendFunc
     const ext = path.extname(absDestFilePath).toLowerCase();
     let commentSyntax;
@@ -933,6 +984,7 @@ export namespace UtilsTypescript {
     }
     return commentSyntax;
     //#endregion
+
   };
   //#endregion
 
@@ -958,6 +1010,7 @@ export namespace UtilsTypescript {
       useRawStringValue?: boolean;
     },
   ): void => {
+
     //#region @backendFunc
     const sourceText = Helpers.readFile(tsAbsFilePath);
     const sourceFile = createSourceFile(
@@ -1090,6 +1143,7 @@ export namespace UtilsTypescript {
     Helpers.writeFile(tsAbsFilePath, newContent);
     result.dispose();
     //#endregion
+
   };
 
   //#endregion
@@ -1220,24 +1274,28 @@ export namespace UtilsTypescript {
       return this.parenthesisType === 'single'
         ? `'${str}'`
         : this.parenthesisType === 'double'
-        ? `"${str}"`
-        : `\`${str}\``;
+          ? `"${str}"`
+          : `\`${str}\``;
       //#endregion
+
     }
   }
   //#endregion
 
   //#region helpers / get quote type
   const getQuoteType = (text: string): 'single' | 'double' | 'tics' => {
+
     //#region @websqlFunc
     if (text.startsWith('`')) return 'tics';
     if (text.startsWith("'")) return 'single';
     return 'double';
     //#endregion
+
   };
   //#endregion
 
   const extractImportExportElements = (node: ts.Node): string[] => {
+
     //#region @websqlFunc
     const elements: string[] = [];
 
@@ -1260,15 +1318,18 @@ export namespace UtilsTypescript {
 
     return elements;
     //#endregion
+
   };
 
   export const recognizeImportsFromFile = (
     fileAbsPAth: string,
   ): TsImportExport[] => {
+
     //#region @backendFunc
     const content = Helpers.readFile(fileAbsPAth);
     return recognizeImportsFromContent(content);
     //#endregion
+
   };
 
   export const recognizeImportsFromContent = (
@@ -1360,6 +1421,7 @@ export namespace UtilsTypescript {
   };
   //#endregion
 
+  //#region transform Angular component standalone option
   /**
    * Transition methods ng18 => ng19
    * Adds standalone: false if not exists in component decorator
@@ -1367,6 +1429,7 @@ export namespace UtilsTypescript {
   export function transformComponentStandaloneOption(
     sourceText: string,
   ): string {
+
     //#region @backendFunc
     return sourceText.replace(
       /@Component\s*\(\s*\{([\s\S]*?)\}\s*\)/g,
@@ -1398,7 +1461,9 @@ export namespace UtilsTypescript {
       },
     );
     //#endregion
+
   }
+  //#endregion
 
   //#region escape @ in html text
   const escapeAtInHtmlText = (fileContent: string): string => {
@@ -1411,6 +1476,7 @@ export namespace UtilsTypescript {
   };
 
   export const fixHtmlTemplatesInDir = (directoryPath: string): void => {
+
     //#region @backendFunc
     Helpers.taskStarted(`(before prettier) Fixing HTML templates in`);
     const files = Helpers.filesFrom(directoryPath, true, false);
@@ -1432,6 +1498,7 @@ export namespace UtilsTypescript {
     }
     Helpers.taskDone(`(before prettier) Fixing HTML templates done.`);
     //#endregion
+
   };
   //#endregion
 
@@ -1505,6 +1572,7 @@ export namespace UtilsTypescript {
   export const wrapFirstImportsInImportsRegion = (
     fileContent: string,
   ): string => {
+
     //#region @backendFunc
     const importRegion = `//#re` + `gion`;
     const importRegionStart = `${importRegion} imports`;
@@ -1578,6 +1646,7 @@ export namespace UtilsTypescript {
       .filter(f => f !== undefined)
       .join('\n');
     //#endregion
+
   };
   //#endregion
 
@@ -1602,6 +1671,7 @@ export namespace UtilsTypescript {
     classFileContent: string,
     wrapTag = '@websql',
   ): string {
+
     //#region @backendFunc
     const sourceFile = createSourceFile(
       'temp.ts',
@@ -1650,13 +1720,100 @@ export namespace UtilsTypescript {
     visit(sourceFile);
     return applyEdits(classFileContent, edits);
     //#endregion
+
   }
   //#endregion
+
+  export type FlattenMapping = {
+    [modulePath: string]: {
+      [oldQualifiedName: string]: string; // new identifier
+    };
+  };
+
+  export function transformFlatImports(
+    sourceText: string,
+    mapping: FlattenMapping,
+  ): string {
+
+    //#region @backendFunc
+    let transformed = sourceText;
+
+    const importsToAdd = new Map<string, Set<string>>();
+
+    // 1. Replace qualified usages
+    for (const [modulePath, entries] of Object.entries(mapping)) {
+      for (const [oldName, newName] of Object.entries(entries)) {
+        const usageRegex = new RegExp(
+          `\\b${oldName.replace(/\./g, '\\.')}\\b`,
+          'g',
+        );
+
+        if (usageRegex.test(transformed)) {
+          transformed = transformed.replace(usageRegex, newName);
+
+          if (!importsToAdd.has(modulePath)) {
+            importsToAdd.set(modulePath, new Set());
+          }
+          importsToAdd.get(modulePath)!.add(newName);
+        }
+      }
+    }
+
+    // 2. Parse existing imports
+    const existingImports = new Map<string, Set<string>>();
+
+    const importRegex = /import\s*{\s*([^}]+)\s*}\s*from\s*['"]([^'"]+)['"]/g;
+
+    for (const match of transformed.matchAll(importRegex)) {
+      const [, imports, modulePath] = match;
+      const names = imports.split(',').map(s => s.trim());
+      existingImports.set(modulePath, new Set(names));
+    }
+
+    // 3. Build missing import statements
+    const newImportLines: string[] = [];
+
+    for (const [modulePath, names] of importsToAdd) {
+      const alreadyImported = existingImports.get(modulePath) ?? new Set();
+
+      const missing = [...names].filter(n => !alreadyImported.has(n));
+      if (missing.length === 0) continue;
+
+      newImportLines.push(
+        `import { ${missing.join(', ')} } from '${modulePath}';`,
+      );
+    }
+
+    // 4. Inject imports (after last import or at top)
+    if (newImportLines.length > 0) {
+      const lastImportMatch = [
+        ...transformed.matchAll(/import .*?;\n?/g),
+      ].pop();
+
+      if (lastImportMatch?.index != null) {
+        const insertPos = lastImportMatch.index + lastImportMatch[0].length;
+
+        transformed =
+          transformed.slice(0, insertPos) +
+          '\n' +
+          newImportLines.join('\n') +
+          '\n' +
+          transformed.slice(insertPos);
+      } else {
+        transformed = newImportLines.join('\n') + '\n\n' + transformed;
+      }
+    }
+
+    return transformed;
+    //#endregion
+
+  }
 
   export const clearRequireCacheRecursive = (
     modulePath: string,
     seen = new Set<string>(),
   ): void => {
+
     //#region @backendFunc
     const resolvedPath = require.resolve(modulePath);
     const mod = require.cache[resolvedPath];
@@ -1672,6 +1829,7 @@ export namespace UtilsTypescript {
 
     delete require.cache[resolvedPath];
     //#endregion
+
   };
 
   export type DeepWritable<T> = {
@@ -1687,6 +1845,7 @@ export namespace UtilsTypescript {
 
 //#region utils http
 export namespace UtilsHttp {
+
   //#region utils http / start http server
   export const startHttpServer = async (
     cwd: string,
@@ -1695,6 +1854,7 @@ export namespace UtilsHttp {
       startMessage?: string;
     },
   ) => {
+
     //#region @backendFunc
     options = options || {};
     const express = require('express');
@@ -1724,8 +1884,10 @@ export namespace UtilsHttp {
       });
     });
     //#endregion
+
   };
   //#endregion
+
 }
 //#endregion
 
@@ -1735,6 +1897,7 @@ export namespace UtilsMd {
    * extract assets pathes from .md file
    */
   export const getAssets = (mdfileContent: string): string[] => {
+
     //#region @backendFunc
     // Regular expressions for detecting assets
     const markdownImgRegex = /!\[.*?\]\((.*?)\)/g; // Markdown image syntax ![alt](src)
@@ -1756,9 +1919,11 @@ export namespace UtilsMd {
 
     return assets.map(r => r.replace(new RegExp(/^\.\//), ''));
     //#endregion
+
   };
 
   export const getAssetsFromFile = (absPathToFile: string): string[] => {
+
     //#region @backendFunc
     if (!Helpers.exists(absPathToFile)) {
       return [];
@@ -1768,6 +1933,7 @@ export namespace UtilsMd {
     }
     return getAssets(Helpers.readFile(absPathToFile));
     //#endregion
+
   };
 
   /**
@@ -1775,6 +1941,7 @@ export namespace UtilsMd {
    * @param mdfileContent
    */
   export const getLinksToOtherMdFiles = (mdfileContent: string): string[] => {
+
     //#region @backendFunc
     // Regex pattern to match Markdown and HTML links to .md files
     const mdLinkPattern = /\[.*?\]\(([^)]+\.md)\)/g; // Matches [text](link.md)
@@ -1795,12 +1962,14 @@ export namespace UtilsMd {
 
     return Array.from(links); // Convert Set to Array and return
     //#endregion
+
   };
 
   export const moveAssetsPathsToLevelFromFile = (
     absFilePath: string,
     level = 1,
   ): string | undefined => {
+
     //#region @backendFunc
     if (!Helpers.exists(absFilePath)) {
       return undefined;
@@ -1815,6 +1984,7 @@ export namespace UtilsMd {
       level,
     );
     //#endregion
+
   };
 
   /**
@@ -1828,6 +1998,7 @@ export namespace UtilsMd {
     mdfileContent: string,
     level = 1,
   ): string => {
+
     //#region @backendFunc
     mdfileContent = mdfileContent || '';
     // Regular expressions for detecting assets
@@ -1855,12 +2026,14 @@ export namespace UtilsMd {
 
     return result;
     //#endregion
+
   };
 }
 //#endregion
 
 //#region utils quickfixes
 export namespace UtilsQuickFixes {
+
   //#region replace sql-wasm.js faulty code content
   /**
    *
@@ -1869,6 +2042,7 @@ export namespace UtilsQuickFixes {
   export const replaceKnownFaultyCode = (
     contentofSQLWasmJS: string,
   ): string => {
+
     //#region @backendFunc
     // console.log(`
 
@@ -1909,6 +2083,7 @@ export namespace UtilsQuickFixes {
     });
     return contentofSQLWasmJS;
     //#endregion
+
   };
   //#endregion
 
@@ -1919,6 +2094,7 @@ export namespace UtilsQuickFixes {
     jsContent: string,
     packageName: string,
   ): string => {
+
     //#region @backendFunc
     return jsContent
       .replace(
@@ -1943,6 +2119,7 @@ export namespace UtilsQuickFixes {
       );
     // var electron_1 = require("electron");
     //#endregion
+
   };
 }
 //#endregion
@@ -2015,6 +2192,7 @@ export namespace UtilsVSCode {
   };
 
   export const vscodeImport = () => {
+
     //#region @backendFunc
     if (!UtilsOs.isRunningInVscodeExtension()) {
       return {} as typeof vscodeType;
@@ -2022,12 +2200,14 @@ export namespace UtilsVSCode {
     const vscode = require('vsc' + 'ode');
     return vscode as typeof vscodeType;
     //#endregion
+
   };
 
   export const regenerateVsCodeSettingsColors = (
     cwd: string,
     overideBottomColor?: string,
   ): void => {
+
     //#region @backendFunc
     const vscodePath = crossPlatformPath([cwd, '.vscode']);
     const settingsAbsPath = crossPlatformPath([vscodePath, 'settings.json']);
@@ -2054,6 +2234,7 @@ export namespace UtilsVSCode {
 
     Helpers.writeJson(settingsAbsPath, currentSettingsValue);
     //#endregion
+
   };
 }
 
@@ -2127,12 +2308,14 @@ export namespace UtilsZipBrowser {
 
 //#region utils zip node
 export namespace UtilsZip {
+
   //#region split zip file
 
   export const splitFile7Zip = async (
     inputPath: string,
     partSizeMB = 99,
   ): Promise<number> => {
+
     //#region @backendFunc
     const stat = fse.statSync(inputPath);
     const partSize = partSizeMB * 1024 * 1024;
@@ -2180,6 +2363,7 @@ export namespace UtilsZip {
       });
     });
     //#endregion
+
   };
 
   /**
@@ -2190,6 +2374,7 @@ export namespace UtilsZip {
     inputPath: string,
     partSizeMB = 99,
   ): Promise<number> => {
+
     //#region @backendFunc
     const stat = fse.statSync(inputPath);
     const partSize = partSizeMB * 1024 * 1024;
@@ -2238,6 +2423,7 @@ export namespace UtilsZip {
       currentStream.on('error', reject);
     });
     //#endregion
+
   };
   //#endregion
 
@@ -2253,6 +2439,7 @@ export namespace UtilsZip {
       overrideIfZipFileExists?: boolean;
     },
   ): Promise<string> => {
+
     //#region @backendFunc
     const zipPath = `${path.basename(absPathToDir)}.zip`;
     const destinationFilePath = crossPlatformPath([
@@ -2295,10 +2482,12 @@ export namespace UtilsZip {
     );
     return destinationFilePath;
     //#endregion;
+
   };
 
   // Unzip: `/some/path/folder.zip` → `/some/path/folder`
   export const unzipArchive = async (absPathToZip: string): Promise<void> => {
+
     //#region @backendFunc
     const yauzl = await import('yauzl'); // Use default import for yauzl
     const { mkdir, stat } = await import('fs/promises'); // Use default import for fs
@@ -2330,6 +2519,7 @@ export namespace UtilsZip {
       });
     });
     //#endregion
+
   };
 }
 //#endregion
@@ -2358,8 +2548,10 @@ export namespace UtilsTaonWorker {
 
 //#region utils java
 export namespace UtilsJava {
+
   //#region select jdk version
   export const selectJdkVersion = async (): Promise<string | undefined> => {
+
     //#region @backendFunc
     Helpers.taskStarted(`Looking for JDK versions...`);
     const platform = os.platform();
@@ -2547,10 +2739,12 @@ export namespace UtilsJava {
 
     return selected.path;
     //#endregion
+
   };
   //#endregion
 
   export const detectJavaVersionMacOS = (javaHome: string): string => {
+
     //#region @backendFunc
     try {
       // 1. Try to read "release" file shipped with every JDK
@@ -2575,10 +2769,12 @@ export namespace UtilsJava {
       return 'unknown';
     }
     //#endregion
+
   };
 
   //#region update java home path
   export const updateJavaHomePath = (selectedPath: string): void => {
+
     //#region @backendFunc
     const platform = os.platform();
 
@@ -2617,11 +2813,13 @@ export namespace UtilsJava {
       }
     }
     //#endregion
+
   };
   //#endregion
 
   //#region api methods / selectTomcatVersion
   export const selectTomcatVersion = async (): Promise<string> => {
+
     //#region @backendFunc
     const platform = os.platform();
     let currentTomcat = process.env.TOMCAT_HOME || '';
@@ -2709,11 +2907,13 @@ export namespace UtilsJava {
     const selectedPath = selected.path;
     return selectedPath;
     //#endregion
+
   };
   //#endregion
 
   //#region update tomcat home path
   export const updateTomcatHomePath = (selectedPath: string): void => {
+
     //#region @backendFunc
     const platform = os.platform();
     if (platform === 'darwin' || platform === 'linux') {
@@ -2738,16 +2938,20 @@ export namespace UtilsJava {
       }
     }
     //#endregion
+
   };
   //#endregion
+
 }
 
 //#endregion
 
 //#region utils passwords
 export namespace UtilsPasswords {
+
   //#region hash password
   export const hashPassword = (password: string): Promise<string> => {
+
     //#region @backendFunc
     return new Promise((resolve, reject) => {
       const salt = randomBytes(16);
@@ -2758,6 +2962,7 @@ export namespace UtilsPasswords {
       });
     });
     //#endregion
+
   };
   //#endregion
 
@@ -2766,6 +2971,7 @@ export namespace UtilsPasswords {
     password: string,
     stored: string,
   ): Promise<boolean> => {
+
     //#region @backendFunc
     return new Promise((resolve, reject) => {
       const [saltHex, keyHex] = stored.split(':');
@@ -2778,6 +2984,7 @@ export namespace UtilsPasswords {
       });
     });
     //#endregion
+
   };
   //#endregion
 
@@ -2794,6 +3001,7 @@ export namespace UtilsPasswords {
 
 //#region utils docker
 export namespace UtilsDocker {
+
   //#region utils docker  / constants
   const DOCKER_TAON_PROJECT_LABEL_KEY = 'com.docker.compose.taon.project'; // change to your app name
 
@@ -2808,6 +3016,7 @@ export namespace UtilsDocker {
     labelKey: string,
     labelValue: string,
   ): Promise<void> => {
+
     //#region @backendFunc
     const label = `${labelKey}=${labelValue}`;
     const execAsync = promisify(child_process.exec);
@@ -2851,6 +3060,7 @@ export namespace UtilsDocker {
       );
     }
     //#endregion
+
   };
   //#endregion
 
@@ -2903,6 +3113,7 @@ export namespace UtilsDocker {
     action: DockerComposeActionType,
     options?: DockerComposeActionOptions,
   ): ChildProcess => {
+
     //#region @backendFunc
     options = options || {};
 
@@ -2931,18 +3142,21 @@ export namespace UtilsDocker {
 
     return child;
     //#endregion
+
   };
   //#endregion
 
   //#region utils docker / remove all taon containers and images from docker
   export const removeAllTaonContainersAndImagesFromDocker =
     async (): Promise<void> => {
+
       //#region @backendFunc
       await UtilsDocker.cleanImagesAndContainersByDockerLabel(
         DOCKER_TAON_PROJECT_LABEL_KEY,
         DOCKER_TAON_PROJECT_LABEL_VALUE,
       );
       //#endregion
+
     };
   //#endregion
 
@@ -2951,6 +3165,7 @@ export namespace UtilsDocker {
    * @TODO @REFACTOR use async stuff
    */
   export const linkPodmanAsDockerIfNecessary = async (): Promise<void> => {
+
     //#region @backendFunc
     const isWin = process.platform === 'win32';
     const isMac = process.platform === 'darwin';
@@ -3055,8 +3270,10 @@ export namespace UtilsDocker {
       );
     }
     //#endregion
+
   };
   //#endregion
+
 }
 //#endregion
 
@@ -3065,6 +3282,7 @@ export namespace UtilsDocker {
  * ! TODO @IN_PROGRESS @LAST
  */
 export namespace UtilsFileSync {
+
   //#region constants
   // ───── SAFETY SETTINGS ─────────────────────────────
   // Minimum realistic photo/video size (in bytes) before we even try
@@ -3077,6 +3295,7 @@ export namespace UtilsFileSync {
   //#region @backend
   const execAsync = promisify(child_process.exec);
   //#endregion
+
   //#endregion
 
   //#region models
@@ -3105,6 +3324,7 @@ export namespace UtilsFileSync {
   export const forFolders = async (
     folder: FoldersSyncOptions,
   ): Promise<void> => {
+
     //#region @backendFunc
 
     const hasFFmpeg = await UtilsOs.commandExistsAsync('ffmpeg');
@@ -3156,6 +3376,7 @@ export namespace UtilsFileSync {
     // ───── MAIN WATCHER ─────────────────────────────────
     chokidar
       .watch(folder.androidFolder, {
+
         //#region watcher options
         ignored: /(^|[\/\\])\../,
         persistent: true,
@@ -3169,8 +3390,10 @@ export namespace UtilsFileSync {
         interval: 2000,
         binaryInterval: 3000,
         //#endregion
+
       })
       .on('add', filePath => {
+
         //#region handle add
         // Clear any old timer
         if (pending.has(filePath)) clearTimeout(pending.get(filePath));
@@ -3183,8 +3406,10 @@ export namespace UtilsFileSync {
 
         pending.set(filePath, timer);
         //#endregion
+
       })
       .on('change', filePath => {
+
         //#region handle change
         // File is still being written → reset timer
         if (pending.has(filePath)) clearTimeout(pending.get(filePath));
@@ -3196,6 +3421,7 @@ export namespace UtilsFileSync {
           }, STABILIZATION_MS),
         );
         //#endregion
+
       });
 
     //#region log startup info
@@ -3208,11 +3434,13 @@ export namespace UtilsFileSync {
     //#endregion
 
     //#endregion
+
   };
   //#endregion
 
   //#region is hevc
   async function isHevc(file: string): Promise<boolean> {
+
     //#region @backendFunc
     try {
       const { stdout } = await execAsync(
@@ -3224,6 +3452,7 @@ export namespace UtilsFileSync {
       return false;
     }
     //#endregion
+
   }
   //#endregion
 
@@ -3232,6 +3461,7 @@ export namespace UtilsFileSync {
     filePath: string,
     wacherData?: WacherData,
   ): Promise<void> => {
+
     //#region @backendFunc
     if (wacherData.processed.has(filePath)) return;
 
@@ -3311,6 +3541,8 @@ export namespace UtilsFileSync {
       wacherData.processed.delete(filePath); // retry later if it was a temporary error
     }
     //#endregion
+
   };
   //#endregion
+
 }

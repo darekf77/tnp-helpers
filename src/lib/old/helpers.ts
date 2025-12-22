@@ -153,6 +153,7 @@ export function fixJSONString(s: string) {
  * @deprecated
  */
 export function optionsFix(options?: ProcesOptions) {
+
   //#region handle args
   if (!options) {
     options = {};
@@ -193,6 +194,7 @@ export function optionsFix(options?: ProcesOptions) {
   }
 
   //#endregion
+
   return options;
 }
 
@@ -203,11 +205,13 @@ export function crossPlatformPath(pathStringOrPathParts: string | string[]) {
   if (Array.isArray(pathStringOrPathParts)) {
     pathStringOrPathParts = pathStringOrPathParts.join('/');
   }
+
   //#region @backend
   if (process.platform !== 'win32') {
     return pathStringOrPathParts;
   }
   //#endregion
+
   if (typeof pathStringOrPathParts !== 'string') {
     return pathStringOrPathParts;
   }

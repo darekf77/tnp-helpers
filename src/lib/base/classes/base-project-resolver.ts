@@ -49,10 +49,12 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
 
   //#region fields & getters / allowed types
   get allowedTypes(): string[] {
+
     //#region @websqlFunc
     return [this.NPM_PROJECT_KEY];
     // throw `Please override this getter [allowedTypes] in your child class or  ${CLI.chalk.bold(config.frameworkName)}`;
     //#endregion
+
   }
   //#endregion
 
@@ -61,6 +63,7 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
    * project from process.cwd()
    */
   get Current(): PROJECT {
+
     //#region @backendFunc
     const current = (this.classFn as typeof BaseProject).ins.From(
       process.cwd(),
@@ -75,6 +78,7 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
     }
     return current as unknown as PROJECT;
     //#endregion
+
   }
   //#endregion
 
@@ -83,6 +87,7 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
    * override this
    */
   typeFrom(location: string, recrusiveCall = false): string {
+
     //#region @backendFunc
     if (
       Helpers.exists(crossPlatformPath([location, config.file.package_json]))
@@ -95,6 +100,7 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
 
     // throw `Please override this function [typeFrom] in your child class or  ${CLI.chalk.bold(config.frameworkName)}`;
     //#endregion
+
   }
   //#endregion
 
@@ -103,6 +109,7 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
     // console.log({
     //   locationOfProj
     // })
+
     //#region @websqlFunc
     if (Array.isArray(locationOfProject)) {
       locationOfProject = locationOfProject.join('/');
@@ -157,6 +164,7 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
     //#endregion
 
     //#endregion
+
   }
   //#endregion
 
@@ -169,6 +177,7 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
       onlyOutSideNodeModules?: boolean;
     },
   ): PROJECT {
+
     //#region @backendFunc
     if (Array.isArray(absoluteLocation)) {
       absoluteLocation = crossPlatformPath(absoluteLocation);
@@ -247,6 +256,7 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
     }
     return project as any;
     //#endregion
+
   }
   //#endregion
 
@@ -263,24 +273,29 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
 
   //#region fields & getters / remove project
   remove(project: PROJECT) {
+
     //#region @backend
     const location = project.location;
     this.projects = this.projects.filter(p => p.location !== location);
     //#endregion
+
   }
   //#endregion
 
   //#region fields & getters / manually add project
   add(project: PROJECT) {
+
     //#region @backend
     this.projects.push(project);
     //#endregion
+
   }
   //#endregion
 
   //#region fields & getters / all projects from location
 
   allProjectFrom(absoluteLocation: string, stopOnCwd: string = '/') {
+
     //#region @backendFunc
     const projects = {};
     const projectsList = [];
@@ -307,14 +322,17 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
     }
     return projectsList as PROJECT[];
     //#endregion
+
   }
 
   allProjectsFromFolder(folderLocation: string): PROJECT[] {
+
     //#region @backendFunc
     return Helpers.foldersFrom(folderLocation, { recursive: false })
       .map(f => this.From(f))
       .filter(f => !!f) as PROJECT[];
     //#endregion
+
   }
   //#endregion
 
@@ -365,4 +383,5 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
     // return result.reverse(); // Reverse the result to get the correct order
   }
   //#endregion
+
 }

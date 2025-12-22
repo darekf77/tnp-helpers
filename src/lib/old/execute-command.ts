@@ -42,6 +42,7 @@ export function executeCommand(
   context?: ExtensionContext,
   debug?: boolean,
 ) {
+
   //#region @backendFunc
   const log = Log.instance(`execute-command`, 'logmsg', debug);
   const commandToExecuteReadable =
@@ -169,6 +170,7 @@ export function executeCommand(
 
         vscodeWindow.withProgress(
           {
+
             //#region initialize progress
             location: progressLocation,
             title: MAIN_TITLE,
@@ -222,6 +224,7 @@ export function executeCommand(
                     });
                   });
                   //#endregion
+
                   const { placeholder, prompt } = item;
                   let placeHolder;
                   if (typeof placeholder === 'string') {
@@ -358,6 +361,7 @@ export function executeCommand(
                     break;
                   }
                   //#endregion
+
                   resolveVars.push(item);
                 }
               }
@@ -655,6 +659,7 @@ export function executeCommand(
                 dataToDisplayInLog += `commandToExecute: ${execCommand}`;
 
                 if (syncProcess) {
+
                   //#region handle sync process
                   let childResult = child.execSync(cmd, { shell });
                   progress.report({ increment: 50 });
@@ -664,7 +669,9 @@ export function executeCommand(
                   progress.report({ increment: 50 });
                   finishAction(showOutputDataOnSuccess ? childResult : '');
                   //#endregion
+
                 } else {
+
                   //#region handle async process events
                   if (isDefaultBuildCommand) {
                     var outputChannel =
@@ -775,6 +782,7 @@ export function executeCommand(
                     }
                   });
                   //#endregion
+
                 }
               } catch (err) {
                 finishError(err, dataToDisplayInLog);
@@ -788,4 +796,5 @@ export function executeCommand(
     },
   );
   //#endregion
+
 }

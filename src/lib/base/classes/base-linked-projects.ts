@@ -59,14 +59,17 @@ export class BaseLinkedProjects<
 
   //#region methods & getters / projects db location
   get projectsDbLocation() {
+
     //#region @backendFunc
     return this.project.ins.projectsDb.projectsDbLocation;
     //#endregion
+
   }
   //#endregion
 
   //#region methods & getters / save location to db
   async saveLocationToDB() {
+
     //#region @backendFunc
     const db = await this.project.ins.projectsDb.getConnection();
 
@@ -90,6 +93,7 @@ export class BaseLinkedProjects<
       }
     }
     //#endregion
+
   }
   //#endregion
 
@@ -123,6 +127,7 @@ export class BaseLinkedProjects<
     linkedProj: LinkedProject | string,
     options?: { skipFormat?: boolean },
   ) {
+
     //#region @backendFunc
     options = options || {};
     const linkedProject: LinkedProject = _.isString(linkedProj)
@@ -163,6 +168,7 @@ export class BaseLinkedProjects<
     linkedProjectsConfig.projects.push(linkedProjectToAdd);
     this.setLinkedProjectsConfig(linkedProjectsConfig, options);
     //#endregion
+
   }
   //#endregion
 
@@ -171,12 +177,14 @@ export class BaseLinkedProjects<
     linkedProjs: LinkedProject[],
     options?: { skipFormat?: boolean },
   ) {
+
     //#region @backendFunc
     options = options || {};
     for (const linkedProj of linkedProjs) {
       this.addLinkedProject(linkedProj, options);
     }
     //#endregion
+
   }
   //#endregion
 
@@ -187,6 +195,7 @@ export class BaseLinkedProjects<
       skipFormat?: boolean;
     },
   ) {
+
     //#region @backendFunc
     options = options || {};
     if (!Helpers.exists(this.linkedProjectsConfigPath)) {
@@ -228,13 +237,16 @@ export class BaseLinkedProjects<
       this.formatConfigFile();
     }
     //#endregion
+
   }
   //#endregion
 
   public formatConfigFile() {
+
     //#region @backendFunc
     UtilsTypescript.formatFile(this.linkedProjectsConfigPath);
     //#endregion
+
   }
 
   //#region methods & getters  / get linked projects config path
@@ -249,6 +261,7 @@ export class BaseLinkedProjects<
 
   //#region methods & getters  / recreate linked projects config
   protected recreateLinkedProjectsConfig() {
+
     //#region @backendFunc
     if (
       !Helpers.exists(this.linkedProjectsConfigPath) &&
@@ -260,11 +273,13 @@ export class BaseLinkedProjects<
       );
     }
     //#endregion
+
   }
   //#endregion
 
   //#region methods & getters  / get linked projects config
   getLinkedProjectsConfig(): LinkedPorjectsConfig {
+
     //#region @backendFunc
     this.recreateLinkedProjectsConfig();
     const existedConfig = Helpers.readJson(
@@ -317,6 +332,7 @@ export class BaseLinkedProjects<
     }
     return linkedPorjectsConfig;
     //#endregion
+
   }
   //#endregion
 
@@ -350,6 +366,7 @@ export class BaseLinkedProjects<
 
   //#region getters & methods / get unexisted projects
   async cloneNonexistedLinkedProjects(setOrigin: 'ssh' | 'http') {
+
     //#region @backendFunc
     const detectedLinkedProjects = this.detectedLinkedProjects;
 
@@ -437,6 +454,8 @@ ${projectsThatShouldBeLinked
       }
     }
     //#endregion
+
   }
   //#endregion
+
 }

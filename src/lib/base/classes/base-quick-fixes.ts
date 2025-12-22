@@ -24,14 +24,19 @@ export class BaseQuickFixes<
    * @param filesRelativeAbsPaths\ Quick fix for typescript check
    */
   excludeNodeModulesDtsFromTypescriptCheck(filesRelativeAbsPaths:string[]) {
+
     //#region @backendFunc
-    for (const file of filesRelativeAbsPaths) {
-      const fileContent = Helpers.readFile(file) || '';
+    for (const absPath of filesRelativeAbsPaths) {
+      if(!Helpers.exists(absPath)) {
+        Helpers.warn(`File for quick fix not found: ${absPath}`);
+        continue;
+      }
+      const fileContent = Helpers.readFile(absPath) || '';
       if(fileContent) {
          if(!fileContent.startsWith(`// @ts-${'nocheck'}`)) {
           const contentFixed = `// @ts-${'nocheck'}\n${fileContent}`;
           if(fileContent !== contentFixed) {
-            Helpers.writeFile(file, contentFixed);
+            Helpers.writeFile(absPath, contentFixed);
           }
          }
       }
@@ -42,6 +47,7 @@ export class BaseQuickFixes<
 
   //#region fix sqlite pacakge in node_modules
   fixSQLLiteModuleInNodeModules() {
+
     //#region @backendFunc
     const filePath = this.project.pathFor(
       `${config.folder.node_modules}/sql.js/dist/sql-wasm.js`,
@@ -54,11 +60,13 @@ export class BaseQuickFixes<
     const fixedContent = UtilsQuickFixes.replaceKnownFaultyCode(content);
     Helpers.writeFile(filePath, fixedContent);
     //#endregion
+
   }
   //#endregion
 
   //#region add missing empty libs
   public createDummyEmptyLibsReplacements(missingLibsNames: string[] = []) {
+
     //#region @backendFunc
     missingLibsNames.forEach(missingLibName => {
       const pathInProjectNodeModules = path.join(
@@ -99,6 +107,8 @@ export default _default;
       );
     });
     //#endregion
+
   }
   //#endregion
+
 }

@@ -59,10 +59,12 @@ export class BaseNodeModules<
    * @example <project-path>/node_modules/<package-name>
    */
   pathFor(packageName: string | string[]): string {
+
     //#region @backendFunc
     packageName = crossPlatformPath(packageName);
     return crossPlatformPath([this.realPath, packageName]);
     //#endregion
+
   }
   //#endregion
 
@@ -100,6 +102,7 @@ export class BaseNodeModules<
 
   //#region link node_modules to other project
   linkToProject(project: Partial<BaseProject>) {
+
     //#region @backendFunc
     const source = this.realPath;
     let dest = project.pathFor(config.folder.node_modules);
@@ -108,11 +111,13 @@ export class BaseNodeModules<
       continueWhenExistedFolderDoesntExists: true,
     });
     //#endregion
+
   }
   //#endregion
 
   //#region link node_modules to other project
   copyToProject(project: BaseProject): void {
+
     //#region @backendFunc
     Helpers.taskStarted(`Copying node_modules folder to project ${project.name}/node_modules`);
     const source = this.realPath;
@@ -127,11 +132,13 @@ export class BaseNodeModules<
     });
     Helpers.taskDone(`Done copying node_modules folder to project ${project.name}/node_modules`);
     //#endregion
+
   }
   //#endregion
 
   //#region link to project or location
   linkToLocation(location: string): void {
+
     //#region @backendFunc
     let dest = crossPlatformPath(location);
     dest = this.preventWrongLinkDestination(dest);
@@ -140,6 +147,7 @@ export class BaseNodeModules<
       continueWhenExistedFolderDoesntExists: true,
     });
     //#endregion
+
   }
   //#endregion
 
@@ -153,6 +161,7 @@ export class BaseNodeModules<
 
   //#region delete node_modules
   async remove(options?: { skipQuestion?: boolean }): Promise<void> {
+
     //#region @backendFunc
     options = options || {};
     if (
@@ -165,20 +174,24 @@ export class BaseNodeModules<
       Helpers.remove(this.path, true);
     }
     //#endregion
+
   }
   //#endregion
 
   //#region remove package inside
   removePackage(packageInside: string): void {
+
     //#region @backendFunc
     Helpers.log(`Removing node_modules from ${this.path}`);
     Helpers.removeIfExists([this.path, packageInside]);
     //#endregion
+
   }
   //#endregion
 
   //#region reinstall node modules
   async reinstall(options?: Omit<CoreModels.NpmInstallOptions, 'pkg'>) {
+
     //#region @backendFunc
 
     options = _.cloneDeep(options || {});
@@ -253,6 +266,7 @@ with ${options.useYarn ? 'yarn' : 'npm'}
       `);
     this.npmHelpers.packageJson.reloadPackageJsonInMemory();
     //#endregion
+
   }
   //#endregion
 
@@ -263,6 +277,7 @@ with ${options.useYarn ? 'yarn' : 'npm'}
   //#endregion
 
   unlinkNodeModulesWhenLinked() {
+
     //#region @backendFunc
     if (this.isLink) {
       try {
@@ -273,6 +288,7 @@ with ${options.useYarn ? 'yarn' : 'npm'}
       } catch (error) {}
     }
     //#endregion
+
   }
 
   //#region empty
@@ -288,6 +304,7 @@ with ${options.useYarn ? 'yarn' : 'npm'}
    * and is not existent
    */
   isEmpty() {
+
     //#region @backendFunc
     let node_modules_path = this.path;
 
@@ -341,6 +358,7 @@ with ${options.useYarn ? 'yarn' : 'npm'}
 
     return notFullyInstalled;
     //#endregion
+
   }
   //#endregion
 
@@ -353,6 +371,7 @@ with ${options.useYarn ? 'yarn' : 'npm'}
     options: CoreModels.NpmInstallOptions,
     cwd: string = this.cwd,
   ): Promise<string> {
+
     //#region @backendFunc
     let {
       pkg,
@@ -369,6 +388,7 @@ with ${options.useYarn ? 'yarn' : 'npm'}
     const commonOptions = `--ignore-engines`;
 
     if (useYarn) {
+
       //#region yarn
       const argsForFasterInstall = `${force ? '--force' : ''} ${commonOptions} `;
       if (removeYarnOrPackageJsonLock) {
@@ -385,7 +405,9 @@ with ${options.useYarn ? 'yarn' : 'npm'}
         ` ${argsForFasterInstall} ` +
         ` ${pkg && pkg.installType && pkg.installType === '--save-dev' ? '-dev' : ''} `;
       //#endregion
+
     } else {
+
       //#region npm
       const argsForFasterInstall =
         `${force ? '--force' : ''} ${commonOptions} --no-audit ` +
@@ -409,6 +431,7 @@ with ${options.useYarn ? 'yarn' : 'npm'}
         ` ${pkg && pkg.installType ? pkg.installType : ''} ` +
         ` ${argsForFasterInstall} `;
       //#endregion
+
     }
     Helpers.info(`Command for npm install:
 
@@ -417,6 +440,7 @@ with ${options.useYarn ? 'yarn' : 'npm'}
       `);
     return command;
     //#endregion
+
   }
   //#endregion
 
@@ -432,6 +456,7 @@ with ${options.useYarn ? 'yarn' : 'npm'}
     packageName: string,
     options: { maxDepth?: number; signal?: AbortSignal } = {},
   ): string[] {
+
     //#region @backendFunc
     const results: string[] = [];
     const visited = new Set<string>();
@@ -482,6 +507,7 @@ with ${options.useYarn ? 'yarn' : 'npm'}
     walk(rootDir);
     return results;
     //#endregion
+
   }
   //#endregion
 
@@ -491,6 +517,7 @@ with ${options.useYarn ? 'yarn' : 'npm'}
     countOnly = false,
     fake = false,
   ): void {
+
     //#region @backendFunc
     // packagesConfig = ['@angular/cdk', 'tnp-models'];
     Helpers.taskStarted(
@@ -629,7 +656,9 @@ with ${options.useYarn ? 'yarn' : 'npm'}
 
     Helpers.taskDone(`${countOnly ? 'Counting' : 'Removing'} duplicates done.`);
     //#endregion
+
   }
 
   //#endregion
+
 }

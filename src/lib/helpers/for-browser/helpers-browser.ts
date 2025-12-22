@@ -32,6 +32,7 @@ export class HelpersBrowser {
   })();
 
   private constructor(win: Window) {
+
     //#region @browser
     win.addEventListener("beforeunload", (e) => {
       win.sessionStorage.tabId = this.tabId;
@@ -55,16 +56,11 @@ export class HelpersBrowser {
     })
 
     //#endregion
-  }
 
+  }
 
   static get instance() {
     return HelpersBrowser.inst;
   }
 
 }
-
-
-
-
-

@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 //#region imports
 import { CommonModule } from '@angular/common'; // @browser
 import { NgModule, inject, Injectable } from '@angular/core'; // @browser
@@ -7,7 +9,18 @@ import Aura from '@primeng/themes/aura'; // @browser
 import { MaterialCssVarsModule } from 'angular-material-css-vars'; // @browser
 import { providePrimeNG } from 'primeng/config'; // @browser
 import { Observable, map } from 'rxjs';
-import { Taon, TaonBaseContext, TAON_CONTEXT } from 'taon/src';
+import {
+  Taon,
+  TaonBaseContext,
+  TAON_CONTEXT,
+  TaonBaseAbstractEntity,
+  StringColumn,
+  TaonController,
+  TaonBaseCrudController,
+  TaonMigration,
+  GET,
+  TaonBaseMigration,
+} from 'taon/src';
 import { UtilsOs } from 'tnp-core/src';
 
 import { HOST_URL, FRONTEND_HOST_URL } from './app.hosts';
@@ -17,6 +30,7 @@ console.log('hello world');
 console.log('Your server will start on port ' + HOST_URL.split(':')[2]);
 
 //#region tnp-helpers component
+
 //#region @browser
 @Component({
   selector: 'app-tnp-helpers',
@@ -41,23 +55,29 @@ export class TnpHelpersComponent {
   angularVersion =
     VERSION.full +
     ` mode: ${UtilsOs.isRunningInWebSQL() ? ' (websql)' : '(normal)'}`;
+
   userApiService = inject(UserApiService);
+
   readonly users$: Observable<User[]> = this.userApiService.getAll();
+
   readonly hello$ = this.userApiService.userController
     .helloWorld()
     .request()
     .observable.pipe(map(r => r.body.text));
 }
 //#endregion
+
 //#endregion
 
 //#region  tnp-helpers api service
+
 //#region @browser
 @Injectable({
   providedIn: 'root',
 })
-export class UserApiService extends Taon.Base.AngularService {
+export class UserApiService extends TaonBaseAngularService {
   userController = this.injectController(UserController);
+
   getAll(): Observable<User[]> {
     return this.userController
       .getAll()
@@ -66,9 +86,11 @@ export class UserApiService extends Taon.Base.AngularService {
   }
 }
 //#endregion
+
 //#endregion
 
 //#region  tnp-helpers module
+
 //#region @browser
 @NgModule({
   providers: [
@@ -96,25 +118,26 @@ export class UserApiService extends Taon.Base.AngularService {
 })
 export class TnpHelpersModule {}
 //#endregion
+
 //#endregion
 
 //#region  tnp-helpers entity
 @Taon.Entity({ className: 'User' })
-class User extends Taon.Base.AbstractEntity {
+class User extends TaonBaseAbstractEntity {
   //#region @websql
-  @Taon.Orm.Column.String()
+  @StringColumn()
   //#endregion
   name?: string;
 }
 //#endregion
 
 //#region  tnp-helpers controller
-@Taon.Controller({ className: 'UserController' })
-class UserController extends Taon.Base.CrudController<User> {
+@TaonController({ className: 'UserController' })
+class UserController extends TaonBaseCrudController<User> {
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   entityClassResolveFn = () => User;
 
-  @Taon.Http.GET()
+  @GET()
   helloWorld(): Taon.Response<string> {
     return async (req, res) => 'hello world';
   }
@@ -122,12 +145,14 @@ class UserController extends Taon.Base.CrudController<User> {
 //#endregion
 
 //#region  tnp-helpers migration
+
 //#region @websql
-@Taon.Migration({
+@TaonMigration({
   className: 'UserMigration',
 })
-class UserMigration extends Taon.Base.Migration {
+class UserMigration extends TaonBaseMigration {
   userController = this.injectRepo(User);
+
   async up(): Promise<any> {
     const superAdmin = new User();
     superAdmin.name = 'super-admin';
@@ -135,6 +160,7 @@ class UserMigration extends Taon.Base.Migration {
   }
 }
 //#endregion
+
 //#endregion
 
 //#region  tnp-helpers context

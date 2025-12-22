@@ -10,8 +10,10 @@ import {
 
 import { BaseCliWorkerConfig } from './base-cli-worker-config';
 //#endregion
+
 export namespace BaseCliWorkerUtils {
   export const getPathToProcessLocalInfoJson = (serviceID: string): string => {
+
     //#region @backendFunc
     // console.log('os.userInfo()', os.userInfo());
     return crossPlatformPath([
@@ -21,9 +23,11 @@ export namespace BaseCliWorkerUtils {
       `${serviceID}.json`,
     ]);
     //#endregion
+
   };
 
   export const getAllServicesFromOS = (): BaseCliWorkerConfig[] => {
+
     //#region @backendFunc
     const dir = crossPlatformPath(
       path.dirname(getPathToProcessLocalInfoJson('dummy')),
@@ -32,5 +36,6 @@ export namespace BaseCliWorkerUtils {
       .filter(f => f.endsWith('.json'))
       .map(f => BaseCliWorkerConfig.from(UtilsJson.readJsonWithComments(f)));
     //#endregion
+
   };
 }

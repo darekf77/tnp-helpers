@@ -11,6 +11,7 @@ import type { BaseProject } from './base-project';
 export class BaseFileFoldersOperations<
   PROJECT extends BaseProject = any,
 > extends BaseFeatureForProject<PROJECT> {
+
   //#region files and folders to copy when copying project
   /**
    * Relative to project root
@@ -36,6 +37,7 @@ export class BaseFileFoldersOperations<
 
   //#region delete project
   deleteProject(options?: { skipChildren?: boolean }): void {
+
     //#region @backendFunc
     options = options || {};
 
@@ -57,6 +59,7 @@ export class BaseFileFoldersOperations<
     Helpers.remove(this.project.location);
     // this.ins.remove(this.project);
     //#endregion
+
   }
   //#endregion
 
@@ -65,6 +68,7 @@ export class BaseFileFoldersOperations<
     destination: string,
     options?: { skipChildren?: boolean },
   ): Promise<void> {
+
     //#region @backendFunc
     options = options || {};
     const fielsAndFoldersToCopy = this.fielsAndFoldersToCopy();
@@ -119,6 +123,8 @@ export class BaseFileFoldersOperations<
     await copyProj(this.project, destination);
     // this.ins.add(this.ins.From(destination));
     //#endregion
+
   }
   //#endregion
+
 }

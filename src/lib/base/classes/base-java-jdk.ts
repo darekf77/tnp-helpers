@@ -6,6 +6,7 @@ import { BaseProject } from './base-project';
 export class BaseJavaJdk<
   PROJECT extends BaseProject = any,
 > extends BaseFeatureForProject<PROJECT> {
+
   //#region api methods / selectJdkVersion
   async selectJdkVersion(): Promise<string | undefined> {
     return await UtilsJava.selectJdkVersion();
@@ -30,4 +31,5 @@ export class BaseJavaJdk<
     UtilsJava.updateTomcatHomePath(selectedPath);
   }
   //#endregion
+
 }

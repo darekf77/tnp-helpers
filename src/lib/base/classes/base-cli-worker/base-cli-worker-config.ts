@@ -34,6 +34,7 @@ export class BaseCliWorkerConfig {
   version: string;
 
   hasBiggerOrEqualWorkerVersionThan(other: BaseCliWorkerConfig): boolean {
+
     //#region @backendFunc
     other = BaseCliWorkerConfig.from(other);
     if (this.serviceID !== other.serviceID) {
@@ -48,6 +49,7 @@ export class BaseCliWorkerConfig {
       return false;
     }
     //#endregion
+
   }
 
   isEquals(other: BaseCliWorkerConfig): boolean {

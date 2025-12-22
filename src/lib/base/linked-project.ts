@@ -8,6 +8,7 @@ import { _, crossPlatformPath, path } from 'tnp-core/src';
 import { Helpers } from '../index';
 
 export class LinkedProject {
+
   //#region static
 
   //#region static / from
@@ -34,6 +35,7 @@ export class LinkedProject {
     currentRemoteUrl?: string,
     currentBranch?: string,
   ) {
+
     //#region @backendFunc
     const isProperCurrentRemoteUrl =
       currentRemoteUrl && Helpers.git.isValidRepoUrl(currentRemoteUrl);
@@ -51,6 +53,7 @@ export class LinkedProject {
       relativeClonePath: projectName,
     });
     //#endregion
+
   }
   //#endregion
 
@@ -62,6 +65,7 @@ export class LinkedProject {
       checkAlsoNonRepos?: boolean;
     },
   ): LinkedProject[] {
+
     //#region @backendFunc
     options = options || ({} as any);
     const { recursive, checkAlsoNonRepos } = options;
@@ -118,6 +122,7 @@ export class LinkedProject {
     // });
     return detectedLinkedProjects;
     //#endregion
+
   }
   //#endregion
 
@@ -154,6 +159,7 @@ export class LinkedProject {
   }
 
   public remoteUrlTransformed(setOrigin: 'ssh' | 'http'): string {
+
     //#region @backendFunc
     let url = this.remoteUrl();
     if (setOrigin === 'ssh') {
@@ -169,6 +175,7 @@ export class LinkedProject {
     }
     return url;
     //#endregion
+
   }
 
   defaultBranch?: string;
@@ -177,6 +184,7 @@ export class LinkedProject {
 }
 
 export class LinkedPorjectsConfig {
+
   //#region static
 
   //#region static / from
@@ -194,6 +202,7 @@ export class LinkedPorjectsConfig {
     return _.merge(new (LinkedPorjectsConfig as any)(), _.cloneDeep(options));
   }
   //#endregion
+
   //#endregion
 
   prefix?: string;

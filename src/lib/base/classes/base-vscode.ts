@@ -18,6 +18,7 @@ import type { BaseProject } from './base-project';
 export class BaseVscodeHelpers<
   PROJECT extends BaseProject = any,
 > extends BaseFeatureForProject<PROJECT> {
+
   //#region init
   async init(options?: { skipHiddingTempFiles?: boolean }): Promise<void> {
     options = options || {};
@@ -59,6 +60,7 @@ export class BaseVscodeHelpers<
       settings: CoreModels.VSCodeSettings,
     ) => CoreModels.VSCodeSettings,
   ): void {
+
     //#region @backendFunc
     try {
       // @ts-ignore
@@ -68,23 +70,27 @@ export class BaseVscodeHelpers<
       Helpers.error(`Error during modifying vscode settings`, true, true);
     }
     //#endregion
+
   }
   //#endregion
 
   //#region save current settings
   public saveCurrentSettings(): void {
+
     //#region @backendFunc
     this.project.writeJsonC(
       this.relativePathSettingsJsonVscode,
       this.currentSettingsValue,
     );
     //#endregion
+
   }
   //#endregion
 
   //#region get extensions
   getExtensions(): string[] {
     return Helpers.uniqArray([
+
       //#region @backend
       // 'Angular.ng-template', // high cpu usage
       'EditorConfig.EditorConfig',
@@ -195,6 +201,7 @@ export class BaseVscodeHelpers<
       // 'mechatroner.rainbow-csv',
 
       //#endregion
+
     ]).map(c => (c as string).toLowerCase());
   }
   //#endregion
@@ -210,6 +217,7 @@ export class BaseVscodeHelpers<
 
   //#region recreate extensions
   recreateExtensions(): void {
+
     //#region @backendFunc
     this.project.writeFile(
       this.relativePathExtensionJsonVScode,
@@ -222,6 +230,7 @@ export class BaseVscodeHelpers<
       ),
     );
     //#endregion
+
   }
   //#endregion
 
@@ -231,6 +240,7 @@ export class BaseVscodeHelpers<
   }
 
   async recreateBaseSettings(options?: { save?: boolean }): Promise<void> {
+
     //#region @backendFunc
     options = options || {};
     options.save = !!options.save;
@@ -244,11 +254,13 @@ export class BaseVscodeHelpers<
       this.saveCurrentSettings();
     }
     //#endregion
+
   }
   //#endregion
 
   //#region recraete window title
   recreateWindowTitle(options?: { save?: boolean }): void {
+
     //#region @backendFunc
     options = options || {};
     options.save = !!options.save;
@@ -262,6 +274,7 @@ export class BaseVscodeHelpers<
       this.saveCurrentSettings();
     }
     //#endregion
+
   }
   //#endregion
 
@@ -270,6 +283,7 @@ export class BaseVscodeHelpers<
     extensions = this.extensions,
     defaultSelectedAll = false,
   ): Promise<void> {
+
     //#region @backendFunc
     // console.log({ extensions });
     const alreadyInstalled = this.installedExtensions;
@@ -326,6 +340,7 @@ export class BaseVscodeHelpers<
     }
     Helpers.info('Done installing');
     //#endregion
+
   }
   //#endregion
 
@@ -344,6 +359,7 @@ export class BaseVscodeHelpers<
 
   //#region installed extensions
   get installedExtensions(): string[] {
+
     //#region @backendFunc
     /**
      * Removes trailing version/OS tags from folder names:
@@ -373,11 +389,13 @@ export class BaseVscodeHelpers<
 
     return Utils.uniqArray(extensions).map(c => (c as string).toLowerCase());
     //#endregion
+
   }
   //#endregion
 
   //#region apply proper global settings
   public static async applyProperGlobalSettings(): Promise<void> {
+
     //#region @backendFunc
     const keybindingPathLinux = path.join(
       crossPlatformPath(os.userInfo().homedir),
@@ -408,6 +426,7 @@ export class BaseVscodeHelpers<
         key: 'shift+alt+d',
         command: 'eslint.executeAutofix',
       },
+
       //#region macros start stop replay
       {
         key: 'ctrl+oem_1',
@@ -440,6 +459,7 @@ export class BaseVscodeHelpers<
         when: "!kb-macro.recording && config.keyboardMacro.recordingShortcuts == 'Option1'",
       },
       //#endregion
+
     ];
 
     //#region global / keybindings macos
@@ -675,6 +695,8 @@ export class BaseVscodeHelpers<
         'mkdocs',
         'Initing',
         'traefik',
+        'Zscaller',
+        'formly',
       ],
       'cSpell.diagnosticLevel': 'Hint',
       'cSpell.enabledNotifications': {
@@ -725,6 +747,7 @@ export class BaseVscodeHelpers<
     Helpers.writeFile(dest, settings);
     Helpers.info(`Vscode configured !`);
     //#endregion
+
   }
   //#endregion
 
@@ -835,6 +858,7 @@ export class BaseVscodeHelpers<
 
   //#region resolve params vscode
   protected async resolveParamsVscode(obj, prams: any[]): Promise<void> {
+
     //#region @backendFunc
     if (_.isObject(obj)) {
       const keys = Object.keys(obj);
@@ -856,6 +880,7 @@ export class BaseVscodeHelpers<
       }
     }
     //#endregion
+
   }
   //#endregion
 

@@ -3,13 +3,17 @@ import { Helpers } from '../../index';
 import { UtilsTerminal } from 'tnp-core/src'
 
 export class HelpersConsoleGuiQuestion {
+
   //#region qestion yes / no
+
   //#region @backend
   async yesNo(questionMessage: string) {
     return await Helpers.questionYesNo(questionMessage);
   }
   //#endregion
+
   //#endregion
+
 }
 
 export class HelpersConsoleGui {
@@ -24,6 +28,7 @@ export class HelpersConsoleGui {
   //#endregion
 
   //#region select
+
   //#region @backend
   /**
    * @deprecated use UtilsTerminal.select
@@ -41,9 +46,11 @@ export class HelpersConsoleGui {
     return (await Helpers.list(questionMessage, choices)) as T;
   };
   //#endregion
+
   //#endregion
 
   //#region multiselect
+
   //#region @backend
   /**
    * @deprecated use UtilsTerminal.multiselect
@@ -62,21 +69,27 @@ export class HelpersConsoleGui {
     });
   };
   //#endregion
+
   //#endregion
 
   //#region wait
+
   //#region @backend
   wait = async (howManySecondsWait: number) => {
     await Helpers.wait(howManySecondsWait);
   };
   //#endregion
+
   //#endregion
 
   //#region press any key
+
   //#region @backend
   pressAnyKey = async (message = 'Press enter to continue..') => {
     await Helpers.pressKeyAndContinue(message);
   };
   //#endregion
+
   //#endregion
+
 }

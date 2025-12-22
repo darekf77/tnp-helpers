@@ -10,6 +10,7 @@ import { CLASS } from 'typescript-class-helpers/src';
 export type BaseStartConfigOptions = Partial<BaseStartConfig>;
 
 export class BaseStartConfig {
+
   //#region prepareArgs
   /**
    * @deprecated
@@ -232,4 +233,5 @@ export class BaseStartConfig {
     }
   }
   //#endregion
+
 }

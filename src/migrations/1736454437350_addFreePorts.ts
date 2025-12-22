@@ -1,14 +1,13 @@
 // @ts-nocheck
-import { Taon } from 'taon/src';
+import { Taon,TaonMigration, TaonBaseMigration } from 'taon/src';
 import { QueryRunner } from 'taon-typeorm/src';
 import { _ } from 'tnp-core/src';
 import { Port, TaonPortsController } from '../lib';
 
-@Taon.Migration({
+@TaonMigration({
   className: 'TaonPortsContext_1736454437350_addFreePorts',
 })
-export class TaonPortsContext_1736454437350_addFreePorts extends Taon.Base
-  .Migration {
+export class TaonPortsContext_1736454437350_addFreePorts extends TaonBaseMigration {
   protected portsController: TaonPortsController =
     this.injectController(TaonPortsController);
 

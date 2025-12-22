@@ -22,11 +22,13 @@ import { BaseProject } from './base-project';
 export class BaseDocker<
   PROJECT extends BaseProject = any,
 > extends BaseFeatureForProject<PROJECT> {
+
   //#region update docker compose ports in .env
   /**
    * Updates ports in .env file based on available ports range.
    */
   async updateDockerComposePorts(): Promise<void> {
+
     //#region @backendFunc
     const envPath = this.project.pathFor('.env');
 
@@ -53,6 +55,7 @@ export class BaseDocker<
       }
     }
     //#endregion
+
   }
   //#endregion
 
@@ -61,18 +64,20 @@ export class BaseDocker<
     action: UtilsDocker.DockerComposeActionType,
     options?: UtilsDocker.DockerComposeActionOptions,
   ): ChildProcess {
+
     //#region @backendFunc
     options = options || {};
     options.cwd = options?.cwd || this.project.location;
 
-
     return UtilsDocker.getDockerComposeActionChildProcess(action, options);
     //#endregion
+
   }
   //#endregion
 
   //#region remove all images by COMPOSE_PROJECT_NAME from .env
   async removeAllImagesBy_Env_COMPOSE_PROJECT_NAME(): Promise<void> {
+
     //#region @backendFunc
     await UtilsDocker.cleanImagesAndContainersByDockerLabel(
       UtilsDocker.DOCKER_LABEL_KEY,
@@ -82,6 +87,8 @@ export class BaseDocker<
       ).toString(),
     );
     //#endregion
+
   }
   //#endregion
+
 }

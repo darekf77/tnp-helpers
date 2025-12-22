@@ -1,11 +1,11 @@
 // @ts-nocheck
-import { Taon } from 'taon/src';
+import { Taon, TaonMigration, TaonBaseMigration } from 'taon/src';
 import { QueryRunner } from 'taon-typeorm/src';
 
-@Taon.Migration({
+@TaonMigration({
   className: 'MainContext_1736198527297_init',
 })
-export class MainContext_1736198527297_init extends Taon.Base.Migration {
+export class MainContext_1736198527297_init extends TaonBaseMigration {
   /**
    * remove this method if you are ready to run this migration
    */
@@ -22,10 +22,10 @@ export class MainContext_1736198527297_init extends Taon.Base.Migration {
   }
 }
 
-@Taon.Migration({
+@TaonMigration({
   className: 'TaonPortsContext_1736198527297_init',
 })
-export class TaonPortsContext_1736198527297_init extends Taon.Base.Migration {
+export class TaonPortsContext_1736198527297_init extends TaonBaseMigration {
   /**
    * remove this method if you are ready to run this migration
    */

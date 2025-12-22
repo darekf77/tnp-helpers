@@ -43,6 +43,7 @@ const regexCommitModuleInArgs: RegExp = /\[[a-z|\-|\,]+\]/;
 const regexCommitModuleInBranch: RegExp = /\-\-[a-z|\-|\_]+\-\-/;
 
 export class CommitData {
+
   //#region static
 
   //#region static / methods & getters / clean http(s) from commit message
@@ -89,6 +90,7 @@ export class CommitData {
    * @returns jiras (from oldest to newset)
    */
   static extractAndOrderJiraNumbers(commitOrBranchName: string): string[] {
+
     //#region @backendFunc
     return Helpers.uniqArray(
       (
@@ -116,6 +118,7 @@ export class CommitData {
         }),
     );
     //#endregion
+
   }
   //#endregion
 
@@ -133,6 +136,7 @@ export class CommitData {
     commitOrBranchName: string,
     currentOrigin?: string,
   ): string[] {
+
     //#region @backendFunc
     if (commitOrBranchName.trim() === '') {
       // console.trace('commitOrBranchName is empty');
@@ -212,6 +216,7 @@ export class CommitData {
         }),
     );
     //#endregion
+
   }
   //#endregion
 
@@ -334,6 +339,7 @@ export class CommitData {
       jiraIssuesAreOutsideBrackets?: boolean;
     },
   ): Promise<CommitData> {
+
     //#region @backendFunc
     options = options || ({} as any);
     const { typeOfCommit, currentOrigin } = options;
@@ -401,6 +407,7 @@ export class CommitData {
       jiraIssuesAreOutsideBrackets: !!options.jiraIssuesAreOutsideBrackets,
     });
     //#endregion
+
   }
   //#endregion
 
@@ -420,6 +427,7 @@ export class CommitData {
       jiraIssuesAreOutsideBrackets?: boolean;
     },
   ): Promise<CommitData> {
+
     //#region @backendFunc
     options = options || { releaseWords: [] };
     options.releaseWords = options.releaseWords || [];
@@ -532,6 +540,7 @@ export class CommitData {
 
     return result;
     //#endregion
+
   }
   //#endregion
 
@@ -609,6 +618,7 @@ export class CommitData {
 
   //#region methods & getters / branch prefix
   get branchPrefix(): TypeOfMsgPrefix {
+
     //#region @backendFunc
     const typeOfCommit = this.typeOfCommit;
     if (typeOfCommit === 'feature') {
@@ -620,6 +630,7 @@ export class CommitData {
     }
     return (this.typeOfCommit as any) || 'feat';
     //#endregion
+
   }
   //#endregion
 
@@ -657,6 +668,7 @@ export class CommitData {
 
   //#region methods & getters / commit message git commit -m
   get commitMessage(): string {
+
     //#region @backendFunc
     if (this.message === Helpers.git.ACTION_MSG_RESET_GIT_HARD_COMMIT) {
       return this.message;
@@ -772,11 +784,13 @@ export class CommitData {
     return commitMsg.replace(': :', ': ');
 
     //#endregion
+
   }
   //#endregion
 
   //#region methods & getters / branch name
   get branchName(): string {
+
     //#region @backendFunc
     let typeOfCommit = this.typeOfCommit;
     if (typeOfCommit === 'test' && this.useFeatureBranchForTestBranch) {
@@ -823,14 +837,18 @@ export class CommitData {
       .replace(/\_\_\-/g, '__') // QUICK_FIX
       .replace(/\-\-\-\-/g, '--'); // QUICK_FIX
     //#endregion
+
   }
   //#endregion
 
   //#region methods & getters / is action commit
   get isActionCommit() {
+
     //#region @backendFunc
     return this.message === Helpers.git.ACTION_MSG_RESET_GIT_HARD_COMMIT;
     //#endregion
+
   }
   //#endregion
+
 }

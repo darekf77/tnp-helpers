@@ -26,7 +26,6 @@ let json5Test2 = `
     }
     `;
 
-
 describe('taon-helpers json5', () => {
 
   beforeEach(() => {
@@ -73,8 +72,5 @@ describe('taon-helpers json5', () => {
     }
     expect(errorDuringModify).to.be.true;
   })
-
-
-
 
 })

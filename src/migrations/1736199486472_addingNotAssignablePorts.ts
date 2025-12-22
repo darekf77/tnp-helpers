@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { Taon } from 'taon/src';
+import { Taon, TaonMigration, TaonBaseMigration } from 'taon/src';
 import { _ } from 'tnp-core/src';
 import { QueryRunner } from 'taon-typeorm/src';
 import { Port, TaonPortsController } from '../lib';
@@ -24,11 +24,12 @@ const portsWithDescription = {
   6000: 'in use by something in macos',
 };
 
-@Taon.Migration({
+@TaonMigration({
   className: 'TaonPortsContext_1736199486472_addingNotAssignablePorts',
 })
-export class TaonPortsContext_1736199486472_addingNotAssignablePorts extends Taon
-  .Base.Migration {
+export class TaonPortsContext_1736199486472_addingNotAssignablePorts
+  extends TaonBaseMigration
+{
   protected portsController: TaonPortsController =
     this.injectController(TaonPortsController);
 

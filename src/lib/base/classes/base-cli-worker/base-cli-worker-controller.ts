@@ -1,42 +1,56 @@
-import { Taon } from 'taon/src';
+import {
+  Body,
+  GET,
+  HTML,
+  POST,
+  PUT,
+  Query,
+  Taon,
+  TaonBaseController,
+  TaonController,
+} from 'taon/src';
 import { Helpers } from 'tnp-core/src';
 
 import { BaseCliWorkerConfig } from './base-cli-worker-config';
 import { BaseCliWorkerUtils } from './base-cli-worker.utils';
 
-@Taon.Controller({
+@TaonController({
   className: 'TaonBaseCliWorkerController',
 })
 export abstract class TaonBaseCliWorkerController<
   UPLOAD_FILE_QUERY_PARAMS = {},
-> extends Taon.Base.Controller<UPLOAD_FILE_QUERY_PARAMS> {
+> extends TaonBaseController<UPLOAD_FILE_QUERY_PARAMS> {
   /**
    * service id
    */
   private cliWorkerServiceId: string = null;
+
   private cliWorkerServiceVersion: string = null;
 
   //#region api methods / initialize metadata
-  @Taon.Http.PUT()
+  @PUT()
   baseCLiWorkerCommand_initializeMetadata(
-    @Taon.Http.Param.Body('serviceId') serviceId: string,
-    @Taon.Http.Param.Body('serviceVersion') serviceVersion: string,
+    @Body('serviceId') serviceId: string,
+    @Body('serviceVersion') serviceVersion: string,
   ): Taon.Response<void> {
+
     //#region @backendFunc
     return async () => {
       this.cliWorkerServiceId = serviceId;
       this.cliWorkerServiceVersion = serviceVersion;
     };
     //#endregion
+
   }
   //#endregion
 
   //#region api methods / kill
-  @Taon.Http.GET()
+  @GET()
   baseCLiWorkerCommand_kill(
-    @Taon.Http.Param.Query('dontRemoveConfigFile')
+    @Query('dontRemoveConfigFile')
     dontRemoveConfigFile?: boolean,
   ): Taon.Response<void> {
+
     //#region @backendFunc
     return async () => {
       console.log(`Killing worker "${this.cliWorkerServiceId}"...`);
@@ -59,15 +73,17 @@ export abstract class TaonBaseCliWorkerController<
       }); // TODO may be change to 0
     };
     //#endregion
+
   }
   //#endregion
 
   //#region api methods / info
-  @Taon.Http.HTML({
+  @HTML({
     pathIsGlobal: true,
     path: '/info',
   })
   info(): Taon.ResponseHtml {
+
     //#region @backendFunc
     return async () => {
       return `
@@ -83,14 +99,16 @@ export abstract class TaonBaseCliWorkerController<
       `;
     };
     //#endregion
+
   }
   //#endregion
 
   //#region api methods / is healthy
-  @Taon.Http.POST()
+  @POST()
   baseCLiWorkerCommand_isHealthy(
-    @Taon.Http.Param.Body() checkingProcessConfig: BaseCliWorkerConfig,
+    @Body() checkingProcessConfig: BaseCliWorkerConfig,
   ): Taon.Response<boolean> {
+
     //#region @backendFunc
     return async (req, res) => {
       checkingProcessConfig = BaseCliWorkerConfig.from(checkingProcessConfig);
@@ -105,14 +123,16 @@ export abstract class TaonBaseCliWorkerController<
       return checkingProcessConfig.isEquals(currentConfig);
     };
     //#endregion
+
   }
   //#endregion
 
   //#region api methods / has up to date version
-  @Taon.Http.POST()
+  @POST()
   baseCLiWorkerCommand_hasUpToDateVersion(
-    @Taon.Http.Param.Body() checkingProcessConfig: BaseCliWorkerConfig,
+    @Body() checkingProcessConfig: BaseCliWorkerConfig,
   ): Taon.Response<boolean> {
+
     //#region @backendFunc
     return async (req, res) => {
       checkingProcessConfig = BaseCliWorkerConfig.from(checkingProcessConfig);
@@ -129,6 +149,8 @@ export abstract class TaonBaseCliWorkerController<
       );
     };
     //#endregion
+
   }
   //#endregion
+
 }

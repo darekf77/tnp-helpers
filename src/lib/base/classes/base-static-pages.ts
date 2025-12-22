@@ -19,6 +19,7 @@ export class BaseStaticPages<
 
   //#region clear folder for gh-pages
   protected async cleanFolderForStaticPages(pathToBranchRepoFolder: string) {
+
     //#region @backendFunc
     const noAllowedToDeleteFiles = [config.file._gitignore];
     const noAllowedToDeleteFolders = ['.git'];
@@ -35,6 +36,7 @@ export class BaseStaticPages<
       }
     }
     //#endregion
+
   }
   //#endregion
 
@@ -56,6 +58,7 @@ export class BaseStaticPages<
 
   //#region init
   async init(mainFolder: string, completeProcess = false) {
+
     //#region @backendFunc
     this.project.cache['mainFolder'] = mainFolder;
     const tempRepoPath = this.project.pathFor([
@@ -123,6 +126,8 @@ export class BaseStaticPages<
       }
     }
     //#endregion
+
   }
   //#endregion
+
 }

@@ -15,12 +15,14 @@ export abstract class BaseCompilerForProject<
   ADDITIONAL_DATA = any,
   PROJECT extends BaseProject = BaseProject,
 > extends BaseClientCompiler<ADDITIONAL_DATA> {
+
   //#region check folder compiler
   protected checkFolderCompiler(
     project: PROJECT,
     options: BaseClientCompilerOptions,
     dontCheck = false,
   ): BaseClientCompilerOptions {
+
     //#region @backendFunc
     if (_.isUndefined(options)) {
       return options;
@@ -61,6 +63,7 @@ export abstract class BaseCompilerForProject<
     });
     return options;
     //#endregion
+
   }
   //#endregion
 
@@ -72,6 +75,7 @@ export abstract class BaseCompilerForProject<
     allowFolderOutSideProject = false,
   ) {
     super();
+
     //#region @backend
     options = this.checkFolderCompiler(
       project,
@@ -82,7 +86,9 @@ export abstract class BaseCompilerForProject<
       this.initOptions(options);
     }
     //#endregion
+
   }
 
   //#endregion
+
 }

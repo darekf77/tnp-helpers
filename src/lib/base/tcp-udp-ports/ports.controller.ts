@@ -1,5 +1,5 @@
 //#region imports
-import { Taon } from 'taon/src';
+import { DELETE, GET, POST, PUT, Query, Taon, TaonController } from 'taon/src';
 import { _, UtilsOs } from 'tnp-core/src';
 
 import { TaonBaseCliWorkerController } from '../classes/base-cli-worker';
@@ -7,13 +7,16 @@ import { TaonBaseCliWorkerController } from '../classes/base-cli-worker';
 import { Port, PortStatus } from './ports.entity';
 //#endregion
 
-@Taon.Controller({
+@TaonController({
   className: 'TaonPortsController',
 })
 export class TaonPortsController extends TaonBaseCliWorkerController {
+
   //#region fields
   public START_PORT = 3000;
+
   public END_PORT = 20000;
+
   public readonly portsCache = new Map<string, Port>();
   //#endregion
 
@@ -21,6 +24,7 @@ export class TaonPortsController extends TaonBaseCliWorkerController {
 
   //#region methods / first free port
   protected get firstFreePort(): Port | null | undefined {
+
     //#region  @backendFunc
     if (!this.portsCache) {
       return null;
@@ -29,11 +33,13 @@ export class TaonPortsController extends TaonBaseCliWorkerController {
       p => p.status === 'unassigned',
     );
     //#endregion
+
   }
   //#endregion
 
   //#region methods / get first unassigned port more than
   protected firstUnassignedPortMoreThan(port: number) {
+
     //#region   @backendFunc
     if (!this.portsCache) {
       return null;
@@ -42,8 +48,10 @@ export class TaonPortsController extends TaonBaseCliWorkerController {
       p => p.status === 'unassigned' && p.port > port,
     );
     //#endregion
+
   }
   //#endregion
+
   //#endregion
 
   //#region public methods
@@ -51,7 +59,7 @@ export class TaonPortsController extends TaonBaseCliWorkerController {
   //#region public methods / get
 
   //#region public methods / get / first free port
-  @Taon.Http.GET()
+  @GET()
   getFirstFreePort(): Taon.Response<Port> {
     return async () => {
       return this.firstFreePort;
@@ -60,9 +68,9 @@ export class TaonPortsController extends TaonBaseCliWorkerController {
   //#endregion
 
   //#region public methods / get / port by number
-  @Taon.Http.GET()
+  @GET()
   getPortByNumber(
-    @Taon.Http.Param.Query('portNumber') portNumber: number,
+    @Query('portNumber') portNumber: number,
   ): Taon.Response<Port> {
     return async () => {
       portNumber = Number(portNumber);
@@ -74,10 +82,8 @@ export class TaonPortsController extends TaonBaseCliWorkerController {
   //#endregion
 
   //#region public methods / get / ports by status
-  @Taon.Http.GET()
-  getPortsByStatus(
-    @Taon.Http.Param.Query('status') status: PortStatus,
-  ): Taon.Response<Port[]> {
+  @GET()
+  getPortsByStatus(@Query('status') status: PortStatus): Taon.Response<Port[]> {
     return async () => {
       return Array.from(this.portsCache.values())
         .filter(f => f.status === status)
@@ -105,10 +111,9 @@ export class TaonPortsController extends TaonBaseCliWorkerController {
   /**
    * make it unassigned
    */
-  @Taon.Http.DELETE()
-  deletePort(
-    @Taon.Http.Param.Query('portNumber') portNumber: number,
-  ): Taon.Response<Port> {
+  @DELETE()
+  deletePort(@Query('portNumber') portNumber: number): Taon.Response<Port> {
+
     //#region @backendFunc
     return async () => {
       portNumber = Number(portNumber);
@@ -134,6 +139,7 @@ export class TaonPortsController extends TaonBaseCliWorkerController {
       return port;
     };
     //#endregion
+
   }
   //#endregion
 
@@ -141,11 +147,12 @@ export class TaonPortsController extends TaonBaseCliWorkerController {
   /**
    * make it unassigned
    */
-  @Taon.Http.PUT()
+  @PUT()
   updatePortUniqueId(
-    @Taon.Http.Param.Query('portNumber') portNumber: number,
-    @Taon.Http.Param.Query('serviceId') serviceId: string,
+    @Query('portNumber') portNumber: number,
+    @Query('serviceId') serviceId: string,
   ): Taon.Response<Port> {
+
     //#region @backendFunc
     return async () => {
       portNumber = Number(portNumber);
@@ -171,15 +178,17 @@ export class TaonPortsController extends TaonBaseCliWorkerController {
       return port;
     };
     //#endregion
+
   }
   //#endregion
 
   //#region public methods / ports take by os / ADD port take by os
-  @Taon.Http.POST()
+  @POST()
   addTakeByOsPort(
-    @Taon.Http.Param.Query('portNumber') portNumber: number,
-    @Taon.Http.Param.Query('uniqueId') uniqueId: string,
+    @Query('portNumber') portNumber: number,
+    @Query('uniqueId') uniqueId: string,
   ): Taon.Response<Port> {
+
     //#region @backendFunc
     return async () => {
       portNumber = Number(portNumber);
@@ -207,6 +216,7 @@ export class TaonPortsController extends TaonBaseCliWorkerController {
       return port;
     };
     //#endregion
+
   }
   //#endregion
 
@@ -218,11 +228,12 @@ export class TaonPortsController extends TaonBaseCliWorkerController {
    * @param startFrom start searching for free port from this number
    * @returns
    */
-  @Taon.Http.PUT()
+  @PUT()
   registerAndAssignPort(
-    @Taon.Http.Param.Query('uniqueServiceName') uniqueServiceName: string,
-    @Taon.Http.Param.Query('startFrom') startFrom?: number,
+    @Query('uniqueServiceName') uniqueServiceName: string,
+    @Query('startFrom') startFrom?: number,
   ): Taon.Response<Port> {
+
     //#region @backendFunc
     return async () => {
       uniqueServiceName = decodeURIComponent(uniqueServiceName);
@@ -271,8 +282,10 @@ export class TaonPortsController extends TaonBaseCliWorkerController {
       }
     };
     //#endregion
+
   }
   //#endregion
 
   //#endregion
+
 }

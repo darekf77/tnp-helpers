@@ -10,6 +10,7 @@ import { Helpers } from '../../index';
 //#endregion
 
 export class HelpersCliTool {
+
   //#region resolve items from begin of args
   /**
    * Resolve projects or anything from begin of arguments string
@@ -132,6 +133,7 @@ export class HelpersCliTool {
    * get minimist params from args
    */
   public getPramsFromArgs<T = object>(args: string | string[]): T {
+
     //#region @backendFunc
     if (_.isArray(args)) {
       args = Helpers.cliTool
@@ -154,6 +156,7 @@ export class HelpersCliTool {
     });
     return (_.isObject(obj) ? obj : {}) as T;
     //#endregion
+
   }
   //#endregion
 
@@ -264,6 +267,7 @@ export class HelpersCliTool {
   //#endregion
 
   //#region arguments parse
+
   //#region @backend
   /**
    * @todo TODO replace with funciton below
@@ -273,6 +277,7 @@ export class HelpersCliTool {
     argsv: string[],
     ProjectClass: Partial<typeof BaseProject>,
   ) {
+
     //#region @backendFunc
     Helpers.log(`[${config.frameworkName}] Fixing global arguments started...`);
     let options = require('minimist')(argsv);
@@ -395,9 +400,11 @@ export class HelpersCliTool {
     Helpers.log(`Fixing global arguments finish.`);
     return argsv.join(' ');
     //#endregion
+
   }
 
   //#endregion
+
   //#endregion
 
   //#region remove argumetn from args array
@@ -429,6 +436,7 @@ export class HelpersCliTool {
   }
 
   public removeArgsFromCommand(commadWithArgs: string, argsToClear: string[]) {
+
     //#region @backendFunc
     const argsObj = require('minimist')(commadWithArgs.split(' '));
     // console.log({ argsObj, argv: process.argv });
@@ -473,6 +481,8 @@ export class HelpersCliTool {
     }
     return commadWithArgs;
     //#endregion
+
   }
   //#endregion
+
 }

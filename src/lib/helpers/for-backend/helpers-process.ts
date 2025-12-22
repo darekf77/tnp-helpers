@@ -26,8 +26,10 @@ import { Helpers } from '../../index';
 //#endregion
 
 export class HelpersProcess {
+
   //#region restart application itself
   async restartApplicationItself(nameOfApp: string) {
+
     //#region @backendFunc
     Helpers.log(`Restarting ${nameOfApp}`);
     return new Promise(() => {
@@ -43,11 +45,13 @@ export class HelpersProcess {
       }, 5000);
     });
     //#endregion
+
   }
   //#endregion
 
   //#region os is macos
   osIsMacOs(versino: 'big-sur' | 'catalina') {
+
     //#region @backendFunc
     if (versino == 'big-sur') {
       return os.release().startsWith('20.');
@@ -57,17 +61,20 @@ export class HelpersProcess {
     }
     // TODO other oses
     //#endregion
+
   }
   //#endregion
 
   //#region  generate file wrap
   generatedFileWrap(content: string) {
+
     //#region @backendFunc
     return `${content}
   // [${config.frameworkName}] GENERATED CONTENT FOR BACKEND VERSION
   // [${config.frameworkName}] GENERATED CONTENT FOR BACKEND VERSION
           `.trim();
     //#endregion
+
   }
   //#endregion
 
@@ -77,6 +84,7 @@ export class HelpersProcess {
     functionToExecure: Function,
     logLevel: Level = Level.__NOTHING,
   ) {
+
     //#region @backendFunc
     const currentCwd = crossPlatformPath(process.cwd());
     Helpers.changeCwd(dir);
@@ -85,17 +93,20 @@ export class HelpersProcess {
     Log.enableLogs();
     Helpers.changeCwd(currentCwd);
     //#endregion
+
   }
   //#endregion
 
   //#region change cwd
   changeCwd(dir?: string) {
+
     //#region @backendFunc
     if (!dir) {
       return;
     }
     Helpers.goToDir(dir);
     //#endregion
+
   }
   //#endregion
 
@@ -105,6 +116,7 @@ export class HelpersProcess {
    * @deprecated
    */
   goToDir(dir = '..') {
+
     //#region @backendFunc
     const previous = crossPlatformPath(process.cwd());
     try {
@@ -132,6 +144,7 @@ export class HelpersProcess {
     }
     return true;
     //#endregion
+
   }
   //#endregion
 
@@ -140,6 +153,7 @@ export class HelpersProcess {
     message = 'Press enter try again',
     printWaitMessages = 0,
   ) {
+
     //#region @backendFunc
     if (_.isNumber(printWaitMessages) && printWaitMessages > 0) {
       Helpers.log(`Please wait (${printWaitMessages}) seconds`);
@@ -154,6 +168,7 @@ export class HelpersProcess {
       });
     });
     //#endregion
+
   }
   //#endregion
 
@@ -162,9 +177,11 @@ export class HelpersProcess {
    * @deprecated use UtilsTerminal.pressAnyKey
    */
   pressKeyAndContinue(message = 'Press enter to continue..') {
+
     //#region @backendFunc
     return UtilsTerminal.pressAnyKey({ message });
     //#endregion
+
   }
   //#endregion
 
@@ -178,6 +195,7 @@ export class HelpersProcess {
       | { name: string; value: T }[]
       | { [choice: string]: { name: string } },
   ) {
+
     //#region @backendFunc
     if (!_.isArray(choices) && _.isObject(choices)) {
       choices = Object.keys(choices)
@@ -201,6 +219,7 @@ export class HelpersProcess {
     } as any)) as any;
     return res.value as T;
     //#endregion
+
   }
   //#endregion
 
@@ -214,6 +233,7 @@ export class HelpersProcess {
     autocomplete: boolean = false,
     selected?: { name: string; value: string }[],
   ): Promise<string[]> {
+
     //#region @backendFunc
     return UtilsTerminal.multiselect({
       question,
@@ -222,6 +242,7 @@ export class HelpersProcess {
       defaultSelected: (selected || []).map(s => s.value),
     });
     //#endregion
+
   }
   //#endregion
 
@@ -235,9 +256,11 @@ export class HelpersProcess {
     // required?: boolean;
     validate?: (value: string) => boolean;
   }): Promise<string> {
+
     //#region @backendFunc
     return await UtilsTerminal.input(options);
     //#endregion
+
   }
   //#endregion
 
@@ -252,6 +275,7 @@ export class HelpersProcess {
       | { name: string; value: T }[]
       | { [choice: string]: { name: string } },
   ): Promise<T> {
+
     //#region @backendFunc
     // console.log({ choices })
     // Helpers.pressKeyAndContinue()
@@ -284,6 +308,7 @@ export class HelpersProcess {
     const res = await prompt.run();
     return res;
     //#endregion
+
   }
   //#endregion
 
@@ -293,6 +318,7 @@ export class HelpersProcess {
     choices: { name: string; value: T }[],
     pageSize = 10,
   ): Promise<T> {
+
     //#region @backendFunc
     const source = (__, input) => {
       input = input || '';
@@ -327,11 +353,13 @@ export class HelpersProcess {
 
     return res.command;
     //#endregion
+
   }
   //#endregion
 
   //#region get working dir of process
   getWorkingDirOfProcess(PID: number) {
+
     //#region @backendFunc
     try {
       const cwd = child_process
@@ -343,6 +371,7 @@ export class HelpersProcess {
       Helpers.error(e);
     }
     //#endregion
+
   }
   //#endregion
 
@@ -351,6 +380,7 @@ export class HelpersProcess {
     data: { label: string; option: string }[] | string,
     disableEncode = false,
   ) {
+
     //#region @backendFunc
     if (_.isObject(data)) {
       data = JSON.stringify(data);
@@ -361,11 +391,13 @@ export class HelpersProcess {
       console.log(encodeURIComponent(data as any));
     }
     //#endregion
+
   }
   //#endregion
 
   //#region action wrapper
   async actionWrapper(fn: () => void, taskName: string = 'Task') {
+
     //#region @backendFunc
     const currentDate = () => {
       return `[${dateformat(new Date(), 'dd-mm-yyyy HH:MM:ss')}]`;
@@ -376,14 +408,17 @@ export class HelpersProcess {
     Helpers.taskDone(`${currentDate()} "${taskName}" Done`);
     // global.spinner && global.spinner.stop()
     //#endregion
+
   }
   //#endregion
 
   //#region terminal line
   terminalLine() {
+
     //#region @backendFunc
     return _.times(process.stdout.columns, () => '-').join('');
     //#endregion
+
   }
   //#endregion
 
@@ -393,6 +428,7 @@ export class HelpersProcess {
    * ! TOOD FIX THIS
    */
   async killAllNodeExceptCurrentProcess() {
+
     //#region @backendFunc
     return new Promise<void>((resolve, reject) => {
       // Get the current process ID
@@ -477,11 +513,13 @@ export class HelpersProcess {
       );
     });
     //#endregion
+
   }
   //#endregion
 
   //#region kill all node
   killAllNode() {
+
     //#region @backendFunc
     Helpers.info('Killing all node processes...');
     try {
@@ -502,11 +540,13 @@ export class HelpersProcess {
     }
     Helpers.info('DONE KILL ALL NODE PROCESSES');
     //#endregion
+
   }
   //#endregion
 
   //#region format path
   formatPath(pathToFileOrFolder: string) {
+
     //#region @backendFunc
     if (!_.isString(pathToFileOrFolder)) {
       return `\n< provided path is not string: ${pathToFileOrFolder} >\n`;
@@ -547,6 +587,7 @@ ${
 }
 ${Helpers.terminalLine()}\n`;
     //#endregion
+
   }
   //#endregion
 
@@ -555,9 +596,11 @@ ${Helpers.terminalLine()}\n`;
    * @deprecated
    */
   prepareWatchCommand(cmd) {
+
     //#region @backendFunc
     return os.platform() === 'win32' ? `"${cmd}"` : `'${cmd}'`;
     //#endregion
+
   }
   //#endregion
 
@@ -566,6 +609,7 @@ ${Helpers.terminalLine()}\n`;
    * @deprecated
    */
   getStringFrom(command: string, descriptionOfCommand?: string) {
+
     //#region @backendFunc
     try {
       const res = Helpers.run(command, { output: false }).sync().toString();
@@ -577,11 +621,13 @@ ${Helpers.terminalLine()}\n`;
       return void 0;
     }
     //#endregion
+
   }
   //#endregion
 
   //#region wait for message in stdout
   async waitForMessegeInStdout(proc: ChildProcess, message: string) {
+
     //#region @backendFunc
     return new Promise((resolve, reject) => {
       let resolved = false;
@@ -613,6 +659,8 @@ ${Helpers.terminalLine()}\n`;
       });
     });
     //#endregion
+
   }
   //#endregion
+
 }

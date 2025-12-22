@@ -173,6 +173,7 @@ export interface CommandProcessRunOptions {
 
 //#region command process
 export class CommandProcess {
+
   //#region fields and getters
   private state: CommandProcessState = CommandProcessState.NOT_STARTED;
   public readonly child_process?: ChildProcess;
@@ -220,6 +221,7 @@ export class CommandProcess {
   }
 
   //#endregion
+
   public dependenciesProcesses: CommandProcess[] = [];
 
   //#region constructor
@@ -233,6 +235,7 @@ export class CommandProcess {
   //#region run
 
   async start(options?: CommandProcessRunOptions): Promise<void> {
+
     //#region @backendFunc
     const { progress, resolveWhenFinish } = options || {};
 
@@ -294,11 +297,13 @@ export class CommandProcess {
     });
 
     //#endregion
+
   }
   //#endregion
 
   //#region stop
   async stop(): Promise<void> {
+
     //#region @backendFunc
     if (!this.manager.watch) {
       console.warn(`Can't stop process in normal mode: ${this.name}`);
@@ -338,8 +343,10 @@ export class CommandProcess {
     }
 
     //#endregion
+
   }
   //#endregion
+
 }
 //#endregion
 

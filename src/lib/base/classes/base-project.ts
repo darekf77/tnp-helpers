@@ -9,6 +9,8 @@ import { _ } from 'tnp-core/src';
 import { Utils } from 'tnp-core/src';
 
 import {
+  BaseNodeModules,
+  BasePackageJson,
   CoreProject,
   Helpers,
   LinkedProject,
@@ -67,11 +69,11 @@ export abstract class BaseProject<
   public npmHelpers?: BaseNpmHelpers;
   public fileFoldersOperations?: BaseFileFoldersOperations;
 
-  get packageJson() {
+  get packageJson(): Partial<BasePackageJson> {
     return this.npmHelpers.packageJson;
   }
 
-  get nodeModules() {
+  get nodeModules(): Partial<BaseNodeModules> {
     return this.npmHelpers.nodeModules;
   }
 
@@ -96,6 +98,7 @@ export abstract class BaseProject<
   }
 
   //#region constructor
+
   //#region @backend
   // @ts-ignore
   constructor(
@@ -105,6 +108,7 @@ export abstract class BaseProject<
     location: string,
   ) {
     this.location = location;
+
     //#region @backend
     // @ts-ignore
     this.libraryBuild = new (require('./base-library-build')
@@ -148,6 +152,7 @@ export abstract class BaseProject<
     //#endregion
   }
   //#endregion
+
   //#endregion
 
   //#region methods & getters / is monorepo
@@ -442,6 +447,7 @@ export abstract class BaseProject<
       return this.cache['genericName'];
     }
     let nameFromPackageJson = this.name;
+
     //#region @backend
     nameFromPackageJson = `${chalk.bold.gray(this.name)}`;
     //#endregion
@@ -475,11 +481,13 @@ export abstract class BaseProject<
     const result = parts.map((part, index) => {
       const pathTocheck = parts.slice(0, index + 1).join('/');
       // console.log('pathTocheck', pathTocheck);
+
       //#region @backend
       if (this.ins.From(pathTocheck)) {
         return chalk.underline.italic.bold(part);
       }
       //#endregion
+
       return part;
     });
 
@@ -635,6 +643,7 @@ export abstract class BaseProject<
    */
   run(command: string, options?: Omit<CoreModels.RunOptions, 'cwd'>) {
     let opt: CoreModels.RunOptions;
+
     //#region @backend
     options = (_.cloneDeep(options) as CoreModels.RunOptions) || {};
     Helpers.log(`command: ${command}`);
@@ -656,6 +665,7 @@ export abstract class BaseProject<
       );
     }
     //#endregion
+
     return Helpers.run(command, opt);
   }
   //#endregion
@@ -700,6 +710,7 @@ export abstract class BaseProject<
    */
   tryRunSync(
     command: string,
+
     //#region @backend
     options?: Omit<CoreModels.RunOptions, 'cwd'>,
     //#endregion
@@ -717,6 +728,7 @@ export abstract class BaseProject<
   //#region methods & getters / output from command
   outputFrom(
     command: string,
+
     //#region @backend
     options?: CommandOutputOptions,
     //#endregion
@@ -860,7 +872,6 @@ export abstract class BaseProject<
 
     Detected projects:
 ${linkedProjects.map(l => `- ${l.relativeClonePath}`).join('\n')}
-
 
 Would you like to update current project configuration?`)
         : true
@@ -1337,9 +1348,7 @@ Would you like to update current project configuration?`)
   async lint(lintOptions?: any) {
     Helpers.info(`
 
-
     COMMIT LINT NOT IMPLEMENTED
-
 
     `);
   }

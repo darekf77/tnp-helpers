@@ -27,6 +27,7 @@ export abstract class BaseLibraryBuild<
 
   //#region getters & methods / sort by deps
   protected sortByDeps(libraries: PROJECT[]): PROJECT[] {
+
     //#region @backendFunc
     const libs = libraries;
 
@@ -54,6 +55,7 @@ export abstract class BaseLibraryBuild<
     );
     return sorted;
     //#endregion
+
   }
   //#endregion
 
@@ -85,6 +87,7 @@ export abstract class BaseLibraryBuild<
       useLastUserConfiguration?: boolean;
     },
   ): Promise<{ selectedLibs: PROJECT[]; skipRebuildingAllForWatch: boolean }> {
+
     //#region @backendFunc
     let buildAll = false;
     let skipRebuildingAllForWatch = false;
@@ -199,6 +202,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     );
     return { selectedLibs, skipRebuildingAllForWatch };
     //#endregion
+
   }
   //#endregion
 
@@ -207,6 +211,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
    * angular libraries from angular.json
    */
   get libraries(): PROJECT[] {
+
     //#region @backendFunc
     if (!_.isUndefined(this.cache['libraries'])) {
       return this.cache['libraries'];
@@ -215,8 +220,10 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     this.cache['libraries'] = libraries;
     return libraries as any;
     //#endregion
+
   }
   protected getLibraries() {
+
     //#region @backendFunc
     const projects = (
       Object.values(
@@ -232,6 +239,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     libraries = this.sortByDeps(libraries);
     return libraries;
     //#endregion
+
   }
   //#endregion
 
@@ -251,6 +259,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
       useLastUserConfiguration,
     }: LibrariesBuildOptions<PROJECT> & { watch?: boolean } = {} as any,
   ): Promise<void> {
+
     //#region @backend
 
     await this.project.linkedProjects.saveAllLinkedProjectsToDB();
@@ -376,6 +385,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     //#endregion
 
     //#endregion
+
   }
   //#endregion
 
@@ -391,6 +401,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     strategy: 'link' | 'copy';
     outputLineReplace?: (outputLine: string) => string;
   }) {
+
     //#region @backendFunc
 
     //#region debouce copy/link
@@ -444,6 +455,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     //#endregion
 
     //#endregion
+
   }
   //#endregion
 
@@ -459,6 +471,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     strategy: 'link' | 'copy';
     outputLineReplace?: (outputLine: string) => string;
   }) {
+
     //#region @backendFunc
 
     const libCompiledInDist = lib.nearestParent.pathFor([
@@ -484,6 +497,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     //#endregion
 
     if (strategy === 'link') {
+
       //#region link dist to node_modules
 
       for (const node_modules_abs_path of locationsForNodeModules) {
@@ -533,7 +547,9 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
       await compileProcess();
 
       //#endregion
+
     } else if (strategy === 'copy') {
+
       //#region copy dist to node_modules
       await compileProcess();
       for (const node_modules_abs_path of locationsForNodeModules) {
@@ -558,8 +574,10 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
         );
       }
       //#endregion
+
     }
     //#endregion
+
   }
   //#endregion
 
@@ -567,6 +585,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
   getLibraryBuildCommand(
     options?: LibraryBuildCommandOptions,
   ): string | undefined {
+
     //#region @backendFunc
     const { watch } = options;
 
@@ -579,11 +598,13 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
       );
     }
     //#endregion
+
   }
   //#endregion
 
   //#region getters & methods / get library build success command
   get getLibraryBuildSuccessComamnds(): string[] {
+
     //#region @backendFunc
     const isAngularLib = this.project.isAngularLib;
     if (isAngularLib) {
@@ -595,11 +616,13 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
       ];
     }
     //#endregion
+
   }
   //#endregion
 
   //#region getters & methods / select copy to projects
   async selectCopytoProjects(): Promise<string[]> {
+
     //#region @backendFunc
     const projects = (
       this.project.ins.allProjectsFromFolder(
@@ -625,11 +648,13 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     );
     return locations;
     //#endregion
+
   }
   //#endregion
 
   //#region private methods / change tsconfig for libraries typescript proper local types
   private async changeTsConfigForLibrariesTypes(): Promise<void> {
+
     //#region @backendFunc
     await this.restoreOriginalTsConfig();
     await this.replaceTsConfigsPathes();
@@ -646,11 +671,13 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
       );
     }
     //#endregion
+
   }
   //#endregion
 
   //#region private methods / replace tsconfig pathes
   protected async replaceTsConfigsPathes() {
+
     //#region @backendFunc
 
     if (!this.project.hasFile(this.tempOrgTsConfigFile)) {
@@ -679,11 +706,13 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
       paths,
     );
     //#endregion
+
   }
   //#endregion
 
   //#region private methods  / restore original tsconfig
   private async restoreOriginalTsConfig() {
+
     //#region @backendFunc
     Helpers.taskStarted('  original tsconfig files');
     const commands = [
@@ -702,6 +731,8 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     }
     Helpers.taskDone('Restore original tsconfig files');
     //#endregion
+
   }
   //#endregion
+
 }

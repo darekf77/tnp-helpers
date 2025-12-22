@@ -41,4 +41,5 @@ export class BaseBowerJson extends BaseJsonFileReader<BowerJson> {
     return (this.data ? this.data.dependencies : {}) || {};
   }
   //#endregion
+
 }

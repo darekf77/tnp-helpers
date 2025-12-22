@@ -13,6 +13,7 @@ import type { BaseProject } from './base-project';
 export class BaseReleaseProcess<
   PROJECT extends BaseProject<any, any> = any,
 > extends BaseFeatureForProject<PROJECT> {
+
   //#region fields
 
   /**
@@ -48,6 +49,7 @@ export class BaseReleaseProcess<
       index: number;
     }[]
   > {
+
     //#region @backendFunc
     const data = await this.getCommitsUpToReleaseCommit();
     Helpers.info(
@@ -74,6 +76,7 @@ export class BaseReleaseProcess<
       return data.find(d => d.index.toString() === v);
     });
     //#endregion
+
   }
   //#endregion
 
@@ -84,6 +87,7 @@ export class BaseReleaseProcess<
       index: number;
     }[]
   > {
+
     //#region @backendFunc
     const lastReleaseCommitData = await this.getLastReleaseCommitData();
     // console.log({ lastReleaseCommitData });
@@ -98,6 +102,7 @@ export class BaseReleaseProcess<
     }
     return [];
     //#endregion
+
   }
   //#endregion
 
@@ -105,6 +110,7 @@ export class BaseReleaseProcess<
     cwdForCode: string,
     checkMessage = `Select action before publishing ?`,
   ): Promise<boolean> {
+
     //#region @backendFunc
     while (true) {
       const choices = {
@@ -147,6 +153,7 @@ export class BaseReleaseProcess<
       }
     }
     //#endregion
+
   }
 
   //#region methods & getters / publish to npm
@@ -157,6 +164,7 @@ export class BaseReleaseProcess<
     cwdForCode = this.project.pathFor('dist'),
     automaticRelease = this.automaticRelease,
   ): Promise<boolean> {
+
     //#region   @backendFunc
 
     if (!automaticRelease) {
@@ -192,11 +200,13 @@ export class BaseReleaseProcess<
     await this.project.publish();
     return true;
     //#endregion
+
   }
   //#endregion
 
   //#region methods & getters / test after publish
   protected async testAfterPublish(): Promise<boolean> {
+
     //#region @backendFunc
     if (!this.automaticRelease) {
       if (
@@ -214,11 +224,13 @@ export class BaseReleaseProcess<
     }
     return true;
     //#endregion
+
   }
   //#endregion
 
   //#region methods & getters / test before publish
   protected async testBeforePublish(): Promise<boolean> {
+
     //#region @backendFunc
     if (!this.automaticRelease) {
       if (
@@ -236,11 +248,13 @@ export class BaseReleaseProcess<
     }
     return true;
     //#endregion
+
   }
   //#endregion
 
   //#region methods & getters / commit and push
   protected async commitAndPush(): Promise<void> {
+
     //#region @backendFunc
     const releaseCommitMessage = this.releaseCommitTemplate();
     const lastCommitMessage = await this.project.git.penultimateCommitMessage();
@@ -260,6 +274,7 @@ export class BaseReleaseProcess<
       },
     });
     //#endregion
+
   }
   //#endregion
 
@@ -292,6 +307,7 @@ export class BaseReleaseProcess<
 
   //#region methods & getters / reset release files
   async resetReleaseFiles() {
+
     //#region @backendFunc
     this.project.git.restoreLastVersion(this.changeLogPath);
     for (const projToBump of this.toBumpProjects) {
@@ -299,6 +315,7 @@ export class BaseReleaseProcess<
       projToBump.git.restoreLastVersion(config.file.package_lock_json);
     }
     //#endregion
+
   }
   //#endregion
 
@@ -315,6 +332,7 @@ export class BaseReleaseProcess<
 
   //#region methods & getters / bump new version everywhere
   async bumpNewVersionEverywhere() {
+
     //#region @backendFunc
     const allLibrariesNames = this.project.libraryBuild.libraries.map(
       l => l.name,
@@ -332,11 +350,13 @@ export class BaseReleaseProcess<
       }
     }
     //#endregion
+
   }
   //#endregion
 
   //#region methods & getters / confirm release type
   async confirmNewVersion(): Promise<void> {
+
     //#region @backendFunc
     if (this.automaticRelease) {
       return;
@@ -380,6 +400,7 @@ export class BaseReleaseProcess<
     }
     this.newVersion = newVersion;
     //#endregion
+
   }
   //#endregion
 
@@ -392,6 +413,7 @@ export class BaseReleaseProcess<
       quesitonPrefixMessage?: string;
     },
   ): Promise<CoreModels.ReleaseVersionType> {
+
     //#region @backendFunc
     options = options || {};
     if (this.automaticRelease) {
@@ -431,6 +453,7 @@ export class BaseReleaseProcess<
       );
     return selected;
     //#endregion
+
   }
   //#endregion
 
@@ -444,6 +467,7 @@ export class BaseReleaseProcess<
 
   //#region methods & getters / calculate item
   async getChangelogContentToAppend(askForEveryItem: boolean): Promise<string> {
+
     //#region @backendFunc
     let newChangeLogContentToAdd = '';
     for (const commit of this.commitsForChangelog) {
@@ -463,6 +487,7 @@ export class BaseReleaseProcess<
     }`;
     return thingsToAddToChangeLog;
     //#endregion
+
   }
   //#endregion
 
@@ -471,6 +496,7 @@ export class BaseReleaseProcess<
    * TODO extend this to all commits from last release
    */
   async updateChangeLogFromCommits(): Promise<void> {
+
     //#region @backendFunc
     let askForEveryItem = false;
     while (true) {
@@ -499,6 +525,7 @@ export class BaseReleaseProcess<
       break;
     }
     //#endregion
+
   }
   //#endregion
 
@@ -506,6 +533,7 @@ export class BaseReleaseProcess<
   async extractChangedLibrariesInCommit(
     hashOrIndex: string | number,
   ): Promise<string> {
+
     //#region @backendFunc
     const hash = _.isString(hashOrIndex) ? hashOrIndex : void 0;
     const index = _.isNumber(hashOrIndex) ? hashOrIndex : void 0;
@@ -523,6 +551,7 @@ export class BaseReleaseProcess<
     });
     return libraries.map(l => l.name).join(', ');
     //#endregion
+
   }
   //#endregion
 
@@ -531,6 +560,7 @@ export class BaseReleaseProcess<
     hashOrIndex: string | number,
     confirmEveryItem: boolean = false,
   ): Promise<string> {
+
     //#region @backendFunc
     const hash = _.isString(hashOrIndex) ? hashOrIndex : void 0;
     const index = _.isNumber(hashOrIndex) ? hashOrIndex : void 0;
@@ -580,6 +610,7 @@ export class BaseReleaseProcess<
     result = result.replace(/\ \ /g, ' ');
     return result;
     //#endregion
+
   }
   //#endregion
 
@@ -621,6 +652,7 @@ ${await this.getLastChangesFromCommits({
      */
     stopOnCommitMessage?: string;
   } = {}): Promise<string> {
+
     //#region @backendFunc
     let index = 0;
     const commits = [] as string[];
@@ -644,6 +676,7 @@ ${await this.getLastChangesFromCommits({
       .map((c, index) => `${index + 1}. ${c}`)
       .join('\n');
     //#endregion
+
   }
   //#endregion
 
@@ -655,6 +688,7 @@ ${await this.getLastChangesFromCommits({
      */
     index: number;
   }> {
+
     //#region @backendFunc
     let index = 0;
     const maxMessages = 50;
@@ -683,11 +717,13 @@ ${await this.getLastChangesFromCommits({
     }
     return { lastReleaseCommitMsg: '', index: -1 };
     //#endregion
+
   }
   //#endregion
 
   //#region methods & getters / get last changes from changelog
   async getLastPackageVersionChangesFromChnagelog(): Promise<string> {
+
     //#region @backendFunc
     if (!this.project.hasFile(this.changeLogPath)) {
       return `< project doesn't use CHANGELOG.md yet >`;
@@ -726,16 +762,19 @@ ${await this.getLastChangesFromCommits({
     //   .map(l => chalk.italic(l));
     // return splited.join('\n').trim();
     //#endregion
+
   }
   //#endregion
 
   //#region methods & getters / get changelog path
   private get changeLogPath() {
+
     //#region @backendFunc
     return this.project.hasFile('changelog.md')
       ? 'changelog.md'
       : 'CHANGELOG.md';
     //#endregion
+
   }
   //#endregion
 
@@ -753,6 +792,7 @@ ${await this.getLastChangesFromCommits({
 
   //#region methods & getters / get changelog data
   getChnagelogData(): ChangelogData[] {
+
     //#region @backendFunc
     const changelogData: ChangelogData[] = [];
     const keyword = this.changeLogKeyWord();
@@ -780,6 +820,8 @@ ${await this.getLastChangesFromCommits({
 
     return changelogData;
     //#endregion
+
   }
   //#endregion
+
 }

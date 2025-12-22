@@ -1,4 +1,11 @@
-import { Taon } from 'taon/src';
+import {
+  TaonBaseEntity,
+  CustomColumn,
+  NumberColumn,
+  String500Column,
+  TaonEntity,
+} from 'taon/src';
+import { PrimaryColumn } from 'taon-typeorm/src';
 import { _, chalk } from 'tnp-core/src';
 
 export type PortStatus =
@@ -14,43 +21,54 @@ export const PortStatusArr: PortStatus[] = [
   'assigned-taken-by-os',
 ];
 
-@Taon.Entity({
+@TaonEntity({
   className: 'Port',
   uniqueKeyProp: 'port',
 })
-export class Port extends Taon.Base.Entity {
-  static from(opt: Omit<Port, 'version' | '_' | 'clone' | 'titleOnList' | 'relation'| 'relations'>) {
+export class Port extends TaonBaseEntity {
+  static from(
+    opt: Omit<
+      Port,
+      'version' | '_' | 'clone' | 'titleOnList' | 'relation' | 'relations'
+    >,
+  ) {
     return _.merge(new Port(), opt);
   }
 
   static getTitleForFreePort(port: Number) {
-    return `free port ${port}`
+    return `free port ${port}`;
   }
 
   get titleOnList(): string {
+
     //#region @backendFunc
     return `- ${this.port} <${chalk.gray(this.serviceId)}>`;
     //#endregion
+
   }
 
   //#region port entity / columns / port
+
   //#region @websql
-  @Taon.Orm.Column.Primary({
+  @PrimaryColumn({
     type: 'int',
     unique: true,
   })
   //#endregion
+
   port: number;
   //#endregion
 
   //#region port entity / columns /  serviceId
+
   //#region @websql
-  @Taon.Orm.Column.Custom({
+  @CustomColumn({
     type: 'varchar',
     length: 1000,
     unique: true,
   })
   //#endregion
+
   serviceId: string;
   //#endregion
 
@@ -58,9 +76,11 @@ export class Port extends Taon.Base.Entity {
   /**
    * Port status
    */
+
   //#region @websql
-  @Taon.Orm.Column.String500<PortStatus>('unassigned')
+  @String500Column<PortStatus>('unassigned')
   //#endregion
+
   status: PortStatus;
   //#endregion
 
@@ -68,9 +88,12 @@ export class Port extends Taon.Base.Entity {
   /**
    * When port was assigned as registered service
    */
+
   //#region @websql
-  @Taon.Orm.Column.Number()
+  @NumberColumn()
   //#endregion
+
   whenAssignedTimestamp?: Number;
   //#endregion
+
 }

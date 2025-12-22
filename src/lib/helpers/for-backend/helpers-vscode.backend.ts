@@ -6,7 +6,6 @@ import { CoreModels } from 'tnp-core/src';
 import type { BaseProject } from '../../index';
 export class HelpersVscode {
 
-
   getSettingsFrom(project: BaseProject) {
     let settings: CoreModels.VSCodeSettings;
     const pathSettingsVScode = path.join(project.location, '.vscode', 'settings.json')

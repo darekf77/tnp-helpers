@@ -9,6 +9,7 @@ import type { PortsWorker } from './tcp-upd-ports.worker';
 //#endregion
 
 export class TcpUdpPortsTerminalUI extends BaseCliWorkerTerminalUI<PortsWorker> {
+
   //#region methods / header text
   protected async headerText(): Promise<string> {
     return 'TCP/UDP|Ports DB';
@@ -55,6 +56,7 @@ export class TcpUdpPortsTerminalUI extends BaseCliWorkerTerminalUI<PortsWorker> 
 
   //#region methods / add port process
   protected async addPortTerminalUiProcess(): Promise<void> {
+
     //#region @backendFunc
     const ctrl = await this.worker.getRemoteControllerFor({
       methodOptions: {
@@ -87,6 +89,7 @@ export class TcpUdpPortsTerminalUI extends BaseCliWorkerTerminalUI<PortsWorker> 
       }
     }
     //#endregion
+
   }
   //#endregion
 
@@ -95,6 +98,7 @@ export class TcpUdpPortsTerminalUI extends BaseCliWorkerTerminalUI<PortsWorker> 
     ports: Port[],
     title: string,
   ): Promise<Port> {
+
     //#region @backendFunc
     const selectedPort = await UtilsTerminal.select<number>({
       question: title,
@@ -112,11 +116,13 @@ export class TcpUdpPortsTerminalUI extends BaseCliWorkerTerminalUI<PortsWorker> 
 
     return ports.find(f => f.port === selectedPort);
     //#endregion
+
   }
   //#endregion
 
   //#region methods / delete port process
   protected async deletePortTerminalUiProcess(): Promise<void> {
+
     //#region @backendFunc
     const ctrl = await this.worker.getRemoteControllerFor({
       methodOptions: {
@@ -147,11 +153,13 @@ export class TcpUdpPortsTerminalUI extends BaseCliWorkerTerminalUI<PortsWorker> 
       return;
     }
     //#endregion
+
   }
   //#endregion
 
   //#region methods / edit port process
   protected async editPortTerminalUiProcess(): Promise<void> {
+
     //#region @backendFunc
     const ctrl = await this.worker.getRemoteControllerFor({
       methodOptions: {
@@ -197,11 +205,13 @@ export class TcpUdpPortsTerminalUI extends BaseCliWorkerTerminalUI<PortsWorker> 
     }
 
     //#endregion
+
   }
   //#endregion
 
   //#region methods / get worker terminal actions
   getWorkerTerminalActions(options?: { exitIsOnlyReturn?: boolean }) {
+
     //#region @backendFunc
     options = options || {};
     const additionalActions = {};
@@ -246,11 +256,13 @@ export class TcpUdpPortsTerminalUI extends BaseCliWorkerTerminalUI<PortsWorker> 
       ...super.getWorkerTerminalActions({ chooseAction: false, ...options }),
     };
     //#endregion
+
   }
   //#endregion
 
   //#region methods / display menu with items
   protected async displayItemsForPortsStatus(status: PortStatus) {
+
     //#region @backendFunc
     const controller = await this.worker.getRemoteControllerFor({
       methodOptions: {
@@ -273,11 +285,13 @@ export class TcpUdpPortsTerminalUI extends BaseCliWorkerTerminalUI<PortsWorker> 
       await UtilsTerminal.previewLongList(ports.join('\n'));
     }
     //#endregion
+
   }
   //#endregion
 
   //#region methods / get new port to add
   private async getNewPortToAdd(): Promise<number> {
+
     //#region @backendFunc
     const ctrl = await this.worker.getRemoteControllerFor({
       methodOptions: {
@@ -318,6 +332,8 @@ export class TcpUdpPortsTerminalUI extends BaseCliWorkerTerminalUI<PortsWorker> 
     }
     return portToAdd;
     //#endregion
+
   }
   //#endregion
+
 }

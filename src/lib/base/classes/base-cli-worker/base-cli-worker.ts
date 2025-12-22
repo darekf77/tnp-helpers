@@ -45,7 +45,6 @@ export abstract class BaseCliWorker<
   REMOTE_CTRL extends TaonBaseCliWorkerController<any>,
   TERMINAL_UI extends BaseCliWorkerTerminalUI<any> = any,
 > {
-
   /**
    * Indicates if worker is part of cloud
    * and should use cloud ip address
@@ -58,8 +57,10 @@ export abstract class BaseCliWorker<
   /**
    * Cloud ip address of the worker (if part of cloud)
    */
-  public static readonly  cloudIp: Pick<BehaviorSubject<string | null>, 'next' | 'getValue'> =
-    new BehaviorSubject<string | null>(null);
+  public static readonly cloudIp: Pick<
+    BehaviorSubject<string | null>,
+    'next' | 'getValue'
+  > = new BehaviorSubject<string | null>(null);
 
   private static workers = new Map<string, BaseCliWorker<any, any>>();
 
@@ -755,6 +756,7 @@ export abstract class BaseCliWorker<
           stdout: [this.SPECIAL_WORKER_READY_MESSAGE],
           stderr: [this.SPECIAL_WORKER_READY_MESSAGE],
         },
+        displayOutputInParentProcess: Helpers.isVerboseMode,
         resolveAfterAnyExitCode: true,
       });
     } else {

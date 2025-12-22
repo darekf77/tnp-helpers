@@ -6,7 +6,6 @@ import * as json5 from 'json5';
 import * as json5Writer from 'json10-writer/src';
 import * as glob from 'glob';
 
-
 export class JSON5Helpers<STRUCTURE = {}> {
   private isDataReadFirstTime = false;
   constructor(

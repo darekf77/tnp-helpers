@@ -19,9 +19,11 @@ export class GhTempCode {
   private GHTEMP_CODE_REPO_PATH = 'git@github.com:darekf77/ghtemp-code.git';
 
   private get cwdRepo() {
+
     //#region @backendFunc
     return crossPlatformPath([UtilsOs.getRealHomeDir(), dotTaonFolder]);
     //#endregion
+
   }
 
   private get tempPathRepo() {
@@ -29,6 +31,7 @@ export class GhTempCode {
   }
 
   init() {
+
     //#region @backendFunc
     if (!Helpers.exists(this.cwdRepo)) {
       Helpers.mkdirp(this.cwdRepo);
@@ -43,9 +46,11 @@ export class GhTempCode {
     }).sync();
     return this;
     //#endregion
+
   }
 
   async save() {
+
     //#region @backendFunc
     const changes = [
       ...this.project.git.listOfCurrentGitChanges.created,
@@ -80,9 +85,11 @@ export class GhTempCode {
 
     Helpers.info(`Saved ${changes.length} files in ${this.tempPathRepo}`);
     //#endregion
+
   }
 
   async restore() {
+
     //#region @backendFunc
     Helpers.run(`git reset --soft HEAD~1`, { cwd: this.tempPathRepo }).sync();
     Helpers.info(`Restored last commit in ${this.tempPathRepo}...`);
@@ -109,5 +116,6 @@ export class GhTempCode {
     );
     return this;
     //#endregion
+
   }
 }

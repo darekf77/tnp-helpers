@@ -15,7 +15,6 @@
 
 // const log = Log.create('base formly component', Level.__NOTHING)
 
-
 // @Component({
 //   selector: 'app-base-formly-component-meta',
 //   template: `<div></div>`
@@ -52,7 +51,6 @@
 //   }
 //   @Input() path: string;
 //   @Output() change = new EventEmitter();
-
 
 //   // @ts-ignore
 //   @Input() set key(value: string) {

@@ -15,11 +15,13 @@ export type CoreProjectEnvironment = {
 //#endregion
 
 //#region constants
+
 //#region constants / defult db
 const defaultDb = {
   projects: [],
 };
 //#endregion
+
 //#endregion
 
 //#region core project command args options
@@ -59,6 +61,7 @@ export type CoreCommandArgOptions<PROJECT extends BaseProject<any,any>> = {
 //#endregion
 
 export class CoreProject<PROJECT extends BaseProject = BaseProject> {
+
   //#region static
 
   //#region static / core projects
@@ -69,6 +72,7 @@ export class CoreProject<PROJECT extends BaseProject = BaseProject> {
   static from<Proj extends BaseProject = BaseProject<any,any>>(
     options: Omit<CoreProject<Proj>, 'name' | 'url' | 'branch'>,
   ): CoreProject<Proj> {
+
     //#region @backendFunc
     const proj: CoreProject<Proj> = _.merge(
       new (CoreProject as any)(),
@@ -95,6 +99,7 @@ export class CoreProject<PROJECT extends BaseProject = BaseProject> {
     this.coreProjects.push(proj);
     return proj as CoreProject<Proj>;
     //#endregion
+
   }
   //#endregion
 
@@ -182,13 +187,16 @@ export class CoreProject<PROJECT extends BaseProject = BaseProject> {
     return (this.urlHttp ? this.urlHttp : this.urlSSH) || '';
   }
   //#endregion
+
 }
 
 export const CoreTypescriptProject = CoreProject.from<BaseProject>({
+
   //#region configuration
   branches: ['master', 'develop'],
   environments: [],
   recognizedFn: project => {
+
     //#region @backendFunc
     return (
       !project.hasFile('angular.json') &&
@@ -201,6 +209,7 @@ export const CoreTypescriptProject = CoreProject.from<BaseProject>({
     //#endregion
   },
   async startCommand({ project }) {
+
     //#region @backendFunc
     await project.nodeModules.makeSureInstalled();
     const mainFilePath = Helpers.getValueFromJSON(
@@ -211,6 +220,7 @@ export const CoreTypescriptProject = CoreProject.from<BaseProject>({
     //#endregion
   },
   async buildCommand({ project, watch }) {
+
     //#region @backendFunc
     // console.log('Building typescript project');
     // process.exit(0)
@@ -220,9 +230,11 @@ export const CoreTypescriptProject = CoreProject.from<BaseProject>({
   },
 
   //#endregion
+
 });
 
 export const CoreAngularProject = CoreProject.from<BaseProject>({
+
   //#region configuration
   extends: CoreTypescriptProject,
   branches: ['master', 'develop'],
@@ -240,4 +252,5 @@ export const CoreAngularProject = CoreProject.from<BaseProject>({
     project.run(`npm-run ng build`).sync();
   },
   //#endregion
+
 });

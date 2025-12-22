@@ -166,7 +166,6 @@ export class HelpersStrings {
     return word
   }
 
-
   /**
    * https://stackoverflow.com/a/57129703/1345101
    *
@@ -271,4 +270,3 @@ export class HelpersStrings {
   }
 
 }
-

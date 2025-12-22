@@ -3,7 +3,6 @@
 // import { OnDestroy, OnInit, Component, Input } from '@angular/core';
 // import { NavigationEnd, Router } from '@angular/router';
 
-
 // @Component({
 //   selector: 'app-base-component-meta',
 //   template: '<div></div>'
@@ -20,7 +19,6 @@
 //     this.handlers.length = 0;
 //   }
 
-
 // }
 
 // const isCalledNgInitAfterInternalRefresh = Symbol()
@@ -33,7 +31,6 @@
 //     super();
 //     this[isCalledNgInitAfterInternalRefresh] = false;
 //   }
-
 
 //   protected isCalledNgInitAfterInternalRefresh() {
 //     return !!this[isCalledNgInitAfterInternalRefresh];

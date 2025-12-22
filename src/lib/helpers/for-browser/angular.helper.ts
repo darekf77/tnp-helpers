@@ -4,7 +4,6 @@ import { Observable, Subject } from "rxjs";
 const componentContextSymbol = Symbol();
 const componentsDestroy$Subjects = {};
 
-
 export namespace HelpersAngular {
 
   export class SerializedSubject<T> {
@@ -12,7 +11,6 @@ export namespace HelpersAngular {
       public id: string
     ) { }
   }
-
 
   function subjectId(destroySubject: Subject<any>): SerializedSubject<any> {
     const id = Math.random().toString(36).substring(2);
@@ -49,11 +47,8 @@ export namespace HelpersAngular {
     }
   }
 
-
-
   /**
   get properties from scss file
-
 
   import styles from './tasks-ngrx-data.component.scss';
 

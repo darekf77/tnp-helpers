@@ -65,7 +65,6 @@ export abstract class BaseCommandLineFeature<
     this.__project = v;
   }
 
-
   constructor(
     public readonly argsWithParams: string,
     protected readonly methodNameToCall: string,
@@ -79,10 +78,12 @@ export abstract class BaseCommandLineFeature<
     protected cwd: string,
     ins: PROJECT_RESOLVER,
   ) {
+
     //#region @backend
     this.ins = ins;
     this.project = project;
     this.cwd = crossPlatformPath(cwd);
+
     //#region resolve params and args
 
     // this.project = Project.Current as Project;
@@ -153,9 +154,10 @@ export abstract class BaseCommandLineFeature<
       }
     });
     //#endregion
-    //#endregion
-  }
 
+    //#endregion
+
+  }
 
   public _exit(code = 0): void {
     process.exit(code);

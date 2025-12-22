@@ -10,6 +10,7 @@ export { CommandConfig } from '../../models';
 //#endregion
 
 //#region custom console select/multiselect
+
 //#region @backend
 // eslint-disable-next-line import/order
 const Select = require('enquirer/lib/prompts/select');
@@ -44,11 +45,13 @@ class CustomMultiSelect extends MultiSelect {
   }
 }
 //#endregion
+
 //#endregion
 
 export class BaseProcessManger<
   PROJECT extends BaseProject<any, any> = BaseProject<any, any>,
 > extends BaseFeatureForProject<PROJECT> {
+
   //#region fields and getters
   private initialOptions: ProcessManagerConfig<PROJECT>;
   private allProcesses: CommandProcess[] = [];
@@ -90,6 +93,7 @@ export class BaseProcessManger<
   async init<PROJECT = BaseProject<any, any>>(
     initialOptions: ProcessManagerConfig<PROJECT>,
   ): Promise<void> {
+
     //#region @backendFunc
     this.initialOptions = initialOptions;
     this.allProcesses.length = 0;
@@ -123,11 +127,13 @@ export class BaseProcessManger<
 
     await this.buildMenu(false);
     //#endregion
+
   }
   //#endregion
 
   //#region show output
   private showOutput(): void {
+
     //#region @backendFunc
     console.clear();
     this.showLogs = true;
@@ -145,11 +151,13 @@ export class BaseProcessManger<
       this.killOrBuildMenu();
     });
     //#endregion
+
   }
   //#endregion
 
   //#region kill or build menu
   private async killOrBuildMenu(): Promise<void> {
+
     //#region @backendFunc
 
     const buildMore = 'Build more';
@@ -224,11 +232,13 @@ export class BaseProcessManger<
       }
     }
     //#endregion
+
   }
   //#endregion
 
   //#region make sure selected processes are running
   async makeSureSelectedProcessesAreRunning(): Promise<void> {
+
     //#region @backendFunc
     if (this.selectedProcesses.length === 0) {
       console.log('No processes selected. Returning to menu.');
@@ -258,6 +268,7 @@ export class BaseProcessManger<
       await this.startProcessWithDependencies(process, this.startedProcesses);
     }
     //#endregion
+
   }
   //#endregion
 
@@ -267,6 +278,7 @@ export class BaseProcessManger<
     startedProcesses = new Set<CommandProcess>(),
     parent: CommandProcess | undefined = undefined,
   ): Promise<void> {
+
     //#region @backendFunc
     if (startedProcesses.has(process)) {
       return; // Avoid circular dependencies or already-started processes
@@ -287,11 +299,13 @@ export class BaseProcessManger<
       });
     }
     //#endregion
+
   }
   //#endregion
 
   //#region build menu
   private async buildMenu(allowedToShowOutput = true): Promise<void> {
+
     //#region @backendFunc
     console.clear();
     const choices = this.allProcesses
@@ -327,6 +341,8 @@ export class BaseProcessManger<
     this.showOutput();
     await this.makeSureSelectedProcessesAreRunning();
     //#endregion
+
   }
   //#endregion
+
 }
