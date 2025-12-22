@@ -344,6 +344,12 @@ with ${options.useYarn ? 'yarn' : 'npm'}
       return true;
     }
 
+    if (childrenInNodeModules.length === 1) {
+      Helpers.logWarn(`[npm-helpers] Only `+
+        `${path.basename(_.first(childrenInNodeModules))} folder in node_modules in ${this.cwd}`);
+      return true;
+    }
+
     const minDepsLength = Object.keys(
       this.npmHelpers.packageJson.allDependencies,
     ).length;
