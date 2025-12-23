@@ -7,16 +7,20 @@
     "json10-writer",
     "lowdb",
     "typescript",
-    "incremental-compiler"
+    "incremental-compiler",
   ],
+
+  "isomorphicDependenciesForNpmLib": ["taon"],
 
   "additionalNpmNames": ["taon-helpers"],
   "appId": "com.domain.example.tnp-helpers",
 
-  "autoReleaseConfigAllowedItems": [{
-    "artifactName": "npm-lib-and-cli-tool",
-    "taskName": "npm"
-  }],
+  "autoReleaseConfigAllowedItems": [
+    {
+      "artifactName": "npm-lib-and-cli-tool",
+      "taskName": "npm",
+    },
+  ],
 
   "resources": [],
 
@@ -30,6 +34,6 @@
     "scripts": {
       "docs": "python3 -m mkdocs",
       "mkdocs": "python3 -m mkdocs",
-    }
-  }
+    },
+  },
 }
