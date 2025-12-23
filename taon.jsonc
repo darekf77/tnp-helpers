@@ -10,17 +10,17 @@
     "incremental-compiler",
   ],
 
-  "isomorphicDependenciesForNpmLib": ["taon"],
-
   "additionalNpmNames": ["taon-helpers"],
-  "appId": "com.domain.example.tnp-helpers",
 
+  "appId": "com.domain.example.tnp-helpers",
   "autoReleaseConfigAllowedItems": [
     {
       "artifactName": "npm-lib-and-cli-tool",
       "taskName": "npm",
     },
   ],
+
+  "isomorphicDependenciesForNpmLib": ["taon"],
 
   "resources": [],
 
