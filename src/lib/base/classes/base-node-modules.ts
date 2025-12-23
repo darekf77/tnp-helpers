@@ -17,6 +17,7 @@ import type { BaseNpmHelpers } from 'tnp-helpers/src';
 import { Helpers } from '../../index';
 
 import type { BaseProject } from './base-project';
+import { UtilsFilesFoldersSync } from 'tnp-core/src';
 //#endregion
 
 export type DedupePackage =
@@ -338,7 +339,10 @@ with ${options.useYarn ? 'yarn' : 'npm'}
       return true;
     }
 
-    const childrenInNodeModules = Helpers.foldersFrom(node_modules_path);
+    const childrenInNodeModules = UtilsFilesFoldersSync.getFoldersFrom(node_modules_path,{
+      followSymlinks: false,
+      recursive: false,
+    });
 
     if (childrenInNodeModules.length === 0) {
       return true;
