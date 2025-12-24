@@ -25,7 +25,6 @@ import type { BaseProject } from './base-project';
 export class BaseNpmHelpers<
   PROJECT extends BaseProject = BaseProject,
 > extends BaseFeatureForProject<PROJECT> {
-
   //#region fields
   public readonly packageJson: BasePackageJson;
 
@@ -70,7 +69,6 @@ export class BaseNpmHelpers<
 
   //#region reset package-lock.json
   async resetPackageLockJson() {
-
     //#region @backendFunc
     const children = this.project.children;
     const currentLocation = this.project.location;
@@ -92,13 +90,11 @@ export class BaseNpmHelpers<
     });
     Helpers.info('RESETING DONE');
     //#endregion
-
   }
   //#endregion
 
   //#region start npm task
   startNpmTask(taskName: string, additionalArguments?: string | object) {
-
     //#region @backendFunc
     if (_.isObject(additionalArguments)) {
       additionalArguments = Object.keys(additionalArguments)
@@ -115,7 +111,6 @@ export class BaseNpmHelpers<
       biggerBuffer: true,
     });
     //#endregion
-
   }
   //#endregion
 
@@ -126,7 +121,6 @@ export class BaseNpmHelpers<
    * @returns
    */
   async isLoggedInToRegistry(registry?: string): Promise<boolean> {
-
     //#region @backendFunc
     // validate registry with regex
     Helpers.info(
@@ -156,7 +150,6 @@ export class BaseNpmHelpers<
       );
     });
     //#endregion
-
   }
   //#endregion
 
@@ -167,7 +160,6 @@ export class BaseNpmHelpers<
    * @returns {Promise<void>} - A promise that resolves when the login process completes.
    */
   async loginToRegistry(registry?: string): Promise<void> {
-
     //#region @backendFunc
     Helpers.info(
       `Trying to login to npm registry: ${registry || '< default public npm >'}`,
@@ -197,13 +189,11 @@ export class BaseNpmHelpers<
       });
     });
     //#endregion
-
   }
   //#endregion
 
   //#region check if logged in to npm
   async makeSureLoggedInToNpmRegistry(registry?: string): Promise<void> {
-
     //#region @backendFunc
     while (true) {
       let loggedIn = await this.isLoggedInToRegistry();
@@ -228,7 +218,6 @@ You are not logged in to npm. Press any key and follow instructions...`,
       } catch (error) {}
     }
     //#endregion
-
   }
   //#endregion
 
@@ -241,11 +230,13 @@ You are not logged in to npm. Press any key and follow instructions...`,
       itself: boolean;
       children: boolean;
     };
+    actionType?: 'release' | 'publish' | 'build' | 'init' | 'clear' | 'clear';
     skipQuestionToUser?: boolean;
     messagePrefix?: string;
   }): Promise<boolean> {
-
     //#region @backendFunc
+    options =  options || {} as any;
+    options.actionType = options.actionType || 'release';
     const {
       releaseVersionBumpType: releaseVersionType,
       versionToUse,
@@ -278,18 +269,17 @@ You are not logged in to npm. Press any key and follow instructions...`,
       projectsInfo = `${itselfString}`;
     }
     Helpers.info(`
-${options.messagePrefix ? `[${options.messagePrefix}] ` : `\t`}Projects to release:
+${options.messagePrefix ? `[${options.messagePrefix}] ` : `\t`}Projects to ${options.actionType}:
 ${projectsInfo}
       `);
 
-    let message = `${options.messagePrefix ? `[${options.messagePrefix}] ` : ``}Proceed with release ?`;
+    let message = `${options.messagePrefix ? `[${options.messagePrefix}] ` : ``}Proceed with ${options.actionType} ?`;
 
     return skipQuestionToUser
       ? true
       : await UtilsTerminal.confirm({ message, defaultValue: true });
 
     //#endregion
-
   }
   //#endregion
 
@@ -298,7 +288,6 @@ ${projectsInfo}
    * @param registry when not specified, it will use the default npm registry
    */
   async publishToNpmRegistry(options?: { registry?: string }): Promise<void> {
-
     //#region @backendFunc
     const { registry } = options || {};
     const accessPublic =
@@ -328,7 +317,6 @@ ${projectsInfo}
     }
 
     //#endregion
-
   }
   //#endregion
 
@@ -339,7 +327,6 @@ ${projectsInfo}
       registry?: string;
     },
   ): Promise<string | undefined> {
-
     //#region @backendFunc
     return new Promise((resolve, reject) => {
       const { registry } = options || {};
@@ -358,8 +345,6 @@ ${projectsInfo}
       );
     });
     //#endregion
-
   }
   //#endregion
-
 }
