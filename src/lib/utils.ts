@@ -67,6 +67,7 @@ import {
   isExpressionStatement,
   isPropertyDeclaration,
   isMethodDeclaration,
+  EmitHint,
 } from 'typescript';
 import type * as ts from 'typescript';
 import { CLASS } from 'typescript-class-helpers/src';
@@ -369,6 +370,7 @@ export namespace UtilsNpm {
 //#endregion
 
 //#region utils typescript
+
 export namespace UtilsTypescript {
   //#region remove region by name
   /**
@@ -1656,6 +1658,7 @@ export namespace UtilsTypescript {
   }
   //#endregion
 
+  //#region transform flat imports
   export type FlattenMapping = {
     [modulePath: string]: {
       [oldQualifiedName: string]: string; // new identifier
@@ -1747,7 +1750,9 @@ export namespace UtilsTypescript {
     return transformed;
     //#endregion
   }
+  //#endregion
 
+  //#region clear require cache recursive
   export const clearRequireCacheRecursive = (
     modulePath: string,
     seen = new Set<string>(),
@@ -1768,7 +1773,12 @@ export namespace UtilsTypescript {
     delete require.cache[resolvedPath];
     //#endregion
   };
+  //#endregion
 
+  //#region deep writable interface
+  /**
+   * Make all properties of T and its nested objects writable (non-readonly).
+   */
   export type DeepWritable<T> = {
     -readonly [P in keyof T]: T[P] extends object
       ? T[P] extends Function
@@ -1776,6 +1786,279 @@ export namespace UtilsTypescript {
         : DeepWritable<T[P]>
       : T[P];
   };
+  //#endregion
+
+  //#region add or update import if not exists
+  export const addOrUpdateImportIfNotExists = (
+    tsFileContent: string,
+    identifiers: string | string[],
+    fromModule: string,
+  ): string => {
+    const idents = Array.isArray(identifiers) ? identifiers : [identifiers];
+
+    const impRegex = new RegExp(
+      `${'imp' + 'ort'}\\s*\\{([^}]*)\\}\\s*from\\s*['"]${fromModule}['"];?`,
+      'm',
+    );
+
+    const match = tsFileContent.match(impRegex);
+
+    // ----------------------------------------------------
+    // 1. Import exists → merge identifiers
+    // ----------------------------------------------------
+    if (match) {
+      const existing = match[1]
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean);
+
+      const merged = Array.from(new Set([...existing, ...idents])).sort();
+
+      const updatedImport = `import { ${merged.join(
+        ', ',
+      )} } from '${fromModule}';`;
+
+      return tsFileContent.replace(match[0], updatedImport);
+    }
+
+    // ----------------------------------------------------
+    // 2. Import does NOT exist → insert into //#region imports
+    // ----------------------------------------------------
+    const newImport = `${'imp' + 'ort'} { ${idents.join(', ')} } from '${fromModule}';\n`;
+
+    const regRegex = new RegExp(
+      `\\/\\/\\#${'reg' + 'ion'} imports\\s*\\n([\\s\\S]*?)\\/\\/\\#${'endr' + 'egion'}`,
+      'm',
+    );
+
+    const regionMatch = tsFileContent.match(regRegex);
+
+    if (regionMatch) {
+      const regStart = regionMatch.index! + regionMatch[0].indexOf('\n') + 1;
+
+      return (
+        tsFileContent.slice(0, regStart) +
+        newImport +
+        tsFileContent.slice(regStart)
+      );
+    }
+
+    // ----------------------------------------------------
+    // 3. Fallback → insert at very top (after 'use strict')
+    // ----------------------------------------------------
+    const useStrictMatch = tsFileContent.match(/^(['"])use strict\1;\s*/m);
+
+    if (useStrictMatch) {
+      const idx = useStrictMatch.index! + useStrictMatch[0].length;
+
+      return tsFileContent.slice(0, idx) + newImport + tsFileContent.slice(idx);
+    }
+
+    return newImport + tsFileContent;
+  };
+  //#endregion
+
+  //#region migrate from ng modules to standalone v21
+  export const migrateFromNgModulesToStandaloneV21 = (
+    tsFileContent: string,
+    projectName: string,
+  ): string => {
+    //#region @backendFunc
+    const sourceFile = createSourceFile(
+      'app.ts',
+      tsFileContent,
+      ScriptTarget.Latest,
+      true,
+      ScriptKind.TS,
+    );
+
+    let text = tsFileContent;
+
+    const appClassOld = `${projectName}Component`;
+    const appClassNew = `${projectName}App`;
+    const startFnOld = `start`;
+    const startFnNew = `${projectName}StartFunction`;
+    const routesOld = `routes`;
+    const routesNew = `${projectName}ClientRoutes`;
+
+    let ngModuleNode: ts.ClassDeclaration | undefined;
+    let ngModuleDecorator: ts.Decorator | undefined;
+
+    // ------------------------------------------------------------------
+    // 1. Locate NgModule and extract metadata
+    // ------------------------------------------------------------------
+    const printer = createPrinter({ newLine: NewLineKind.LineFeed });
+
+    let extractedProviders = '';
+    let extractedImports = '';
+
+    sourceFile.forEachChild(node => {
+      if (isClassDeclaration(node)) {
+        const decorators = canHaveDecorators(node)
+          ? getDecorators(node)
+          : undefined;
+        if (!decorators) {
+          return;
+        }
+        for (const d of decorators) {
+          if (
+            isCallExpression(d.expression) &&
+            d.expression.expression.getText() === 'NgModule'
+          ) {
+            ngModuleNode = node;
+            ngModuleDecorator = d;
+
+            const arg = d.expression.arguments[0];
+            if (arg && isObjectLiteralExpression(arg)) {
+              for (const prop of arg.properties) {
+                if (isPropertyAssignment(prop) && isIdentifier(prop.name)) {
+                  if (prop.name.text === 'providers') {
+                    extractedProviders = printer.printNode(
+                      EmitHint.Unspecified,
+                      prop.initializer,
+                      sourceFile,
+                    );
+                  }
+                  if (prop.name.text === 'imports') {
+                    extractedImports = printer.printNode(
+                      EmitHint.Unspecified,
+                      prop.initializer,
+                      sourceFile,
+                    );
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // ------------------------------------------------------------------
+    // 2. Comment out NgModule decorator + class
+    // ------------------------------------------------------------------
+    // if (ngModuleNode && ngModuleDecorator) {
+    //   const start = ngModuleDecorator.getStart();
+    //   const end = ngModuleNode.getEnd();
+
+    //   const commented = text.slice(start, end).replace(/^/gm, '// ');
+    //   text = text.slice(0, start) + commented + text.slice(end);
+    // }
+
+    // ------------------------------------------------------------------
+    // 3. Rename root component class
+    // ------------------------------------------------------------------
+    text = text.replace(
+      new RegExp(`class\\s+${appClassOld}\\b`, 'g'),
+      `class ${appClassNew}`,
+    );
+
+    text = text.replace(
+      new RegExp(appClassOld, 'g'),
+      appClassNew
+    );
+
+    // ------------------------------------------------------------------
+    // 4. Rename start() → ProjectStartFunction
+    // ------------------------------------------------------------------
+    text = text.replace(
+      new RegExp(`async function\\s+${startFnOld}\\b`, 'g'),
+      `async function ${startFnNew}`,
+    );
+
+    text = text.replace(
+      new RegExp(`export default\\s+${startFnOld}\\b`, 'g'),
+      `export default ${startFnNew}`,
+    );
+
+    // ------------------------------------------------------------------
+    // 5. Rename routes constant
+    // ------------------------------------------------------------------
+    text = text.replace(
+      new RegExp(`const\\s+${routesOld}\\s*:\\s*Routes`, 'g'),
+      `export const ${routesNew}: Routes`,
+    );
+
+    text = text.replace(new RegExp(routesOld, 'g'), routesNew);
+
+    // ------------------------------------------------------------------
+    // 6. Inject NgModule providers/imports into ApplicationConfig
+    // ------------------------------------------------------------------
+    // if (extractedProviders || extractedImports) {
+    //   text = text.replace(/providers\s*:\s*\[/, match => {
+    //     let extra = '';
+    //     if (extractedProviders) {
+    //       extra +=
+    //         extractedProviders.replace(/^\[/, '').replace(/\]$/, '') + ',';
+    //     }
+    //     if (extractedImports) {
+    //       extra += extractedImports.replace(/^\[/, '').replace(/\]$/, '') + ',';
+    //     }
+    //     return match + '\n' + extra;
+    //   });
+    // }
+
+    // ------------------------------------------------------------------
+    // 7. Ensure ServerConfig exists
+    // ------------------------------------------------------------------
+
+    if (!text.includes(`${projectName}ServerConfig`)) {
+      text += `
+
+    export const ${projectName}AppConfig: ApplicationConfig = {
+      providers: [
+        {
+          provide: APP_INITIALIZER,
+          multi: true,
+          useFactory: () => ${projectName}StartFunction,
+        },
+        provideBrowserGlobalErrorListeners(),
+        provideRouter(${projectName}ClientRoutes),
+        provideClientHydration(withEventReplay()),
+        provideServiceWorker('ngsw-worker.js', {
+          enabled: !isDevMode(),
+          registrationStrategy: 'registerWhenStable:30000',
+        }),
+      ]
+    }
+    `;
+    }
+
+    if (!text.includes(`${projectName}ServerConfig`)) {
+      text += `
+
+  export const ${projectName}ServerRoutes: ServerRoute[] = [
+  {
+    path: '**',
+    renderMode: RenderMode.Prerender,
+  },
+];
+
+  export const ${projectName}ServerConfig: ApplicationConfig = {
+    providers: [
+      provideServerRendering(
+        withRoutes(${projectName}ServerRoutes),
+      ),
+    ],
+  };
+  `;
+    }
+
+    if (!text.includes(`${projectName}Config`)) {
+      text += `
+
+export const ${projectName}Config = mergeApplicationConfig(
+  ${projectName}AppConfig,
+  ${projectName}ServerConfig,
+);
+
+    `;
+    }
+
+    return text;
+    //#endregion
+  };
+  //#endregion
 }
 
 //#endregion
