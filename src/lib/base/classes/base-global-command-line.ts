@@ -212,9 +212,21 @@ export class BaseGlobalCommandLine<
     //#endregion
   }
 
+  async upapiAll() {
+    //#region @backendFunc
+    await this.apiUpdateAll();
+    //#endregion
+  }
+
   async apiup() {
     //#region @backendFunc
     await this.apiUpdate();
+    //#endregion
+  }
+
+  async apiupall() {
+    //#region @backendFunc
+    await this.apiUpdateAll();
     //#endregion
   }
 
@@ -223,15 +235,27 @@ export class BaseGlobalCommandLine<
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
-    Helpers.info('Updating & push project...');
-    try {
-      this.project.git.addAndCommit(
-        `chore: api ${!!this.firstArg ? this.firstArg : 'update'}`,
-      );
-    } catch (error) {}
-    await this.project.git.pushCurrentBranch({
-      askToRetry: true,
-      forcePushNoQuestion: true,
+    Helpers.info('Updating & pushing all projects (first level)...');
+    await this.updateProject(this.project, {
+      commitType: 'chore',
+      updateType: 'only-this',
+      commitMessagePart: `api ${!!this.firstArg ? this.firstArg : 'update'}`,
+    });
+    Helpers.info('Done');
+    this._exit();
+    //#endregion
+  }
+
+  async apiUpdateAll() {
+    //#region @backendFunc
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
+      return;
+    }
+    Helpers.info('Updating & pushing all projects (first level)...');
+    await this.updateProject(this.project, {
+      updateType: 'first-level',
+      commitType: 'chore',
+      commitMessagePart: `api ${!!this.firstArg ? this.firstArg : 'update'}`,
     });
     Helpers.info('Done');
     this._exit();
@@ -326,6 +350,7 @@ export class BaseGlobalCommandLine<
       updateType?: 'deep' | 'first-level' | 'only-this';
       force?: boolean;
       commitType?: TypeOfCommit;
+      commitMessagePart?: string;
     },
   ): Promise<void> {
     //#region @backendFunc
@@ -375,7 +400,7 @@ export class BaseGlobalCommandLine<
     } catch (error) {}
     try {
       project.git.addAndCommit(
-        `${options.commitType}: ${!!this.firstArg ? this.args.join(' ') : 'update'}`,
+        `${options.commitType}: ${options.commitMessagePart ? options.commitMessagePart : !!this.firstArg ? this.args.join(' ') : 'update'}`,
       );
     } catch (error) {}
     await project.git.pushCurrentBranch({
