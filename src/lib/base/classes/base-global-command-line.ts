@@ -1689,6 +1689,24 @@ ${lastCommitMessage}
   }
   //#endregion
 
+  //#region commands / struct all
+  /**
+   * init parent and first level children
+   */
+  async structAll() {
+    //#region @backendFunc
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: false }))) {
+      return;
+    }
+    await this.project.struct();
+    for (const child of this.project.children) {
+      await child.struct();
+    }
+    this._exit();
+    //#endregion
+  }
+  //#endregion
+
   //#region commands / struct
   /**
    * TODO move somewhere
