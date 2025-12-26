@@ -3,6 +3,7 @@ import { ChildProcess, StdioOptions } from 'node:child_process';
 import { scrypt, randomBytes, timingSafeEqual } from 'node:crypto'; // @backend
 import { promisify } from 'node:util'; // @backend
 
+import * as ncp from 'copy-paste'; // @backend
 import * as semver from 'semver'; // @backend
 import { chalk, chokidar, config, UtilsFilesFoldersSync } from 'tnp-core/src';
 import {
@@ -1953,10 +1954,7 @@ export namespace UtilsTypescript {
       `class ${appClassNew}`,
     );
 
-    text = text.replace(
-      new RegExp(appClassOld, 'g'),
-      appClassNew
-    );
+    text = text.replace(new RegExp(appClassOld, 'g'), appClassNew);
 
     // ------------------------------------------------------------------
     // 4. Rename start() → ProjectStartFunction
@@ -3692,4 +3690,80 @@ export namespace UtilsFileSync {
     //#endregion
   };
   //#endregion
+}
+
+export namespace UtilsClipboard {
+  export const copyText = async (textToCopy: string): Promise<void> => {
+    //#region @backend
+    await new Promise(resolve => {
+      ncp.copy(textToCopy, function () {
+        Helpers.log(`Copied to clipboard !`);
+        resolve(void 0);
+      });
+    });
+    //#endregion
+
+    //#region @browser
+    if (typeof navigator !== 'undefined') {
+      // Preferred modern API
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(textToCopy);
+        return;
+      }
+
+      // Fallback (older browsers / restricted permissions)
+      const textarea = document.createElement('textarea');
+      textarea.value = textToCopy;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+
+      try {
+        document.execCommand('copy');
+      } finally {
+        document.body.removeChild(textarea);
+      }
+    }
+    //#endregion
+  };
+
+  export const pasteText = async (): Promise<string> => {
+    //#region @backend
+    return await new Promise<string>((resolve, reject) => {
+      ncp.paste(function (__, p) {
+        Helpers.log(`Paster from to clipboard !`);
+        resolve(p);
+      });
+    });
+    //#endregion
+
+    //#region @browser
+    if (typeof navigator !== 'undefined') {
+      // Preferred modern API
+      if (navigator.clipboard?.readText) {
+        return await navigator.clipboard.readText();
+      }
+
+      // Fallback (best-effort)
+      const textarea = document.createElement('textarea');
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+
+      document.body.appendChild(textarea);
+      textarea.focus();
+
+      try {
+        document.execCommand('paste');
+        return textarea.value;
+      } finally {
+        document.body.removeChild(textarea);
+      }
+    }
+    //#endregion
+
+    return '';
+  };
 }
