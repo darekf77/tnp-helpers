@@ -740,10 +740,11 @@ export abstract class BaseProject<
   //#endregion
 
   //#region methods & getters / remove file
-  removeFile(fileRelativeToProjectPath: string) {
+  removeFile(fileRelativeToProjectPath: string | string[]): void {
     //#region @backendFunc
+    fileRelativeToProjectPath = crossPlatformPath(fileRelativeToProjectPath);
     const fullPath = path.resolve(
-      path.join(this.location, fileRelativeToProjectPath),
+      crossPlatformPath([this.location, fileRelativeToProjectPath]),
     );
     return Helpers.removeFileIfExists(fullPath);
     //#endregion
