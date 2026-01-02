@@ -111,7 +111,7 @@ export abstract class BaseCommandLineFeature<
     const firstArg = _.first(argsWithParams.split(' '));
     const method = methods.find(m => m === firstArg);
     // console.log('className',className)
-    if (method && !!className) {
+    if (method && !!className && !methodNameToCall) {
       // this prevents taon reset develop => to run: taon develop
       methodNameToCall = method;
       argsWithParams = argsWithParams.split(' ').slice(1).join(' ');
