@@ -1174,20 +1174,23 @@ ${lastCommitMessage}
       !options.overrideCommitMessage &&
       this.project.git.useBranchNameDirectlyAsCommitMessage()
     ) {
-      options.overrideCommitMessage = (this.project.git.currentBranchName || '')
-        .split('-')
-        .join(' ');
-
-      const jiraNumbers =
-        CommitData.extractAndOrderJiraNumbers(
-          this.project.git.currentBranchName,
-        ) || [];
+            const jiraNumbers =         CommitData.extractAndOrderJiraNumbers(
+          this.args.join(' '),
+      );
+      Helpers.info(
+        `Using branch name directly as commit message.
+         Found JIRA numbers: ${jiraNumbers.join(
+          ', ',
+        )}`,
+        );
 
       for (const jiraNum of jiraNumbers) {
-        options.overrideCommitMessage = options.overrideCommitMessage.replace(
-          jiraNum.replace('-', ' '),
-          jiraNum,
-        );
+        for (const argIndex in this.args) {
+          const arg = this.args[argIndex];
+          if (arg.endsWith(jiraNum)) {
+            this.args[argIndex] = jiraNum;
+          }
+        }
       }
     }
 
