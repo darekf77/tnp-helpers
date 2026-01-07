@@ -369,7 +369,9 @@ export class BaseGlobalCommandLine<
 
       const resp = await UtilsTerminal.select<keyof typeof choices>({
         choices,
-        question: `Project ${chalk.bold(project.genericName)} has action commits to melt. What you want to do ?`,
+        question: `Project ${chalk.bold(
+          project.genericName,
+        )} has action commits to melt. What you want to do ?`,
       });
       if (resp === 'continue') {
         continue;
@@ -400,7 +402,13 @@ export class BaseGlobalCommandLine<
     } catch (error) {}
     try {
       project.git.addAndCommit(
-        `${options.commitType}: ${options.commitMessagePart ? options.commitMessagePart : !!this.firstArg ? this.args.join(' ') : 'update'}`,
+        `${options.commitType}: ${
+          options.commitMessagePart
+            ? options.commitMessagePart
+            : !!this.firstArg
+              ? this.args.join(' ')
+              : 'update'
+        }`,
       );
     } catch (error) {}
     await project.git.pushCurrentBranch({
@@ -807,7 +815,9 @@ ${
       );
       if (
         !(await Helpers.questionYesNo(
-          `Would you like to reset root repo instead (project=${chalk.bold.red(resetProject.genericName)}) ?`,
+          `Would you like to reset root repo instead (project=${chalk.bold.red(
+            resetProject.genericName,
+          )}) ?`,
         ))
       ) {
         Helpers.error(`Aborted`, false, true);
@@ -816,7 +826,11 @@ ${
 
     const res = await Helpers.questionYesNo(
       `Reset hard and pull current project ` +
-        `${resetChildren && resetProject.linkedProjects.linkedProjects.length > 0 ? '(and children)' : ''} ?`,
+        `${
+          resetChildren && resetProject.linkedProjects.linkedProjects.length > 0
+            ? '(and children)'
+            : ''
+        } ?`,
     );
     if (res) {
       await resetProject.resetProcess(overrideBranchToReset);
@@ -838,7 +852,9 @@ ${
 
     _.times(howManyCommits, n => {
       console.log(
-        `Resetting soft ${n + 1} commit "${this.project.git.lastCommitMessage()}"`,
+        `Resetting soft ${
+          n + 1
+        } commit "${this.project.git.lastCommitMessage()}"`,
       );
       this.project.git.resetSoftHEAD(1);
     });
@@ -1174,15 +1190,13 @@ ${lastCommitMessage}
       !options.overrideCommitMessage &&
       this.project.git.useBranchNameDirectlyAsCommitMessage()
     ) {
-            const jiraNumbers =         CommitData.extractAndOrderJiraNumbers(
-          this.args.join(' '),
+      const jiraNumbers = CommitData.extractAndOrderJiraNumbers(
+        this.args.join(' '),
       );
       Helpers.info(
         `Using branch name directly as commit message.
-         Found JIRA numbers: ${jiraNumbers.join(
-          ', ',
-        )}`,
-        );
+         Found JIRA numbers: ${jiraNumbers.join(', ')}`,
+      );
 
       for (const jiraNum of jiraNumbers) {
         for (const argIndex in this.args) {
@@ -1650,7 +1664,9 @@ ${lastCommitMessage}
   CHECK_TAG_EXISTS() {
     //#region @backendFunc
     Helpers.info(
-      `tag "${this.firstArg}"  exits = ${Helpers.git.checkTagExists(this.firstArg)} `,
+      `tag "${this.firstArg}"  exits = ${Helpers.git.checkTagExists(
+        this.firstArg,
+      )} `,
     );
     this._exit();
     //#endregion
@@ -1790,7 +1806,9 @@ ${lastCommitMessage}
         ? libs
             .map(
               c =>
-                `${chalk.bold(c.name)} (${c.git.uncommitedFiles.map(p => chalk.black(path.basename(p))).join(', ')})`,
+                `${chalk.bold(c.name)} (${c.git.uncommitedFiles
+                  .map(p => chalk.black(path.basename(p)))
+                  .join(', ')})`,
             )
             .join('\n')
         : 'Nothing modifed',
@@ -2402,7 +2420,9 @@ ${lastCommitMessage}
     for (const port of ports) {
       const isPortInUse = await UtilsOs.isPortInUse(port);
       console.log(
-        `Port ${port} is in use: ${isPortInUse ? chalk.red('YES') : chalk.green('NO')}`,
+        `Port ${port} is in use: ${
+          isPortInUse ? chalk.red('YES') : chalk.green('NO')
+        }`,
       );
     }
     this._exit();
@@ -2607,7 +2627,11 @@ ${lastCommitMessage}
 
      ${chalk.bold('PRESS ANY KEY TO STOP')} RUNNING CONTAINER(S) ` +
           `FOR ${chalk.bold.underline(COMPOSE_PROJECT_NAME as string)}
-  ${simulateDomain ? `AND SIMULATING DOMAINS: ${allDomains.join(', ')} IN ETC/HOST` : ''}
+  ${
+    simulateDomain
+      ? `AND SIMULATING DOMAINS: ${allDomains.join(', ')} IN ETC/HOST`
+      : ''
+  }
 
   `,
       );
@@ -3057,7 +3081,9 @@ ${lastCommitMessage}
       'gif-from-videos',
       basenameToProcess.replace(path.extname(basenameToProcess), '.gif'),
     ]);
-    const palleteBasename = `${_.kebabCase(path.basename(gifDownloadPath))}-palette.png`;
+    const palleteBasename = `${_.kebabCase(
+      path.basename(gifDownloadPath),
+    )}-palette.png`;
     Helpers.removeFileIfExists([cwdToProcess, palleteBasename]);
     const quality = `fps=10,scale=960`;
     Helpers.info(`Preparing gif from video (creating palette)...`);
@@ -3073,7 +3099,9 @@ ${lastCommitMessage}
     Helpers.run(
       `ffmpeg -i ${basenameToProcess} -i ` +
         ` ${palleteBasename}  -filter_complex ` +
-        `"${quality}:-1:flags=lanczos[x];[x][1:v]paletteuse" ${path.basename(gifDownloadPath)}`,
+        `"${quality}:-1:flags=lanczos[x];[x][1:v]paletteuse" ${path.basename(
+          gifDownloadPath,
+        )}`,
       {
         output: true,
         cwd: cwdToProcess,
