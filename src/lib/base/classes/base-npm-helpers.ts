@@ -235,7 +235,7 @@ You are not logged in to npm. Press any key and follow instructions...`,
     messagePrefix?: string;
   }): Promise<boolean> {
     //#region @backendFunc
-    options =  options || {} as any;
+    options = options || ({} as any);
     options.actionType = options.actionType || 'release';
     const {
       releaseVersionBumpType: releaseVersionType,
@@ -247,7 +247,7 @@ You are not logged in to npm. Press any key and follow instructions...`,
 
     const itselfString =
       `- this project: ${chalk.italic(this.project.nameForNpmPackage)}` +
-      `@${chalk.bold(versionToUse ? versionToUse : this.project.packageJson.getBumpedVersionFor(releaseVersionType))}`;
+      `@${chalk.bold(versionToUse ? versionToUse : this.project.packageJson.getBumpedOrCurrentVersionFor(releaseVersionType))}`;
 
     const childrenToRelease = children ? children : this.project.children;
     const childrenString = `- all (${childrenToRelease.length}) children projects: ${chalk.italic(
@@ -255,7 +255,7 @@ You are not logged in to npm. Press any key and follow instructions...`,
         .map(
           c =>
             `${c.nameForNpmPackage}` +
-            `@${chalk.bold(c.packageJson.getBumpedVersionFor(releaseVersionType))}`,
+            `@${chalk.bold(c.packageJson.getBumpedOrCurrentVersionFor(releaseVersionType))}`,
         )
         .join(', '),
     )}`;

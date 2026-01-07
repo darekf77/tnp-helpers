@@ -437,6 +437,18 @@ export class BasePackageJson extends BaseJsonFileReader<PackageJson> {
     }
     //#endregion
   }
+
+  getBumpedOrCurrentVersionFor(
+    releaseType?: CoreModels.ReleaseVersionType,
+  ): string {
+    //#region @backendFunc
+    if (releaseType) {
+      return this.getBumpedVersionFor(releaseType);
+    } else {
+      return this.version;
+    }
+    //#endregion
+  }
   //#endregion
 
   //#region update deps from locations
