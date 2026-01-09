@@ -1,5 +1,5 @@
 //#region import
-import { config } from 'tnp-core/src';
+import { config, dotTaonFolder } from 'tnp-core/src';
 import { CommandOutputOptions, UtilsOs, UtilsTerminal } from 'tnp-core/src';
 import { CoreModels } from 'tnp-core/src';
 import { CLI } from 'tnp-core/src';
@@ -17,7 +17,7 @@ import {
   UtilsTaonWorker,
   UtilsTypescript,
 } from '../../index';
-import { BaseProjectType } from '../../models';
+import { BaseProjectType, CommandActionType } from '../../models';
 
 import { BaseDocker } from './base-docker';
 import { BaseFileFoldersOperations } from './base-file-folders-operations';
@@ -379,10 +379,21 @@ export abstract class BaseProject<
   //#region methods & getters / parent
   get parent(): PROJECT {
     //#region @websqlFunc
-    if (!_.isString(this.location) || this.location.trim() === '') {
+    let location = this.location;
+    const absExternalPathToChildren = this.pathFor([
+      dotTaonFolder,
+      CoreModels.parentLocation,
+    ]);
+    if (Helpers.exists(absExternalPathToChildren)) {
+      const externalLocation = Helpers.readFile(absExternalPathToChildren);
+      if (externalLocation && Helpers.exists(externalLocation)) {
+        return this.ins.From(externalLocation);
+      }
+    }
+    if (!_.isString(location) || location.trim() === '') {
       return void 0;
     }
-    return this.ins.From(path.join(this.location, '..'));
+    return this.ins.From(path.join(location, '..'));
     //#endregion
   }
   //#endregion
@@ -1046,12 +1057,17 @@ Would you like to update current project configuration?`)
   //#endregion
 
   //#region methods & getters / reset process
-  async resetProcess(overrideBranch?: string, recrusive = false) {
+  async resetProcess(
+    overrideBranch?: string,
+    options?: {
+      commandActionType?: CommandActionType;
+    },
+  ) {
     //#region @backend
+    // debugger;
+    options = options || {};
+    options.commandActionType = options.commandActionType || 'only-this';
     // console.log(`CORE PROJECT BRANCH ${this.name}: ${this.core?.branch}, overrideBranch: ${overrideBranch}`)
-    const resetChildren = this.git.resetIsRestingAlsoChildren();
-    const resetOnlyChildren =
-      !!this.linkedProjects.getLinkedProjectsConfig().resetOnlyChildren;
 
     Helpers.taskStarted(`
 
@@ -1068,35 +1084,49 @@ Would you like to update current project configuration?`)
 
     this.git.fetch();
 
-    if (!resetOnlyChildren) {
-      Helpers.logInfo(`reseting hard  in ${this.genericName}`);
-      this.git.resetHard();
-      Helpers.logInfo(
-        `checking out branch "${branchToReset}" in ${this.genericName}`,
-      );
-      this.git.checkout(branchToReset);
-      Helpers.logInfo(`pulling current branch in ${this.genericName}`);
-      await this.git.pullCurrentBranch({ askToRetry: true });
-      Helpers.logInfo(`initing (struct) in ${this.genericName}`);
+    Helpers.logInfo(`reseting hard  in ${this.genericName}`);
+    this.git.resetHard();
+    Helpers.logInfo(
+      `checking out branch "${branchToReset}" in ${this.genericName}`,
+    );
+    this.git.checkout(branchToReset);
+    Helpers.logInfo(`pulling current branch in ${this.genericName}`);
+    await this.git.pullCurrentBranch({ askToRetry: true });
+    Helpers.logInfo(`initing (struct) in ${this.genericName}`);
+    try {
       await this.struct();
-      Helpers.taskDone(
-        `RESET DONE BRANCH: ${chalk.bold(branchToReset)} in ${this.genericName}`,
-      );
-    }
+    } catch (error) {}
 
-    // console.log('resetOnlyChildren', resetOnlyChildren);
-    // console.log('resetChildren', resetChildren);
-    if (resetChildren) {
-      for (const linked of this.linkedProjects.linkedProjects) {
-        const child = this.ins.From(this.pathFor([linked.relativeClonePath]));
-        if (child) {
-          await child.resetProcess(
-            child.linkedProjects.resetLinkedProjectsOnlyToCoreBranches()
-              ? void 0
-              : branchToReset,
-            true,
-          );
-        }
+    Helpers.taskDone(
+      `RESET DONE BRANCH: ${chalk.bold(branchToReset)} in ${this.genericName}`,
+    );
+
+    const childCommandActionType =
+      options.commandActionType === 'first-level'
+        ? 'only-this'
+        : options.commandActionType;
+
+    const children = Utils.uniqArray<PROJECT>(
+      [
+        ...(this.linkedProjects?.linkedProjects || [])
+          .map(lp => this.ins.From(this.pathFor([lp.relativeClonePath])))
+          .filter(p => !!p),
+        ...this.children,
+      ],
+      'location',
+    );
+
+    if (options.commandActionType !== 'only-this') {
+      // console.log(`Reseting children ...`);
+      for (const child of children) {
+        await child.resetProcess(
+          child.linkedProjects.resetLinkedProjectsOnlyToCoreBranches()
+            ? void 0
+            : branchToReset,
+          {
+            commandActionType: childCommandActionType,
+          },
+        );
       }
     }
 

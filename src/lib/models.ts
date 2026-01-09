@@ -13,6 +13,8 @@ export type BaseProjectType = CoreModels.BaseProjectType;
 export const BaseProjectTypeArr = CoreModels.BaseProjectTypeArr;
 //#endregion
 
+export type CommandActionType =  'deep' | 'first-level' | 'only-this';
+
 //#region ng project
 /**
  * Angular project type

@@ -32,6 +32,7 @@ import { win32Path } from 'tnp-core/src';
 import { UtilsSudo } from 'tnp-core/src';
 
 import {
+  CommandActionType,
   BaseCLiWorkerStartMode,
   Helpers,
   LinkedProject,
@@ -46,6 +47,8 @@ import { GhTempCode } from '../gh-temp-code';
 import { BaseCommandLineFeature } from './base-command-line-feature';
 import { BaseProject } from './base-project';
 import type { BaseProjectResolver } from './base-project-resolver';
+import { createBuilderStatusReporter } from 'typescript';
+import { console } from 'inspector';
 //#endregion
 
 export class BaseGlobalCommandLine<
@@ -347,7 +350,7 @@ export class BaseGlobalCommandLine<
   private async updateProject(
     project: PROJECT,
     options?: {
-      updateType?: 'deep' | 'first-level' | 'only-this';
+      updateType?: CommandActionType;
       force?: boolean;
       commitType?: TypeOfCommit;
       commitMessagePart?: string;
@@ -708,28 +711,6 @@ export class BaseGlobalCommandLine<
   //#endregion
 
   //#region commands / reset
-  private __resetInfo(branchToReset: string, withChildren: boolean) {
-    //#region @backendFunc
-    Helpers.info(
-      `
-
-    YOU ARE RESETING ${withChildren ? 'EVERYTHING' : 'PROJECT'} ` +
-        `TO BRANCH: ${chalk.bold(branchToReset)}
-
-- curret project (${this.project.name})
-${
-  withChildren &&
-  _.isArray(this.project.children) &&
-  this.project.children.length > 0
-    ? `- modules:\n${this.project.children
-        .map(c => `\t${c.basename} (${chalk.yellow(c.name)})`)
-        .join('\n')}`
-    : ''
-}
-      `,
-    );
-    //#endregion
-  }
 
   async fetch() {
     //#region @backendFunc
@@ -741,7 +722,23 @@ ${
   }
 
   async reset() {
+    await this.resetProject({ commandActionType: 'only-this' });
+  }
+
+  async resetAll() {
+    await this.resetProject({ commandActionType: 'first-level' });
+  }
+
+  async resetDeep() {
+    await this.resetProject({ commandActionType: 'deep' });
+  }
+
+  private async resetProject(options?: {
+    commandActionType?: CommandActionType;
+  }) {
     //#region @backendFunc
+    options = options || {};
+    options.commandActionType = options.commandActionType || 'only-this';
     // Helpers.clearConsole();
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
@@ -779,13 +776,17 @@ ${
       ...this.__filterBranchesByPattern(''),
     ]);
 
-    const resetChildren = this.project.git.resetIsRestingAlsoChildren();
+    const resetChildren = options.commandActionType !== 'only-this';
 
     if (resetChildren && resetOnlyChildren) {
       Helpers.info(`Reseting only children...for defualt branches.`);
     } else {
       if (branches.length > 0) {
-        overrideBranchToReset = await this.__selectBrach(branches, 'reset');
+        overrideBranchToReset = await this.__selectBranch(
+          branches,
+          'reset',
+          options.commandActionType,
+        );
       } else {
         Helpers.error(
           `No branch found by name "${overrideBranchToReset || this.firstArg}"`,
@@ -796,11 +797,26 @@ ${
     }
 
     overrideBranchToReset = overrideBranchToReset || '';
-    this.__resetInfo(
-      overrideBranchToReset
-        ? overrideBranchToReset
-        : this.project.git.getDefaultDevelopmentBranch(),
-      resetChildren,
+
+    const withChildren = options.commandActionType !== 'only-this';
+
+    Helpers.info(
+      `
+
+    YOU ARE RESETING ${withChildren ? 'EVERYTHING' : 'PROJECT'} ` +
+        `TO BRANCH: ${chalk.bold(overrideBranchToReset)}
+
+- curret project (${this.project.name})
+${
+  withChildren &&
+  _.isArray(this.project.children) &&
+  this.project.children.length > 0
+    ? `- modules:\n${this.project.children
+        .map(c => `\t${c.basename} (${chalk.yellow(c.name)})`)
+        .join('\n')}`
+    : ''
+}
+      `,
     );
 
     let resetProject = this.project;
@@ -825,7 +841,7 @@ ${
     }
 
     const res = await Helpers.questionYesNo(
-      `Reset hard and pull current project ` +
+      `(${options.commandActionType}) Reset hard and pull current project ` +
         `${
           resetChildren && resetProject.linkedProjects.linkedProjects.length > 0
             ? '(and children)'
@@ -833,7 +849,9 @@ ${
         } ?`,
     );
     if (res) {
-      await resetProject.resetProcess(overrideBranchToReset);
+      await resetProject.resetProcess(overrideBranchToReset, {
+        commandActionType: options.commandActionType,
+      });
     }
 
     this._exit();
@@ -878,7 +896,7 @@ ${
     const branches = this.__filterBranchesByPattern(rebaseBranch);
 
     if (branches.length > 1) {
-      rebaseBranch = await this.__selectBrach(branches, 'rebase');
+      rebaseBranch = await this.__selectBranch(branches, 'rebase', 'only-this');
     } else if (branches.length === 1) {
       rebaseBranch = _.first(branches);
     } else {
@@ -1548,7 +1566,7 @@ ${lastCommitMessage}
     const branches = this.__filterBranchesByPattern(branchName);
 
     if (branches.length > 0) {
-      branchName = await this.__selectBrach(branches, 'checkout');
+      branchName = await this.__selectBranch(branches, 'checkout', 'only-this');
     } else {
       Helpers.error(`No branch found by name "${branchName}"`, false, true);
     }
@@ -2149,18 +2167,19 @@ ${lastCommitMessage}
   //#endregion
 
   //#region select branch from list of branches
-  private async __selectBrach(
+  private async __selectBranch(
     branches: string[],
     task: 'rebase' | 'reset' | 'checkout',
+    commandActionType: CommandActionType,
   ) {
     //#region @backendFunc
-    const actionWithoutChildren =
-      task === 'reset' && !this.project.git.resetIsRestingAlsoChildren();
+    const actionWithoutChildren = commandActionType === 'only-this';
+
     const childrenMsg = actionWithoutChildren
       ? '(without children)'
       : this.project.children.length == 0
         ? '(no children in project)'
-        : '(with children)';
+        : `(with children${commandActionType === 'deep' ? ' (resursive deep)' : ''})`;
 
     return await Helpers.autocompleteAsk(
       `Choose branch to ${task} in this project ${childrenMsg}: `,
