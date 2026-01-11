@@ -69,6 +69,8 @@ import {
   isPropertyDeclaration,
   isMethodDeclaration,
   EmitHint,
+  getTrailingCommentRanges,
+  isArrayLiteralExpression,
 } from 'typescript';
 import type * as ts from 'typescript';
 import { CLASS } from 'typescript-class-helpers/src';
@@ -1100,7 +1102,7 @@ export namespace UtilsTypescript {
 
   //#region recognize imports from file
 
-  //#region helpers / ts import export class
+  //#region recognize imports from file / ts import export class
   export class TsImportExport {
     /**
      * for external modification
@@ -1231,7 +1233,7 @@ export namespace UtilsTypescript {
   }
   //#endregion
 
-  //#region helpers / get quote type
+  //#region recognize imports from file / get quote type
   const getQuoteType = (text: string): 'single' | 'double' | 'tics' => {
     //#region @websqlFunc
     if (text.startsWith('`')) return 'tics';
@@ -1241,6 +1243,7 @@ export namespace UtilsTypescript {
   };
   //#endregion
 
+  //#region recognize imports from file / extract import export elements
   const extractImportExportElements = (node: ts.Node): string[] => {
     //#region @websqlFunc
     const elements: string[] = [];
@@ -1265,7 +1268,9 @@ export namespace UtilsTypescript {
     return elements;
     //#endregion
   };
+  //#endregion
 
+  //#region recognize imports from file / recognize imports from file
   export const recognizeImportsFromFile = (
     fileAbsPAth: string,
   ): TsImportExport[] => {
@@ -1274,7 +1279,9 @@ export namespace UtilsTypescript {
     return recognizeImportsFromContent(content);
     //#endregion
   };
+  //#endregion
 
+  //#region recognize imports from file / recognize imports from content
   export const recognizeImportsFromContent = (
     fileContent: string,
   ): TsImportExport[] => {
@@ -1364,6 +1371,8 @@ export namespace UtilsTypescript {
   };
   //#endregion
 
+  //#endregion
+
   //#region transform Angular component standalone option
   /**
    * Transition methods ng18 => ng19
@@ -1445,6 +1454,7 @@ export namespace UtilsTypescript {
   export function removeTaggedImportExport(
     tsFileContent: string,
     tags: string[],
+    replaceWithEmptyLine: boolean = false,
     // debug = false,
   ): string {
     const sourceFile = createSourceFile(
@@ -1454,7 +1464,6 @@ export namespace UtilsTypescript {
       true,
       ScriptKind.TS,
     );
-    // debug && console.log(tsFileContent);
 
     const lines = tsFileContent.split(/\r?\n/);
     const tagRegex = new RegExp(
@@ -1484,26 +1493,156 @@ export namespace UtilsTypescript {
 
       if (!tagRegex.test(endLineText)) continue;
 
-      // debug &&
-      //   console.log(`
-      //   start: ${start}
-      //   end: ${end}
-      //   startLine: ${startLine}
-      //   endLine: ${endLine}
-      //   endLineText: >> ${endLineText} <<
-      //   `);
-
-      // console.log('removing line ' + startLine + ' to ' + endLine);
       for (let i = startLine; i <= endLine; i++) {
         const original = lines[i];
+        if (replaceWithEmptyLine) {
+          lines[i] = '';
+        } else {
+          lines[i] = '/* */' + ' '.repeat(Math.max(0, original.length - 4));
+        }
+      }
+    }
+
+    const result = lines.join('\n');
+    return result;
+  }
+  //#endregion
+
+  //#region remove tagged array objects
+  export function removeTaggedArrayObjects(
+    tsFileContent: string,
+    tags: string[],
+    replaceWithEmptyLine: boolean = false,
+  ): string {
+    const sourceFile = createSourceFile(
+      'temp.ts',
+      tsFileContent,
+      ScriptTarget.Latest,
+      true,
+      ScriptKind.TS,
+    );
+
+    const lines = tsFileContent.split(/\r?\n/);
+
+    const tagRegex = new RegExp(
+      tags.map(t => Utils.escapeStringForRegEx(t)).join('|'),
+      'i',
+    );
+
+    function hasTag(node: ts.Node): boolean {
+      const fullText = sourceFile.getFullText();
+
+      // comments BEFORE object
+      const leading =
+        getLeadingCommentRanges(fullText, node.getFullStart()) ?? [];
+      for (const c of leading) {
+        const text = fullText.slice(c.pos, c.end);
+        if (tagRegex.test(text)) return true;
+      }
+
+      // comments AFTER `{` (same-line)
+      const trailing =
+        getTrailingCommentRanges(fullText, node.getStart()) ?? [];
+      for (const c of trailing) {
+        const text = fullText.slice(c.pos, c.end);
+        if (tagRegex.test(text)) return true;
+      }
+
+      return false;
+    }
+
+    function commentOutNode(node: ts.Node) {
+      const startLine = sourceFile.getLineAndCharacterOfPosition(
+        node.getStart(),
+      ).line;
+      const endLine = sourceFile.getLineAndCharacterOfPosition(
+        node.getEnd(),
+      ).line;
+
+      for (let i = startLine; i <= endLine; i++) {
+        const original = lines[i];
+        if (replaceWithEmptyLine) {
+          lines[i] = '';
+        } else {
+          lines[i] = '/* */' + ' '.repeat(Math.max(0, original.length - 4));
+        }
+      }
+    }
+
+    function visit(node: ts.Node) {
+      if (isArrayLiteralExpression(node)) {
+        for (const element of node.elements) {
+          if (isObjectLiteralExpression(element) && hasTag(element)) {
+            commentOutNode(element);
+          }
+        }
+      }
+
+      forEachChild(node, visit);
+    }
+
+    visit(sourceFile);
+
+    return lines.join('\n');
+  }
+  //#endregion
+
+  //#region remove tagged lines
+  export function removeTaggedLines(
+    tsFileContent: string,
+    tags: string[],
+    replaceWithEmptyLine: boolean = false,
+  ): string {
+    const lines = tsFileContent.split(/\r?\n/);
+
+    const tagRegex = new RegExp(
+      tags
+        .filter(Boolean)
+        .map(t => Utils.escapeStringForRegEx(t))
+        .join('|'),
+      'i',
+    );
+
+    for (let i = 0; i < lines.length; i++) {
+      const original = lines[i];
+
+      if (!tagRegex.test(original)) continue;
+
+      // preserve line length
+      if (replaceWithEmptyLine) {
+        lines[i] = '';
+      } else {
         lines[i] = '/* */' + ' '.repeat(Math.max(0, original.length - 4));
       }
     }
 
-    // debug && console.log('\n\n\n\n');
-    const result = lines.join('\n');
-    // debug && console.log(result)
-    return result;
+    return lines.join('\n');
+  }
+  //#endregion
+
+  //#region add content below placeholder
+  export function addBelowPlaceholder(
+    tsFileContent: string,
+    placeholderTag: string,
+    contentToAdd: string,
+  ): string {
+    const lines = tsFileContent.split(/\r?\n/);
+    const insertLines = contentToAdd.split(/\r?\n/);
+
+    const placeholderRegex = new RegExp(
+      Utils.escapeStringForRegEx(placeholderTag),
+      'i',
+    );
+
+    for (let i = 0; i < lines.length; i++) {
+      if (!placeholderRegex.test(lines[i])) continue;
+
+      // insert directly BELOW the placeholder line
+      lines.splice(i + 1, 0, ...insertLines);
+      break;
+    }
+
+    return lines.join('\n');
   }
   //#endregion
 
