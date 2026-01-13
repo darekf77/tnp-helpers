@@ -47,8 +47,6 @@ import { GhTempCode } from '../gh-temp-code';
 import { BaseCommandLineFeature } from './base-command-line-feature';
 import { BaseProject } from './base-project';
 import type { BaseProjectResolver } from './base-project-resolver';
-import { createBuilderStatusReporter } from 'typescript';
-import { console } from 'inspector';
 //#endregion
 
 export class BaseGlobalCommandLine<
@@ -2449,6 +2447,7 @@ ${lastCommitMessage}
   }
   //#endregion
 
+  //#region commands / symlink
   symlink() {
     //#region @backendFunc
     let [fromArg, toArg] = this.args;
@@ -2482,6 +2481,21 @@ ${lastCommitMessage}
 
     Helpers.createSymLink(fromArg, toArg);
     Helpers.info(`Symlink created from "${fromArg}" to "${toArg}"`);
+    this._exit();
+    //#endregion
+  }
+  //#endregion
+
+  isSymlinkFileExitedOrUnexisted() {
+    //#region @backendFunc
+    const firstArg = crossPlatformPath(this.firstArg);
+    const pathToFileOrFolder = path.isAbsolute(firstArg)
+      ? firstArg
+      : crossPlatformPath([this.cwd, firstArg]);
+
+    console.log(
+      `is Symlink File Exited Or Unexisted ${Helpers.isSymlinkFileExitedOrUnexisted(pathToFileOrFolder)}`,
+    );
     this._exit();
     //#endregion
   }
