@@ -204,7 +204,7 @@ export class BaseVscodeHelpers<
       'ivangabriele.vscode-git-add-and-commit',
       'alexiv.vscode-angular2-files',
       'taddison.gitlazy',
-      'xabikos.JavaScriptSnippets'
+      'xabikos.JavaScriptSnippets',
     ];
   }
 
@@ -682,6 +682,17 @@ export class BaseVscodeHelpers<
         'port' + 'finder',
         'ngrx',
         'nocheck',
+        "dockerization",
+        "matero",
+        'portfinder',
+        'Rebuilder',
+        'reinit',
+        'Stder',
+        'Taon',
+        'traefik',
+        'Trys',
+        'typeorm',
+        'websql',
         'mkdocs',
         'Initing',
         'traefik',
@@ -695,13 +706,13 @@ export class BaseVscodeHelpers<
       'docker.extension.dockerEngineAvailabilityPrompt': false,
       'chat.commandCenter.enabled': false,
       'terminal.integrated.stickyScroll.enabled': false,
-
+      'vsicons.dontShowNewVersionMessage': true,
       // disable intro AI panel
       'chat.editor.open': 'never',
       'chat.editor.experimental.introPanel': false,
       'chat.welcome.show': false,
       'workbench.secondarySideBar.defaultVisibility': 'hidden',
-
+      'http.proxyStrictSSL': false,
       'telemetry.telemetryLevel': 'off',
     };
     //#endregion
