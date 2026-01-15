@@ -1,7 +1,8 @@
 import { config } from 'tnp-core/src';
 import { crossPlatformPath, path, _ } from 'tnp-core/src';
+
 import { Helpers } from 'tnp-helpers/src';
-import { PackageJson } from 'type-fest';
+
 
 export interface BaseJsonFileReaderOptions<DATA> {
   /**
@@ -43,7 +44,6 @@ export interface BaseJsonFileReaderOptions<DATA> {
  *   reloadInMemoryCallback for external reload)
  */
 export class BaseJsonFileReader<DATA> {
-
   //#region fields
   /**
    * null when package.json not exist
@@ -142,7 +142,6 @@ export class BaseJsonFileReader<DATA> {
 
   //#region write package json to disk
   saveToDisk(purpose?: string) {
-
     //#region @backendFunc
     if (this.jsonContent) {
       // @ts-ignore
@@ -161,20 +160,17 @@ export class BaseJsonFileReader<DATA> {
     }
     this.reloadPackageJsonInMemory();
     //#endregion
-
   }
   //#endregion
 
   //#region link to
   linkTo(destination: string): void {
-
     //#region @backendFunc
     const source = path.join(this.cwd, this.fileName);
     const dest = path.join(destination, this.fileName);
     Helpers.removeFileIfExists(dest);
     Helpers.createSymLink(source, dest);
     //#endregion
-
   }
   //#endregion
 
@@ -190,5 +186,4 @@ export class BaseJsonFileReader<DATA> {
     this.saveToDisk();
   }
   //#endregion
-
 }
