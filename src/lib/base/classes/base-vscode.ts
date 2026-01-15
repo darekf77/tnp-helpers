@@ -184,6 +184,7 @@ export class BaseVscodeHelpers<
       'ms-vscode-remote.remote-wsl',
       'kgrzywocz.wsl-path',
       'imgildev.vscode-angular-generator',
+    //  'bierner.color-info', // nice to have color info in css/scss files
       // ---
       // 'skacekachna.win-opacity',
       // 'electrotype.windows-explorer-context-menu',
@@ -827,6 +828,8 @@ export class BaseVscodeHelpers<
       // 'github.copilot.nextEditSuggestions.enabled': true,
       // 'github.copilot.chat.languageContext.inline.typescript.enabled': true,
       // 'github.copilot.chat.languageContext.typescript.enabled': true,
+      "typescript.suggest.autoImports": false,
+      "javascript.suggest.autoImports": false
     };
 
     settings['search.useIgnoreFiles'] = false;
