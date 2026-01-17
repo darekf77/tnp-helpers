@@ -1,5 +1,5 @@
 //#region imports
-import { crossPlatformPath } from 'tnp-core/src';
+import { crossPlatformPath, UtilsOs } from 'tnp-core/src';
 
 import type { BaseProjectResolver } from './classes/base-project-resolver';
 import { BaseDb } from './classes/base-db';
@@ -24,15 +24,12 @@ export class ConfigDatabase extends BaseDb<typeof defaultDb> {
     return 'selected-code-editor';
   }
 
-  public async selectCodeEditor(): Promise<
-    'code' | 'idea' | 'idea64' | string
-  > {
-
+  public async selectCodeEditor(): Promise<UtilsOs.Editor> {
     //#region @backendFunc
     const db = await this.getConnection();
     let editor = await Helpers.consoleGui.select(
       'Select default code editor',
-      ['code', 'idea', 'idea64'].map(name => {
+      UtilsOs.EditorArr.map(name => {
         return {
           name,
           value: name,
@@ -44,11 +41,9 @@ export class ConfigDatabase extends BaseDb<typeof defaultDb> {
     );
     return editor as any;
     //#endregion
-
   }
 
-  public async getCodeEditor(): Promise<'code' | 'idea' | 'idea64' | string> {
-
+  public async getCodeEditor(): Promise<UtilsOs.Editor> {
     //#region @backendFunc
     const db = await this.getConnection();
     let editor = db.data.config[this.selectedCodeEditorKey] as any;
@@ -57,6 +52,5 @@ export class ConfigDatabase extends BaseDb<typeof defaultDb> {
     }
     return editor;
     //#endregion
-
   }
 }

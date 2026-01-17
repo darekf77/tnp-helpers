@@ -327,7 +327,7 @@ export class BaseVscodeHelpers<
       const extname = extensionsToInstall[index];
       try {
         Helpers.taskStarted(`Installing: ${extname}`);
-        Helpers.run(`code --install-extension ${extname}`).sync();
+        Helpers.run(`${UtilsOs.detectEditor()} --install-extension ${extname}`).sync();
         Helpers.taskDone(`Installed: ${extname}`);
       } catch (error) {
         Helpers.warn(`Not able to install ${extname}`);

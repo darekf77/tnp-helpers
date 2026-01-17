@@ -147,7 +147,7 @@ export class BaseGlobalCommandLine<
   hosts() {
     //#region @backendFunc
     Helpers.run(
-      `code ${crossPlatformPath(UtilsNetwork.getEtcHostsPath())}`,
+      `${UtilsOs.detectEditor()} ${crossPlatformPath(UtilsNetwork.getEtcHostsPath())}`,
     ).sync();
     process.exit(0);
     //#endregion
@@ -378,7 +378,7 @@ export class BaseGlobalCommandLine<
         continue;
       }
       if (resp === 'openInCode') {
-        project.run('code . ').sync();
+        project.run(`${UtilsOs.detectEditor()} . `).sync();
         continue;
       }
       if (resp === 'skipUpdate') {
@@ -1137,7 +1137,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
           this._exit();
         }
         if (res === 'open') {
-          this.project.run('code . ').sync();
+          this.project.run(`${UtilsOs.detectEditor()} . `).sync();
           continue;
         }
         if (res === 'continueForce') {
@@ -1998,7 +1998,7 @@ ${lastCommitMessage}
   gitConfig() {
     //#region @backendFunc
     const root = Helpers.git.findGitRoot(this.cwd);
-    Helpers.run(`code ${crossPlatformPath([root, '.git', 'config'])}`).sync();
+    Helpers.run(`${UtilsOs.detectEditor()} ${crossPlatformPath([root, '.git', 'config'])}`).sync();
     this._exit();
     //#endregion
   }
@@ -2142,7 +2142,7 @@ ${lastCommitMessage}
 
     `);
     Helpers.run(
-      `code ${this.project.linkedProjects.projectsDbLocation}`,
+      `${UtilsOs.detectEditor()} ${this.project.linkedProjects.projectsDbLocation}`,
     ).sync();
     this._exit();
     //#endregion
@@ -2293,7 +2293,7 @@ ${lastCommitMessage}
       this.params['provider'] || 'github',
       !!this.params['full'],
     );
-    Helpers.run('code .', {
+    Helpers.run(`${UtilsOs.detectEditor()} .`, {
       cwd: this.project.staticPages.mainFolderAbsPath,
     }).sync();
     this._exit();

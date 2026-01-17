@@ -1,5 +1,5 @@
 //#region imports
-import { config } from 'tnp-core/src';
+import { config, UtilsOs } from 'tnp-core/src';
 import { chalk, dateformat, fse, Utils } from 'tnp-core/src';
 import { crossPlatformPath, path, _, UtilsTerminal } from 'tnp-core/src';
 
@@ -405,7 +405,7 @@ Please provide proper commit message for lastest changes in your project:
 
         //#region handle actions
         if (selected === 'openInVscode') {
-          this.project.run(`code ${this.project.location}`).sync();
+          this.project.run(`${UtilsOs.detectEditor()} ${this.project.location}`).sync();
           await UtilsTerminal.pressAnyKeyToContinueAsync({
             message: `Press any key to continue when you done`,
           });
@@ -1186,7 +1186,7 @@ Please provide proper commit message for lastest changes in your project:
             });
 
         if (action === 'openInVscode') {
-          Helpers.run(`code .`, { cwd: this.project.location }).sync();
+          Helpers.run(`${UtilsOs.detectEditor()} .`, { cwd: this.project.location }).sync();
           continue;
         }
 

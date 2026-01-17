@@ -1061,7 +1061,7 @@ export class HelpersGit {
 
           if (whatToDo === 'openInVscode') {
             try {
-              Helpers.run(`code .`, { cwd }).sync();
+              Helpers.run(`${UtilsOs.detectEditor()} .`, { cwd }).sync();
             } catch (error) {}
             continue;
           }
@@ -1216,7 +1216,7 @@ ${cwd}
 
         if (whatToDo === 'openInVscode') {
           try {
-            Helpers.run(`code .`, { cwd }).sync();
+            Helpers.run(`${UtilsOs.detectEditor()} .`, { cwd }).sync();
           } catch (error) {}
 
           continue;

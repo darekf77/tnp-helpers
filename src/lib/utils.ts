@@ -5,7 +5,13 @@ import { promisify } from 'node:util'; // @backend
 
 import * as ncp from 'copy-paste'; // @backend
 import * as semver from 'semver'; // @backend
-import { chalk, chokidar, config, UtilsFilesFoldersSync } from 'tnp-core/src';
+import {
+  chalk,
+  chokidar,
+  config,
+  spawn,
+  UtilsFilesFoldersSync,
+} from 'tnp-core/src';
 import {
   child_process,
   crossPlatformPath,
@@ -764,6 +770,49 @@ export namespace UtilsTypescript {
     //#endregion
   };
 
+  export const eslintFixAllFilesInsideFolderAsync = async (
+    absPathToFolder: string | string[],
+  ): Promise<void> => {
+    //#region @backendFunc
+    absPathToFolder = crossPlatformPath(absPathToFolder);
+
+    if (!Helpers.exists(absPathToFolder)) {
+      return;
+    }
+
+    Helpers.info(`Fixing files with eslint in: ${absPathToFolder}`);
+
+    const runEslintFix = (): Promise<void> =>
+      new Promise((resolve, reject) => {
+        const child = spawn('npx', ['--yes', 'eslint', '--fix', '.'], {
+          cwd: absPathToFolder,
+          windowsHide: true, // 🔥 prevents black terminal on Windows
+          shell: false,
+          stdio: 'inherit',
+        });
+
+        child.once('error', reject);
+
+        child.once('close', code => {
+          if (code === 0) {
+            resolve();
+          } else {
+            reject(new Error(`eslint exited with code ${code}`));
+          }
+        });
+      });
+
+    // sequential, real await
+    await runEslintFix();
+    await runEslintFix(); // yes, sometimes eslint really needs a second pass 😐
+
+    Helpers.info(`Eslint fixing files done.`);
+    //#endregion
+  };
+
+  /**
+   * @deprecated use eslintFixAllFilesInsideFolderAsync
+   */
   export const eslintFixAllFilesInsideFolder = (
     absPathToFolder: string | string[],
   ): void => {

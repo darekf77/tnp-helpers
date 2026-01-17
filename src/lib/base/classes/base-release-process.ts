@@ -1,5 +1,5 @@
 //#region imports
-import { config } from 'tnp-core/src';
+import { config, UtilsOs } from 'tnp-core/src';
 import { CoreModels, chalk, dateformat, _, UtilsTerminal } from 'tnp-core/src';
 
 import { Helpers } from '../../index';
@@ -132,8 +132,7 @@ export class BaseReleaseProcess<
         process.exit(0);
       }
       if (selected === 'vscodeOpen') {
-        const editor = await this.project.ins.configDb.getCodeEditor();
-        Helpers.run(`${editor} .`, {
+        Helpers.run(`${UtilsOs.detectEditor()} .`, {
           output: true,
           cwd: cwdForCode,
         }).sync();
