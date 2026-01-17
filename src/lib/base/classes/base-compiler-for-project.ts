@@ -1,4 +1,5 @@
 //#region imports
+import { Helpers } from '../../index';
 import {
   BaseClientCompiler,
   BaseClientCompilerOptions,
@@ -6,7 +7,6 @@ import {
 import { path, crossPlatformPath } from 'tnp-core/src';
 import { _ } from 'tnp-core/src';
 import { config } from 'tnp-core/src';
-import { Helpers } from 'tnp-helpers/src';
 
 import { BaseProject } from './base-project';
 //#endregion
@@ -15,14 +15,12 @@ export abstract class BaseCompilerForProject<
   ADDITIONAL_DATA = any,
   PROJECT extends BaseProject = BaseProject,
 > extends BaseClientCompiler<ADDITIONAL_DATA> {
-
   //#region check folder compiler
   protected checkFolderCompiler(
     project: PROJECT,
     options: BaseClientCompilerOptions,
     dontCheck = false,
   ): BaseClientCompilerOptions {
-
     //#region @backendFunc
     if (_.isUndefined(options)) {
       return options;
@@ -63,7 +61,6 @@ export abstract class BaseCompilerForProject<
     });
     return options;
     //#endregion
-
   }
   //#endregion
 
@@ -86,9 +83,7 @@ export abstract class BaseCompilerForProject<
       this.initOptions(options);
     }
     //#endregion
-
   }
 
   //#endregion
-
 }
