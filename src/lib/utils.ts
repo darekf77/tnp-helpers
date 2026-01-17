@@ -2196,6 +2196,78 @@ export const ${projectName}Config = mergeApplicationConfig(
     //#endregion
   };
   //#endregion
+
+  //#region calculate relative import path function
+  /**
+   * Calculate relative import path between two project-relative files.
+   *
+   * @example
+   * calculateRelativeImportPath(
+   *   'mypath/to/file/here.ts',
+   *   'mypath/to/other/file/there.ts'
+   * )
+   * => '../other/file/there'
+   */
+  export const calculateRelativeImportPath = (
+    fileRelativePathFrom: string,
+    fileRelativePathTo: string,
+  ): string => {
+    //#region @backendFunc
+    // normalize to posix (important on Windows)
+    const from = fileRelativePathFrom.replace(/\\/g, '/');
+    const to = fileRelativePathTo.replace(/\\/g, '/');
+
+    // dirname of source file
+    const fromDir = path.posix.dirname(from);
+
+    // relative path
+    let relative = path.posix.relative(fromDir, to);
+
+    // remove extension for TS/JS imports
+    relative = relative.replace(/\.(ts|tsx|js|jsx)$/, '');
+
+    // TS imports must start with ./ or ../
+    if (!relative.startsWith('.')) {
+      relative = './' + relative;
+    }
+
+    return relative;
+    //#endregion
+  };
+  //#endregion
+
+  //#region inject imports into imports region function
+  export const injectImportsIntoImportsRegion = (
+    content: string,
+    importsToAdd: string[],
+  ): string => {
+    //#region @backendFunc
+    if (!importsToAdd.length) {
+      return content;
+    }
+
+    const importsBlock = importsToAdd.join('\n') + '\n';
+    // optional comments / empty lines
+    const regionHeaderRegex = new RegExp(
+      '^' +
+        '(\\/\\/\\#reg' +
+        'ion\\s+imports\\s*\\r?\\n' +
+        '(?:\\/\\/.*\\r?\\n|\\s*\\r?\\n)*)', // comments or empty lines
+      'i',
+    );
+
+    const match = content.match(regionHeaderRegex);
+
+    if (match) {
+      // Inject directly after region header + comments
+      return match[1] + importsBlock + content.slice(match[1].length);
+    }
+
+    // Fallback: prepend to file
+    return importsBlock + content;
+    //#endregion
+  };
+  //#endregion
 }
 
 //#endregion
