@@ -103,6 +103,10 @@ export class BasePackageJson extends BaseJsonFileReader<PackageJson> {
     return this.data.displayName || '';
   }
 
+  get license(): string {
+    return this.data.license || '';
+  }
+
   get publisher(): string {
     return this.data.publisher || '';
   }

@@ -102,7 +102,7 @@ export class BaseVscodeHelpers<
       // 'alexiv.vscode-angular2-files', // taon generator is better
       'amodio.toggle-excluded-files',
       'cg-cnu.vscode-path-tools',
-      'chrisdias.vscode-opennewinstance',
+      // 'chrisdias.vscode-opennewinstance', // no needed anymore (embeded in taon)
       'ctcuff.font-preview',
       'dbaeumer.vscode-eslint',
       'dnicolson.binary-plist',
