@@ -2602,6 +2602,19 @@ ${lastCommitMessage}
     //#endregion
   }
 
+  editorSettings() {
+    //#region @backendFunc
+    console.log(
+      `
+      Your current editor is: ${UtilsOs.detectEditor()}
+
+      Your current editor settings path is:
+       ${UtilsOs.getEditorSettingsJsonPath(UtilsOs.detectEditor())}`,
+    );
+    this._exit();
+    //#endregion
+  }
+
   //#region commands / simulate domain
   async simulateDomain(): Promise<void> {
     //#region @backendFunc

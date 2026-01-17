@@ -209,8 +209,6 @@ export class BaseVscodeHelpers<
     ];
   }
 
-
-
   //#region recreate extensions
   recreateExtensions(): void {
     //#region @backendFunc
@@ -269,9 +267,11 @@ export class BaseVscodeHelpers<
   //#endregion
 
   //#region install extensions
-  async installExtensions(
-    options?: { defaultSelectedAll?: boolean; editor?: UtilsOs.Editor, extensions?: string[] },
-  ): Promise<void> {
+  async installExtensions(options?: {
+    defaultSelectedAll?: boolean;
+    editor?: UtilsOs.Editor;
+    extensions?: string[];
+  }): Promise<void> {
     //#region @backendFunc
     options = options || {};
     options.extensions = options.extensions || this.getExtensions();
@@ -735,10 +735,19 @@ export class BaseVscodeHelpers<
     }
     //#endregion
 
+    if (!options.editor || !settingsPath) {
+      Helpers.error(
+        `Cannot detect editor to apply global settings! `,
+        false,
+        true,
+      );
+    }
+
     console.log(`Applying global settings to ${options.editor}
       settings.json file at:
        ${settingsPath}
     `);
+
     const dest = crossPlatformPath(settingsPath);
     Helpers.writeFile(dest, settings);
     Helpers.info(`Vscode configured !`);
