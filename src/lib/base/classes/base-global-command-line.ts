@@ -1998,7 +1998,9 @@ ${lastCommitMessage}
   gitConfig() {
     //#region @backendFunc
     const root = Helpers.git.findGitRoot(this.cwd);
-    Helpers.run(`${UtilsOs.detectEditor()} ${crossPlatformPath([root, '.git', 'config'])}`).sync();
+    Helpers.run(
+      `${UtilsOs.detectEditor()} ${crossPlatformPath([root, '.git', 'config'])}`,
+    ).sync();
     this._exit();
     //#endregion
   }
@@ -2120,10 +2122,10 @@ ${lastCommitMessage}
       true,
     );
     Helpers.clearConsole();
-    await this.project.vsCodeHelpers.installExtensions(
-      extensions.recommendations,
-      true,
-    );
+    await this.project.vsCodeHelpers.installExtensions({
+      extensions: extensions.recommendations,
+      defaultSelectedAll: true,
+    });
     this._exit();
     //#endregion
   }
@@ -2572,6 +2574,33 @@ ${lastCommitMessage}
     //#endregion
   }
   //#endregion
+
+  killAllCode() {
+    return UtilsOs.killAllEditor('code');
+  }
+
+  killAllCodium() {
+    return UtilsOs.killAllEditor('codium');
+  }
+
+  killAllCursor() {
+    return UtilsOs.killAllEditor('cursor');
+  }
+
+  killAllTheia() {
+    return UtilsOs.killAllEditor('theia');
+  }
+
+  killAllCodeOSS() {
+    return UtilsOs.killAllEditor('code-oss');
+  }
+
+  editor() {
+    //#region @backendFunc
+    console.log(`Your current editor is: ${UtilsOs.detectEditor()}`);
+    this._exit();
+    //#endregion
+  }
 
   //#region commands / simulate domain
   async simulateDomain(): Promise<void> {

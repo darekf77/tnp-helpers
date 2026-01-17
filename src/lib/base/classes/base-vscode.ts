@@ -184,7 +184,7 @@ export class BaseVscodeHelpers<
       'ms-vscode-remote.remote-wsl',
       'kgrzywocz.wsl-path',
       'imgildev.vscode-angular-generator',
-    //  'bierner.color-info', // nice to have color info in css/scss files
+      //  'bierner.color-info', // nice to have color info in css/scss files
       // ---
       // 'skacekachna.win-opacity',
       // 'electrotype.windows-explorer-context-menu',
@@ -209,14 +209,7 @@ export class BaseVscodeHelpers<
     ];
   }
 
-  //#region extensions
-  /**
-   * @deprecated use getExtensions() instead
-   */
-  private get extensions(): string[] {
-    return this.getExtensions();
-  }
-  //#endregion
+
 
   //#region recreate extensions
   recreateExtensions(): void {
@@ -225,7 +218,7 @@ export class BaseVscodeHelpers<
       this.relativePathExtensionJsonVScode,
       JSON.stringify(
         {
-          recommendations: this.extensions,
+          recommendations: this.getExtensions(),
         },
         null,
         2,
@@ -277,10 +270,14 @@ export class BaseVscodeHelpers<
 
   //#region install extensions
   async installExtensions(
-    extensions = this.extensions,
-    defaultSelectedAll = false,
+    options?: { defaultSelectedAll?: boolean; editor?: UtilsOs.Editor, extensions?: string[] },
   ): Promise<void> {
     //#region @backendFunc
+    options = options || {};
+    options.extensions = options.extensions || this.getExtensions();
+    options.editor = options.editor || UtilsOs.detectEditor();
+    let extensions = options.extensions;
+    const defaultSelectedAll = !!options.defaultSelectedAll;
     // console.log({ extensions });
     const alreadyInstalled = this.installedExtensions;
     Helpers.info(
@@ -327,7 +324,9 @@ export class BaseVscodeHelpers<
       const extname = extensionsToInstall[index];
       try {
         Helpers.taskStarted(`Installing: ${extname}`);
-        Helpers.run(`${UtilsOs.detectEditor()} --install-extension ${extname}`).sync();
+        Helpers.run(
+          `${UtilsOs.detectEditor()} --install-extension ${extname}`,
+        ).sync();
         Helpers.taskDone(`Installed: ${extname}`);
       } catch (error) {
         Helpers.warn(`Not able to install ${extname}`);
@@ -387,8 +386,12 @@ export class BaseVscodeHelpers<
   //#endregion
 
   //#region apply proper global settings
-  public static async applyProperGlobalSettings(): Promise<void> {
+  public static async applyProperGlobalSettings(options?: {
+    editor?: UtilsOs.Editor;
+  }): Promise<void> {
     //#region @backendFunc
+    options = options || {};
+    options.editor = options.editor || UtilsOs.detectEditor();
     const keybindingPathLinux = path.join(
       crossPlatformPath(os.userInfo().homedir),
       '.config/Code/User/keybindings.json',
@@ -683,8 +686,8 @@ export class BaseVscodeHelpers<
         'port' + 'finder',
         'ngrx',
         'nocheck',
-        "dockerization",
-        "matero",
+        'dockerization',
+        'matero',
         'portfinder',
         'Rebuilder',
         'reinit',
@@ -719,33 +722,24 @@ export class BaseVscodeHelpers<
     //#endregion
 
     //#region global / settings paths
-    const settingspathWindows = path.join(
-      crossPlatformPath(os.userInfo().homedir),
-      'AppData/Roaming/Code/User/settings.json',
-    );
-    const settingspathLinux = path.join(
-      crossPlatformPath(os.userInfo().homedir),
-      '.config/Code/User/settings.json',
-    );
-    let settingspath = path.join(
-      crossPlatformPath(os.userInfo().homedir),
-      'Library/Application Support/Code/User/settings.json',
-    );
+    const settingsPath = UtilsOs.getEditorSettingsJsonPath(options.editor);
 
     if (process.platform === 'darwin') {
       settings = _.merge(settings, settingsMacOS);
     }
     if (process.platform === 'win32') {
-      settingspath = settingspathWindows;
       settings = _.merge(settings, windowsSettings);
     }
     if (process.platform === 'linux') {
       settings = _.merge(settings, settingsLinux);
-      settingspath = settingspathLinux;
     }
     //#endregion
 
-    const dest = crossPlatformPath(settingspath);
+    console.log(`Applying global settings to ${options.editor}
+      settings.json file at:
+       ${settingsPath}
+    `);
+    const dest = crossPlatformPath(settingsPath);
     Helpers.writeFile(dest, settings);
     Helpers.info(`Vscode configured !`);
     //#endregion
@@ -828,8 +822,8 @@ export class BaseVscodeHelpers<
       // 'github.copilot.nextEditSuggestions.enabled': true,
       // 'github.copilot.chat.languageContext.inline.typescript.enabled': true,
       // 'github.copilot.chat.languageContext.typescript.enabled': true,
-      "typescript.suggest.autoImports": false,
-      "javascript.suggest.autoImports": false
+      'typescript.suggest.autoImports': false,
+      'javascript.suggest.autoImports': false,
     };
 
     settings['search.useIgnoreFiles'] = false;
