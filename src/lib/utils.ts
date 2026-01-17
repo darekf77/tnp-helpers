@@ -77,6 +77,7 @@ import {
   EmitHint,
   getTrailingCommentRanges,
   isArrayLiteralExpression,
+  isExportSpecifier,
 } from 'typescript';
 import type * as ts from 'typescript';
 import { CLASS } from 'typescript-class-helpers/src';
@@ -638,6 +639,94 @@ export namespace UtilsTypescript {
   };
   //#endregion
 
+  export type RedefinedExportInfo = {
+    exportedName: string;      // CustomColumn
+    originalName: string;      // Column
+    from: string | null;       // 'taon-typeorm/src'
+    isStarExport: boolean;     // export * from '...'
+  };
+
+  /**
+   * Extracts redefined exports like:
+   *   export { Column as CustomColumn } from 'x';
+   *   export { Foo } from 'y';
+   *   export * from 'z';
+   */
+  export const exportsRedefinedFromContent = (
+    fileContent: string,
+  ): RedefinedExportInfo[] => {
+    //#region @backendFunc
+    const sourceFile = createSourceFile(
+      'temp.ts',
+      fileContent,
+      ScriptTarget.Latest,
+      true,
+    );
+
+    const exports: RedefinedExportInfo[] = [];
+
+    const visit = (node: Node) => {
+      //#region @backendFunc
+      if (isExportDeclaration(node)) {
+        const from =
+          node.moduleSpecifier && isStringLiteral(node.moduleSpecifier)
+            ? node.moduleSpecifier.text
+            : null;
+
+        // export * from 'x'
+        if (!node.exportClause) {
+          exports.push({
+            exportedName: '*',
+            originalName: '*',
+            from,
+            isStarExport: true,
+          });
+        }
+
+        // export { A as B } from 'x'
+        if (node.exportClause && isNamedExports(node.exportClause)) {
+          for (const element of node.exportClause.elements) {
+            if (isExportSpecifier(element)) {
+              const originalName = element.propertyName
+                ? element.propertyName.text
+                : element.name.text;
+
+              const exportedName = element.name.text;
+
+              exports.push({
+                exportedName,
+                originalName,
+                from,
+                isStarExport: false,
+              });
+            }
+          }
+        }
+      }
+
+      forEachChild(node, visit);
+      //#endregion
+    };
+
+    visit(sourceFile);
+
+    return exports;
+    //#endregion
+  };
+
+  /**
+   * Function to extract exports from a TypeScript file
+   */
+  export const exportsRedefinedFromFile = (filePath: string): RedefinedExportInfo[] => {
+    //#region @backendFunc
+    if (!filePath.endsWith('.ts')) {
+      return [];
+    }
+    const file = Helpers.readFile(filePath);
+    return exportsRedefinedFromContent(file);
+    //#endregion
+  };
+
   //#endregion
 
   //#region extract class names from ts file or source code
@@ -803,8 +892,10 @@ export namespace UtilsTypescript {
       });
 
     // sequential, real await
-    await runEslintFix();
-    await runEslintFix(); // yes, sometimes eslint really needs a second pass 😐
+    try {
+      await runEslintFix();
+      await runEslintFix();
+    } catch (error) {}
 
     Helpers.info(`Eslint fixing files done.`);
     //#endregion
