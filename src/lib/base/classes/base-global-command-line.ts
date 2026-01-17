@@ -1699,6 +1699,7 @@ ${lastCommitMessage}
       return;
     }
     await this.project.lint();
+    this._exit();
     //#endregion
   }
   //#endregion
