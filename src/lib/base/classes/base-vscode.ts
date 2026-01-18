@@ -835,6 +835,10 @@ export class BaseVscodeHelpers<
       'javascript.suggest.autoImports': false,
     };
 
+    settings["files.associations"]  = {
+      "tsconfig.json": "json"
+    };
+
     settings['search.useIgnoreFiles'] = false;
     settings['search.include'] = ['**/src/**'];
     settings['search.exclude'] = {
