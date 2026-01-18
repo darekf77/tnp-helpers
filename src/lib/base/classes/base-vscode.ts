@@ -595,7 +595,7 @@ export class BaseVscodeHelpers<
       'typescript.referencesCodeLens.enabled': true,
       'git.autoRepositoryDetection': false,
       // Whether auto fetching is enabled.
-            'git.autofetch': false,
+      'git.autofetch': false,
       'gitlens.keymap': 'none',
       'gitlens.advanced.messages': {
         suppressCommitHasNoPreviousCommitWarning: false,
@@ -853,8 +853,8 @@ export class BaseVscodeHelpers<
       'javascript.suggest.autoImports': false,
     };
 
-    settings["files.associations"]  = {
-      "tsconfig.json": "json"
+    settings['files.associations'] = {
+      'tsconfig.json': 'json',
     };
 
     settings['search.useIgnoreFiles'] = false;
