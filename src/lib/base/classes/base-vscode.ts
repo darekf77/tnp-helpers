@@ -595,9 +595,7 @@ export class BaseVscodeHelpers<
       'typescript.referencesCodeLens.enabled': true,
       'git.autoRepositoryDetection': false,
       // Whether auto fetching is enabled.
-      'github.copilot.search.enable': false,
-      'github.copilot.chat.search.semanticTextResults': false,
-      'git.autofetch': false,
+            'git.autofetch': false,
       'gitlens.keymap': 'none',
       'gitlens.advanced.messages': {
         suppressCommitHasNoPreviousCommitWarning: false,
@@ -718,6 +716,26 @@ export class BaseVscodeHelpers<
       'workbench.secondarySideBar.defaultVisibility': 'hidden',
       'http.proxyStrictSSL': false,
       'telemetry.telemetryLevel': 'off',
+      // github copilot settings
+      'github.copilot.search.enable': false,
+      'github.copilot.chat.search.semanticTextResults': false,
+      'editor.inlineSuggest.enabled': true,
+      'editor.inlineSuggest.showToolbar': 'never',
+      'editor.inlineSuggest.suppressSuggestions': false,
+      'github.copilot.suggestionDelay': 75,
+      'github.copilot.chat.enabled': false,
+      'editor.semanticHighlighting.enabled': false,
+      'editor.tokenColorCustomizations': {
+        textMateRules: [
+          {
+            scope: 'meta.inline.completion',
+            settings: {
+              foreground: '#7a7a7a',
+              fontStyle: 'italic',
+            },
+          },
+        ],
+      },
     };
     //#endregion
 
