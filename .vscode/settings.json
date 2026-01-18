@@ -198,5 +198,9 @@
   "github.copilot.chat.languageContext.inline.typescript.enabled": true,
   "github.copilot.chat.languageContext.typescript.enabled": true,
   "typescript.suggest.autoImports": false,
-  "javascript.suggest.autoImports": false
+  "javascript.suggest.autoImports": false,
+
+  "files.associations": {
+    "tsconfig.json": "json"
+  }
 }

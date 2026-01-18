@@ -13,8 +13,7 @@ import type { BaseProjectResolver } from './base-project-resolver';
 export abstract class BaseCommandLineFeature<
   PARAMS extends {} = any,
   PROJECT extends BaseProject<any, any> = BaseProject,
-  PROJECT_RESOLVER extends
-    BaseProjectResolver<PROJECT> = BaseProjectResolver<PROJECT>,
+  PROJECT_RESOLVER extends BaseProjectResolver<PROJECT> = BaseProjectResolver<PROJECT>,
 > {
   /**
    * params from command line
@@ -35,7 +34,7 @@ export abstract class BaseCommandLineFeature<
   /**
    * clean args without params from command line
    */
-   args: string[];
+  args: string[];
   /**
    * first arg from args
    */
@@ -65,6 +64,19 @@ export abstract class BaseCommandLineFeature<
     this.__project = v;
   }
 
+  readonly classNameOfMethodToCall: string;
+
+  protected get allParamsAfterFrameworName(): string {
+    //#region @backendFunc
+    return [
+      `${_.kebabCase(this.classNameOfMethodToCall).toLowerCase()}:${
+        this.methodNameToCall
+      }`,
+      ...(this.argsWithParams || '')?.split(' '),
+    ].join(' ');
+    //#endregion
+  }
+
   constructor(
     public readonly argsWithParams: string,
     protected readonly methodNameToCall: string,
@@ -78,7 +90,6 @@ export abstract class BaseCommandLineFeature<
     protected cwd: string,
     ins: PROJECT_RESOLVER,
   ) {
-
     //#region @backend
     this.ins = ins;
     this.project = project;
@@ -110,6 +121,7 @@ export abstract class BaseCommandLineFeature<
 
     const firstArg = _.first(argsWithParams.split(' '));
     const method = methods.find(m => m === firstArg);
+    this.classNameOfMethodToCall = className;
     // console.log('className',className)
     if (method && !!className && !methodNameToCall) {
       // this prevents taon reset develop => to run: taon develop
@@ -117,6 +129,9 @@ export abstract class BaseCommandLineFeature<
       argsWithParams = argsWithParams.split(' ').slice(1).join(' ');
       this.argsWithParams = argsWithParams;
     }
+
+    this.argsWithParams = argsWithParams || '';
+    this.methodNameToCall = methodNameToCall;
 
     this.params =
       require('minimist')(
@@ -144,7 +159,9 @@ export abstract class BaseCommandLineFeature<
           this[methodNameToCall]();
         } else {
           Helpers.error(
-            `Class ${CLASS.getName(this as any)} doesn't have method '${methodNameToCall}'`,
+            `Class ${CLASS.getName(
+              this as any,
+            )} doesn't have method '${methodNameToCall}'`,
             false,
             true,
           );
@@ -156,7 +173,6 @@ export abstract class BaseCommandLineFeature<
     //#endregion
 
     //#endregion
-
   }
 
   public _exit(code = 0): void {
