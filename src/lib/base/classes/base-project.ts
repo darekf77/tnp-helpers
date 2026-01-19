@@ -17,7 +17,7 @@ import {
   UtilsTaonWorker,
   UtilsTypescript,
 } from '../../index';
-import { BaseProjectType, CommandActionType } from '../../models';
+import { BaseProjectType, CommandActionType, PushProcessOptions } from '../../models';
 
 import { BaseDocker } from './base-docker';
 import { BaseFileFoldersOperations } from './base-file-folders-operations';
@@ -1376,7 +1376,7 @@ Would you like to update current project configuration?`)
   /**
    * lint porject
    */
-  async lint(lintOptions?: any) {
+  async lint(lintOptions?: PushProcessOptions) {
     Helpers.info(`
 
     COMMIT LINT NOT IMPLEMENTED

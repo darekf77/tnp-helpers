@@ -1279,7 +1279,7 @@ Please provide proper commit message for lastest changes in your project:
     if (!skipLint) {
       while (true) {
         try {
-          await this.project.lint();
+          await this.project.lint(options);
           break;
         } catch (error) {
           Helpers.warn('Fix your code...');
