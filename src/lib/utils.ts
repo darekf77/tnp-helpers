@@ -78,6 +78,8 @@ import {
   getTrailingCommentRanges,
   isArrayLiteralExpression,
   isExportSpecifier,
+  flattenDiagnosticMessageText,
+  DiagnosticCategory,
 } from 'typescript';
 import type * as ts from 'typescript';
 import { CLASS } from 'typescript-class-helpers/src';
@@ -640,10 +642,10 @@ export namespace UtilsTypescript {
   //#endregion
 
   export type RedefinedExportInfo = {
-    exportedName: string;      // CustomColumn
-    originalName: string;      // Column
-    from: string | null;       // 'taon-typeorm/src'
-    isStarExport: boolean;     // export * from '...'
+    exportedName: string; // CustomColumn
+    originalName: string; // Column
+    from: string | null; // 'taon-typeorm/src'
+    isStarExport: boolean; // export * from '...'
   };
 
   /**
@@ -717,7 +719,9 @@ export namespace UtilsTypescript {
   /**
    * Function to extract exports from a TypeScript file
    */
-  export const exportsRedefinedFromFile = (filePath: string): RedefinedExportInfo[] => {
+  export const exportsRedefinedFromFile = (
+    filePath: string,
+  ): RedefinedExportInfo[] => {
     //#region @backendFunc
     if (!filePath.endsWith('.ts')) {
       return [];
@@ -2407,6 +2411,75 @@ export const ${projectName}Config = mergeApplicationConfig(
     return importsBlock + content;
     //#endregion
   };
+  //#endregion
+
+  //#region parse ts diagnostic
+  export interface ParsedTsDiagnostic {
+    code?: number | string;
+    category?: string;
+    message: string;
+    file?: string;
+    line?: number;
+    character?: number;
+  }
+
+  function categoryToString(cat?: number) {
+    return cat === DiagnosticCategory.Error
+      ? 'error'
+      : cat === DiagnosticCategory.Warning
+        ? 'warning'
+        : cat === DiagnosticCategory.Suggestion
+          ? 'suggestion'
+          : cat === DiagnosticCategory.Message
+            ? 'message'
+            : 'unknown';
+  }
+
+  export function parseTsDiagnostic(diagnostic: ts.Diagnostic | any): ParsedTsDiagnostic[] {
+    //#region @backendFunc
+    const out: ParsedTsDiagnostic[] = [];
+
+    const visit = (d: any) => {
+      if (!d) return;
+
+      // --- extract message ---
+      const message =
+        typeof d.messageText === 'string'
+          ? d.messageText
+          : flattenDiagnosticMessageText(d.messageText, '\n');
+
+      let file: string | undefined;
+      let line: number | undefined;
+      let character: number | undefined;
+
+      if (d.file && typeof d.start === 'number') {
+        const pos = d.file.getLineAndCharacterOfPosition(d.start);
+        file = d.file.fileName;
+        line = pos.line + 1;
+        character = pos.character + 1;
+      }
+
+      out.push({
+        code: d.code,
+        category: categoryToString(d.category),
+        message,
+        file,
+        line,
+        character,
+      });
+
+      // 🔴 THIS IS THE IMPORTANT PART
+      if (Array.isArray(d.relatedInformation)) {
+        for (const r of d.relatedInformation) {
+          visit(r);
+        }
+      }
+    };
+
+    visit(diagnostic);
+    return out;
+    //#endregion
+  }
   //#endregion
 }
 
