@@ -3,16 +3,38 @@
   "version": "v21",
 
   "dependenciesNamesForNpmLib": [
+    "7zip-bin",
+    "copy-paste",
+    "cross-spawn",
+    "dateformat",
+    "enquirer",
+    "esbuild",
+    "express",
+    "fs-extra",
+    "fuzzy",
+    "glob",
+    "ini",
+    "inquirer",
+    "inquirer-autocomplete-prompt",
+    "json5",
+    "minimist",
+    "open",
+    "rxjs",
+    "semver",
+    "simple-git",
+    "sloc",
     "task.js",
-    "json10-writer",
-    "lowdb",
+    "type-fest",
     "typescript",
-    "incremental-compiler",
+    "underscore",
+    "vscode",
+    "yauzl",
+    "yazl",
   ],
 
   "additionalNpmNames": ["taon-helpers"],
-
   "appId": "com.domain.example.tnp-helpers",
+
   "autoReleaseConfigAllowedItems": [
     {
       "artifactName": "npm-lib-and-cli-tool",
@@ -20,8 +42,18 @@
     },
   ],
 
-  "isomorphicDependenciesForNpmLib": ["taon"],
+  "isomorphicDependenciesForNpmLib": [
+    "incremental-compiler",
+    "json10-writer",
+    "magic-renamer",
+    "ng2-logger",
+    "taon",
+    "taon-typeorm",
+    "tnp-core",
+    "typescript-class-helpers",
+  ],
 
+  "peerDependenciesNamesForNpmLib": [],
   "resources": [],
 
   "packageJsonOverride": {
