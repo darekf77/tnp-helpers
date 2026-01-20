@@ -9,6 +9,7 @@ import {
   folderName,
   UtilsEtcHosts,
   UtilsExecProc,
+  UtilsFilesFoldersSync,
 } from 'tnp-core/src';
 import {
   chalk,
@@ -40,6 +41,7 @@ import {
   UtilsJava,
   UtilsVSCode,
   UtilsZip,
+  UtilsTypescript,
 } from '../../index';
 import { TypeOfCommit, CommitData } from '../commit-data';
 import { GhTempCode } from '../gh-temp-code';
@@ -3434,4 +3436,20 @@ ${lastCommitMessage}
     //#endregion
   }
   //#endregion
+
+  splitNamespace() {
+    //#region @backendFunc
+    let namespacePath = path.isAbsolute(this.firstArg)
+      ? crossPlatformPath(this.firstArg)
+      : crossPlatformPath([process.cwd(), this.firstArg]);
+
+    UtilsFilesFoldersSync.writeFile(
+      namespacePath,
+      UtilsTypescript.splitNamespaceForFile(namespacePath),
+    );
+    UtilsTypescript.formatFile(namespacePath);
+    Helpers.info(`Done`);
+    this._exit();
+    //#endregion
+  }
 }

@@ -10,6 +10,7 @@ import {
   chokidar,
   config,
   spawn,
+  TAGS,
   UtilsFilesFoldersSync,
 } from 'tnp-core/src';
 import {
@@ -26,6 +27,7 @@ import { _, CoreModels, Utils } from 'tnp-core/src';
 import {
   createPrinter,
   createSourceFile,
+  isShorthandPropertyAssignment,
   factory,
   getLeadingCommentRanges,
   isClassDeclaration,
@@ -74,12 +76,15 @@ import {
   isExpressionStatement,
   isPropertyDeclaration,
   isMethodDeclaration,
-  EmitHint,
   getTrailingCommentRanges,
   isArrayLiteralExpression,
   isExportSpecifier,
   flattenDiagnosticMessageText,
   DiagnosticCategory,
+  createProgram,
+  createCompilerHost,
+  isModuleBlock,
+  EmitHint,
 } from 'typescript';
 import type * as ts from 'typescript';
 import { CLASS } from 'typescript-class-helpers/src';
@@ -2435,7 +2440,9 @@ export const ${projectName}Config = mergeApplicationConfig(
             : 'unknown';
   }
 
-  export function parseTsDiagnostic(diagnostic: ts.Diagnostic | any): ParsedTsDiagnostic[] {
+  export function parseTsDiagnostic(
+    diagnostic: ts.Diagnostic | any,
+  ): ParsedTsDiagnostic[] {
     //#region @backendFunc
     const out: ParsedTsDiagnostic[] = [];
 
@@ -2481,6 +2488,381 @@ export const ${projectName}Config = mergeApplicationConfig(
     //#endregion
   }
   //#endregion
+
+  export const splitNamespaceForContent = (
+    content: string,
+  ): {
+    content: string;
+    namespacesMapObj: { [namespaceDotPath: string]: string };
+    namespacesReplace: { [rootNamespace: string]: string[] };
+  } => {
+    //#region @backendFunc
+    type Range = { start: number; end: number };
+    type Edit = { start: number; end: number; text: string };
+
+    const namespacesMapObj: { [k: string]: string } = {};
+    const namespacesReplace: { [k: string]: string[] } = {};
+
+    const inAnyRange = (pos: number, ranges: Range[]) =>
+      ranges.some(r => pos >= r.start && pos <= r.end);
+
+    const intersectsAnyRange = (
+      spanStart: number,
+      spanEnd: number,
+      ranges: Range[],
+    ) =>
+      ranges.some(
+        r => Math.max(spanStart, r.start) <= Math.min(spanEnd, r.end),
+      );
+
+    const applyEdits = (text: string, edits: Edit[]): string => {
+      edits.sort((a, b) => b.start - a.start);
+      let out = text;
+      for (const e of edits)
+        out = out.slice(0, e.start) + e.text + out.slice(e.end);
+      return out;
+    };
+
+    const regionRanges = [{ start: 0, end: content.length }];
+
+    // ---------------------------------------------
+    // Phase 1: Parse + TypeChecker
+    // ---------------------------------------------
+    // IMPORTANT: you already have these in your file (keep your import style):
+    // createSourceFile, ScriptTarget, ScriptKind, createProgram, createCompilerHost,
+    // isModuleDeclaration, isIdentifier, isModuleBlock, forEachChild,
+    // isVariableDeclaration, isFunctionDeclaration, isClassDeclaration,
+    // isInterfaceDeclaration, isTypeAliasDeclaration, isEnumDeclaration,
+    // isShorthandPropertyAssignment
+    const sourceFile = createSourceFile(
+      'file.ts',
+      content,
+      ScriptTarget.Latest,
+      true,
+      ScriptKind.TS,
+    );
+
+    const program = createProgram({
+      rootNames: ['file.ts'],
+      options: { target: ScriptTarget.ESNext } as any,
+      host: {
+        ...createCompilerHost({}),
+        getSourceFile: fileName =>
+          fileName === 'file.ts' ? sourceFile : (undefined as any),
+        readFile: () => content,
+        fileExists: () => true,
+        writeFile: () => {},
+        getCanonicalFileName: f => f,
+        getCurrentDirectory: () => '',
+        getNewLine: () => '\n',
+      },
+    });
+
+    const checker = program.getTypeChecker();
+
+    type NsCtx = { fullPrefix: string; dotPrefix: string };
+    const nsStack: NsCtx[] = [];
+    const symbolRename = new Map<ts.Symbol, string>();
+
+    // ---------------------------------------------
+    // Phase 2: Collect declarations inside namespaces (+ build maps)
+    // ---------------------------------------------
+    const collect = (node: ts.Node): void => {
+      const nodePos = node.getStart(sourceFile, false);
+
+      if (isModuleDeclaration(node) && node.name && isIdentifier(node.name)) {
+        const parent = nsStack[nsStack.length - 1];
+
+        const fullPrefix = parent
+          ? `${parent.fullPrefix}_${node.name.text}`
+          : node.name.text;
+        const dotPrefix = parent
+          ? `${parent.dotPrefix}.${node.name.text}`
+          : node.name.text;
+
+        nsStack.push({ fullPrefix, dotPrefix });
+
+        if (node.body && isModuleBlock(node.body)) {
+          for (const stmt of node.body.statements) collect(stmt);
+        } else {
+          forEachChild(node, collect);
+        }
+
+        nsStack.pop();
+        return;
+      }
+
+      const inNamespace = nsStack.length > 0;
+      const inRegion = inAnyRange(nodePos, regionRanges);
+
+      if (inNamespace && inRegion) {
+        if (
+          isVariableDeclaration(node) ||
+          isFunctionDeclaration(node) ||
+          isClassDeclaration(node) ||
+          isInterfaceDeclaration(node) ||
+          isTypeAliasDeclaration(node) ||
+          isEnumDeclaration(node)
+        ) {
+          const anyNode = node as any;
+          const name = anyNode.name;
+
+          if (name && isIdentifier(name)) {
+            const symbol = checker.getSymbolAtLocation(name);
+            const ctx = nsStack[nsStack.length - 1];
+
+            if (symbol && ctx) {
+              const newName = `${ctx.fullPrefix}_${name.text}`;
+              symbolRename.set(symbol, newName);
+
+              // Build dot-path mapping: Utils.Css.calc -> Utils_Css_calc
+              const dotKey = `${ctx.dotPrefix}.${name.text}`;
+              namespacesMapObj[dotKey] = newName;
+
+              // Build grouping by ROOT namespace: Utils -> [Utils_..., Utils_Css_...]
+              const root = ctx.fullPrefix.split('_')[0];
+              (namespacesReplace[root] ||= []).push(newName);
+            }
+          }
+        }
+      }
+
+      forEachChild(node, collect);
+    };
+
+    collect(sourceFile);
+
+    // Deduplicate namespacesReplace lists
+    for (const k of Object.keys(namespacesReplace)) {
+      namespacesReplace[k] = Array.from(new Set(namespacesReplace[k])).sort();
+    }
+
+    // ---------------------------------------------
+    // Phase 3: Rename ALL identifier occurrences via text edits
+    // ---------------------------------------------
+    const renameEdits: Edit[] = [];
+
+    const collectIdentifierEdits = (node: ts.Node): void => {
+      const nodePos = node.getStart(sourceFile, false);
+
+      if (!inAnyRange(nodePos, regionRanges)) {
+        forEachChild(node, collectIdentifierEdits);
+        return;
+      }
+
+      // Expand shorthand properties using getShorthandAssignmentValueSymbol
+      if (isShorthandPropertyAssignment(node)) {
+        const nameId = node.name;
+
+        const valueSymbol =
+          (checker as any).getShorthandAssignmentValueSymbol?.(node) ??
+          checker.getSymbolAtLocation(nameId);
+
+        const newName = valueSymbol ? symbolRename.get(valueSymbol) : undefined;
+
+        if (newName && nameId.text !== newName) {
+          const start = node.getStart(sourceFile, false);
+          const end = node.getEnd();
+          renameEdits.push({ start, end, text: `${nameId.text}: ${newName}` });
+          return;
+        }
+      }
+
+      if (isIdentifier(node)) {
+        const parent = node.parent;
+        if (
+          parent &&
+          isShorthandPropertyAssignment(parent) &&
+          parent.name === node
+        ) {
+          return;
+        }
+
+        const symbol = checker.getSymbolAtLocation(node);
+        const newName = symbol ? symbolRename.get(symbol) : undefined;
+
+        if (newName && node.text !== newName) {
+          const start = node.getStart(sourceFile, false);
+          const end = node.getEnd();
+          renameEdits.push({ start, end, text: newName });
+        }
+      }
+
+      forEachChild(node, collectIdentifierEdits);
+    };
+
+    collectIdentifierEdits(sourceFile);
+
+    const renamedContent = applyEdits(content, renameEdits);
+
+    const cleanupDoubledNamespaceReceiver = (text: string): string =>
+      text.replace(
+        /\b([A-Za-z_]\w*)\.\1_([A-Za-z_]\w*)\b/g,
+        (_m, ns, rest) => `${ns}_${rest}`,
+      );
+
+    const renamedContent2 = cleanupDoubledNamespaceReceiver(renamedContent);
+
+    // ---------------------------------------------
+    // Phase 4: Replace namespaces → regions (AFTER renames), via text edits
+    // ---------------------------------------------
+    const sf2 = createSourceFile(
+      'file.ts',
+      renamedContent2,
+      ScriptTarget.Latest,
+      true,
+      ScriptKind.TS,
+    );
+
+    const regionRanges2 = [{ start: 0, end: renamedContent2.length }];
+
+    type NsReplace = {
+      openStart: number;
+      openEnd: number;
+      closeStart: number;
+      closeEnd: number;
+      fullPrefix: string;
+    };
+
+    const nsReplaces: NsReplace[] = [];
+    const nsStack2: { fullPrefix: string }[] = [];
+
+    const findNamespaceBrace = (
+      node: ts.ModuleDeclaration,
+    ): { openBracePos: number; closeBracePos: number } | null => {
+      const text = renamedContent2;
+
+      const start = node.getStart(sf2, false);
+      const end = node.getEnd();
+
+      const slice = text.slice(start, end);
+      const firstBraceRel = slice.indexOf('{');
+      if (firstBraceRel < 0) return null;
+
+      const openBracePos = start + firstBraceRel;
+
+      let depth = 0;
+      for (let i = openBracePos; i < text.length; i++) {
+        const ch = text[i];
+        if (ch === '{') depth++;
+        else if (ch === '}') {
+          depth--;
+          if (depth === 0) return { openBracePos, closeBracePos: i };
+        }
+      }
+      return null;
+    };
+
+    const collectNamespaceReplaces = (node: ts.Node): void => {
+      const nodePos = node.getStart(sf2, false);
+
+      if (isModuleDeclaration(node) && node.name && isIdentifier(node.name)) {
+        const parent = nsStack2[nsStack2.length - 1];
+        const fullPrefix = parent
+          ? `${parent.fullPrefix}_${node.name.text}`
+          : node.name.text;
+
+        nsStack2.push({ fullPrefix });
+
+        const inRegion = intersectsAnyRange(
+          node.getStart(sf2, false),
+          node.getEnd(),
+          regionRanges2,
+        );
+
+        if (inRegion) {
+          const brace = findNamespaceBrace(node);
+          if (brace && node.body && isModuleBlock(node.body)) {
+            const openStart = node.getStart(sf2, false);
+            const openEnd = brace.openBracePos + 1;
+            const closeStart = brace.closeBracePos;
+            const closeEnd = closeStart + 1;
+
+            nsReplaces.push({
+              openStart,
+              openEnd,
+              closeStart,
+              closeEnd,
+              fullPrefix,
+            });
+          }
+        }
+
+        if (node.body && isModuleBlock(node.body)) {
+          for (const stmt of node.body.statements)
+            collectNamespaceReplaces(stmt);
+        } else {
+          forEachChild(node, collectNamespaceReplaces);
+        }
+
+        nsStack2.pop();
+        return;
+      }
+
+      forEachChild(node, collectNamespaceReplaces);
+    };
+
+    collectNamespaceReplaces(sf2);
+
+    const nsEdits: Edit[] = [];
+    nsReplaces.sort((a, b) => b.openStart - a.openStart);
+
+    for (const ns of nsReplaces) {
+      nsEdits.push({
+        start: ns.openStart,
+        end: ns.openEnd,
+        text: `//namespace ${ns.fullPrefix}\n`,
+      });
+      nsEdits.push({
+        start: ns.closeStart,
+        end: ns.closeEnd,
+        text: `\n//end of namespace ${ns.fullPrefix}\n`,
+      });
+    }
+
+    let finalContent = applyEdits(renamedContent2, nsEdits);
+
+    const keyPaths = Object.keys(namespacesMapObj).sort((a, b) => {
+      const aParts = a.split('.').length;
+      const bParts = b.split('.').length;
+
+      // 1) deeper first (more dots)
+      if (aParts !== bParts) return bParts - aParts;
+
+      // 2) longer first
+      if (a.length !== b.length) return b.length - a.length;
+
+      // 3) stable fallback
+      return a.localeCompare(b);
+    });
+
+    for (const keyPath of keyPaths) {
+      finalContent = finalContent.replace(
+        new RegExp(`\\b${Utils.escapeStringForRegEx(keyPath)}\\b`, 'g'),
+        namespacesMapObj[keyPath],
+      );
+    }
+
+    // console.log({
+    //   namespacesMapObj,
+    //   namespacesReplace
+    // })
+
+    return {
+      content: finalContent,
+      namespacesMapObj,
+      namespacesReplace,
+    };
+
+    //#endregion
+  };
+
+  export const splitNamespaceForFile = (fileAbsPath: string): string => {
+    //#region @backendFunc
+    return splitNamespaceForContent(UtilsFilesFoldersSync.readFile(fileAbsPath))
+      .content;
+    //#endregion
+  };
 }
 
 //#endregion
@@ -4115,6 +4497,7 @@ export namespace UtilsFileSync {
   };
   //#endregion
 }
+//#endregion
 
 export namespace UtilsClipboard {
   export const copyText = async (textToCopy: string): Promise<void> => {
