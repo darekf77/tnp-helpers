@@ -91,6 +91,11 @@ import { CLASS } from 'typescript-class-helpers/src';
 import type * as vscodeType from 'vscode';
 
 import { Helpers } from './index';
+import {
+  applicationConfigTemplate,
+  ngMergeConfigTemplate,
+  serverNgPartTemplates,
+} from './utils-helpers/application-config-template';
 //#endregion
 
 //#region utils npm
@@ -2289,56 +2294,15 @@ export namespace UtilsTypescript {
     // ------------------------------------------------------------------
 
     if (!text.includes(`${projectName}ServerConfig`)) {
-      text += `
-
-    export const ${projectName}AppConfig: ApplicationConfig = {
-      providers: [
-        {
-          provide: APP_INITIALIZER,
-          multi: true,
-          useFactory: () => ${projectName}StartFunction,
-        },
-        provideBrowserGlobalErrorListeners(),
-        provideRouter(${projectName}ClientRoutes),
-        provideClientHydration(withEventReplay()),
-        provideServiceWorker('ngsw-worker.js', {
-          enabled: !isDevMode(),
-          registrationStrategy: 'registerWhenStable:30000',
-        }),
-      ]
-    }
-    `;
+      text += applicationConfigTemplate(projectName);
     }
 
     if (!text.includes(`${projectName}ServerConfig`)) {
-      text += `
-
-  export const ${projectName}ServerRoutes: ServerRoute[] = [
-  {
-    path: '**',
-    renderMode: RenderMode.Prerender,
-  },
-];
-
-  export const ${projectName}ServerConfig: ApplicationConfig = {
-    providers: [
-      provideServerRendering(
-        withRoutes(${projectName}ServerRoutes),
-      ),
-    ],
-  };
-  `;
+      text += serverNgPartTemplates(projectName);
     }
 
     if (!text.includes(`${projectName}Config`)) {
-      text += `
-
-export const ${projectName}Config = mergeApplicationConfig(
-  ${projectName}AppConfig,
-  ${projectName}ServerConfig,
-);
-
-    `;
+      text += ngMergeConfigTemplate(projectName);
     }
 
     return text;
