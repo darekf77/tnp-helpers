@@ -1,6 +1,9 @@
 import { Utils, _ } from 'tnp-core/src';
 export class HelpersStringsRegexes {
 
+  /**
+   * @depecated use Utils.escapeStringForRegEx
+   */
   escapeStringForRegEx(s: string) {
     return Utils.escapeStringForRegEx(s);
   }
