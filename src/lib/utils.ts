@@ -85,6 +85,8 @@ import {
   createCompilerHost,
   isModuleBlock,
   EmitHint,
+  getModifiers,
+  canHaveModifiers,
 } from 'typescript';
 import type * as ts from 'typescript';
 import { CLASS } from 'typescript-class-helpers/src';
@@ -2453,14 +2455,54 @@ export namespace UtilsTypescript {
   }
   //#endregion
 
+  export interface SplitNamespaceResult {
+    content?: string;
+    /**
+     * EXAMPLE:
+     *  namespacesMapObj: {
+     *  'Utils.wait': 'Utils_wait',
+     *  'Utils.waitMilliseconds': 'Utils_waitMilliseconds',
+     *  'Utils.uniqArray': 'Utils_uniqArray',
+     *  'Utils.seen': 'Utils_seen',
+     *  'Utils.sortKeys': 'Utils_sortKeys',
+     * }
+     */
+    namespacesMapObj: { [namespaceDotPath: string]: string };
+    /**
+     * namespacesReplace: {
+     *  Utils: [
+     *  'Utils_DbBinaryFormat',
+     *  'Utils_DbBinaryFormatEnum',
+     *  'Utils_DbBinaryFormatForBackend',
+     *  'Utils_DbBinaryFormatForBrowser',
+     *  'Utils_ansiRegex',
+     *  'Utils_binary_arrayBuffer',
+     *  'Utils_binary_arrayBufferToBlob',
+     *  'Utils_binary_base64toBlob',
+     *  'Utils_binary_base64toBuffer',
+     *  ],
+     *  UtilsCliClassMethod: [
+     *  'UtilsCliClassMethod_CLI_METHOD_KEY',
+     *  'UtilsCliClassMethod_argsToParse',
+     *  'UtilsCliClassMethod_classFnConstructor',
+     *  'UtilsCliClassMethod_className',
+     *  'UtilsCliClassMethod_decoratorMethod',
+     *  ]
+     * }
+     */
+    namespacesReplace: { [rootNamespace: string]: string[] };
+  }
+
   export const splitNamespaceForContent = (
     content: string,
-  ): {
-    content: string;
-    namespacesMapObj: { [namespaceDotPath: string]: string };
-    namespacesReplace: { [rootNamespace: string]: string[] };
-  } => {
+  ): SplitNamespaceResult => {
     //#region @backendFunc
+
+    // content = content.replace(
+    //   /^.*\/\/#(?:region|end(?:region|reigon)).*\r?\n?/gm,
+    //   '\n',
+    // );
+
     type Range = { start: number; end: number };
     type Edit = { start: number; end: number; text: string };
 
@@ -2559,14 +2601,48 @@ export namespace UtilsTypescript {
       const inNamespace = nsStack.length > 0;
       const inRegion = inAnyRange(nodePos, regionRanges);
 
+      const hasExportModifier = (n: ts.Node): boolean => {
+        // Some nodes (declarations/statements) have modifiers; Node in general doesn't.
+        const mods = canHaveModifiers(n) ? getModifiers(n) : undefined;
+        return !!mods?.some(m => m.kind === SyntaxKind.ExportKeyword);
+      };
+
+      const isNamespaceApiDecl = (
+        n: ts.Node,
+      ): n is
+        | ts.FunctionDeclaration
+        | ts.ClassDeclaration
+        | ts.InterfaceDeclaration
+        | ts.TypeAliasDeclaration
+        | ts.EnumDeclaration => {
+        return (
+          isFunctionDeclaration(n) ||
+          isClassDeclaration(n) ||
+          isInterfaceDeclaration(n) ||
+          isTypeAliasDeclaration(n) ||
+          isEnumDeclaration(n)
+        );
+      };
+
+      // export const/let/var Foo = ...
+      const isExportedVarInNamespace = (
+        n: ts.Node,
+      ): n is ts.VariableDeclaration => {
+        // only variables declared via `export const/let/var ...` statement
+        if (!isVariableDeclaration(n)) return false;
+
+        const declList = n.parent; // VariableDeclarationList
+        const varStmt = declList?.parent; // VariableStatement
+        if (!varStmt || !isVariableStatement(varStmt)) return false;
+
+        return hasExportModifier(varStmt);
+      };
+
       if (inNamespace && inRegion) {
+        // ✅ only namespace API: exported declarations
         if (
-          isVariableDeclaration(node) ||
-          isFunctionDeclaration(node) ||
-          isClassDeclaration(node) ||
-          isInterfaceDeclaration(node) ||
-          isTypeAliasDeclaration(node) ||
-          isEnumDeclaration(node)
+          (isNamespaceApiDecl(node) && hasExportModifier(node)) ||
+          isExportedVarInNamespace(node)
         ) {
           const anyNode = node as any;
           const name = anyNode.name;
@@ -2579,11 +2655,9 @@ export namespace UtilsTypescript {
               const newName = `${ctx.fullPrefix}_${name.text}`;
               symbolRename.set(symbol, newName);
 
-              // Build dot-path mapping: Utils.Css.calc -> Utils_Css_calc
               const dotKey = `${ctx.dotPrefix}.${name.text}`;
               namespacesMapObj[dotKey] = newName;
 
-              // Build grouping by ROOT namespace: Utils -> [Utils_..., Utils_Css_...]
               const root = ctx.fullPrefix.split('_')[0];
               (namespacesReplace[root] ||= []).push(newName);
             }
@@ -2633,6 +2707,11 @@ export namespace UtilsTypescript {
       }
 
       if (isIdentifier(node)) {
+        // 🔥 do NOT rename `this` (it can resolve to the containing class symbol in type positions)
+        if (node.text === 'this' || node.text === 'super') {
+          return;
+        }
+
         const parent = node.parent;
         if (
           parent &&
@@ -2691,31 +2770,31 @@ export namespace UtilsTypescript {
     const nsReplaces: NsReplace[] = [];
     const nsStack2: { fullPrefix: string }[] = [];
 
-    const findNamespaceBrace = (
-      node: ts.ModuleDeclaration,
-    ): { openBracePos: number; closeBracePos: number } | null => {
-      const text = renamedContent2;
+    // const findNamespaceBrace = (
+    //   node: ts.ModuleDeclaration,
+    // ): { openBracePos: number; closeBracePos: number } | null => {
+    //   const text = renamedContent2;
 
-      const start = node.getStart(sf2, false);
-      const end = node.getEnd();
+    //   const start = node.getStart(sf2, false);
+    //   const end = node.getEnd();
 
-      const slice = text.slice(start, end);
-      const firstBraceRel = slice.indexOf('{');
-      if (firstBraceRel < 0) return null;
+    //   const slice = text.slice(start, end);
+    //   const firstBraceRel = slice.indexOf('{');
+    //   if (firstBraceRel < 0) return null;
 
-      const openBracePos = start + firstBraceRel;
+    //   const openBracePos = start + firstBraceRel;
 
-      let depth = 0;
-      for (let i = openBracePos; i < text.length; i++) {
-        const ch = text[i];
-        if (ch === '{') depth++;
-        else if (ch === '}') {
-          depth--;
-          if (depth === 0) return { openBracePos, closeBracePos: i };
-        }
-      }
-      return null;
-    };
+    //   let depth = 0;
+    //   for (let i = openBracePos; i < text.length; i++) {
+    //     const ch = text[i];
+    //     if (ch === '{') depth++;
+    //     else if (ch === '}') {
+    //       depth--;
+    //       if (depth === 0) return { openBracePos, closeBracePos: i };
+    //     }
+    //   }
+    //   return null;
+    // };
 
     const collectNamespaceReplaces = (node: ts.Node): void => {
       const nodePos = node.getStart(sf2, false);
@@ -2735,12 +2814,16 @@ export namespace UtilsTypescript {
         );
 
         if (inRegion) {
-          const brace = findNamespaceBrace(node);
-          if (brace && node.body && isModuleBlock(node.body)) {
+          // const brace = findNamespaceBrace(node);
+          if (node.body && isModuleBlock(node.body)) {
+            // AST-accurate braces for the namespace block
+            const openBracePos = node.body.getStart(sf2, false); // points at '{'
+            const closeBracePos = node.body.getEnd() - 1; // points at '}'
+
             const openStart = node.getStart(sf2, false);
-            const openEnd = brace.openBracePos + 1;
-            const closeStart = brace.closeBracePos;
-            const closeEnd = closeStart + 1;
+            const openEnd = openBracePos + 1; // consume '{'
+            const closeStart = closeBracePos; // consume '}'
+            const closeEnd = closeBracePos + 1;
 
             nsReplaces.push({
               openStart,
@@ -2786,31 +2869,15 @@ export namespace UtilsTypescript {
 
     let finalContent = applyEdits(renamedContent2, nsEdits);
 
-    const keyPaths = Object.keys(namespacesMapObj).sort((a, b) => {
-      const aParts = a.split('.').length;
-      const bParts = b.split('.').length;
-
-      // 1) deeper first (more dots)
-      if (aParts !== bParts) return bParts - aParts;
-
-      // 2) longer first
-      if (a.length !== b.length) return b.length - a.length;
-
-      // 3) stable fallback
-      return a.localeCompare(b);
-    });
-
-    for (const keyPath of keyPaths) {
-      finalContent = finalContent.replace(
-        new RegExp(`\\b${Utils.escapeStringForRegEx(keyPath)}\\b`, 'g'),
-        namespacesMapObj[keyPath],
-      );
-    }
+    // finalContent = replaceNamespaceWithLongNames(
+    //   finalContent,
+    //   namespacesMapObj,
+    // );
 
     // console.log({
     //   namespacesMapObj,
-    //   namespacesReplace
-    // })
+    //   namespacesReplace,
+    // });
 
     return {
       content: finalContent,
@@ -2827,6 +2894,192 @@ export namespace UtilsTypescript {
       .content;
     //#endregion
   };
+
+  export const replaceNamespaceWithLongNames = (
+    content: string,
+    namespacesMapObj: SplitNamespaceResult['namespacesMapObj'],
+  ): string => {
+    //#region @backendFunc
+    if (!content || Object.keys(namespacesMapObj || {}).length === 0) {
+      return content;
+    }
+    const keyPaths = Object.keys(namespacesMapObj).sort((a, b) => {
+      const aParts = a.split('.').length;
+      const bParts = b.split('.').length;
+
+      // 1) deeper first (more dots)
+      if (aParts !== bParts) return bParts - aParts;
+
+      // 2) longer first
+      if (a.length !== b.length) return b.length - a.length;
+
+      // 3) stable fallback
+      return a.localeCompare(b);
+    });
+
+    for (const keyPath of keyPaths) {
+      content = content.replace(
+        new RegExp(`\\b${Utils.escapeStringForRegEx(keyPath)}\\b`, 'g'),
+        namespacesMapObj[keyPath],
+      );
+    }
+    return content;
+    //#endregion
+  };
+
+  export const replaceImportNamespaceWithWithExplodedNamespace = (
+    content: string,
+    namespacesReplace: Record<string, string[]>,
+    replaceInAllImports = false,
+  ): string => {
+    //#region @backendFunc
+    if (
+      !content ||
+      !namespacesReplace ||
+      Object.keys(namespacesReplace).length === 0
+    ) {
+      return content;
+    }
+
+    type Edit = { start: number; end: number; text: string };
+    const edits: Edit[] = [];
+
+    const sf = createSourceFile(
+      'file.ts',
+      content,
+      ScriptTarget.Latest,
+      true,
+      ScriptKind.TS,
+    );
+
+    const trim = (s: string) => s.trim();
+    const uniq = <T>(arr: T[]) => Array.from(new Set(arr));
+    const sortStable = (arr: string[]) =>
+      [...arr].sort((a, b) => a.localeCompare(b));
+    const getText = (n: ts.Node) =>
+      content.slice(n.getStart(sf, false), n.getEnd());
+
+    // Precompute:
+    // - ns -> exploded[]
+    // - explodedName -> rootNs
+    const nsToExploded = new Map<string, string[]>();
+    const explodedToNs = new Map<string, string>();
+
+    for (const [ns, explodedRaw] of Object.entries(namespacesReplace)) {
+      const exploded = sortStable(
+        uniq((explodedRaw || []).map(trim).filter(Boolean)),
+      );
+      if (exploded.length === 0) continue;
+
+      nsToExploded.set(ns, exploded);
+      for (const ex of exploded) {
+        // first wins if collisions (shouldn't happen)
+        if (!explodedToNs.has(ex)) explodedToNs.set(ex, ns);
+      }
+    }
+
+    const addEditsFromNamedImports = (named: ts.NamedImports) => {
+      const elements = [...named.elements];
+
+      // importedName -> spec info
+      // handles: import { Utils as U } from ...
+      const existing = new Map<
+        string,
+        { imported: string; local: string; text: string }
+      >();
+
+      for (const el of elements) {
+        const imported = el.propertyName ? el.propertyName.text : el.name.text;
+        const local = el.name.text;
+        existing.set(imported, { imported, local, text: getText(el) });
+      }
+
+      // Decide which namespaces to explode in THIS import clause
+      const namespacesToExplode = new Set<string>();
+
+      if (!replaceInAllImports) {
+        // old mode: explode only if namespace itself is imported
+        for (const ns of nsToExploded.keys()) {
+          if (existing.has(ns)) namespacesToExplode.add(ns);
+        }
+      } else {
+        // new mode: explode if either:
+        // - namespace itself is imported, OR
+        // - any exploded symbol from that namespace is imported
+        for (const [name] of existing) {
+          const ns = explodedToNs.get(name);
+          if (ns) namespacesToExplode.add(ns);
+        }
+        for (const ns of nsToExploded.keys()) {
+          if (existing.has(ns)) namespacesToExplode.add(ns);
+        }
+      }
+
+      if (namespacesToExplode.size === 0) return;
+
+      // Build final specifier list:
+      // - remove namespace symbol if present (Utils) (and also if aliased like `Utils as U`)
+      // - keep everything else as-is (preserve original text)
+      // - add missing exploded symbols for chosen namespaces
+      const toRemove = new Set<string>(); // imported names to remove
+      const toAdd: string[] = [];
+
+      for (const ns of namespacesToExplode) {
+        // remove the namespace import if present
+        if (existing.has(ns)) toRemove.add(ns);
+
+        const exploded = nsToExploded.get(ns) || [];
+        for (const ex of exploded) {
+          if (!existing.has(ex)) toAdd.push(ex);
+        }
+      }
+
+      // Rebuild kept specifiers (preserve formatting/comments per-element)
+      const keptTexts: string[] = [];
+      for (const el of elements) {
+        const imported = el.propertyName ? el.propertyName.text : el.name.text;
+        if (!toRemove.has(imported)) keptTexts.push(getText(el));
+      }
+
+      const finalParts = [...keptTexts, ...sortStable(uniq(toAdd))];
+
+      // If we'd end up with empty `{ }`, leave unchanged to avoid invalid import.
+      if (finalParts.length === 0) return;
+
+      const newNamed = `{ ${finalParts.join(', ')} }`;
+
+      edits.push({
+        start: named.getStart(sf, false),
+        end: named.getEnd(),
+        text: newNamed,
+      });
+    };
+
+    const visit = (node: ts.Node): void => {
+      if (isImportDeclaration(node)) {
+        const clause = node.importClause;
+        if (clause?.namedBindings && isNamedImports(clause.namedBindings)) {
+          addEditsFromNamedImports(clause.namedBindings);
+        }
+        // ignore: import * as X from '...'
+        // ignore: dynamic import/require per your note
+      }
+      forEachChild(node, visit);
+    };
+
+    visit(sf);
+
+    if (edits.length === 0) return content;
+
+    edits.sort((a, b) => b.start - a.start);
+    let out = content;
+    for (const e of edits)
+      out = out.slice(0, e.start) + e.text + out.slice(e.end);
+    return out;
+    //#endregion
+  };
+
+  //#endregion
 }
 
 //#endregion

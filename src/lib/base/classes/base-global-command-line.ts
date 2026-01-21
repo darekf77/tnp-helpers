@@ -3437,17 +3437,32 @@ ${lastCommitMessage}
   }
   //#endregion
 
+  splitNamespaces() {
+    this.splitNamespace();
+  }
+
   splitNamespace() {
     //#region @backendFunc
     let namespacePath = path.isAbsolute(this.firstArg)
       ? crossPlatformPath(this.firstArg)
       : crossPlatformPath([process.cwd(), this.firstArg]);
 
-    UtilsFilesFoldersSync.writeFile(
-      namespacePath,
-      UtilsTypescript.splitNamespaceForFile(namespacePath),
+    const splitData = UtilsTypescript.splitNamespaceForContent(
+      Helpers.readFile(namespacePath),
     );
-    UtilsTypescript.formatFile(namespacePath);
+
+    UtilsFilesFoldersSync.writeFile(
+      namespacePath.replace('.ts', '.split-namespace.ts'),
+      splitData.content,
+    );
+    UtilsTypescript.formatFile(
+      namespacePath.replace('.ts', '.split-namespace.ts'),
+    );
+    Helpers.writeJson(namespacePath.replace('.ts', '.split-namespace.json'), {
+      namespacesMapObj: splitData.namespacesMapObj,
+      namespacesReplace: splitData.namespacesReplace,
+    });
+
     Helpers.info(`Done`);
     this._exit();
     //#endregion
