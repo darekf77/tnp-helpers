@@ -2455,6 +2455,7 @@ export namespace UtilsTypescript {
   }
   //#endregion
 
+  //#region spliting namespaces
   export interface SplitNamespaceResult {
     content?: string;
     /**
@@ -2973,16 +2974,20 @@ export namespace UtilsTypescript {
 
       nsToExploded.set(ns, exploded);
       for (const ex of exploded) {
-        // first wins if collisions (shouldn't happen)
         if (!explodedToNs.has(ex)) explodedToNs.set(ex, ns);
       }
     }
 
-    const addEditsFromNamedImports = (named: ts.NamedImports) => {
-      const elements = [...named.elements];
+    // Works for both ImportSpecifier and ExportSpecifier:
+    // - imported/original name: propertyName ?? name
+    // - local/exported name: name
+    type Spec = ts.ImportSpecifier | ts.ExportSpecifier;
 
-      // importedName -> spec info
-      // handles: import { Utils as U } from ...
+    const rewriteNamedSpecifiers = (
+      named: ts.NamedImports | ts.NamedExports,
+      elements: readonly Spec[],
+    ) => {
+      // imported/original -> { local/exported, text }
       const existing = new Map<
         string,
         { imported: string; local: string; text: string }
@@ -2994,18 +2999,18 @@ export namespace UtilsTypescript {
         existing.set(imported, { imported, local, text: getText(el) });
       }
 
-      // Decide which namespaces to explode in THIS import clause
+      // Decide which namespaces to explode in THIS clause
       const namespacesToExplode = new Set<string>();
 
       if (!replaceInAllImports) {
-        // old mode: explode only if namespace itself is imported
+        // explode only if namespace symbol itself is present
         for (const ns of nsToExploded.keys()) {
           if (existing.has(ns)) namespacesToExplode.add(ns);
         }
       } else {
-        // new mode: explode if either:
-        // - namespace itself is imported, OR
-        // - any exploded symbol from that namespace is imported
+        // explode if either:
+        // - namespace itself is present, OR
+        // - any exploded symbol from that namespace is present
         for (const [name] of existing) {
           const ns = explodedToNs.get(name);
           if (ns) namespacesToExplode.add(ns);
@@ -3017,24 +3022,21 @@ export namespace UtilsTypescript {
 
       if (namespacesToExplode.size === 0) return;
 
-      // Build final specifier list:
-      // - remove namespace symbol if present (Utils) (and also if aliased like `Utils as U`)
-      // - keep everything else as-is (preserve original text)
-      // - add missing exploded symbols for chosen namespaces
-      const toRemove = new Set<string>(); // imported names to remove
+      const toRemove = new Set<string>();
       const toAdd: string[] = [];
 
       for (const ns of namespacesToExplode) {
-        // remove the namespace import if present
+        // remove the namespace specifier if present (even if aliased)
         if (existing.has(ns)) toRemove.add(ns);
 
+        // add missing exploded
         const exploded = nsToExploded.get(ns) || [];
         for (const ex of exploded) {
           if (!existing.has(ex)) toAdd.push(ex);
         }
       }
 
-      // Rebuild kept specifiers (preserve formatting/comments per-element)
+      // Keep everything not removed (preserve original formatting per-element)
       const keptTexts: string[] = [];
       for (const el of elements) {
         const imported = el.propertyName ? el.propertyName.text : el.name.text;
@@ -3043,9 +3045,11 @@ export namespace UtilsTypescript {
 
       const finalParts = [...keptTexts, ...sortStable(uniq(toAdd))];
 
-      // If we'd end up with empty `{ }`, leave unchanged to avoid invalid import.
+      // Avoid producing empty braces
       if (finalParts.length === 0) return;
 
+      // NOTE: if someone had `export { Utils as X } ...` we remove that specifier,
+      // and we export exploded names as-is (no aliasing). Same for import alias.
       const newNamed = `{ ${finalParts.join(', ')} }`;
 
       edits.push({
@@ -3056,14 +3060,25 @@ export namespace UtilsTypescript {
     };
 
     const visit = (node: ts.Node): void => {
+      // ----- imports -----
       if (isImportDeclaration(node)) {
         const clause = node.importClause;
         if (clause?.namedBindings && isNamedImports(clause.namedBindings)) {
-          addEditsFromNamedImports(clause.namedBindings);
+          rewriteNamedSpecifiers(
+            clause.namedBindings,
+            clause.namedBindings.elements,
+          );
         }
-        // ignore: import * as X from '...'
-        // ignore: dynamic import/require per your note
       }
+
+      // ----- exports -----
+      if (isExportDeclaration(node)) {
+        // ignore: export * from '...'
+        if (node.exportClause && isNamedExports(node.exportClause)) {
+          rewriteNamedSpecifiers(node.exportClause, node.exportClause.elements);
+        }
+      }
+
       forEachChild(node, visit);
     };
 
@@ -3071,6 +3086,7 @@ export namespace UtilsTypescript {
 
     if (edits.length === 0) return content;
 
+    // apply edits back-to-front
     edits.sort((a, b) => b.start - a.start);
     let out = content;
     for (const e of edits)
@@ -3078,7 +3094,6 @@ export namespace UtilsTypescript {
     return out;
     //#endregion
   };
-
   //#endregion
 }
 
