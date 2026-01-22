@@ -33,7 +33,7 @@ import { HelpersNumber } from './helpers-numbers';
 
 //#region @browser
 import { HelpersBrowser } from './for-browser/helpers-browser';
-import { HelpersAngular } from './for-browser/angular.helper';
+// import { HelpersAngular } from './for-browser/angular.helper';
 //#endregion
 
 //#endregion
@@ -99,7 +99,7 @@ export class HelpersTaon extends CoreHelpers {
 
     //#region @browser
     public browser = HelpersBrowser.instance,
-    public ng = HelpersAngular,
+    // public ng = HelpersAngular,
     //#endregion
 
   ) {

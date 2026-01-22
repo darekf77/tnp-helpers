@@ -87,6 +87,7 @@ import {
   EmitHint,
   getModifiers,
   canHaveModifiers,
+  isImportEqualsDeclaration,
 } from 'typescript';
 import type * as ts from 'typescript';
 import { CLASS } from 'typescript-class-helpers/src';
@@ -1529,6 +1530,83 @@ export namespace UtilsTypescript {
 
   //#endregion
 
+  //#region extract renamed imports or exports
+  export type RenamedImportOrExport = {
+    elementName: string; // original/imported/exported-from name
+    renamedAs: string; // local/exported-as name
+    packageName?: string; // module specifier text without quotes (if any)
+  };
+
+  export const extractRenamedImportsOrExport = (
+    content: string,
+  ): RenamedImportOrExport[] => {
+    //#region @backendFunc
+    if (!content?.trim()) return [];
+
+    const sf = createSourceFile(
+      'file.ts',
+      content,
+      ScriptTarget.Latest,
+      true,
+      ScriptKind.TS,
+    );
+
+    const out: RenamedImportOrExport[] = [];
+
+    const pushIfRenamed = (
+      elementName: string,
+      renamedAs: string,
+      packageName?: string,
+    ) => {
+      if (!elementName || !renamedAs) return;
+      if (elementName === renamedAs) return; // only renamed ones
+      out.push({ elementName, renamedAs, packageName });
+    };
+
+    const visit = (node: ts.Node): void => {
+      // import { A as B } from 'pkg'
+      if (isImportDeclaration(node)) {
+        const pkg =
+          node.moduleSpecifier && isStringLiteral(node.moduleSpecifier)
+            ? node.moduleSpecifier.text
+            : undefined;
+
+        const clause = node.importClause;
+        const named = clause?.namedBindings;
+        if (named && isNamedImports(named)) {
+          for (const el of named.elements) {
+            if (!el.propertyName) continue; // not renamed
+            pushIfRenamed(el.propertyName.text, el.name.text, pkg);
+          }
+        }
+      }
+
+      // export { A as B } [from 'pkg']
+      if (isExportDeclaration(node)) {
+        const pkg =
+          node.moduleSpecifier && isStringLiteral(node.moduleSpecifier)
+            ? node.moduleSpecifier.text
+            : undefined;
+
+        const clause = node.exportClause;
+        if (clause && isNamedExports(clause)) {
+          for (const el of clause.elements) {
+            if (!el.propertyName) continue; // not renamed
+            pushIfRenamed(el.propertyName.text, el.name.text, pkg);
+          }
+        }
+      }
+
+      forEachChild(node, visit);
+    };
+
+    visit(sf);
+    return out;
+    //#endregion
+  };
+
+  //#endregion
+
   //#region transform Angular component standalone option
   /**
    * Transition methods ng18 => ng19
@@ -2615,13 +2693,15 @@ export namespace UtilsTypescript {
         | ts.ClassDeclaration
         | ts.InterfaceDeclaration
         | ts.TypeAliasDeclaration
-        | ts.EnumDeclaration => {
+        | ts.EnumDeclaration
+        | ts.ImportEqualsDeclaration => {
         return (
           isFunctionDeclaration(n) ||
           isClassDeclaration(n) ||
           isInterfaceDeclaration(n) ||
           isTypeAliasDeclaration(n) ||
-          isEnumDeclaration(n)
+          isEnumDeclaration(n) ||
+          isImportEqualsDeclaration(n)
         );
       };
 
@@ -2930,7 +3010,9 @@ export namespace UtilsTypescript {
 
   export const replaceImportNamespaceWithWithExplodedNamespace = (
     content: string,
-    namespacesReplace: Record<string, string[]>,
+    namespacesReplace: SplitNamespaceResult['namespacesReplace'],
+    renamedImportsOrExports: RenamedImportOrExport[],
+    currentPackageName: string,
     replaceInAllImports = false,
   ): string => {
     //#region @backendFunc
@@ -2941,6 +3023,51 @@ export namespace UtilsTypescript {
     ) {
       return content;
     }
+
+    // ------------------------------------------------------------
+    // Source filtering
+    // ------------------------------------------------------------
+
+    const isRelative = (spec?: ts.Expression): boolean =>
+      !!spec &&
+      isStringLiteral(spec) &&
+      (spec.text.startsWith('./') || spec.text.startsWith('../'));
+
+    const isAllowedImportSource = (
+      moduleSpecifier?: ts.Expression,
+    ): boolean => {
+      if (!moduleSpecifier || !isStringLiteral(moduleSpecifier)) return false;
+
+      const spec = moduleSpecifier.text;
+
+      // always allow current package (and subpaths)
+      if (
+        spec === currentPackageName ||
+        spec.startsWith(currentPackageName + '/')
+      ) {
+        return true;
+      }
+
+      // allow relative traversal only when explicitly enabled
+      if (replaceInAllImports && isRelative(moduleSpecifier)) {
+        return true;
+      }
+
+      return false;
+    };
+
+    const aliasMap = new Map<string, string>();
+
+    for (const r of renamedImportsOrExports) {
+      if (!r?.elementName || !r?.renamedAs) continue;
+      if (r.packageName && r.packageName !== currentPackageName) continue;
+
+      aliasMap.set(r.elementName, r.renamedAs);
+    }
+
+    // ------------------------------------------------------------
+    // Setup
+    // ------------------------------------------------------------
 
     type Edit = { start: number; end: number; text: string };
     const edits: Edit[] = [];
@@ -2960,34 +3087,45 @@ export namespace UtilsTypescript {
     const getText = (n: ts.Node) =>
       content.slice(n.getStart(sf, false), n.getEnd());
 
-    // Precompute:
-    // - ns -> exploded[]
-    // - explodedName -> rootNs
-    const nsToExploded = new Map<string, string[]>();
-    const explodedToNs = new Map<string, string>();
+    // ------------------------------------------------------------
+    // Precompute namespace explosion tables
+    // ------------------------------------------------------------
 
-    for (const [ns, explodedRaw] of Object.entries(namespacesReplace)) {
+    // root namespace -> exploded symbols
+    const nsToExploded = new Map<string, string[]>();
+
+    // exploded symbol -> root namespace
+    const explodedToRootNs = new Map<string, string>();
+
+    for (const [rootNs, explodedRaw] of Object.entries(namespacesReplace)) {
       const exploded = sortStable(
         uniq((explodedRaw || []).map(trim).filter(Boolean)),
       );
       if (exploded.length === 0) continue;
 
-      nsToExploded.set(ns, exploded);
+      nsToExploded.set(rootNs, exploded);
       for (const ex of exploded) {
-        if (!explodedToNs.has(ex)) explodedToNs.set(ex, ns);
+        if (!explodedToRootNs.has(ex)) {
+          explodedToRootNs.set(ex, rootNs);
+        }
       }
     }
 
-    // Works for both ImportSpecifier and ExportSpecifier:
-    // - imported/original name: propertyName ?? name
-    // - local/exported name: name
+    // ------------------------------------------------------------
+    // Specifier rewrite (imports + exports)
+    // ------------------------------------------------------------
+
     type Spec = ts.ImportSpecifier | ts.ExportSpecifier;
 
     const rewriteNamedSpecifiers = (
       named: ts.NamedImports | ts.NamedExports,
       elements: readonly Spec[],
     ) => {
-      // imported/original -> { local/exported, text }
+      /**
+       * LOCAL name -> metadata
+       * - imported: original exported name
+       * - local: identifier used in this file
+       */
       const existing = new Map<
         string,
         { imported: string; local: string; text: string }
@@ -2996,60 +3134,99 @@ export namespace UtilsTypescript {
       for (const el of elements) {
         const imported = el.propertyName ? el.propertyName.text : el.name.text;
         const local = el.name.text;
-        existing.set(imported, { imported, local, text: getText(el) });
+        existing.set(local, { imported, local, text: getText(el) });
       }
 
-      // Decide which namespaces to explode in THIS clause
-      const namespacesToExplode = new Set<string>();
+      /**
+       * Which LOCAL namespaces should be exploded
+       * (important: explosion is driven by local alias!)
+       */
+      const localsToExplode = new Set<string>();
 
       if (!replaceInAllImports) {
         // explode only if namespace symbol itself is present
-        for (const ns of nsToExploded.keys()) {
-          if (existing.has(ns)) namespacesToExplode.add(ns);
+        for (const { imported, local } of existing.values()) {
+          if (nsToExploded.has(imported)) {
+            localsToExplode.add(local);
+          }
         }
       } else {
-        // explode if either:
+        // explode if:
         // - namespace itself is present, OR
         // - any exploded symbol from that namespace is present
-        for (const [name] of existing) {
-          const ns = explodedToNs.get(name);
-          if (ns) namespacesToExplode.add(ns);
-        }
-        for (const ns of nsToExploded.keys()) {
-          if (existing.has(ns)) namespacesToExplode.add(ns);
+        for (const { imported, local } of existing.values()) {
+          if (nsToExploded.has(imported)) {
+            localsToExplode.add(local);
+            continue;
+          }
+
+          const rootNs = explodedToRootNs.get(imported);
+          if (rootNs) {
+            localsToExplode.add(local);
+          }
         }
       }
 
-      if (namespacesToExplode.size === 0) return;
+      if (localsToExplode.size === 0) return;
 
-      const toRemove = new Set<string>();
+      // ------------------------------------------------------------
+      // Build replacement
+      // ------------------------------------------------------------
+
+      const toRemove = new Set<string>(); // LOCAL names
       const toAdd: string[] = [];
 
-      for (const ns of namespacesToExplode) {
-        // remove the namespace specifier if present (even if aliased)
-        if (existing.has(ns)) toRemove.add(ns);
+      for (const localNs of localsToExplode) {
+        const meta = existing.get(localNs);
+        if (!meta) continue;
 
-        // add missing exploded
-        const exploded = nsToExploded.get(ns) || [];
+        const rootNs = meta.imported;
+
+        // remove the namespace specifier itself
+        toRemove.add(localNs);
+
+        const exploded = nsToExploded.get(rootNs) || [];
+
+        // rewrite exploded symbol to use LOCAL alias
+        // const localEx = ex.startsWith(rootNs + '_')
+        //   ? localNs + '_' + ex.slice(rootNs.length + 1)
+        //   : ex;
+
+        // if (!existing.has(localEx)) {
+        //   toAdd.push(localEx);
+        // }
+
+        const aliasLocalNs = aliasMap.get(rootNs); // Models → ModelsNg2Rest
+
         for (const ex of exploded) {
-          if (!existing.has(ex)) toAdd.push(ex);
+          if (!ex.startsWith(rootNs + '_')) continue;
+
+          const localName = aliasLocalNs
+            ? aliasLocalNs + '_' + ex.slice(rootNs.length + 1)
+            : ex;
+
+          const finalImport = aliasLocalNs
+            ? `${ex} as ${localName}` // 🔥 THIS IS THE FIX
+            : localName;
+
+          if (!existing.has(localName)) {
+            toAdd.push(finalImport);
+          }
         }
       }
 
-      // Keep everything not removed (preserve original formatting per-element)
+      // keep all non-removed specifiers (preserve formatting)
       const keptTexts: string[] = [];
       for (const el of elements) {
-        const imported = el.propertyName ? el.propertyName.text : el.name.text;
-        if (!toRemove.has(imported)) keptTexts.push(getText(el));
+        const local = el.name.text;
+        if (!toRemove.has(local)) {
+          keptTexts.push(getText(el));
+        }
       }
 
       const finalParts = [...keptTexts, ...sortStable(uniq(toAdd))];
-
-      // Avoid producing empty braces
       if (finalParts.length === 0) return;
 
-      // NOTE: if someone had `export { Utils as X } ...` we remove that specifier,
-      // and we export exploded names as-is (no aliasing). Same for import alias.
       const newNamed = `{ ${finalParts.join(', ')} }`;
 
       edits.push({
@@ -3059,9 +3236,15 @@ export namespace UtilsTypescript {
       });
     };
 
+    // ------------------------------------------------------------
+    // AST traversal
+    // ------------------------------------------------------------
+
     const visit = (node: ts.Node): void => {
       // ----- imports -----
       if (isImportDeclaration(node)) {
+        if (!isAllowedImportSource(node.moduleSpecifier)) return;
+
         const clause = node.importClause;
         if (clause?.namedBindings && isNamedImports(clause.namedBindings)) {
           rewriteNamedSpecifiers(
@@ -3073,7 +3256,8 @@ export namespace UtilsTypescript {
 
       // ----- exports -----
       if (isExportDeclaration(node)) {
-        // ignore: export * from '...'
+        if (!isAllowedImportSource(node.moduleSpecifier)) return;
+
         if (node.exportClause && isNamedExports(node.exportClause)) {
           rewriteNamedSpecifiers(node.exportClause, node.exportClause.elements);
         }
@@ -3086,15 +3270,104 @@ export namespace UtilsTypescript {
 
     if (edits.length === 0) return content;
 
-    // apply edits back-to-front
+    // ------------------------------------------------------------
+    // Apply edits back-to-front
+    // ------------------------------------------------------------
+
     edits.sort((a, b) => b.start - a.start);
     let out = content;
-    for (const e of edits)
+    for (const e of edits) {
       out = out.slice(0, e.start) + e.text + out.slice(e.end);
+    }
+
     return out;
     //#endregion
   };
   //#endregion
+
+  export const updateSplitNamespaceResultMapReplaceObj = (
+    result: SplitNamespaceResult,
+    renamedList: RenamedImportOrExport[],
+  ): SplitNamespaceResult => {
+    //#region @backendFunc
+    if (!result) {
+      return { namespacesMapObj: {}, namespacesReplace: {} };
+    }
+    if (!Array.isArray(renamedList) || renamedList.length === 0) {
+      return result;
+    }
+
+    // shallow clone once
+    const next: SplitNamespaceResult = {
+      namespacesMapObj: { ...result.namespacesMapObj },
+      namespacesReplace: { ...result.namespacesReplace },
+      content: result.content,
+    };
+
+    const uniqSorted = (arr: string[]) => Array.from(new Set(arr)).sort();
+
+    const applyOne = (renamed: RenamedImportOrExport) => {
+      const elementName = renamed?.elementName?.trim();
+      const renamedAs = renamed?.renamedAs?.trim();
+
+      if (!elementName || !renamedAs || elementName === renamedAs) return;
+
+      const prefixDot = `${elementName}.`;
+      const prefixUnder = `${elementName}_`;
+      const newPrefixDot = `${renamedAs}.`;
+      const newPrefixUnder = `${renamedAs}_`;
+
+      // ---------- 1️⃣ namespacesReplace (CLONE, do NOT delete original)
+      const srcReplace = next.namespacesReplace[elementName];
+      if (srcReplace) {
+        const dst = next.namespacesReplace[renamedAs] || [];
+        next.namespacesReplace[renamedAs] = uniqSorted([
+          ...dst,
+          ...srcReplace.map(v =>
+            v.startsWith(prefixUnder)
+              ? newPrefixUnder + v.slice(prefixUnder.length)
+              : v,
+          ),
+        ]);
+      }
+
+      // ---------- 2️⃣ namespacesMapObj (CLONE entries)
+      const additions: SplitNamespaceResult['namespacesMapObj'] = {};
+
+      for (const [k, v] of Object.entries(next.namespacesMapObj)) {
+        if (k === elementName) {
+          additions[renamedAs] = renamedAs;
+          continue;
+        }
+
+        if (k.startsWith(prefixDot)) {
+          const newK = newPrefixDot + k.slice(prefixDot.length);
+          const newV = v.startsWith(prefixUnder)
+            ? newPrefixUnder + v.slice(prefixUnder.length)
+            : v;
+
+          additions[newK] = newV;
+        }
+      }
+
+      // merge additions (do NOT replace whole object)
+      next.namespacesMapObj = {
+        ...next.namespacesMapObj,
+        ...additions,
+      };
+    };
+
+    // Apply in order (important if multiple aliases chain)
+    for (const r of renamedList) applyOne(r);
+
+    // Final dedupe/sort for all replace lists (in case merges happened)
+    for (const k of Object.keys(next.namespacesReplace)) {
+      next.namespacesReplace[k] = uniqSorted(next.namespacesReplace[k] || []);
+    }
+
+    return next;
+    //#endregion
+  };
 }
 
 //#endregion
