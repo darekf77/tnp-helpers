@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Taon, TaonMigration, TaonBaseMigration } from 'taon/src';
 import { QueryRunner } from 'taon-typeorm/src';
 

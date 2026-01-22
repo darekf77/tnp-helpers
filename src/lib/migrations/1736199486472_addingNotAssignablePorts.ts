@@ -2,7 +2,7 @@
 import { Taon, TaonMigration, TaonBaseMigration } from 'taon/src';
 import { _ } from 'tnp-core/src';
 import { QueryRunner } from 'taon-typeorm/src';
-import { Port, TaonPortsController } from '../lib';
+import { Port, TaonPortsController } from '../base/tcp-udp-ports';
 
 const portsWithDescription = {
   3000: 'Commonly used for development servers',
@@ -27,9 +27,7 @@ const portsWithDescription = {
 @TaonMigration({
   className: 'TaonPortsContext_1736199486472_addingNotAssignablePorts',
 })
-export class TaonPortsContext_1736199486472_addingNotAssignablePorts
-  extends TaonBaseMigration
-{
+export class TaonPortsContext_1736199486472_addingNotAssignablePorts extends TaonBaseMigration {
   protected portsController: TaonPortsController =
     this.injectController(TaonPortsController);
 

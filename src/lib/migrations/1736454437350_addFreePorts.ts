@@ -2,7 +2,7 @@
 import { Taon,TaonMigration, TaonBaseMigration } from 'taon/src';
 import { QueryRunner } from 'taon-typeorm/src';
 import { _ } from 'tnp-core/src';
-import { Port, TaonPortsController } from '../lib';
+import { Port, TaonPortsController } from '../base/tcp-udp-ports';
 
 @TaonMigration({
   className: 'TaonPortsContext_1736454437350_addFreePorts',

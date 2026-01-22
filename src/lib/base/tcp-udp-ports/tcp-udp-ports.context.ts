@@ -2,7 +2,7 @@ import { TaonBaseContext, Taon } from 'taon/src';
 import { os, UtilsOs } from 'tnp-core/src';
 import { crossPlatformPath, path, Helpers } from 'tnp-core/src';
 
-import { MIGRATIONS_CLASSES_FOR_TaonPortsContext } from '../../../migrations';
+import { MIGRATIONS_CLASSES_FOR_TaonPortsContext } from '../../migrations';
 import { getBaseCliWorkerDatabaseConfig } from '../classes/base-cli-worker/base-cli-worker-database-config';
 
 import { TaonPortsController } from './ports.controller';
