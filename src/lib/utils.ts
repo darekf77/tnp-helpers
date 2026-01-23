@@ -2533,6 +2533,8 @@ export namespace UtilsTypescript {
   }
   //#endregion
 
+  export const NSSPLITNAMESAPCE = '__NS__';
+
   //#region spliting namespaces
   export interface SplitNamespaceResult {
     content?: string;
@@ -2659,7 +2661,7 @@ export namespace UtilsTypescript {
         const parent = nsStack[nsStack.length - 1];
 
         const fullPrefix = parent
-          ? `${parent.fullPrefix}_${node.name.text}`
+          ? `${parent.fullPrefix}${NSSPLITNAMESAPCE}${node.name.text}`
           : node.name.text;
         const dotPrefix = parent
           ? `${parent.dotPrefix}.${node.name.text}`
@@ -2733,13 +2735,13 @@ export namespace UtilsTypescript {
             const ctx = nsStack[nsStack.length - 1];
 
             if (symbol && ctx) {
-              const newName = `${ctx.fullPrefix}_${name.text}`;
+              const newName = `${ctx.fullPrefix}${NSSPLITNAMESAPCE}${name.text}`;
               symbolRename.set(symbol, newName);
 
               const dotKey = `${ctx.dotPrefix}.${name.text}`;
               namespacesMapObj[dotKey] = newName;
 
-              const root = ctx.fullPrefix.split('_')[0];
+              const root = ctx.fullPrefix.split(NSSPLITNAMESAPCE)[0];
               (namespacesReplace[root] ||= []).push(newName);
             }
           }
@@ -2821,8 +2823,11 @@ export namespace UtilsTypescript {
 
     const cleanupDoubledNamespaceReceiver = (text: string): string =>
       text.replace(
-        /\b([A-Za-z_]\w*)\.\1_([A-Za-z_]\w*)\b/g,
-        (_m, ns, rest) => `${ns}_${rest}`,
+        new RegExp(
+          `\\b([A-Za-z_]\\w*)\\.\\1${Utils.escapeStringForRegEx(NSSPLITNAMESAPCE)}([A-Za-z_]\\w*)\\b`,
+          'g',
+        ),
+        (_m, ns, rest) => `${ns}${NSSPLITNAMESAPCE}${rest}`,
       );
 
     const renamedContent2 = cleanupDoubledNamespaceReceiver(renamedContent);
@@ -2878,12 +2883,12 @@ export namespace UtilsTypescript {
     // };
 
     const collectNamespaceReplaces = (node: ts.Node): void => {
-      const nodePos = node.getStart(sf2, false);
+      // const nodePos = node.getStart(sf2, false);
 
       if (isModuleDeclaration(node) && node.name && isIdentifier(node.name)) {
         const parent = nsStack2[nsStack2.length - 1];
         const fullPrefix = parent
-          ? `${parent.fullPrefix}_${node.name.text}`
+          ? `${parent.fullPrefix}${NSSPLITNAMESAPCE}${node.name.text}`
           : node.name.text;
 
         nsStack2.push({ fullPrefix });
@@ -3199,12 +3204,13 @@ export namespace UtilsTypescript {
         const aliasLocalNs = aliasMap.get(rootNs); // Models → ModelsNg2Rest
 
         for (const ex of exploded) {
-          if (!ex.startsWith(rootNs + '_')) continue;
+          if (!ex.startsWith(rootNs + NSSPLITNAMESAPCE)) continue;
 
           const localName = aliasLocalNs
-            ? aliasLocalNs + '_' + ex.slice(rootNs.length + 1)
+            ? aliasLocalNs +
+              NSSPLITNAMESAPCE +
+              ex.slice(rootNs.length + NSSPLITNAMESAPCE.length)
             : ex;
-
           const finalImport = aliasLocalNs
             ? `${ex} as ${localName}` // 🔥 THIS IS THE FIX
             : localName;
@@ -3313,9 +3319,9 @@ export namespace UtilsTypescript {
       if (!elementName || !renamedAs || elementName === renamedAs) return;
 
       const prefixDot = `${elementName}.`;
-      const prefixUnder = `${elementName}_`;
+      const prefixUnder = `${elementName}${NSSPLITNAMESAPCE}`;
       const newPrefixDot = `${renamedAs}.`;
-      const newPrefixUnder = `${renamedAs}_`;
+      const newPrefixUnder = `${renamedAs}${NSSPLITNAMESAPCE}`;
 
       // ---------- 1️⃣ namespacesReplace (CLONE, do NOT delete original)
       const srcReplace = next.namespacesReplace[elementName];
@@ -3342,10 +3348,10 @@ export namespace UtilsTypescript {
 
         if (k.startsWith(prefixDot)) {
           const newK = newPrefixDot + k.slice(prefixDot.length);
-          const newV = v.startsWith(prefixUnder)
-            ? newPrefixUnder + v.slice(prefixUnder.length)
-            : v;
-
+          const newV = v.replace(
+            new RegExp(`^${Utils.escapeStringForRegEx(prefixUnder)}`),
+            newPrefixUnder,
+          );
           additions[newK] = newV;
         }
       }

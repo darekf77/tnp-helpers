@@ -128,6 +128,7 @@ taon-config-container.schema.json
     const files = this.project.git.stagedFiles.filter(f => Helpers.exists(f));
 
     const allRelatives = files
+      .filter(f => !f.endsWith('.pot')) // TODO QUICK_FIX
       .map(f => f.replace(this.project.location + '/', ''))
       .join(' ');
 
