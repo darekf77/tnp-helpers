@@ -1,8 +1,8 @@
 //#region imports
-import { config, UtilsOs } from 'tnp-core/src';
+import { Helpers, config, UtilsOs } from 'tnp-core/src';
 import { CoreModels, chalk, dateformat, _, UtilsTerminal } from 'tnp-core/src';
 
-import { Helpers } from '../../index';
+import {  HelpersTaon } from '../../index';
 import type { ChangelogData } from '../../models';
 import { CommitData } from '../commit-data';
 
@@ -63,7 +63,7 @@ export class BaseReleaseProcess<
     if (useAllCommitsForChangelog) {
       return data;
     }
-    const choices = await Helpers.consoleGui.multiselect(
+    const choices = await HelpersTaon.consoleGui.multiselect(
       'Select commits to add to changelog',
       data.map(d => {
         return {
@@ -214,7 +214,7 @@ export class BaseReleaseProcess<
         )
       ) {
         if (!(await this.testLibraries())) {
-          Helpers.pressKeyOrWait(
+          HelpersTaon.pressKeyOrWait(
             `Test failed.. starting release again.. press any key to continue`,
           );
           return false;
@@ -238,7 +238,7 @@ export class BaseReleaseProcess<
         )
       ) {
         if (!(await this.testLibraries())) {
-          Helpers.pressKeyOrWait(
+          HelpersTaon.pressKeyOrWait(
             `Test failed.. starting release again.. press any key to continue`,
           );
           return false;
@@ -384,7 +384,7 @@ export class BaseReleaseProcess<
       if (confirm) {
         break;
       } else {
-        newVersion = await Helpers.consoleGui.input({
+        newVersion = await UtilsTerminal.input({
           question: 'Provide proper new version and press enter',
           defaultValue: originalNewVersion,
           validate(value: string) {
@@ -446,7 +446,7 @@ export class BaseReleaseProcess<
       },
     ];
     const selected =
-      await Helpers.consoleGui.select<CoreModels.ReleaseVersionType>(
+      await HelpersTaon.consoleGui.select<CoreModels.ReleaseVersionType>(
         `${ options?.quesitonPrefixMessage ? `[${options.quesitonPrefixMessage}] `:''}Select release type`,
         selectMenuReleaseOpt,
       );
@@ -594,7 +594,7 @@ export class BaseReleaseProcess<
       );
       const itemIsOK = await Helpers.questionYesNo('Is this item OK ?');
       if (!itemIsOK) {
-        const confirm = await Helpers.consoleGui.input({
+        const confirm = await UtilsTerminal.input({
           question: 'Provide proper changelog item or press enter to confirm',
           defaultValue: result,
           // required: false,

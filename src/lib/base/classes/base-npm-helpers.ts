@@ -9,10 +9,8 @@ import {
   path,
 } from 'tnp-core/src';
 import { _ } from 'tnp-core/src';
-import { CoreModels } from 'tnp-core/src';
+import { CoreModels, Helpers } from 'tnp-core/src';
 import { PackageJson } from 'type-fest';
-
-import { Helpers } from '../../index';
 
 import { BaseBowerJson } from './base-bower-json';
 import { BaseFeatureForProject } from './base-feature-for-project';

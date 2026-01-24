@@ -1,7 +1,7 @@
-import { config, dotTaonFolder } from 'tnp-core/src';
+import { config, dotTaonFolder, Helpers } from 'tnp-core/src';
 import { crossPlatformPath, os, path, UtilsOs } from 'tnp-core/src';
 
-import { Helpers } from '../index';
+import { HelpersTaon } from '../index';
 
 import { BaseProject } from './classes/base-project';
 
@@ -71,7 +71,7 @@ export class GhTempCode {
     for (let index = 0; index < changes.length; index++) {
       const filesAbs = changes[index];
       if (!Helpers.isFolder(filesAbs)) {
-        Helpers.copyFile(
+        HelpersTaon.copyFile(
           filesAbs,
           crossPlatformPath([this.tempPathRepo, changesRelative[index]]),
         );
@@ -93,7 +93,7 @@ export class GhTempCode {
     //#region @backendFunc
     Helpers.run(`git reset --soft HEAD~1`, { cwd: this.tempPathRepo }).sync();
     Helpers.info(`Restored last commit in ${this.tempPathRepo}...`);
-    const { created, modified } = Helpers.git.getListOfCurrentGitChanges(
+    const { created, modified } = HelpersTaon.git.getListOfCurrentGitChanges(
       this.tempPathRepo,
     );
     const filesToRestore = [...created, ...modified].map(f =>
@@ -105,7 +105,7 @@ export class GhTempCode {
     for (let index = 0; index < filesToRestore.length; index++) {
       const filesAbs = filesToRestore[index];
       if (!Helpers.isFolder(filesAbs)) {
-        Helpers.copyFile(
+        HelpersTaon.copyFile(
           filesAbs,
           crossPlatformPath([this.cwd, filesToRestoreRelative[index]]),
         );

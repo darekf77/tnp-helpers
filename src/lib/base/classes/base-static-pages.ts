@@ -1,8 +1,8 @@
 //#region imports
-import { config } from 'tnp-core/src';
+import { Helpers, config } from 'tnp-core/src';
 import { path } from 'tnp-core/src';
 
-import { Helpers } from '../../index';
+import { HelpersTaon } from '../../index';
 
 import { BaseFeatureForProject } from './base-feature-for-project';
 import type { BaseProject } from './base-project';
@@ -66,13 +66,13 @@ export class BaseStaticPages<
       mainFolder,
     ]);
     if (!Helpers.exists(tempRepoPath)) {
-      await Helpers.git.clone({
+      await HelpersTaon.git.clone({
         cwd: this.project.pathFor(this.TMP_STATIC_PAGE_SITE_REPOS),
         url: this.project.git.originURL,
         destinationFolderName: mainFolder,
       });
     }
-    Helpers.git.checkout(tempRepoPath, this.pagesBranchName, {
+    HelpersTaon.git.checkout(tempRepoPath, this.pagesBranchName, {
       createBranchIfNotExists: true,
       switchBranchWhenExists: true,
     });
@@ -83,16 +83,16 @@ export class BaseStaticPages<
       Helpers.filesFrom(currentDocsFolderAbsPath).length > 0 &&
       Helpers.exists([currentDocsFolderAbsPath, 'index.html'])
     ) {
-      Helpers.copy(currentDocsFolderAbsPath, tempRepoPath, {
+      HelpersTaon.copy(currentDocsFolderAbsPath, tempRepoPath, {
         recursive: true,
         overwrite: true,
       });
     }
     if (completeProcess) {
-      Helpers.git.stageAllFiles(tempRepoPath);
-      Helpers.git.commit(tempRepoPath, 'update docs');
+      HelpersTaon.git.stageAllFiles(tempRepoPath);
+      HelpersTaon.git.commit(tempRepoPath, 'update docs');
       try {
-        await Helpers.git.pushCurrentBranch(tempRepoPath);
+        await HelpersTaon.git.pushCurrentBranch(tempRepoPath);
       } catch (error) {
         Helpers.error(
           `Cannot push to ${this.pagesBranchName} branch`,

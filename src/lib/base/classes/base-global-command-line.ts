@@ -7,6 +7,7 @@ import {
   config,
   fileName,
   folderName,
+  Helpers,
   UtilsEtcHosts,
   UtilsExecProc,
   UtilsFilesFoldersSync,
@@ -35,7 +36,7 @@ import { UtilsSudo } from 'tnp-core/src';
 import {
   CommandActionType,
   BaseCLiWorkerStartMode,
-  Helpers,
+  HelpersTaon,
   LinkedProject,
   PushProcessOptions,
   UtilsJava,
@@ -159,7 +160,7 @@ export class BaseGlobalCommandLine<
   //#region commands / count commits
   countCommits() {
     //#region @backendFunc
-    console.log(Helpers.git.countCommits(this.cwd));
+    console.log(HelpersTaon.git.countCommits(this.cwd));
     this._exit();
     //#endregion
   }
@@ -583,13 +584,13 @@ export class BaseGlobalCommandLine<
 
     Helpers.taskStarted(`searching for project...`);
     // @ts-ignore
-    const results = Helpers.uniqArray<BaseProject>(
+    const results = Utils.uniqArray<BaseProject>(
       [
-        ...Helpers.arrays.fuzzy(this.args.join(' '), founded, p => p.name)
+        ...HelpersTaon.arrays.fuzzy(this.args.join(' '), founded, p => p.name)
           .results,
-        ...Helpers.arrays.fuzzy(this.args.join(' '), founded, p => p.basename)
+        ...HelpersTaon.arrays.fuzzy(this.args.join(' '), founded, p => p.basename)
           .results,
-        ...Helpers.arrays.fuzzy(this.args.join(' '), founded, p => p.location)
+        ...HelpersTaon.arrays.fuzzy(this.args.join(' '), founded, p => p.location)
           .results,
       ],
       'location',
@@ -620,7 +621,7 @@ export class BaseGlobalCommandLine<
       );
     } else {
       Helpers.info(`Opening console gui to select project...`);
-      const res = await Helpers.consoleGui.select(
+      const res = await HelpersTaon.consoleGui.select(
         'Select project to open',
         results.map(p => {
           return {
@@ -771,7 +772,7 @@ export class BaseGlobalCommandLine<
     const resetOnlyChildren =
       !!this.project.linkedProjects.getLinkedProjectsConfig().resetOnlyChildren;
 
-    const branches = Helpers.uniqArray([
+    const branches = Utils.uniqArray([
       ...this.__filterBranchesByPattern(overrideBranchToReset),
       ...this.__filterBranchesByPattern(''),
     ]);
@@ -1126,7 +1127,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
           continueForce: { name: 'Continue (without checking)' },
           exit: { name: 'Exit process' },
         };
-        const res = await Helpers.selectChoicesAsk(
+        const res = await HelpersTaon.selectChoicesAsk(
           'What you want to do ?',
           Object.keys(options).map(k => {
             return { name: options[k].name, value: k };
@@ -1594,17 +1595,17 @@ ${lastCommitMessage}
     //#region @backendFunc
     let newOriginNameOrUrl: string = this.firstArg;
     if (newOriginNameOrUrl === 'ssh') {
-      newOriginNameOrUrl = Helpers.git.originHttpToSsh(
-        Helpers.git.getOriginURL(this.cwd),
+      newOriginNameOrUrl = HelpersTaon.git.originHttpToSsh(
+        HelpersTaon.git.getOriginURL(this.cwd),
       );
     }
     if (newOriginNameOrUrl === 'http') {
-      newOriginNameOrUrl = Helpers.git.originSshToHttp(
-        Helpers.git.getOriginURL(this.cwd),
+      newOriginNameOrUrl = HelpersTaon.git.originSshToHttp(
+        HelpersTaon.git.getOriginURL(this.cwd),
       );
     }
 
-    if (Helpers.git.isInsideGitRepo(this.cwd)) {
+    if (HelpersTaon.git.isInsideGitRepo(this.cwd)) {
       Helpers.run(`git remote rm origin`, { cwd: this.cwd }).sync();
       Helpers.run(`git remote add origin ${newOriginNameOrUrl} `, {
         cwd: this.cwd,
@@ -1682,7 +1683,7 @@ ${lastCommitMessage}
   CHECK_TAG_EXISTS() {
     //#region @backendFunc
     Helpers.info(
-      `tag "${this.firstArg}"  exits = ${Helpers.git.checkTagExists(
+      `tag "${this.firstArg}"  exits = ${HelpersTaon.git.checkTagExists(
         this.firstArg,
       )} `,
     );
@@ -1819,7 +1820,7 @@ ${lastCommitMessage}
         config.file.package_json,
       ]);
     });
-    console.log('\n' + Helpers.terminalLine());
+    console.log('\n' + HelpersTaon.terminalLine());
     Helpers.info(
       libs.length
         ? libs
@@ -1852,7 +1853,7 @@ ${lastCommitMessage}
   async changes() {
     //#region @backendFunc
     Helpers.info(await this.project.git.changesSummary());
-    Helpers.terminalLine();
+    HelpersTaon.terminalLine();
     for (const chil of this.project.children) {
       Helpers.info(await chil.git.changesSummary());
     }
@@ -1867,7 +1868,7 @@ ${lastCommitMessage}
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
-    const allTags = await Helpers.git.getAllTags(this.cwd);
+    const allTags = await HelpersTaon.git.getAllTags(this.cwd);
     console.log(allTags);
     this._exit();
     //#endregion
@@ -1879,7 +1880,7 @@ ${lastCommitMessage}
     //#region @backendFunc
     let tagToRemove = this.firstArg;
     if (!tagToRemove) {
-      const allTags = await Helpers.git.getAllTags(this.cwd);
+      const allTags = await HelpersTaon.git.getAllTags(this.cwd);
       tagToRemove = await UtilsTerminal.select({
         question: `Select tag to remove`,
         autocomplete: true,
@@ -1889,7 +1890,7 @@ ${lastCommitMessage}
       });
     }
 
-    Helpers.git.removeTag(this.cwd, tagToRemove);
+    HelpersTaon.git.removeTag(this.cwd, tagToRemove);
     this._exit();
     //#endregion
   }
@@ -1899,7 +1900,7 @@ ${lastCommitMessage}
   BRANCH_NAME() {
     //#region @backendFunc
     console.log(
-      `current branch name: "${Helpers.git.currentBranchName(process.cwd())}"`,
+      `current branch name: "${HelpersTaon.git.currentBranchName(process.cwd())}"`,
     );
     this._exit();
     //#endregion
@@ -1909,21 +1910,21 @@ ${lastCommitMessage}
   //#region commands / remotes
   REMOTES() {
     //#region @backendFunc
-    console.log(Helpers.git.allOrigins(this.cwd));
+    console.log(HelpersTaon.git.allOrigins(this.cwd));
     this._exit();
     //#endregion
   }
 
   async SET_REMOTE_SSH() {
     //#region @backendFunc
-    await Helpers.git.changeRemoteFromHttpsToSSh(this.cwd);
+    await HelpersTaon.git.changeRemoteFromHttpsToSSh(this.cwd);
     this._exit();
     //#endregion
   }
 
   async SET_REMOTE_http() {
     //#region @backendFunc
-    await Helpers.git.changeRemoveFromSshToHttps(this.cwd);
+    await HelpersTaon.git.changeRemoveFromSshToHttps(this.cwd);
     this._exit();
     //#endregion
   }
@@ -1937,7 +1938,7 @@ ${lastCommitMessage}
   protected _resolveChildFromArg() {
     //#region @backendFunc
     const { resolved: projFromArg, clearedCommand } =
-      Helpers.cliTool.resolveItemFromArgsBegin<PROJECT>(this.args, arg =>
+      HelpersTaon.cliTool.resolveItemFromArgsBegin<PROJECT>(this.args, arg =>
         this.ins.From([this.cwd, arg]),
       );
     if (!!projFromArg) {
@@ -1951,14 +1952,14 @@ ${lastCommitMessage}
   origin() {
     //#region @backendFunc
     this._resolveChildFromArg();
-    console.log(Helpers.git.getOriginURL(this.cwd));
+    console.log(HelpersTaon.git.getOriginURL(this.cwd));
     this._exit();
     //#endregion
   }
 
   remote() {
     //#region @backendFunc
-    console.log(Helpers.git.getOriginURL(this.cwd));
+    console.log(HelpersTaon.git.getOriginURL(this.cwd));
     this._exit();
     //#endregion
   }
@@ -1966,7 +1967,7 @@ ${lastCommitMessage}
   originHttp() {
     //#region @backendFunc
     console.log(
-      Helpers.git.originSshToHttp(Helpers.git.getOriginURL(this.cwd)),
+      HelpersTaon.git.originSshToHttp(HelpersTaon.git.getOriginURL(this.cwd)),
     );
     this._exit();
     //#endregion
@@ -1975,7 +1976,7 @@ ${lastCommitMessage}
   originHttps() {
     //#region @backendFunc
     console.log(
-      Helpers.git.originSshToHttp(Helpers.git.getOriginURL(this.cwd)),
+      HelpersTaon.git.originSshToHttp(HelpersTaon.git.getOriginURL(this.cwd)),
     );
     this._exit();
     //#endregion
@@ -1984,7 +1985,7 @@ ${lastCommitMessage}
   originssh() {
     //#region @backendFunc
     console.log(
-      Helpers.git.originHttpToSsh(Helpers.git.getOriginURL(this.cwd)),
+      HelpersTaon.git.originHttpToSsh(HelpersTaon.git.getOriginURL(this.cwd)),
     );
     this._exit();
     //#endregion
@@ -2000,7 +2001,7 @@ ${lastCommitMessage}
   //#region commands / git config
   gitConfig() {
     //#region @backendFunc
-    const root = Helpers.git.findGitRoot(this.cwd);
+    const root = HelpersTaon.git.findGitRoot(this.cwd);
     Helpers.run(
       `${UtilsOs.detectEditor()} ${crossPlatformPath([root, '.git', 'config'])}`,
     ).sync();
@@ -2012,7 +2013,7 @@ ${lastCommitMessage}
   //#region commands / lastCommitHash
   LAST_COMMIT_HASH() {
     //#region @backendFunc
-    console.log(Helpers.git.lastCommitHash(this.cwd));
+    console.log(HelpersTaon.git.lastCommitHash(this.cwd));
     this._exit();
     //#endregion
   }
@@ -2065,8 +2066,8 @@ ${lastCommitMessage}
   //#region is terminal supported
   isSupportedTaonTerminal() {
     //#region @backendFunc
-    console.log(`Terminal is supported: ${Helpers.isSupportedTaonTerminal}`);
-    this._exit();
+    // console.log(`Terminal is supported: ${HelpersTaon.isSupportedTaonTerminal}`);
+    // this._exit();
     //#endregion
   }
   //#endregion
@@ -2159,7 +2160,7 @@ ${lastCommitMessage}
     branchPatternOrBranchName: string,
   ): string[] {
     //#region @backendFunc
-    const branches = Helpers.arrays.uniqArray(
+    const branches = HelpersTaon.arrays.uniqArray(
       this.project.git.getBranchesNamesBy(branchPatternOrBranchName) ||
         this.project.getMainBranches(),
     );
@@ -2184,7 +2185,7 @@ ${lastCommitMessage}
         ? '(no children in project)'
         : `(with children${commandActionType === 'deep' ? ' (resursive deep)' : ''})`;
 
-    return await Helpers.autocompleteAsk(
+    return await HelpersTaon.autocompleteAsk(
       `Choose branch to ${task} in this project ${childrenMsg}: `,
       branches.map(b => {
         return { name: b, value: b };
@@ -2202,13 +2203,13 @@ ${lastCommitMessage}
 
     if (originType) {
       if (originType === 'ssh') {
-        url = Helpers.git.originHttpToSsh(url);
+        url = HelpersTaon.git.originHttpToSsh(url);
       }
       if (originType === 'http') {
-        url = Helpers.git.originSshToHttp(url);
+        url = HelpersTaon.git.originSshToHttp(url);
       }
     }
-    await Helpers.git.clone({
+    await HelpersTaon.git.clone({
       url,
       cwd: this.cwd,
     });
@@ -2274,7 +2275,7 @@ ${lastCommitMessage}
   //#region commands / pause terminal
   pauseTerminal() {
     //#region @backendFunc
-    Helpers.pressKeyAndContinue();
+    HelpersTaon.pressKeyAndContinue();
     this._exit();
     //#endregion
   }
@@ -2567,9 +2568,9 @@ ${lastCommitMessage}
       );
     }
     if (Helpers.isFolder(from)) {
-      Helpers.copy(from, to);
+      HelpersTaon.copy(from, to);
     } else {
-      Helpers.copyFile(from, to);
+      HelpersTaon.copyFile(from, to);
     }
 
     Helpers.taskDone(`Copied`);
@@ -2784,11 +2785,11 @@ ${lastCommitMessage}
   dumpPackagesVersions(): void {
     //#region @backendFunc
     const getData = (location: string) => {
-      const version = Helpers.readValueFromJson(
+      const version = HelpersTaon.readValueFromJson(
         crossPlatformPath([location, fileName.package_json]),
         'version',
       );
-      const name = Helpers.readValueFromJson(
+      const name = HelpersTaon.readValueFromJson(
         crossPlatformPath([location, fileName.package_json]),
         'name',
       );
@@ -3187,7 +3188,7 @@ ${lastCommitMessage}
     ).sync();
 
     Helpers.removeFileIfExists(gifDownloadPath);
-    Helpers.move(
+    HelpersTaon.move(
       crossPlatformPath([cwdToProcess, path.basename(gifDownloadPath)]),
       gifDownloadPath,
     );

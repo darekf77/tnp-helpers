@@ -1,10 +1,12 @@
 //#region imports
 import { config } from 'tnp-core/src';
 import { _, path } from 'tnp-core/src';
-import { Helpers } from '../../index';
-import type { BaseCommandLineFeature } from '../../index';
-import { BaseProject } from './base-project';
+import { Helpers } from 'tnp-core/src';
 import { CLASS } from 'typescript-class-helpers/src';
+
+import { HelpersTaon, type BaseCommandLineFeature } from '../../index';
+
+import { BaseProject } from './base-project';
 //#endregion
 
 export type BaseStartConfigOptions = Partial<BaseStartConfig>;
@@ -57,17 +59,22 @@ export class BaseStartConfig {
 
   //#region fields
   public readonly argsv: string[] = process.argv;
+
   public readonly shortArgsReplaceConfig: { [shortCommand in string]: string } =
     {};
+
   public readonly functionsOrClasses: {
     classOrFnName?: string;
     funcOrClass?: Function;
   }[] = [];
+
   public readonly ProjectClass: Partial<typeof BaseProject> = BaseProject;
+
   public readonly callbackNotRecognizedCommand: (options?: {
     runGlobalCommandByName?: (commandName: string) => void;
     firstArg?: string;
   }) => any;
+
   /**
    * @deprecated
    */
@@ -139,7 +146,7 @@ export class BaseStartConfig {
           break;
         }
 
-        const check = Helpers.cliTool.match({
+        const check = HelpersTaon.cliTool.match({
           functionOrClassName: classOrFnName,
           restOfArgs: _.cloneDeep(this.argsv),
           argsReplacements: this.shortArgsReplaceConfig,
@@ -168,7 +175,7 @@ export class BaseStartConfig {
         // console.log('USING FROM CLASS')
         const obj: BaseCommandLineFeature =
           new (recognizedClassFnOrFunction as any)(
-            Helpers.cliTool.globalArgumentsParserTnp(
+            HelpersTaon.cliTool.globalArgumentsParserTnp(
               restOfArgs,
               this.ProjectClass,
             ),
@@ -181,13 +188,13 @@ export class BaseStartConfig {
         // console.log('USING FROM FUNCTION')
         if (this.useStringArrForArgsFunctions) {
           recognizedClassFnOrFunction.apply({}, [
-            Helpers.cliTool
+            HelpersTaon.cliTool
               .globalArgumentsParserTnp(restOfArgs, this.ProjectClass)
               .split(' '),
           ]);
         } else {
           recognizedClassFnOrFunction.apply({}, [
-            Helpers.cliTool.globalArgumentsParserTnp(
+            HelpersTaon.cliTool.globalArgumentsParserTnp(
               restOfArgs,
               this.ProjectClass,
             ),
@@ -205,7 +212,7 @@ export class BaseStartConfig {
             if (globalClassForGlobalCommands) {
               const obj: BaseCommandLineFeature =
                 new (globalClassForGlobalCommands as any)(
-                  Helpers.cliTool.globalArgumentsParserTnp(
+                  HelpersTaon.cliTool.globalArgumentsParserTnp(
                     this.argsv,
                     this.ProjectClass,
                   ),

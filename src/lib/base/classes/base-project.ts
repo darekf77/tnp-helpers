@@ -1,23 +1,28 @@
 //#region import
-import { config, dotTaonFolder } from 'tnp-core/src';
-import { CommandOutputOptions, UtilsOs, UtilsTerminal } from 'tnp-core/src';
+import { config, dotTaonFolder, Helpers } from 'tnp-core/src';
+import { UtilsOs, UtilsTerminal } from 'tnp-core/src';
 import { CoreModels } from 'tnp-core/src';
 import { CLI } from 'tnp-core/src';
 import { path, crossPlatformPath } from 'tnp-core/src';
 import { fse, chalk } from 'tnp-core/src';
 import { _ } from 'tnp-core/src';
 import { Utils } from 'tnp-core/src';
+import { CommandOutputOptions } from 'tnp-core/src';
 
 import {
   BaseNodeModules,
   BasePackageJson,
   CoreProject,
-  Helpers,
+  HelpersTaon,
   LinkedProject,
   UtilsTaonWorker,
   UtilsTypescript,
 } from '../../index';
-import { BaseProjectType, CommandActionType, PushProcessOptions } from '../../models';
+import {
+  BaseProjectType,
+  CommandActionType,
+  PushProcessOptions,
+} from '../../models';
 
 import { BaseDocker } from './base-docker';
 import { BaseFileFoldersOperations } from './base-file-folders-operations';
@@ -49,16 +54,20 @@ export abstract class BaseProject<
 
   //#region fields
   public cache: any = {};
+
   public static cache: any = {};
+
   public get globalCache(): any {
     return BaseProject.cache;
   }
+
   readonly type: TYPE | string = 'unknow';
 
   /**
    * resolve instance
    */
   abstract readonly ins: BaseProjectResolver<PROJECT>;
+
   /**
    * Unique free port for project instance
    * only available after executing *this.assignFreePort()*
@@ -66,7 +75,9 @@ export abstract class BaseProject<
   readonly port: string;
 
   public libraryBuild?: BaseLibraryBuild<BaseProject>;
+
   public npmHelpers?: BaseNpmHelpers;
+
   public fileFoldersOperations?: BaseFileFoldersOperations;
 
   get packageJson(): Partial<BasePackageJson> {
@@ -78,21 +89,32 @@ export abstract class BaseProject<
   }
 
   public linkedProjects?: BaseLinkedProjects;
+
   public vsCodeHelpers?: BaseVscodeHelpers;
+
   public releaseProcess?: BaseReleaseProcess;
+
   public git?: BaseGit;
+
   public linter?: BaseLinter;
+
   public ignoreHide: BaseIgnoreHideHelpers;
+
   public quickFixes?: BaseQuickFixes;
+
   public staticPages?: BaseStaticPages;
+
   public javaJdk?: BaseJavaJdk;
+
   public docker?: BaseDocker;
   //#endregion
 
   private __location: string;
+
   get location(): string {
     return this.__location;
   }
+
   set location(v: string) {
     this.__location = crossPlatformPath(v);
   }
@@ -318,7 +340,7 @@ export abstract class BaseProject<
 
     let subdirectories = getDirectories(this.location).filter(f => {
       const folderName = path.basename(f);
-      return Helpers.checkIfNameAllowedForTaonProj(folderName);
+      return HelpersTaon.checkIfNameAllowedForTaonProj(folderName);
     });
 
     // if (this.isTnp' && fse.existsSync(path.join(this.location, '../taon-projects'))) {
@@ -525,6 +547,7 @@ export abstract class BaseProject<
     return Helpers.exists(this.pathFor(relativePath));
     //#endregion
   }
+
   hasFolder(relativePath: string | string[]): boolean {
     //#region @backendFunc
     return (
@@ -814,9 +837,9 @@ export abstract class BaseProject<
             filesOrFolderRelativePathes[index],
           ]);
           if (Helpers.isFolder(source)) {
-            Helpers.copy(source, dest);
+            HelpersTaon.copy(source, dest);
           } else {
-            Helpers.copyFile(source, dest);
+            HelpersTaon.copyFile(source, dest);
           }
         }
         //#endregion
@@ -899,7 +922,7 @@ Would you like to update current project configuration?`)
 
       this.linkedProjects.addLinkedProjects(
         linkedProjects.map(c => {
-          c.repoUrl = Helpers.git.originSshToHttp(c.repoUrl);
+          c.repoUrl = HelpersTaon.git.originSshToHttp(c.repoUrl);
           return c;
         }),
         { skipFormat: true },
@@ -1025,7 +1048,7 @@ Would you like to update current project configuration?`)
    */
   filterOnlyCopy(basePathFoldersOnlyToInclude: string[]) {
     //#region @backendFunc
-    return Helpers.filterOnlyCopy(basePathFoldersOnlyToInclude, this.location);
+    return HelpersTaon.filterOnlyCopy(basePathFoldersOnlyToInclude, this.location);
     //#endregion
   }
   //#endregion
@@ -1036,7 +1059,7 @@ Would you like to update current project configuration?`)
    */
   filterDontCopy(basePathFoldersTosSkip: string[]) {
     //#region @backendFunc
-    return Helpers.filterDontCopy(basePathFoldersTosSkip, this.location);
+    return HelpersTaon.filterDontCopy(basePathFoldersTosSkip, this.location);
     //#endregion
   }
   //#endregion
@@ -1152,7 +1175,7 @@ Would you like to update current project configuration?`)
     if (Array.isArray(relativePath)) {
       relativePath = crossPlatformPath(relativePath);
     }
-    Helpers.setValueToJSON(this.pathFor(relativePath), lodashGetPath, value);
+    HelpersTaon.setValueToJSON(this.pathFor(relativePath), lodashGetPath, value);
     //#endregion
   }
   //#endregion
@@ -1167,7 +1190,7 @@ Would you like to update current project configuration?`)
     if (Array.isArray(relativePath)) {
       relativePath = crossPlatformPath(relativePath);
     }
-    Helpers.setValueToJSONC(this.pathFor(relativePath), lodashGetPath, value);
+    HelpersTaon.setValueToJSONC(this.pathFor(relativePath), lodashGetPath, value);
     //#endregion
   }
   //#endregion
@@ -1182,7 +1205,7 @@ Would you like to update current project configuration?`)
     if (Array.isArray(relativePath)) {
       relativePath = crossPlatformPath(relativePath);
     }
-    Helpers.setValueToJSONC(this.pathFor(relativePath), lodashGetPath, value);
+    HelpersTaon.setValueToJSONC(this.pathFor(relativePath), lodashGetPath, value);
     //#endregion
   }
   //#endregion
@@ -1197,7 +1220,7 @@ Would you like to update current project configuration?`)
     if (Array.isArray(relativePath)) {
       relativePath = crossPlatformPath(relativePath);
     }
-    return Helpers.getValueFromJSON(
+    return HelpersTaon.getValueFromJSON(
       this.pathFor(relativePath),
       lodashGetPath,
       defaultValue,
@@ -1216,7 +1239,7 @@ Would you like to update current project configuration?`)
     if (Array.isArray(relativePath)) {
       relativePath = crossPlatformPath(relativePath);
     }
-    return Helpers.getValueFromJSONC(
+    return HelpersTaon.getValueFromJSONC(
       this.pathFor(relativePath),
       lodashGetPath,
       defaultValue,

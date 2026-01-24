@@ -1,12 +1,13 @@
 //#region imports
-import { Helpers } from '../../index';
 import {
   BaseClientCompiler,
   BaseClientCompilerOptions,
 } from 'incremental-compiler/src';
-import { path, crossPlatformPath } from 'tnp-core/src';
+import { path, crossPlatformPath, Helpers } from 'tnp-core/src';
 import { _ } from 'tnp-core/src';
 import { config } from 'tnp-core/src';
+
+import { HelpersTaon } from '../../index';
 
 import { BaseProject } from './base-project';
 //#endregion

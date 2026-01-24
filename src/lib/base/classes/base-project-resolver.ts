@@ -2,25 +2,29 @@
 import { config } from 'tnp-core/src';
 import { fse } from 'tnp-core/src';
 import { path, crossPlatformPath } from 'tnp-core/src';
-import { _ } from 'tnp-core/src';
+import { _, Helpers } from 'tnp-core/src';
 
-import { Helpers } from '../../index';
+import { CURRENT_PACKAGE_VERSION } from '../../build-info._auto-generated_';
+import { HelpersTaon } from '../../index';
 import { ConfigDatabase } from '../config-database';
 import { ProjectDatabase } from '../project-database';
 import { PortsWorker } from '../tcp-udp-ports';
-import { CURRENT_PACKAGE_VERSION } from '../../build-info._auto-generated_';
 
 import { BaseProject } from './base-project';
 //#endregion
 
 export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
   configDb: ConfigDatabase = new ConfigDatabase(this);
+
   projectsDb: ProjectDatabase = new ProjectDatabase(this);
+
   readonly portsWorker: PortsWorker;
 
   //#region fields
   protected readonly NPM_PROJECT_KEY = 'npm';
+
   protected projects: PROJECT[] = [];
+
   /**
    * To speed up checking folder I am keeping paths for already checked folder
    * This may break things that are creating new projects

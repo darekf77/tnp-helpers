@@ -1,7 +1,7 @@
 import { folderName } from 'tnp-core/src';
-import { _, path } from 'tnp-core/src';
+import { _, path, Helpers } from 'tnp-core/src';
 
-import { Helpers } from '../../index';
+import { HelpersTaon } from '../../index';
 
 import { BaseFeatureForProject } from './base-feature-for-project';
 import type { BaseProject } from './base-project';

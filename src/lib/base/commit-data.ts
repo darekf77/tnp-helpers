@@ -1,8 +1,8 @@
 //#region imports
-import { _ } from 'tnp-core/src';
-import { path } from 'tnp-core/src';
+import { _, Utils } from 'tnp-core/src';
+import { Helpers, path } from 'tnp-core/src';
 
-import { Helpers } from '../index';
+import { HelpersTaon } from '../index';
 //#endregion
 
 //#region open source proviers
@@ -43,7 +43,6 @@ const regexCommitModuleInArgs: RegExp = /\[[a-z|\-|\,]+\]/;
 const regexCommitModuleInBranch: RegExp = /\-\-[a-z|\-|\_]+\-\-/;
 
 export class CommitData {
-
   //#region static
 
   //#region static / methods & getters / clean http(s) from commit message
@@ -90,9 +89,8 @@ export class CommitData {
    * @returns jiras (from oldest to newset)
    */
   static extractAndOrderJiraNumbers(commitOrBranchName: string): string[] {
-
     //#region @backendFunc
-    return Helpers.uniqArray(
+    return Utils.uniqArray(
       (
         _.first(commitOrBranchName.split('\n')).match(/[A-Z0-9]+\-[0-9]+/g) ||
         []
@@ -118,7 +116,6 @@ export class CommitData {
         }),
     );
     //#endregion
-
   }
   //#endregion
 
@@ -136,7 +133,6 @@ export class CommitData {
     commitOrBranchName: string,
     currentOrigin?: string,
   ): string[] {
-
     //#region @backendFunc
     if (commitOrBranchName.trim() === '') {
       // console.trace('commitOrBranchName is empty');
@@ -144,7 +140,7 @@ export class CommitData {
     }
     const isBranch = !commitOrBranchName.trim().includes(' ');
     // console.log(`is branch: "${isBranch}" "${commitOrBranchName}"`);
-    return Helpers.uniqArray(
+    return Utils.uniqArray(
       (
         _.first(commitOrBranchName.split('\n')).match(
           isBranch
@@ -186,7 +182,7 @@ export class CommitData {
           // console.log('project', project?.name);
           if (issue.split('/').length === 2 && !!currentOrigin) {
             // console.log('issue', issue);
-            const origin = Helpers.git.originSshToHttp(currentOrigin);
+            const origin = HelpersTaon.git.originSshToHttp(currentOrigin);
             const provider = _.first(origin.replace('https://', '').split('/'));
             const cleanUserWithPath = origin
               .replace('https://', '')
@@ -216,7 +212,6 @@ export class CommitData {
         }),
     );
     //#endregion
-
   }
   //#endregion
 
@@ -339,7 +334,6 @@ export class CommitData {
       jiraIssuesAreOutsideBrackets?: boolean;
     },
   ): Promise<CommitData> {
-
     //#region @backendFunc
     options = options || ({} as any);
     const { typeOfCommit, currentOrigin } = options;
@@ -407,7 +401,6 @@ export class CommitData {
       jiraIssuesAreOutsideBrackets: !!options.jiraIssuesAreOutsideBrackets,
     });
     //#endregion
-
   }
   //#endregion
 
@@ -427,7 +420,6 @@ export class CommitData {
       jiraIssuesAreOutsideBrackets?: boolean;
     },
   ): Promise<CommitData> {
-
     //#region @backendFunc
     options = options || { releaseWords: [] };
     options.releaseWords = options.releaseWords || [];
@@ -540,7 +532,6 @@ export class CommitData {
 
     return result;
     //#endregion
-
   }
   //#endregion
 
@@ -618,7 +609,6 @@ export class CommitData {
 
   //#region methods & getters / branch prefix
   get branchPrefix(): TypeOfMsgPrefix {
-
     //#region @backendFunc
     const typeOfCommit = this.typeOfCommit;
     if (typeOfCommit === 'feature') {
@@ -630,7 +620,6 @@ export class CommitData {
     }
     return (this.typeOfCommit as any) || 'feat';
     //#endregion
-
   }
   //#endregion
 
@@ -649,7 +638,7 @@ export class CommitData {
     //   console.log('project', this.project?.name);
     //   if (issue.split('/').length === 1 && !!this.project) {
     //     console.log('issue', issue);
-    //     const origin = Helpers.git.originSshToHttp(this.project.git.originURL);
+    //     const origin = HelpersTaon.git.originSshToHttp(this.project.git.originURL);
     //     const provider = _.first(origin.replace('https://', '').split('/'));
     //     const cleanUserWithPath = origin
     //       .replace('https://', '')
@@ -668,9 +657,10 @@ export class CommitData {
 
   //#region methods & getters / commit message git commit -m
   get commitMessage(): string {
-
     //#region @backendFunc
-    if (this.message === Helpers.git.ACTION_MSG_RESET_GIT_HARD_COMMIT) {
+    if (
+      this.message === HelpersTaon.git.getACTION_MSG_RESET_GIT_HARD_COMMIT()
+    ) {
       return this.message;
     }
     const otherIssues = this.issuesFromOtherProjects || [];
@@ -784,13 +774,11 @@ export class CommitData {
     return commitMsg.replace(': :', ': ');
 
     //#endregion
-
   }
   //#endregion
 
   //#region methods & getters / branch name
   get branchName(): string {
-
     //#region @backendFunc
     let typeOfCommit = this.typeOfCommit;
     if (typeOfCommit === 'test' && this.useFeatureBranchForTestBranch) {
@@ -837,18 +825,16 @@ export class CommitData {
       .replace(/\_\_\-/g, '__') // QUICK_FIX
       .replace(/\-\-\-\-/g, '--'); // QUICK_FIX
     //#endregion
-
   }
   //#endregion
 
   //#region methods & getters / is action commit
   get isActionCommit() {
-
     //#region @backendFunc
-    return this.message === Helpers.git.ACTION_MSG_RESET_GIT_HARD_COMMIT;
+    return (
+      this.message === HelpersTaon.git.getACTION_MSG_RESET_GIT_HARD_COMMIT()
+    );
     //#endregion
-
   }
   //#endregion
-
 }

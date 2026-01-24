@@ -1,7 +1,7 @@
 //#region imports
 import { BehaviorSubject } from 'rxjs';
 import { EndpointContext, Taon } from 'taon/src';
-import { config } from 'tnp-core/src';
+import { config, Helpers } from 'tnp-core/src';
 import {
   chalk,
   crossPlatformPath,
@@ -17,7 +17,7 @@ import {
 
 import {
   //  BaseCliWorkerOptionCallable,
-  Helpers,
+  HelpersTaon,
 } from '../../../index';
 
 import { BaseCliWorkerConfig } from './base-cli-worker-config';
@@ -756,7 +756,7 @@ export abstract class BaseCliWorker<
           stdout: [this.SPECIAL_WORKER_READY_MESSAGE],
           stderr: [this.SPECIAL_WORKER_READY_MESSAGE],
         },
-        displayOutputInParentProcess: Helpers.isVerboseMode,
+        displayOutputInParentProcess: Helpers.getIsVerboseMode(),
         resolveAfterAnyExitCode: true,
       });
     } else {

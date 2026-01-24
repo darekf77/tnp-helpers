@@ -1,11 +1,11 @@
 //#region imports
-import { config, UtilsOs } from 'tnp-core/src';
+import { config, Helpers, UtilsOs } from 'tnp-core/src';
 import { chalk, dateformat, fse, Utils } from 'tnp-core/src';
 import { crossPlatformPath, path, _, UtilsTerminal } from 'tnp-core/src';
 
 import {
   CommitData,
-  Helpers,
+  HelpersTaon,
   PushProcessOptions,
   TypeOfCommit,
 } from '../../index';
@@ -21,7 +21,7 @@ export class BaseGit<
   //#region methods & getters / unstage all files
   unstageAllFiles(): void {
     //#region @backendFunc
-    Helpers.git.unstageAllFiles(this.project.location);
+    HelpersTaon.git.unstageAllFiles(this.project.location);
     //#endregion
   }
   //#endregion
@@ -29,7 +29,7 @@ export class BaseGit<
   //#region methods & getters / revert file changes
   revertFileChanges(fileReletivePath: string): void {
     //#region @backendFunc
-    Helpers.git.revertFileChanges(this.project.location, fileReletivePath);
+    HelpersTaon.git.revertFileChanges(this.project.location, fileReletivePath);
     //#endregion
   }
   //#endregion
@@ -41,15 +41,15 @@ export class BaseGit<
     branchName?: string,
   ): Promise<string> {
     //#region @backendFunc
-    const clondeFolderpath = await Helpers.git.clone({
+    const clondeFolderpath = await HelpersTaon.git.clone({
       cwd: this.project.location,
       url,
       destinationFolderName,
     });
     if (branchName) {
       try {
-        Helpers.git.checkout(clondeFolderpath, branchName);
-        await Helpers.git.pullCurrentBranch(clondeFolderpath, {
+        HelpersTaon.git.checkout(clondeFolderpath, branchName);
+        await HelpersTaon.git.pullCurrentBranch(clondeFolderpath, {
           askToRetry: true,
         });
       } catch (error) {}
@@ -65,7 +65,7 @@ export class BaseGit<
   //#region methods & getters / restore last version
   restoreLastVersion(relativeFilePath: string): void {
     //#region @backendFunc
-    Helpers.git.restoreLastVersion(this.project.location, relativeFilePath);
+    HelpersTaon.git.restoreLastVersion(this.project.location, relativeFilePath);
     //#endregion
   }
   //#endregion
@@ -73,7 +73,7 @@ export class BaseGit<
   //#region methods & getters / stage all files
   stageAllFiles(): void {
     //#region @backendFunc
-    Helpers.git.stageAllFiles(this.project.location);
+    HelpersTaon.git.stageAllFiles(this.project.location);
     //#endregion
   }
   //#endregion
@@ -81,7 +81,7 @@ export class BaseGit<
   //#region methods & getters / stage all files
   stageFile(relativeFilePath: string): void {
     //#region @backendFunc
-    Helpers.git.stageFile(this.project.location, relativeFilePath);
+    HelpersTaon.git.stageFile(this.project.location, relativeFilePath);
     //#endregion
   }
   //#endregion
@@ -89,7 +89,7 @@ export class BaseGit<
   //#region methods & getters / stash
   stash(options?: { onlyStaged?: boolean }): void {
     //#region @backendFunc
-    return Helpers.git.stash(this.project.location, options);
+    return HelpersTaon.git.stash(this.project.location, options);
     //#endregion
   }
   //#endregion
@@ -97,7 +97,7 @@ export class BaseGit<
   //#region methods & getters / stash
   rebase(toBranch: string): void {
     //#region @backendFunc
-    return Helpers.git.rebase(this.project.location, toBranch);
+    return HelpersTaon.git.rebase(this.project.location, toBranch);
     //#endregion
   }
   //#endregion
@@ -105,7 +105,7 @@ export class BaseGit<
   //#region methods & getters / stash apply
   stashApply(): void {
     //#region @backendFunc
-    Helpers.git.stashApply(this.project.location);
+    HelpersTaon.git.stashApply(this.project.location);
     //#endregion
   }
   //#endregion
@@ -113,7 +113,7 @@ export class BaseGit<
   //#region methods & getters / fetch
   fetch(all = false): void {
     //#region @backendFunc
-    Helpers.git.fetch(this.project.location, all);
+    HelpersTaon.git.fetch(this.project.location, all);
     //#endregion
   }
   //#endregion
@@ -121,7 +121,7 @@ export class BaseGit<
   //#region methods & getters / reset files
   resetFiles(...relativePathes: string[]): void {
     //#region @backendFunc
-    return Helpers.git.resetFiles(this.project.location, ...relativePathes);
+    return HelpersTaon.git.resetFiles(this.project.location, ...relativePathes);
     //#endregion
   }
   //#endregion
@@ -129,7 +129,7 @@ export class BaseGit<
   //#region methods & getters / is inside git repo
   get isInsideGitRepo(): boolean {
     //#region @backendFunc
-    return Helpers.git.isInsideGitRepo(this.project.location);
+    return HelpersTaon.git.isInsideGitRepo(this.project.location);
     //#endregion
   }
   //#endregion
@@ -145,7 +145,7 @@ export class BaseGit<
   //#region methods & getters / is git root
   get isGitRoot(): boolean {
     //#region @backendFunc
-    return Helpers.git.isGitRoot(this.project.location);
+    return HelpersTaon.git.isGitRoot(this.project.location);
     //#endregion
   }
   //#endregion
@@ -153,7 +153,7 @@ export class BaseGit<
   //#region methods & getters / origin url
   get originURL(): string {
     //#region @backendFunc
-    return Helpers.git.getOriginURL(this.project.location);
+    return HelpersTaon.git.getOriginURL(this.project.location);
     //#endregion
   }
   //#endregion
@@ -161,7 +161,7 @@ export class BaseGit<
   //#region methods & getters / commit
   commit(commitMessage?: string): void {
     //#region @backendFunc
-    return Helpers.git.commit(this.project.location, commitMessage);
+    return HelpersTaon.git.commit(this.project.location, commitMessage);
     //#endregion
   }
   //#endregion
@@ -172,7 +172,7 @@ export class BaseGit<
    */
   addAndCommit(commitMessage: string): void {
     //#region @backendFunc
-    return Helpers.git.stageAllAndCommit(this.project.location, commitMessage);
+    return HelpersTaon.git.stageAllAndCommit(this.project.location, commitMessage);
     //#endregion
   }
   //#endregion
@@ -200,7 +200,7 @@ export class BaseGit<
     global = false,
   ): Promise<{ name?: string; email?: string }> {
     //#region @backendFunc
-    return await Helpers.git.getUserInfo(this.project.location, global);
+    return await HelpersTaon.git.getUserInfo(this.project.location, global);
     //#endregion
   }
 
@@ -209,7 +209,7 @@ export class BaseGit<
     global = false,
   ): Promise<void> {
     //#region @backendFunc
-    return await Helpers.git.setUserInfos({
+    return await HelpersTaon.git.setUserInfos({
       cwd: this.project.location,
       name,
       email,
@@ -221,7 +221,7 @@ export class BaseGit<
   //#region methods & getters / stage all and commit
   stageAllAndCommit(commitMessage: string): void {
     //#region @backendFunc
-    return Helpers.git.stageAllAndCommit(this.project.location, commitMessage);
+    return HelpersTaon.git.stageAllAndCommit(this.project.location, commitMessage);
     //#endregion
   }
   //#endregion
@@ -234,7 +234,7 @@ export class BaseGit<
     forcePushNoQuestion?: boolean;
   }): Promise<boolean> {
     //#region @backendFunc
-    return await Helpers.git.pushCurrentBranch(this.project.location, options);
+    return await HelpersTaon.git.pushCurrentBranch(this.project.location, options);
     //#endregion
   }
   //#endregion
@@ -242,7 +242,7 @@ export class BaseGit<
   //#region methods & getters / all origins
   get allOrigins(): { origin: string; url: string }[] {
     //#region @backendFunc
-    return Helpers.git.allOrigins(this.project.location);
+    return HelpersTaon.git.allOrigins(this.project.location);
     //#endregion
   }
   //#endregion
@@ -250,7 +250,7 @@ export class BaseGit<
   //#region methods & getters / uncommited files
   get uncommitedFiles(): string[] {
     //#region @backendFunc
-    return Helpers.git.uncommitedFiles(this.project.location);
+    return HelpersTaon.git.uncommitedFiles(this.project.location);
     //#endregion
   }
   //#endregion
@@ -258,7 +258,7 @@ export class BaseGit<
   //#region methods & getters / there are some uncommited change
   get thereAreSomeUncommitedChange(): boolean {
     //#region @backendFunc
-    return Helpers.git.checkIfthereAreSomeUncommitedChange(
+    return HelpersTaon.git.checkIfthereAreSomeUncommitedChange(
       this.project.location,
     );
     //#endregion
@@ -268,7 +268,7 @@ export class BaseGit<
   //#region methods & getters / there are some uncommited change except
   thereAreSomeUncommitedChangeExcept(filesList: string[] = []): boolean {
     //#region @backendFunc
-    return Helpers.git.thereAreSomeUncommitedChangeExcept(
+    return HelpersTaon.git.thereAreSomeUncommitedChangeExcept(
       filesList,
       this.project.location,
     );
@@ -499,7 +499,7 @@ Please provide proper commit message for lastest changes in your project:
     //#region @backendFunc
     const lastCommitMessage = this.lastCommitMessage() || '';
     return (
-      lastCommitMessage.trim() === Helpers.git.ACTION_MSG_RESET_GIT_HARD_COMMIT
+      lastCommitMessage.trim() === HelpersTaon.git.getACTION_MSG_RESET_GIT_HARD_COMMIT()
     );
     //#endregion
   }
@@ -511,7 +511,7 @@ Please provide proper commit message for lastest changes in your project:
    */
   meltActionCommits(): number {
     //#region @backendFunc
-    return Helpers.git.meltActionCommits(this.project.location);
+    return HelpersTaon.git.meltActionCommits(this.project.location);
     //#endregion
   }
   //#endregion
@@ -528,7 +528,7 @@ Please provide proper commit message for lastest changes in your project:
     isCiProcess: boolean,
   ): Promise<void> {
     //#region @backendFunc
-    return await Helpers.git.tagAndPushToGitRepo(this.project.location, {
+    return await HelpersTaon.git.tagAndPushToGitRepo(this.project.location, {
       newVersion,
       autoReleaseUsingConfig,
       isCiProcess,
@@ -547,7 +547,7 @@ Please provide proper commit message for lastest changes in your project:
     defaultHardResetCommits?: number;
   }): Promise<void> {
     //#region @backendFunc
-    await Helpers.git.pullCurrentBranch(this.project.location, { ...options });
+    await HelpersTaon.git.pullCurrentBranch(this.project.location, { ...options });
     //#endregion
   }
   //#endregion
@@ -555,7 +555,7 @@ Please provide proper commit message for lastest changes in your project:
   //#region methods & getters / current branch name
   get currentBranchName(): string {
     //#region @backendFunc
-    return Helpers.git.currentBranchName(this.project.location);
+    return HelpersTaon.git.currentBranchName(this.project.location);
     //#endregion
   }
   //#endregion
@@ -567,7 +567,7 @@ Please provide proper commit message for lastest changes in your project:
     created: string[];
   } {
     //#region @backendFunc
-    return Helpers.git.getListOfCurrentGitChanges(this.project.location);
+    return HelpersTaon.git.getListOfCurrentGitChanges(this.project.location);
     //#endregion
   }
   //#endregion
@@ -575,7 +575,7 @@ Please provide proper commit message for lastest changes in your project:
   //#region methods & getters / get branches names by
   getBranchesNamesBy(pattern: string | RegExp): string[] {
     //#region @backendFunc
-    return Helpers.git.getBranchesNames(this.project.location, pattern);
+    return HelpersTaon.git.getBranchesNames(this.project.location, pattern);
     //#endregion
   }
   //#endregion
@@ -583,7 +583,7 @@ Please provide proper commit message for lastest changes in your project:
   //#region methods & getters / reset soft HEAD
   resetSoftHEAD(HEAD = 1): void {
     //#region @backendFunc
-    Helpers.git.resetSoftHEAD(this.project.location, HEAD);
+    HelpersTaon.git.resetSoftHEAD(this.project.location, HEAD);
     //#endregion
   }
   //#endregion
@@ -591,7 +591,7 @@ Please provide proper commit message for lastest changes in your project:
   //#region methods & getters / reset hard
   resetHard(options?: { HEAD?: number }): void {
     //#region @backendFunc
-    Helpers.git.resetHard(this.project.location, options);
+    HelpersTaon.git.resetHard(this.project.location, options);
     //#endregion
   }
   //#endregion
@@ -599,7 +599,7 @@ Please provide proper commit message for lastest changes in your project:
   //#region methods & getters / count commits
   countCommits(): number {
     //#region @backendFunc
-    return Helpers.git.countCommits(this.project.location);
+    return HelpersTaon.git.countCommits(this.project.location);
     //#endregion
   }
   //#endregion
@@ -607,7 +607,7 @@ Please provide proper commit message for lastest changes in your project:
   //#region methods & getters / has any commits
   hasAnyCommits() {
     //#region @backendFunc
-    return Helpers.git.hasAnyCommits(this.project.location);
+    return HelpersTaon.git.hasAnyCommits(this.project.location);
     //#endregion
   }
   //#endregion
@@ -615,7 +615,7 @@ Please provide proper commit message for lastest changes in your project:
   //#region methods & getters / is in merge process
   get isInMergeProcess() {
     //#region @backendFunc
-    return Helpers.git.isInMergeProcess(this.project.location);
+    return HelpersTaon.git.isInMergeProcess(this.project.location);
     //#endregion
   }
   //#endregion
@@ -623,7 +623,7 @@ Please provide proper commit message for lastest changes in your project:
   //#region methods & getters / last commit date
   lastCommitDate() {
     //#region @backendFunc
-    return Helpers.git.lastCommitDate(this.project.location);
+    return HelpersTaon.git.lastCommitDate(this.project.location);
     //#endregion
   }
   //#endregion
@@ -631,7 +631,7 @@ Please provide proper commit message for lastest changes in your project:
   //#region methods & getters / last commit hash
   lastCommitHash() {
     //#region @backendFunc
-    return Helpers.git.lastCommitHash(this.project.location);
+    return HelpersTaon.git.lastCommitHash(this.project.location);
     //#endregion
   }
   //#endregion
@@ -639,7 +639,7 @@ Please provide proper commit message for lastest changes in your project:
   //#region methods & getters / last commit message
   lastCommitMessage(): string {
     //#region @backendFunc
-    return Helpers.git.lastCommitMessage(this.project.location);
+    return HelpersTaon.git.lastCommitMessage(this.project.location);
     //#endregion
   }
   //#endregion
@@ -647,7 +647,7 @@ Please provide proper commit message for lastest changes in your project:
   //#region methods & getters / last commit message
   async penultimateCommitMessage(): Promise<string> {
     //#region @backendFunc
-    return await Helpers.git.penultimateCommitMessage(this.project.location);
+    return await HelpersTaon.git.penultimateCommitMessage(this.project.location);
     //#endregion
   }
   //#endregion
@@ -655,7 +655,7 @@ Please provide proper commit message for lastest changes in your project:
   //#region methods & getters / get commit message by index
   async getCommitMessageByIndex(index: number): Promise<string> {
     //#region @backendFunc
-    return await Helpers.git.getCommitMessageByIndex(
+    return await HelpersTaon.git.getCommitMessageByIndex(
       this.project.location,
       index,
     );
@@ -666,7 +666,7 @@ Please provide proper commit message for lastest changes in your project:
   //#region methods & getters / get commit message by hash
   async getCommitMessageByHash(hash: string): Promise<string> {
     //#region @backendFunc
-    return await Helpers.git.getCommitMessageByHash(
+    return await HelpersTaon.git.getCommitMessageByHash(
       this.project.location,
       hash,
     );
@@ -677,7 +677,7 @@ Please provide proper commit message for lastest changes in your project:
   //#region methods & getters / get commit hash by index
   async getCommitHashByIndex(index: number): Promise<string> {
     //#region @backendFunc
-    return await Helpers.git.getCommitHashByIndex(this.project.location, index);
+    return await HelpersTaon.git.getCommitHashByIndex(this.project.location, index);
     //#endregion
   }
   //#endregion
@@ -685,7 +685,7 @@ Please provide proper commit message for lastest changes in your project:
   //#region methods & getters / penultimate commit hash
   penultimateCommitHash(): string {
     //#region @backendFunc
-    return Helpers.git.penultimateCommitHash(this.project.location);
+    return HelpersTaon.git.penultimateCommitHash(this.project.location);
     //#endregion
   }
   //#endregion
@@ -693,7 +693,7 @@ Please provide proper commit message for lastest changes in your project:
   //#region methods & getters / check tag exists
   checkTagExists(tag: string): boolean {
     //#region @backendFunc
-    return Helpers.git.checkTagExists(tag, this.project.location);
+    return HelpersTaon.git.checkTagExists(tag, this.project.location);
     //#endregion
   }
   //#endregion
@@ -708,7 +708,7 @@ Please provide proper commit message for lastest changes in your project:
     },
   ): void {
     //#region @backendFunc
-    return Helpers.git.checkout(this.project.location, branchName, options);
+    return HelpersTaon.git.checkout(this.project.location, branchName, options);
     //#endregion
   }
   //#endregion
@@ -719,7 +719,7 @@ Please provide proper commit message for lastest changes in your project:
 
   cleanRepoFromAnyFilesExceptDotGitFolder(): void {
     //#region @backendFunc
-    return Helpers.git.cleanRepoFromAnyFilesExceptDotGitFolder(
+    return HelpersTaon.git.cleanRepoFromAnyFilesExceptDotGitFolder(
       this.project.location,
     );
     //#endregion
@@ -732,7 +732,7 @@ Please provide proper commit message for lastest changes in your project:
     origin = 'origin',
   ): void {
     //#region @backendFunc
-    return Helpers.git.checkoutFromTo(
+    return HelpersTaon.git.checkoutFromTo(
       checkoutFromBranch,
       branch,
       origin,
@@ -750,7 +750,7 @@ Please provide proper commit message for lastest changes in your project:
    */
   lastTagNameForMajorVersion(majorVersion): string {
     //#region @backendFunc
-    return Helpers.git.lastTagNameForMajorVersion(
+    return HelpersTaon.git.lastTagNameForMajorVersion(
       this.project.location,
       majorVersion,
     );
@@ -761,7 +761,7 @@ Please provide proper commit message for lastest changes in your project:
   //#region methods & getters / last tag hash
   lastTagHash(): string {
     //#region @backendFunc
-    return Helpers.git.lastTagHash(this.project.location);
+    return HelpersTaon.git.lastTagHash(this.project.location);
     //#endregion
   }
   //#endregion
@@ -769,7 +769,7 @@ Please provide proper commit message for lastest changes in your project:
   //#region methods & getters / remote origin url
   get remoteOriginUrl(): string {
     //#region @backendFunc
-    return Helpers.git.getOriginURL(this.project.location);
+    return HelpersTaon.git.getOriginURL(this.project.location);
     //#endregion
   }
   //#endregion
@@ -780,7 +780,7 @@ Please provide proper commit message for lastest changes in your project:
    */
   get remoteProvider(): string {
     //#region @backendFunc
-    return Helpers.git.getRemoteProvider(this.project.location) || '';
+    return HelpersTaon.git.getRemoteProvider(this.project.location) || '';
     //#endregion
   }
   //#endregion
@@ -788,7 +788,7 @@ Please provide proper commit message for lastest changes in your project:
   //#region methods & getters / last tag version name
   get lastTagVersionName(): string {
     //#region @backendFunc
-    return Helpers.git.lastTagVersionName(this.project.location) || '';
+    return HelpersTaon.git.lastTagVersionName(this.project.location) || '';
     //#endregion
   }
   //#endregion
@@ -796,12 +796,12 @@ Please provide proper commit message for lastest changes in your project:
   //#region methods & getters / staged files
   get stagedFiles(): string[] {
     //#region @backendFunc
-    return Helpers.git.stagedFiles(this.project.location);
+    return HelpersTaon.git.stagedFiles(this.project.location);
     //#endregion
   }
   get stagedFilesRelativePaths(): string[] {
     //#region @backendFunc
-    return Helpers.git.stagedFiles(this.project.location, true);
+    return HelpersTaon.git.stagedFiles(this.project.location, true);
     //#endregion
   }
 
@@ -896,7 +896,7 @@ Please provide proper commit message for lastest changes in your project:
       if (res) {
         Helpers.tryRemoveDir(dest);
       } else {
-        Helpers.pressKeyAndContinue('Operation not completed... press any key');
+        HelpersTaon.pressKeyAndContinue('Operation not completed... press any key');
         return false;
       }
     }
@@ -904,7 +904,7 @@ Please provide proper commit message for lastest changes in your project:
     Helpers.info(`Cloning ${this.project.name}...`);
 
     // copy instead cloning
-    await Helpers.git.clone({
+    await HelpersTaon.git.clone({
       cwd,
       url: this.project.git.remoteOriginUrl,
       destinationFolderName: newProjectName,
@@ -958,9 +958,9 @@ Please provide proper commit message for lastest changes in your project:
       setOrigin = 'http';
     }
     if (setOrigin === 'ssh') {
-      await Helpers.git.changeRemoteFromHttpsToSSh(this.project.location);
+      await HelpersTaon.git.changeRemoteFromHttpsToSSh(this.project.location);
     } else if (setOrigin === 'http') {
-      await Helpers.git.changeRemoveFromSshToHttps(this.project.location);
+      await HelpersTaon.git.changeRemoveFromSshToHttps(this.project.location);
     }
     //#endregion
   }
@@ -1111,7 +1111,7 @@ Please provide proper commit message for lastest changes in your project:
 
   async backupBranch(branchName?: string): Promise<string> {
     //#region @backendFunc
-    return await Helpers.git.backupBranch(this.project.location, branchName);
+    return await HelpersTaon.git.backupBranch(this.project.location, branchName);
     //#endregion
   }
 
@@ -1165,7 +1165,7 @@ Please provide proper commit message for lastest changes in your project:
           useUpdateCommit: {
             name:
               `Use temporary update commit ` +
-              `"${Helpers.git.ACTION_MSG_RESET_GIT_HARD_COMMIT}" and force push`,
+              `"${HelpersTaon.git.getACTION_MSG_RESET_GIT_HARD_COMMIT()}" and force push`,
           },
           provideCommitMessage: {
             name: 'Provide commit message and force push',
@@ -1200,14 +1200,14 @@ Please provide proper commit message for lastest changes in your project:
         if (action === 'useUpdateCommit') {
           force = true;
           forcePushNoQuestion = true;
-          overrideCommitMessage = Helpers.git.ACTION_MSG_RESET_GIT_HARD_COMMIT;
+          overrideCommitMessage = HelpersTaon.git.getACTION_MSG_RESET_GIT_HARD_COMMIT();
         }
 
         if (action === 'provideCommitMessage') {
           force = true;
           forcePushNoQuestion = true;
           try {
-            overrideCommitMessage = await Helpers.input({
+            overrideCommitMessage = await UtilsTerminal.input({
               question: `Please provide commit message for current changes:`,
               defaultValue: 'update',
             });
@@ -1284,7 +1284,7 @@ Please provide proper commit message for lastest changes in your project:
         } catch (error) {
           Helpers.warn('Fix your code...');
           if (
-            !(await Helpers.consoleGui.question.yesNo(
+            !(await HelpersTaon.consoleGui.question.yesNo(
               'Try again lint before commit ?',
             ))
           ) {
@@ -1484,7 +1484,7 @@ Please provide proper commit message for lastest changes in your project:
       !this.project.git.currentBranchName?.trim()
     ) {
       if (
-        await Helpers.consoleGui.question.yesNo(
+        await HelpersTaon.consoleGui.question.yesNo(
           'Repository is empty...Commit "master" branch and commit all as "first commit" ?',
         )
       ) {
@@ -1569,12 +1569,12 @@ Please provide proper commit message for lastest changes in your project:
       }
 
       if (!argsCommitData.message) {
-        argsCommitData.message = Helpers.git.ACTION_MSG_RESET_GIT_HARD_COMMIT;
+        argsCommitData.message = HelpersTaon.git.getACTION_MSG_RESET_GIT_HARD_COMMIT();
       }
       commitData = argsCommitData;
     }
 
-    if (commitData.message !== Helpers.git.ACTION_MSG_RESET_GIT_HARD_COMMIT) {
+    if (commitData.message !== HelpersTaon.git.getACTION_MSG_RESET_GIT_HARD_COMMIT()) {
       const { from, to } = this.transalteGitCommitFromArgs();
       if (from && to) {
         commitData.message = _.kebabCase(
@@ -1601,7 +1601,7 @@ Please provide proper commit message for lastest changes in your project:
   //#region methods & getters / get changed files in commit by hash
   async getChangedFilesInCommitByHash(hash: string): Promise<string[]> {
     //#region @backendFunc
-    return Helpers.git.getChangedFilesInCommitByHash(
+    return HelpersTaon.git.getChangedFilesInCommitByHash(
       this.project.location,
       hash,
     );
@@ -1615,7 +1615,7 @@ Please provide proper commit message for lastest changes in your project:
    */
   async getChangedFilesInCommitByIndex(index: number): Promise<string[]> {
     //#region @backendFunc
-    return Helpers.git.getChangedFilesInCommitByIndex(
+    return HelpersTaon.git.getChangedFilesInCommitByIndex(
       this.project.location,
       index,
     );
@@ -1640,7 +1640,7 @@ Please provide proper commit message for lastest changes in your project:
       options.prefix ??
       `${fillStringWithSpaceUpTo(`[${this.project.name}]`, 40, '.')} `;
 
-    return await Helpers.git.changesSummary(
+    return await HelpersTaon.git.changesSummary(
       this.project.location,
       options.prefix,
     );

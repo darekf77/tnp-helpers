@@ -1,8 +1,8 @@
 //#region imports
 import { config, fileName, folderName } from 'tnp-core/src';
-import { _, crossPlatformPath, fse, path } from 'tnp-core/src';
+import { Helpers, _, crossPlatformPath, fse, path } from 'tnp-core/src';
 
-import { Helpers } from '../../index';
+import { HelpersTaon } from '../../index';
 
 import { BaseFeatureForProject } from './base-feature-for-project';
 import type { BaseProject } from './base-project';
@@ -85,10 +85,10 @@ export class BaseFileFoldersOperations<
         if (Helpers.exists(sourcePath)) {
           if (Helpers.isFolder(sourcePath)) {
             console.log(`Copying folder ${sourcePath} to ${destPath}`);
-            Helpers.copy(sourcePath, destPath);
+            HelpersTaon.copy(sourcePath, destPath);
           } else {
             console.log(`Copying file ${sourcePath} to ${destPath}`);
-            Helpers.copyFile(sourcePath, destPath);
+            HelpersTaon.copyFile(sourcePath, destPath);
           }
         } else {
           console.warn(`Path ${sourcePath} does not exist. Skipping...`);

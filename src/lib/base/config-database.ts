@@ -1,14 +1,13 @@
 //#region imports
 import { crossPlatformPath, UtilsOs } from 'tnp-core/src';
+import { os } from 'tnp-core/src'; // @backend
 
-import type { BaseProjectResolver } from './classes/base-project-resolver';
+import { HelpersTaon } from '../index';
+import { Low } from '../lowdb'; // @backend
+
 import { BaseDb } from './classes/base-db';
-import { Helpers } from '../index';
+import type { BaseProjectResolver } from './classes/base-project-resolver';
 
-//#region @backend
-import { Low } from '../lowdb';
-import { os } from 'tnp-core/src';
-//#endregion
 
 //#endregion
 
@@ -20,6 +19,7 @@ export class ConfigDatabase extends BaseDb<typeof defaultDb> {
   constructor(ins: BaseProjectResolver) {
     super(ins, 'config', defaultDb);
   }
+
   private get selectedCodeEditorKey(): string {
     return 'selected-code-editor';
   }
@@ -27,7 +27,7 @@ export class ConfigDatabase extends BaseDb<typeof defaultDb> {
   public async selectCodeEditor(): Promise<UtilsOs.Editor> {
     //#region @backendFunc
     const db = await this.getConnection();
-    let editor = await Helpers.consoleGui.select(
+    let editor = await HelpersTaon.consoleGui.select(
       'Select default code editor',
       UtilsOs.EditorArr.map(name => {
         return {

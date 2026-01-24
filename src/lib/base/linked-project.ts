@@ -1,11 +1,12 @@
 import {
   config,
+  Helpers,
   notAllowedNames,
   notAllowedProjectNames,
 } from 'tnp-core/src';
 import { _, crossPlatformPath, path } from 'tnp-core/src';
 
-import { Helpers } from '../index';
+import { HelpersTaon } from '../index';
 
 export class LinkedProject {
 
@@ -38,7 +39,7 @@ export class LinkedProject {
 
     //#region @backendFunc
     const isProperCurrentRemoteUrl =
-      currentRemoteUrl && Helpers.git.isValidRepoUrl(currentRemoteUrl);
+      currentRemoteUrl && HelpersTaon.git.isValidRepoUrl(currentRemoteUrl);
 
     const repoUrl = isProperCurrentRemoteUrl
       ? currentRemoteUrl.replace(
@@ -106,12 +107,12 @@ export class LinkedProject {
           return true;
         }
 
-        return Helpers.git.isGitRoot(folderAbsPath);
+        return HelpersTaon.git.isGitRoot(folderAbsPath);
       })
       .map(folderAbsPath => {
         const relativePath = folderAbsPath.replace(insideLocation + '/', '');
         const projectName = path.basename(relativePath);
-        const currentParentUrl = Helpers.git.getOriginURL(folderAbsPath);
+        const currentParentUrl = HelpersTaon.git.getOriginURL(folderAbsPath);
         return LinkedProject.from({
           repoUrl: currentParentUrl ? currentParentUrl : void 0,
           relativeClonePath: projectName,
@@ -166,12 +167,12 @@ export class LinkedProject {
       if (this.repoUrlSsh) {
         return this.repoUrlSsh;
       }
-      url = Helpers.git.originHttpToSsh(url);
+      url = HelpersTaon.git.originHttpToSsh(url);
     } else if (setOrigin === 'http') {
       if (this.repoUrlHttp) {
         return this.repoUrlHttp;
       }
-      url = Helpers.git.originSshToHttp(url);
+      url = HelpersTaon.git.originSshToHttp(url);
     }
     return url;
     //#endregion

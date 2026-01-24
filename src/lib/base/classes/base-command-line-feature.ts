@@ -1,9 +1,9 @@
 //#region imports
-import { config } from 'tnp-core/src';
+import { config, Helpers } from 'tnp-core/src';
 import { _, crossPlatformPath, path } from 'tnp-core/src';
 import { CLASS } from 'typescript-class-helpers/src';
 
-import { Helpers } from '../../index';
+import { HelpersTaon } from '../../index';
 
 import { BaseProject } from './base-project';
 import type { BaseProjectResolver } from './base-project-resolver';
@@ -144,7 +144,7 @@ export abstract class BaseCommandLineFeature<
     //   delete this.params[deleteArgKey];
     // }
     // console.log({ clearArgs: allArgsToClear })
-    this.args = Helpers.cliTool
+    this.args = HelpersTaon.cliTool
       .removeArgsFromCommand(argsWithParams, allArgsToClear)
       .split(' ')
       .filter(f => !!f);
@@ -186,7 +186,7 @@ export abstract class BaseCommandLineFeature<
       resolved,
       clearedCommand,
     } = // @ts-ignore
-      Helpers.cliTool.resolveItemFromArgsBegin<PROJECT>(this.args, arg =>
+      HelpersTaon.cliTool.resolveItemFromArgsBegin<PROJECT>(this.args, arg =>
         this.project.getChildBy(arg.replace(/\/$/, '')),
       );
     this.project = resolved ? resolved : this.project;

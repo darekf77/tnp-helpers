@@ -1,5 +1,5 @@
-import { Helpers } from '../../index';
-import { config } from 'tnp-core/src';
+
+import { config, Helpers } from 'tnp-core/src';
 import { crossPlatformPath, path, _ } from 'tnp-core/src';
 
 export interface BaseJsonFileReaderOptions<DATA> {

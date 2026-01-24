@@ -1,9 +1,10 @@
 //#region imports
 import { config } from 'tnp-core/src';
 import { _, fse, path } from 'tnp-core/src';
+import { Helpers } from 'tnp-core/src';
 import { PackageJson } from 'type-fest';
 
-import { Helpers, UtilsQuickFixes } from '../../index';
+import { HelpersTaon, UtilsQuickFixes } from '../../index';
 
 import { BaseFeatureForProject } from './base-feature-for-project';
 import type { BaseProject } from './base-project';

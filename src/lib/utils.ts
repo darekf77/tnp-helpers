@@ -24,6 +24,7 @@ import {
   UtilsTerminal,
 } from 'tnp-core/src';
 import { _, CoreModels, Utils } from 'tnp-core/src';
+import { Helpers } from 'tnp-core/src';
 import {
   createPrinter,
   createSourceFile,
@@ -88,12 +89,12 @@ import {
   getModifiers,
   canHaveModifiers,
   isImportEqualsDeclaration,
+  isGetAccessorDeclaration,
 } from 'typescript';
 import type * as ts from 'typescript';
 import { CLASS } from 'typescript-class-helpers/src';
 import type * as vscodeType from 'vscode';
 
-import { Helpers } from './index';
 import {
   applicationConfigTemplate,
   ngMergeConfigTemplate,
@@ -2533,6 +2534,7 @@ export namespace UtilsTypescript {
   }
   //#endregion
 
+  //#region spliting namespace
   export const NSSPLITNAMESAPCE = '__NS__';
 
   //#region spliting namespaces
@@ -3374,6 +3376,162 @@ export namespace UtilsTypescript {
     return next;
     //#endregion
   };
+  //#endregion
+
+  //#region refactor classses into namespaces
+
+  export const refactorClassToNamespace = (sourceText: string): string => {
+    //#region @backendFunc
+    const sourceFile = createSourceFile(
+      'temp.ts',
+      sourceText,
+      ScriptTarget.Latest,
+      true,
+    );
+
+    const printer = createPrinter({ newLine: NewLineKind.LineFeed });
+    const statements: ts.Statement[] = [];
+
+    const capitalize = (str: string) =>
+      str.charAt(0).toUpperCase() + str.slice(1);
+
+    /**
+     * Rewrites `this.x` → `x`
+     */
+    const rewriteThis = (block?: ts.Block): ts.Block | undefined => {
+      //#region @backendFunc
+      if (!block) return block;
+
+      const transformer: ts.TransformerFactory<ts.Node> = context => root => {
+        const visit = (node: ts.Node): ts.Node => {
+          if (
+            isPropertyAccessExpression(node) &&
+            node.expression.kind === SyntaxKind.ThisKeyword
+          ) {
+            return factory.createIdentifier(node.name.text);
+          }
+          return visitEachChild(node, visit, context);
+        };
+        return visitNode(root, visit);
+      };
+
+      const result = transform(block, [transformer]);
+      return result.transformed[0] as ts.Block;
+      //#endregion
+    };
+
+    /**
+     * Creates: export const name = () => { ... }
+     */
+    const createExportedArrowFunction = (
+      name: string,
+      parameters: readonly ts.ParameterDeclaration[],
+      type: ts.TypeNode | undefined,
+      body: ts.Block | undefined,
+    ): ts.Statement => {
+      return factory.createVariableStatement(
+        [factory.createModifier(SyntaxKind.ExportKeyword)],
+        factory.createVariableDeclarationList(
+          [
+            factory.createVariableDeclaration(
+              name,
+              undefined,
+              undefined,
+              factory.createArrowFunction(
+                undefined,
+                undefined,
+                parameters,
+                type,
+                factory.createToken(SyntaxKind.EqualsGreaterThanToken),
+                body ?? factory.createBlock([], true),
+              ),
+            ),
+          ],
+          NodeFlags.Const,
+        ),
+      );
+    };
+
+    sourceFile.forEachChild(node => {
+      if (!isClassDeclaration(node) || !node.name) {
+        statements.push(node as ts.Statement);
+        return;
+      }
+
+      const namespaceMembers: ts.Statement[] = [];
+
+      for (const member of node.members) {
+        // ===== Fields =====
+        if (isPropertyDeclaration(member) && member.name) {
+          const name = member.name as ts.Identifier;
+          const isPublic =
+            !member.modifiers ||
+            member.modifiers.some(m => m.kind === SyntaxKind.PublicKeyword);
+
+          namespaceMembers.push(
+            factory.createVariableStatement(
+              isPublic
+                ? [factory.createModifier(SyntaxKind.ExportKeyword)]
+                : undefined,
+              factory.createVariableDeclarationList(
+                [
+                  factory.createVariableDeclaration(
+                    name.text,
+                    undefined,
+                    undefined,
+                    member.initializer,
+                  ),
+                ],
+                NodeFlags.Const,
+              ),
+            ),
+          );
+        }
+
+        // ===== Getter → export const getX = () => {} =====
+        if (isGetAccessorDeclaration(member) && member.name) {
+          const name = member.name as ts.Identifier;
+
+          namespaceMembers.push(
+            createExportedArrowFunction(
+              `get${capitalize(name.text)}`,
+              [],
+              undefined,
+              rewriteThis(member.body),
+            ),
+          );
+        }
+
+        // ===== Methods → export const fn = () => {} =====
+        if (isMethodDeclaration(member) && member.name) {
+          const name = member.name as ts.Identifier;
+
+          namespaceMembers.push(
+            createExportedArrowFunction(
+              name.text,
+              member.parameters,
+              member.type,
+              rewriteThis(member.body),
+            ),
+          );
+        }
+      }
+
+      statements.push(
+        factory.createModuleDeclaration(
+          [factory.createModifier(SyntaxKind.ExportKeyword)],
+          factory.createIdentifier(node.name.text),
+          factory.createModuleBlock(namespaceMembers),
+          NodeFlags.Namespace,
+        ),
+      );
+    });
+
+    const newFile = factory.updateSourceFile(sourceFile, statements);
+    return printer.printFile(newFile);
+    //#endregion
+  };
+  //#endregion
 }
 
 //#endregion

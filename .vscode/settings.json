@@ -194,7 +194,7 @@
     "editor.formatOnSave": false
   },
 
-  "github.copilot.nextEditSuggestions.enabled": true,
+  "github.copilot.nextEditSuggestions.enabled": false,
   "github.copilot.chat.languageContext.inline.typescript.enabled": true,
   "github.copilot.chat.languageContext.typescript.enabled": true,
   "typescript.suggest.autoImports": false,

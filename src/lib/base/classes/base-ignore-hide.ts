@@ -1,8 +1,8 @@
 //#region imports
-import { fileName, folderName } from 'tnp-core/src';
+import { fileName, folderName, Helpers } from 'tnp-core/src';
 import { _, path, Utils } from 'tnp-core/src';
 
-import { Helpers } from '../../index';
+import { HelpersTaon } from '../../index';
 
 import { BaseFeatureForProject } from './base-feature-for-project';
 import type { BaseProject } from './base-project';

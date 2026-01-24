@@ -1,11 +1,11 @@
 //#region import
-import { config, FilesNames } from 'tnp-core/src';
+import { config, FilesNames, Helpers, Utils } from 'tnp-core/src';
 import { chalk } from 'tnp-core/src';
 import { CoreModels } from 'tnp-core/src';
 import { path, crossPlatformPath } from 'tnp-core/src';
 import { _, UtilsTerminal } from 'tnp-core/src';
 
-import { Helpers } from '../../index';
+import { HelpersTaon } from '../../index';
 import {
   LibrariesBuildOptions,
   LibraryBuildCommandOptions,
@@ -113,7 +113,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
       if (
         useLastUserConfiguration
           ? true
-          : await Helpers.consoleGui.question.yesNo(
+          : await HelpersTaon.consoleGui.question.yesNo(
               `Continue${watch ? ' watch ' : ' '}build with last selected ?`,
             )
       ) {
@@ -125,7 +125,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
           if (this.project.hasFolder(config.folder.dist)) {
             skipRebuildingAllForWatch =
               useLastUserConfiguration ||
-              (await Helpers.consoleGui.question.yesNo(
+              (await HelpersTaon.consoleGui.question.yesNo(
                 `Skip rebuilding all libraries for watch mode ?`,
               ));
           } else {
@@ -140,7 +140,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     // more than 6 libs can be hard to manage in watch mode
     if (!watch || (watch && selectedLibs.length < 6)) {
       if (!skipAllLibsQuestion) {
-        buildAll = await Helpers.consoleGui.question.yesNo(
+        buildAll = await HelpersTaon.consoleGui.question.yesNo(
           `Should all libraries be included in${watch ? ' watch' : ' '}build ?`,
         );
       }
@@ -182,7 +182,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
 
       `);
       if (
-        await Helpers.consoleGui.question.yesNo(
+        await HelpersTaon.consoleGui.question.yesNo(
           `Continue build with ${selected.length} selected ?`,
         )
       ) {
@@ -276,7 +276,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
           ...copylink_to_node_modules,
           ...(!useExternalProvidedLibs
             ? []
-            : Helpers.uniqArray(
+            : Utils.uniqArray(
                 libraries.map(c =>
                   c.parent.pathFor(config.folder.node_modules),
                 ),
@@ -304,7 +304,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
 
     //#region normal build
     const allParenProjsForExtenalLibsBuild: PROJECT[] = useExternalProvidedLibs
-      ? Helpers.uniqArray<PROJECT>(
+      ? Utils.uniqArray<PROJECT>(
           libraries.map(c => c.parent),
           'location',
         )
@@ -413,7 +413,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
         if (Helpers.isSymlinkFileExitedOrUnexisted(dest)) {
           Helpers.remove(dest);
         }
-        Helpers.copy(sourceDist, dest, {
+        HelpersTaon.copy(sourceDist, dest, {
           recursive: true,
           overwrite: true,
         });
@@ -575,7 +575,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
         if (Helpers.isSymlinkFileExitedOrUnexisted(libInsideNodeModules)) {
           Helpers.remove(libInsideNodeModules);
         }
-        Helpers.copy(libCompiledInDist, libInsideNodeModules, {
+        HelpersTaon.copy(libCompiledInDist, libInsideNodeModules, {
           recursive: true,
           overwrite: true,
         });
@@ -644,7 +644,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
           : p,
       );
 
-    const locations = await Helpers.consoleGui.multiselect(
+    const locations = await HelpersTaon.consoleGui.multiselect(
       'Copy compiled version to projects',
       projects.map(c => {
         return {
@@ -685,7 +685,7 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     //#region @backendFunc
 
     if (!this.project.hasFile(this.tempOrgTsConfigFile)) {
-      Helpers.copyFile(
+      HelpersTaon.copyFile(
         this.project.pathFor(config.file.tsconfig_json),
         this.project.pathFor(this.tempOrgTsConfigFile),
       );

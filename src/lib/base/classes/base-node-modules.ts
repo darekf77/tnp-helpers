@@ -1,8 +1,7 @@
 //#region imports
-import { BaseNpmHelpers } from './base-npm-helpers';
 import type fs from 'fs';
 
-import { config } from 'tnp-core/src';
+import { config, Helpers } from 'tnp-core/src';
 import { UtilsOs } from 'tnp-core/src';
 import {
   CoreModels,
@@ -13,11 +12,12 @@ import {
   chalk,
   dateformat,
 } from 'tnp-core/src';
-
-import { Helpers } from '../../index';
-
-import type { BaseProject } from './base-project';
 import { UtilsFilesFoldersSync } from 'tnp-core/src';
+
+import { HelpersTaon } from '../../index';
+
+import { BaseNpmHelpers } from './base-npm-helpers';
+import type { BaseProject } from './base-project';
 //#endregion
 
 export type DedupePackage =
@@ -123,7 +123,7 @@ export class BaseNodeModules<
     dest = this.preventWrongLinkDestination(dest);
     Helpers.removeSymlinks(dest);
     Helpers.remove(dest, true);
-    Helpers.copy(source, dest, {
+    HelpersTaon.copy(source, dest, {
       recursive: true,
       overwrite: true,
       copySymlinksAsFiles: false,
@@ -232,7 +232,7 @@ with ${options.useYarn ? 'yarn' : 'npm'}
             name: 'Exit process',
           },
         };
-        const res = await Helpers.consoleGui.select<
+        const res = await HelpersTaon.consoleGui.select<
           keyof typeof nodeModulesInstallFailOptions
         >('What to do?', nodeModulesInstallFailOptions);
         if (res === 'again') {

@@ -8,9 +8,9 @@ import {
   UtilsOs,
   UtilsTerminal,
 } from 'tnp-core/src';
-import { _ } from 'tnp-core/src';
+import { Helpers, _ } from 'tnp-core/src';
 
-import { Helpers, UtilsVSCode } from '../../index';
+import { HelpersTaon, UtilsVSCode } from '../../index';
 
 import { BaseFeatureForProject } from './base-feature-for-project';
 import type { BaseProject } from './base-project';
@@ -84,7 +84,7 @@ export class BaseVscodeHelpers<
 
   //#region get extensions
   getExtensions(): string[] {
-    return Helpers.uniqArray([
+    return Utils.uniqArray([
       //#region @backend
       // 'Angular.ng-template', // high cpu usage
       'EditorConfig.EditorConfig',
@@ -330,7 +330,7 @@ export class BaseVscodeHelpers<
         Helpers.taskDone(`Installed: ${extname}`);
       } catch (error) {
         Helpers.warn(`Not able to install ${extname}`);
-        Helpers.pressKeyOrWait('Press any key to continue...');
+        HelpersTaon.pressKeyOrWait('Press any key to continue...');
       }
     }
     Helpers.info('Done installing');

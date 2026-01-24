@@ -1,10 +1,11 @@
 //#region import
 import { load } from 'json10-writer/src';
 import { config } from 'tnp-core/src';
-import { _, chalk, crossPlatformPath, path, UtilsTerminal } from 'tnp-core/src';
+import { _, chalk, crossPlatformPath, path, Utils, UtilsTerminal } from 'tnp-core/src';
+import { Helpers } from 'tnp-core/src';
 
 import {
-  Helpers,
+  HelpersTaon,
   LinkedPorjectsConfig,
   LinkedProject,
   UtilsTypescript,
@@ -137,10 +138,10 @@ export class BaseLinkedProjects<
     const linkedProjectsConfig = this.getLinkedProjectsConfig();
     const linkedProjectToAdd = LinkedProject.from(linkedProject);
 
-    const newProjRemoteHttpUrl = Helpers.git.originSshToHttp(
+    const newProjRemoteHttpUrl = HelpersTaon.git.originSshToHttp(
       linkedProjectToAdd.remoteUrl(),
     );
-    const newProjRemoteSshUrl = Helpers.git.originHttpToSsh(
+    const newProjRemoteSshUrl = HelpersTaon.git.originHttpToSsh(
       linkedProjectToAdd.remoteUrl(),
     );
 
@@ -311,7 +312,7 @@ export class BaseLinkedProjects<
         if (
           !projOrProjName.remoteUrl() &&
           currentRemoteUrl &&
-          Helpers.git.isValidRepoUrl(currentRemoteUrl)
+          HelpersTaon.git.isValidRepoUrl(currentRemoteUrl)
         ) {
           projOrProjName.repoUrl = currentRemoteUrl.replace(
             path.basename(currentRemoteUrl),
@@ -323,7 +324,7 @@ export class BaseLinkedProjects<
     );
     // console.log({ linkedPorjectsConfig })
     // @ts-ignore
-    linkedPorjectsConfig.projects = Helpers.uniqArray<LinkedProject>(
+    linkedPorjectsConfig.projects = Utils.uniqArray<LinkedProject>(
       linkedPorjectsConfig.projects,
       'relativeClonePath',
     );
