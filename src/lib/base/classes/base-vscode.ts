@@ -857,6 +857,7 @@ export class BaseVscodeHelpers<
       'tsconfig.json': 'json',
     };
 
+    settings["search.followSymlinks"] = false;
     settings['search.useIgnoreFiles'] = false;
     settings['search.include'] = ['**/src/**'];
     settings['search.exclude'] = {
