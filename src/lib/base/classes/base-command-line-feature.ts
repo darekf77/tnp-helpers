@@ -144,8 +144,7 @@ export abstract class BaseCommandLineFeature<
     //   delete this.params[deleteArgKey];
     // }
     // console.log({ clearArgs: allArgsToClear })
-    this.args = HelpersTaon.cliTool
-      .removeArgsFromCommand(argsWithParams, allArgsToClear)
+    this.args = HelpersTaon.cliTool.removeArgsFromCommand(argsWithParams, allArgsToClear)
       .split(' ')
       .filter(f => !!f);
 

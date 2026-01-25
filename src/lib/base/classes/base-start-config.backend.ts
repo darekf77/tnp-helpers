@@ -188,8 +188,7 @@ export class BaseStartConfig {
         // console.log('USING FROM FUNCTION')
         if (this.useStringArrForArgsFunctions) {
           recognizedClassFnOrFunction.apply({}, [
-            HelpersTaon.cliTool
-              .globalArgumentsParserTnp(restOfArgs, this.ProjectClass)
+            HelpersTaon.cliTool.globalArgumentsParserTnp(restOfArgs, this.ProjectClass)
               .split(' '),
           ]);
         } else {

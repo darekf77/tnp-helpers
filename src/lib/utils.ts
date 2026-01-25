@@ -2535,6 +2535,95 @@ export namespace UtilsTypescript {
   //#endregion
 
   //#region spliting namespace
+
+  export const hoistTrailingChainComments = (code: string): string => {
+    return code.replace(
+      /(.*?)(\/\/[^\n]*?)\n(\s*\.)/g,
+      (_m, expr, comment, dot) => `${comment}\n${expr.trim()}\n${dot}`,
+    );
+  };
+
+  export const normalizeBrokenLines = (code: string): string => {
+    //#region @backendFunc
+    code = hoistTrailingChainComments(code);
+
+    const sourceFile = createSourceFile(
+      'file.ts',
+      code,
+      ScriptTarget.Latest,
+      true,
+      ScriptKind.TS,
+    );
+
+    const transformer: TransformerFactory<ts.SourceFile> = context => {
+      const { factory } = context;
+
+      const visit = (node: ts.Node): ts.Node => {
+        // ---- CallExpression: rebuild callee + args
+        if (isCallExpression(node)) {
+          const newExpression = visitNode(
+            node.expression,
+            visit,
+          ) as ts.Expression;
+
+          const newArguments = node.arguments.map(
+            arg => visitNode(arg, visit) as ts.Expression,
+          );
+
+          const newTypeArguments = node.typeArguments?.map(
+            ta => visitNode(ta, visit) as ts.TypeNode,
+          );
+
+          return factory.updateCallExpression(
+            node,
+            newExpression,
+            newTypeArguments,
+            newArguments,
+          );
+        }
+
+        // ---- PropertyAccessExpression: rebuild chain
+        if (isPropertyAccessExpression(node)) {
+          const newExpression = visitNode(
+            node.expression,
+            visit,
+          ) as ts.Expression;
+
+          return factory.updatePropertyAccessExpression(
+            node,
+            newExpression,
+            node.name,
+          );
+        }
+
+        return visitEachChild(node, visit, context);
+      };
+
+      return (sf: ts.SourceFile): ts.SourceFile => {
+        return visitEachChild(sf, visit, context);
+      };
+    };
+
+    const result = transform(sourceFile, [transformer]);
+    const transformedSourceFile = result.transformed[0] as ts.SourceFile;
+
+    const printer = createPrinter({
+      newLine: NewLineKind.LineFeed,
+      removeComments: false,
+    });
+
+    let output = printer.printFile(transformedSourceFile);
+    result.dispose();
+
+    output = collapseFluentChains(output);
+    return output;
+    //#endregion
+  };
+
+  export const collapseFluentChains = (code: string): string => {
+    return code.replace(/(\S)\n\s*\./g, '$1.');
+  };
+
   export const NSSPLITNAMESAPCE = '__NS__';
 
   //#region spliting namespaces
@@ -2580,12 +2669,6 @@ export namespace UtilsTypescript {
     content: string,
   ): SplitNamespaceResult => {
     //#region @backendFunc
-
-    // content = content.replace(
-    //   /^.*\/\/#(?:region|end(?:region|reigon)).*\r?\n?/gm,
-    //   '\n',
-    // );
-
     type Range = { start: number; end: number };
     type Edit = { start: number; end: number; text: string };
 
@@ -2607,8 +2690,9 @@ export namespace UtilsTypescript {
     const applyEdits = (text: string, edits: Edit[]): string => {
       edits.sort((a, b) => b.start - a.start);
       let out = text;
-      for (const e of edits)
+      for (const e of edits) {
         out = out.slice(0, e.start) + e.text + out.slice(e.end);
+      }
       return out;
     };
 
@@ -2617,12 +2701,6 @@ export namespace UtilsTypescript {
     // ---------------------------------------------
     // Phase 1: Parse + TypeChecker
     // ---------------------------------------------
-    // IMPORTANT: you already have these in your file (keep your import style):
-    // createSourceFile, ScriptTarget, ScriptKind, createProgram, createCompilerHost,
-    // isModuleDeclaration, isIdentifier, isModuleBlock, forEachChild,
-    // isVariableDeclaration, isFunctionDeclaration, isClassDeclaration,
-    // isInterfaceDeclaration, isTypeAliasDeclaration, isEnumDeclaration,
-    // isShorthandPropertyAssignment
     const sourceFile = createSourceFile(
       'file.ts',
       content,
@@ -2654,14 +2732,13 @@ export namespace UtilsTypescript {
     const symbolRename = new Map<ts.Symbol, string>();
 
     // ---------------------------------------------
-    // Phase 2: Collect declarations inside namespaces (+ build maps)
+    // Phase 2: Collect namespace API
     // ---------------------------------------------
     const collect = (node: ts.Node): void => {
       const nodePos = node.getStart(sourceFile, false);
 
-      if (isModuleDeclaration(node) && node.name && isIdentifier(node.name)) {
+      if (isModuleDeclaration(node) && isIdentifier(node.name)) {
         const parent = nsStack[nsStack.length - 1];
-
         const fullPrefix = parent
           ? `${parent.fullPrefix}${NSSPLITNAMESAPCE}${node.name.text}`
           : node.name.text;
@@ -2672,7 +2749,7 @@ export namespace UtilsTypescript {
         nsStack.push({ fullPrefix, dotPrefix });
 
         if (node.body && isModuleBlock(node.body)) {
-          for (const stmt of node.body.statements) collect(stmt);
+          node.body.statements.forEach(collect);
         } else {
           forEachChild(node, collect);
         }
@@ -2684,67 +2761,55 @@ export namespace UtilsTypescript {
       const inNamespace = nsStack.length > 0;
       const inRegion = inAnyRange(nodePos, regionRanges);
 
-      const hasExportModifier = (n: ts.Node): boolean => {
-        // Some nodes (declarations/statements) have modifiers; Node in general doesn't.
-        const mods = canHaveModifiers(n) ? getModifiers(n) : undefined;
-        return !!mods?.some(m => m.kind === SyntaxKind.ExportKeyword);
-      };
+      const hasExportModifier = (n: ts.Node): boolean =>
+        !!(canHaveModifiers(n)
+          ? getModifiers(n)?.some(m => m.kind === SyntaxKind.ExportKeyword)
+          : false);
 
-      const isNamespaceApiDecl = (
-        n: ts.Node,
-      ): n is
-        | ts.FunctionDeclaration
-        | ts.ClassDeclaration
-        | ts.InterfaceDeclaration
-        | ts.TypeAliasDeclaration
-        | ts.EnumDeclaration
-        | ts.ImportEqualsDeclaration => {
-        return (
-          isFunctionDeclaration(n) ||
-          isClassDeclaration(n) ||
-          isInterfaceDeclaration(n) ||
-          isTypeAliasDeclaration(n) ||
-          isEnumDeclaration(n) ||
-          isImportEqualsDeclaration(n)
-        );
-      };
-
-      // export const/let/var Foo = ...
-      const isExportedVarInNamespace = (
-        n: ts.Node,
-      ): n is ts.VariableDeclaration => {
-        // only variables declared via `export const/let/var ...` statement
+      const isExportedVarInNamespace = (n: ts.Node): boolean => {
         if (!isVariableDeclaration(n)) return false;
-
-        const declList = n.parent; // VariableDeclarationList
-        const varStmt = declList?.parent; // VariableStatement
-        if (!varStmt || !isVariableStatement(varStmt)) return false;
-
-        return hasExportModifier(varStmt);
+        const stmt = n.parent?.parent;
+        return !!stmt && isVariableStatement(stmt) && hasExportModifier(stmt);
       };
 
       if (inNamespace && inRegion) {
-        // ✅ only namespace API: exported declarations
         if (
-          (isNamespaceApiDecl(node) && hasExportModifier(node)) ||
-          isExportedVarInNamespace(node)
+          (isFunctionDeclaration(node) ||
+            isClassDeclaration(node) ||
+            isInterfaceDeclaration(node) ||
+            isTypeAliasDeclaration(node) ||
+            isEnumDeclaration(node) ||
+            isImportEqualsDeclaration(node)) &&
+          hasExportModifier(node)
         ) {
-          const anyNode = node as any;
-          const name = anyNode.name;
-
+          const name = (node as any).name;
           if (name && isIdentifier(name)) {
             const symbol = checker.getSymbolAtLocation(name);
-            const ctx = nsStack[nsStack.length - 1];
+            const ctx = nsStack.at(-1);
+            if (symbol && ctx) {
+              const newName = `${ctx.fullPrefix}${NSSPLITNAMESAPCE}${name.text}`;
+              symbolRename.set(symbol, newName);
+              namespacesMapObj[`${ctx.dotPrefix}.${name.text}`] = newName;
+              (namespacesReplace[ctx.fullPrefix.split(NSSPLITNAMESAPCE)[0]] ||=
+                []).push(newName);
+            }
+          }
+        }
+
+        if (isExportedVarInNamespace(node)) {
+          const decl = node as ts.VariableDeclaration;
+          const name = decl.name;
+
+          if (isIdentifier(name)) {
+            const symbol = checker.getSymbolAtLocation(name);
+            const ctx = nsStack.at(-1);
 
             if (symbol && ctx) {
               const newName = `${ctx.fullPrefix}${NSSPLITNAMESAPCE}${name.text}`;
               symbolRename.set(symbol, newName);
-
-              const dotKey = `${ctx.dotPrefix}.${name.text}`;
-              namespacesMapObj[dotKey] = newName;
-
-              const root = ctx.fullPrefix.split(NSSPLITNAMESAPCE)[0];
-              (namespacesReplace[root] ||= []).push(newName);
+              namespacesMapObj[`${ctx.dotPrefix}.${name.text}`] = newName;
+              (namespacesReplace[ctx.fullPrefix.split(NSSPLITNAMESAPCE)[0]] ||=
+                []).push(newName);
             }
           }
         }
@@ -2755,65 +2820,50 @@ export namespace UtilsTypescript {
 
     collect(sourceFile);
 
-    // Deduplicate namespacesReplace lists
-    for (const k of Object.keys(namespacesReplace)) {
+    Object.keys(namespacesReplace).forEach(k => {
       namespacesReplace[k] = Array.from(new Set(namespacesReplace[k])).sort();
-    }
+    });
 
     // ---------------------------------------------
-    // Phase 3: Rename ALL identifier occurrences via text edits
+    // Phase 3: Rename usages (FINAL FIX)
     // ---------------------------------------------
     const renameEdits: Edit[] = [];
 
     const collectIdentifierEdits = (node: ts.Node): void => {
-      const nodePos = node.getStart(sourceFile, false);
-
-      if (!inAnyRange(nodePos, regionRanges)) {
+      if (!inAnyRange(node.getStart(sourceFile, false), regionRanges)) {
         forEachChild(node, collectIdentifierEdits);
         return;
       }
 
-      // Expand shorthand properties using getShorthandAssignmentValueSymbol
-      if (isShorthandPropertyAssignment(node)) {
-        const nameId = node.name;
+      // 🔥 Handle FULL property access chains
+      if (isPropertyAccessExpression(node)) {
+        const symbol = checker.getSymbolAtLocation(node.name);
+        const newName = symbol && symbolRename.get(symbol);
 
-        const valueSymbol =
-          (checker as any).getShorthandAssignmentValueSymbol?.(node) ??
-          checker.getSymbolAtLocation(nameId);
-
-        const newName = valueSymbol ? symbolRename.get(valueSymbol) : undefined;
-
-        if (newName && nameId.text !== newName) {
-          const start = node.getStart(sourceFile, false);
-          const end = node.getEnd();
-          renameEdits.push({ start, end, text: `${nameId.text}: ${newName}` });
-          return;
+        if (newName) {
+          renameEdits.push({
+            start: node.getStart(sourceFile, false),
+            end: node.getEnd(),
+            text: newName,
+          });
+          return; // 🚨 do NOT recurse — prevents partial renames
         }
       }
 
+      // Fallback: plain identifiers (non-property access)
       if (isIdentifier(node)) {
-        // 🔥 do NOT rename `this` (it can resolve to the containing class symbol in type positions)
-        if (node.text === 'this' || node.text === 'super') {
-          return;
-        }
-
-        const parent = node.parent;
-        if (
-          parent &&
-          isShorthandPropertyAssignment(parent) &&
-          parent.name === node
-        ) {
-          return;
-        }
+        if (node.text === 'this' || node.text === 'super') return;
 
         const symbol = checker.getSymbolAtLocation(node);
-        const newName = symbol ? symbolRename.get(symbol) : undefined;
+        const newName = symbol && symbolRename.get(symbol);
+        if (!newName || node.text === newName) return;
 
-        if (newName && node.text !== newName) {
-          const start = node.getStart(sourceFile, false);
-          const end = node.getEnd();
-          renameEdits.push({ start, end, text: newName });
-        }
+        renameEdits.push({
+          start: node.getStart(sourceFile, false),
+          end: node.getEnd(),
+          text: newName,
+        });
+        return;
       }
 
       forEachChild(node, collectIdentifierEdits);
@@ -2823,29 +2873,16 @@ export namespace UtilsTypescript {
 
     const renamedContent = applyEdits(content, renameEdits);
 
-    const cleanupDoubledNamespaceReceiver = (text: string): string =>
-      text.replace(
-        new RegExp(
-          `\\b([A-Za-z_]\\w*)\\.\\1${Utils.escapeStringForRegEx(NSSPLITNAMESAPCE)}([A-Za-z_]\\w*)\\b`,
-          'g',
-        ),
-        (_m, ns, rest) => `${ns}${NSSPLITNAMESAPCE}${rest}`,
-      );
-
-    const renamedContent2 = cleanupDoubledNamespaceReceiver(renamedContent);
-
     // ---------------------------------------------
-    // Phase 4: Replace namespaces → regions (AFTER renames), via text edits
+    // Phase 4: Replace namespaces → regions
     // ---------------------------------------------
     const sf2 = createSourceFile(
       'file.ts',
-      renamedContent2,
+      renamedContent,
       ScriptTarget.Latest,
       true,
       ScriptKind.TS,
     );
-
-    const regionRanges2 = [{ start: 0, end: renamedContent2.length }];
 
     type NsReplace = {
       openStart: number;
@@ -2858,76 +2895,28 @@ export namespace UtilsTypescript {
     const nsReplaces: NsReplace[] = [];
     const nsStack2: { fullPrefix: string }[] = [];
 
-    // const findNamespaceBrace = (
-    //   node: ts.ModuleDeclaration,
-    // ): { openBracePos: number; closeBracePos: number } | null => {
-    //   const text = renamedContent2;
-
-    //   const start = node.getStart(sf2, false);
-    //   const end = node.getEnd();
-
-    //   const slice = text.slice(start, end);
-    //   const firstBraceRel = slice.indexOf('{');
-    //   if (firstBraceRel < 0) return null;
-
-    //   const openBracePos = start + firstBraceRel;
-
-    //   let depth = 0;
-    //   for (let i = openBracePos; i < text.length; i++) {
-    //     const ch = text[i];
-    //     if (ch === '{') depth++;
-    //     else if (ch === '}') {
-    //       depth--;
-    //       if (depth === 0) return { openBracePos, closeBracePos: i };
-    //     }
-    //   }
-    //   return null;
-    // };
-
     const collectNamespaceReplaces = (node: ts.Node): void => {
-      // const nodePos = node.getStart(sf2, false);
-
-      if (isModuleDeclaration(node) && node.name && isIdentifier(node.name)) {
-        const parent = nsStack2[nsStack2.length - 1];
+      if (isModuleDeclaration(node) && isIdentifier(node.name)) {
+        const parent = nsStack2.at(-1);
         const fullPrefix = parent
           ? `${parent.fullPrefix}${NSSPLITNAMESAPCE}${node.name.text}`
           : node.name.text;
 
         nsStack2.push({ fullPrefix });
 
-        const inRegion = intersectsAnyRange(
-          node.getStart(sf2, false),
-          node.getEnd(),
-          regionRanges2,
-        );
-
-        if (inRegion) {
-          // const brace = findNamespaceBrace(node);
-          if (node.body && isModuleBlock(node.body)) {
-            // AST-accurate braces for the namespace block
-            const openBracePos = node.body.getStart(sf2, false); // points at '{'
-            const closeBracePos = node.body.getEnd() - 1; // points at '}'
-
-            const openStart = node.getStart(sf2, false);
-            const openEnd = openBracePos + 1; // consume '{'
-            const closeStart = closeBracePos; // consume '}'
-            const closeEnd = closeBracePos + 1;
-
-            nsReplaces.push({
-              openStart,
-              openEnd,
-              closeStart,
-              closeEnd,
-              fullPrefix,
-            });
-          }
-        }
-
         if (node.body && isModuleBlock(node.body)) {
-          for (const stmt of node.body.statements)
-            collectNamespaceReplaces(stmt);
-        } else {
-          forEachChild(node, collectNamespaceReplaces);
+          const openBrace = node.body.getStart(sf2, false);
+          const closeBrace = node.body.getEnd() - 1;
+
+          nsReplaces.push({
+            openStart: node.getStart(sf2, false),
+            openEnd: openBrace + 1,
+            closeStart: closeBrace,
+            closeEnd: closeBrace + 1,
+            fullPrefix,
+          });
+
+          node.body.statements.forEach(collectNamespaceReplaces);
         }
 
         nsStack2.pop();
@@ -2955,20 +2944,8 @@ export namespace UtilsTypescript {
       });
     }
 
-    let finalContent = applyEdits(renamedContent2, nsEdits);
-
-    // finalContent = replaceNamespaceWithLongNames(
-    //   finalContent,
-    //   namespacesMapObj,
-    // );
-
-    // console.log({
-    //   namespacesMapObj,
-    //   namespacesReplace,
-    // });
-
     return {
-      content: finalContent,
+      content: applyEdits(renamedContent, nsEdits),
       namespacesMapObj,
       namespacesReplace,
     };

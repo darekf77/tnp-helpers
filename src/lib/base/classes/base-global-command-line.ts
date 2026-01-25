@@ -588,10 +588,16 @@ export class BaseGlobalCommandLine<
       [
         ...HelpersTaon.arrays.fuzzy(this.args.join(' '), founded, p => p.name)
           .results,
-        ...HelpersTaon.arrays.fuzzy(this.args.join(' '), founded, p => p.basename)
-          .results,
-        ...HelpersTaon.arrays.fuzzy(this.args.join(' '), founded, p => p.location)
-          .results,
+        ...HelpersTaon.arrays.fuzzy(
+          this.args.join(' '),
+          founded,
+          p => p.basename,
+        ).results,
+        ...HelpersTaon.arrays.fuzzy(
+          this.args.join(' '),
+          founded,
+          p => p.location,
+        ).results,
       ],
       'location',
     );
@@ -3463,6 +3469,23 @@ ${lastCommitMessage}
       namespacesMapObj: splitData.namespacesMapObj,
       namespacesReplace: splitData.namespacesReplace,
     });
+
+    Helpers.info(`Done`);
+    this._exit();
+    //#endregion
+  }
+
+  normalizeBrokenLines() {
+    //#region @backendFunc
+    let namespacePath = path.isAbsolute(this.firstArg)
+      ? crossPlatformPath(this.firstArg)
+      : crossPlatformPath([process.cwd(), this.firstArg]);
+
+    const splitData = UtilsTypescript.normalizeBrokenLines(
+      Helpers.readFile(namespacePath),
+    );
+
+    UtilsFilesFoldersSync.writeFile(namespacePath, splitData);
 
     Helpers.info(`Done`);
     this._exit();
