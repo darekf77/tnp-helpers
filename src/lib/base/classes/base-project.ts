@@ -805,11 +805,11 @@ export abstract class BaseProject<
    * @param fileRelativeToProjectPath
    * @returns
    */
-  readJson<T = {}>(fileRelativeToProjectPath: string): T {
+  readJson<T = {}>(fileRelativeToProjectPath: string | string[]): T {
     //#region @backendFunc
-    const fullPath = path.resolve(
-      path.join(this.location, fileRelativeToProjectPath),
-    );
+    const fullPath = crossPlatformPath(path.resolve(
+      this.location,crossPlatformPath(fileRelativeToProjectPath) ,
+    ));
     return Helpers.readJson5(fullPath);
     //#endregion
   }

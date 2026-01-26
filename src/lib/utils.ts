@@ -3041,6 +3041,7 @@ export namespace UtilsTypescript {
   };
   //#endregion
 
+  //#region spliting namespaces / replace import namepspace with exploaded ns
   export const replaceImportNamespaceWithWithExplodedNamespace = (
     content: string,
     namespacesReplace: SplitNamespaceResult['namespacesReplace'],
@@ -3317,6 +3318,7 @@ export namespace UtilsTypescript {
     return out;
     //#endregion
   };
+  //#endregion
 
   //#region spliting namespaces / update result with renames
   export const updateSplitNamespaceResultMapReplaceObj = (
@@ -3482,33 +3484,36 @@ export namespace UtilsTypescript {
     const exportedSymbols = checker.getExportsOfModule(entrySymbol);
 
     for (const symbol of exportedSymbols) {
-      const resolved =
-        symbol.flags & SymbolFlags.Alias
-          ? checker.getAliasedSymbol(symbol)
-          : symbol;
+      // 🔑 DO NOT resolve alias here
+      for (const decl of symbol.declarations ?? []) {
+        if (!isExportSpecifier(decl) && !isExportDeclaration(decl)) {
+          continue;
+        }
 
-      for (const decl of resolved.declarations ?? []) {
-        if (!isExportDeclaration(decl)) continue;
-        if (!decl.moduleSpecifier) continue;
+        const exportDecl = isExportSpecifier(decl) ? decl.parent.parent : decl;
 
-        const pkgName = (decl.moduleSpecifier as ts.StringLiteral).text;
+        if (!isExportDeclaration(exportDecl)) continue;
+        if (!exportDecl.moduleSpecifier) continue;
+
+        const pkgName = getCleanImport(
+          (exportDecl.moduleSpecifier as ts.StringLiteral).text,
+        );
         const split = onlyConsideThisIsomorphicImport.get(pkgName);
         if (!split) continue;
 
         // export * from 'pkg'
-        if (!decl.exportClause) {
+        if (!exportDecl.exportClause) {
           result[pkgName] = '*';
           continue;
         }
 
-        // export { X } from 'pkg'
-        if (isNamedExports(decl.exportClause)) {
-          const names = decl.exportClause.elements
+        // export { Models } from 'pkg'
+        if (isNamedExports(exportDecl.exportClause)) {
+          const names = exportDecl.exportClause.elements
             .map(e => e.name.text)
             .filter(n => split.namespacesReplace[n]);
 
           if (!names.length) continue;
-
           if (result[pkgName] === '*') continue;
 
           result[pkgName] ??= [];
@@ -3554,6 +3559,22 @@ export namespace UtilsTypescript {
   //#endregion
 
   //#endregion
+
+  export const getCleanImport = (importName: string): string | undefined => {
+    if (!importName) {
+      return importName;
+    }
+    return importName
+      .replace(
+        new RegExp(Utils.escapeStringForRegEx(`/browser-prod`) + '$'),
+        '',
+      )
+      .replace(new RegExp(Utils.escapeStringForRegEx(`/websql-prod`) + '$'), '')
+      .replace(new RegExp(Utils.escapeStringForRegEx(`/lib-prod`) + '$'), '')
+      .replace(new RegExp(Utils.escapeStringForRegEx(`/browser`) + '$'), '')
+      .replace(new RegExp(Utils.escapeStringForRegEx(`/websql`) + '$'), '')
+      .replace(new RegExp(Utils.escapeStringForRegEx(`/lib`) + '$'), '');
+  };
 
   //#region refactor classses into namespaces
 
