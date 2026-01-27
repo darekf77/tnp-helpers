@@ -3954,7 +3954,7 @@ ${HelpersTaon.terminalLine()}\n`;
     const esbuildImportName = 'esbuild';
     const esbuild = await import(esbuildImportName);
     const data = await esbuild.build({
-       entryPoints: [pathToJsFile],
+      entryPoints: [pathToJsFile],
       bundle: true,
       platform: 'node',
       target: 'node20', // closest to es2022 in runtime
@@ -3966,6 +3966,13 @@ ${HelpersTaon.terminalLine()}\n`;
       write: false, // don’t write to disk, just return the result
       logLevel: 'silent', // like quiet: true
       format: 'cjs', // CommonJS output like NCC
+      tsconfigRaw: {
+        compilerOptions: {
+          experimentalDecorators: true,
+          emitDecoratorMetadata: true, // if you use TypeORM / Angular DI
+          useDefineForClassFields: false, // Angular-safe default
+        },
+      },
     } as BuildOptions);
     let output = data.outputFiles[0].text;
     // const data = await require('@vercel/ncc')(pathToJsFile, {
