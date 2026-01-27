@@ -4,6 +4,7 @@ import { ChildProcess, exec } from 'child_process';
 import { createHash } from 'crypto'; // @backend
 import { promisify } from 'util'; // @backend
 
+import type { BuildOptions } from 'esbuild';
 import type { CopyOptionsSync } from 'fs-extra';
 import * as ini from 'ini';
 import { Log, Level } from 'ng2-logger/src';
@@ -3860,11 +3861,12 @@ ${HelpersTaon.terminalLine()}\n`;
     return UtilsFilesFoldersSync.copyFile(sourcePath, destinationPath, options);
   };
 
-   /**
+  /**
    * @deprecated
    * use _.random()
    */
-  export const randomInteger = (max, min) => Math.round(Math.random() * (max - min)) + min;
+  export const randomInteger = (max, min) =>
+    Math.round(Math.random() * (max - min)) + min;
 
   export const resolve = (fileOrFolderPath: string): string => {
     //#region @backendFunc
@@ -3952,18 +3954,19 @@ ${HelpersTaon.terminalLine()}\n`;
     const esbuildImportName = 'esbuild';
     const esbuild = await import(esbuildImportName);
     const data = await esbuild.build({
-      entryPoints: [pathToJsFile],
+       entryPoints: [pathToJsFile],
       bundle: true,
       platform: 'node',
       target: 'node20', // closest to es2022 in runtime
       minify: !!minify,
       sourcemap: false,
+      treeShaking: true,
       external: externals, // array of package names to leave unbundled
       // outfile: outputFilePath, // or use write: false if you want in-memory result
       write: false, // don’t write to disk, just return the result
       logLevel: 'silent', // like quiet: true
       format: 'cjs', // CommonJS output like NCC
-    });
+    } as BuildOptions);
     let output = data.outputFiles[0].text;
     // const data = await require('@vercel/ncc')(pathToJsFile, {
     //   //#region ncc options

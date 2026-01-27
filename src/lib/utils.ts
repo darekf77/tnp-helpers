@@ -93,6 +93,11 @@ import {
   SymbolFlags,
   ModuleKind,
   isQualifiedName,
+  ScriptSnapshot,
+  getDefaultLibFilePath,
+  createLanguageService,
+  CodeFixAction,
+  ImportsNotUsedAsValues,
 } from 'typescript';
 import type * as ts from 'typescript';
 import { CLASS } from 'typescript-class-helpers/src';
@@ -3560,6 +3565,7 @@ export namespace UtilsTypescript {
 
   //#endregion
 
+  //#region get clean import
   export const getCleanImport = (importName: string): string | undefined => {
     if (!importName) {
       return importName;
@@ -3575,6 +3581,7 @@ export namespace UtilsTypescript {
       .replace(new RegExp(Utils.escapeStringForRegEx(`/websql`) + '$'), '')
       .replace(new RegExp(Utils.escapeStringForRegEx(`/lib`) + '$'), '');
   };
+  //#endregion
 
   //#region refactor classses into namespaces
 
