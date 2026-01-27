@@ -35,9 +35,9 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
   //#region constructor
   constructor(
     protected readonly classFn: any,
-    public readonly cliToolName: string,
+    public readonly cliToolNameFn: ()=> string,
   ) {
-    this.cliToolName = cliToolName;
+
     // console.log("global.frameworkName",global.frameworkName)
     // if (!UtilsOs.isRunningInVscodeExtension()) {
     // if (!this.cliToolName) {
@@ -45,7 +45,7 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
     // }
     this.portsWorker = new PortsWorker(
       'ports-worker', // BaseGlobalCommandLine.prototype.startCliServicePortsWorker
-      `${this.cliToolName} startCliServicePortsWorker --skipCoreCheck`,
+      ()=> `${cliToolNameFn()} startCliServicePortsWorker --skipCoreCheck`,
       CURRENT_PACKAGE_VERSION,
     );
   }

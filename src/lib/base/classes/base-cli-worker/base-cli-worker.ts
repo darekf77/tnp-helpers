@@ -127,6 +127,7 @@ export abstract class BaseCliWorker<
   //#endregion
 
   //#region constructor
+
   constructor(
     /**
      * unique id for service
@@ -135,7 +136,7 @@ export abstract class BaseCliWorker<
     /**
      * external command that will start service
      */
-    public readonly startCommand: string,
+    public readonly startCommandFn: ()=>string,
     /**
      * unique id for service
      */
@@ -749,9 +750,9 @@ export abstract class BaseCliWorker<
       Helpers.logInfo(
         `[${this.serviceID}][startDetached] ` +
           ` Starting in current terminal
-          "${chalk.bold(this.startCommand)}"...`,
+          "${chalk.bold(this.startCommandFn())}"...`,
       );
-      await UtilsProcess.startAsyncChildProcessCommandUntil(this.startCommand, {
+      await UtilsProcess.startAsyncChildProcessCommandUntil(this.startCommandFn(), {
         untilOptions: {
           stdout: [this.SPECIAL_WORKER_READY_MESSAGE],
           stderr: [this.SPECIAL_WORKER_READY_MESSAGE],
@@ -763,9 +764,9 @@ export abstract class BaseCliWorker<
       Helpers.logInfo(
         `[${this.serviceID}][startDetached] ` +
           `Starting in new terminal
-          "${chalk.bold(this.startCommand)}"...`,
+          "${chalk.bold(this.startCommandFn())}"...`,
       );
-      await UtilsProcess.startInNewTerminalWindow(this.startCommand);
+      await UtilsProcess.startInNewTerminalWindow(this.startCommandFn());
     }
 
     Helpers.logInfo(

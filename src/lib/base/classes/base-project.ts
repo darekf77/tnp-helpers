@@ -47,7 +47,7 @@ export abstract class BaseProject<
   //#region static
 
   //#region static / instance of resovle
-  static ins = new BaseProjectResolver<BaseProject>(BaseProject, 'taon');
+  static ins = new BaseProjectResolver<BaseProject>(BaseProject, () => 'taon');
   //#endregion
 
   //#endregion
@@ -807,9 +807,9 @@ export abstract class BaseProject<
    */
   readJson<T = {}>(fileRelativeToProjectPath: string | string[]): T {
     //#region @backendFunc
-    const fullPath = crossPlatformPath(path.resolve(
-      this.location,crossPlatformPath(fileRelativeToProjectPath) ,
-    ));
+    const fullPath = crossPlatformPath(
+      path.resolve(this.location, crossPlatformPath(fileRelativeToProjectPath)),
+    );
     return Helpers.readJson5(fullPath);
     //#endregion
   }
@@ -1048,7 +1048,10 @@ Would you like to update current project configuration?`)
    */
   filterOnlyCopy(basePathFoldersOnlyToInclude: string[]) {
     //#region @backendFunc
-    return HelpersTaon.filterOnlyCopy(basePathFoldersOnlyToInclude, this.location);
+    return HelpersTaon.filterOnlyCopy(
+      basePathFoldersOnlyToInclude,
+      this.location,
+    );
     //#endregion
   }
   //#endregion
@@ -1175,7 +1178,11 @@ Would you like to update current project configuration?`)
     if (Array.isArray(relativePath)) {
       relativePath = crossPlatformPath(relativePath);
     }
-    HelpersTaon.setValueToJSON(this.pathFor(relativePath), lodashGetPath, value);
+    HelpersTaon.setValueToJSON(
+      this.pathFor(relativePath),
+      lodashGetPath,
+      value,
+    );
     //#endregion
   }
   //#endregion
@@ -1190,7 +1197,11 @@ Would you like to update current project configuration?`)
     if (Array.isArray(relativePath)) {
       relativePath = crossPlatformPath(relativePath);
     }
-    HelpersTaon.setValueToJSONC(this.pathFor(relativePath), lodashGetPath, value);
+    HelpersTaon.setValueToJSONC(
+      this.pathFor(relativePath),
+      lodashGetPath,
+      value,
+    );
     //#endregion
   }
   //#endregion
@@ -1205,7 +1216,11 @@ Would you like to update current project configuration?`)
     if (Array.isArray(relativePath)) {
       relativePath = crossPlatformPath(relativePath);
     }
-    HelpersTaon.setValueToJSONC(this.pathFor(relativePath), lodashGetPath, value);
+    HelpersTaon.setValueToJSONC(
+      this.pathFor(relativePath),
+      lodashGetPath,
+      value,
+    );
     //#endregion
   }
   //#endregion

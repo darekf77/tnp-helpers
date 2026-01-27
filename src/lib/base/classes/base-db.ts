@@ -26,31 +26,26 @@ export class BaseDb<DB extends object> {
   //#endregion
 
   public get isUsingDB(): boolean {
-
     //#region @backendFunc
     return !!this.lowDB;
     //#endregion
-
   }
 
   get projectsDbLocation() {
-
     //#region @backendFunc
     const userFolder = crossPlatformPath([
       UtilsOs.getRealHomeDir(),
-      `${dotTaonFolder}/apps/${this.dbName}-db/${this.ins.cliToolName}`,
+      `${dotTaonFolder}/apps/${this.dbName}-db/${this.ins.cliToolNameFn()}`,
     ]);
     try {
       Helpers.mkdirp(userFolder);
     } catch (error) {}
     return crossPlatformPath([userFolder, 'db.json']);
     //#endregion
-
   }
 
   //#region @backend
   async getConnection(): Promise<Low<DB>> {
-
     //#region @backendFunc
     const dbLocation = this.projectsDbLocation;
     // console.log({ dbLocation })
@@ -74,5 +69,4 @@ export class BaseDb<DB extends object> {
     return void 0;
   }
   //#endregion
-
 }
