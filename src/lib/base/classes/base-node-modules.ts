@@ -549,7 +549,7 @@ with ${options.useYarn ? 'yarn' : 'npm'}
         packageNameForDuplicationRemoval,
         { maxDepth: 15 },
       );
-
+      Helpers.log(foundAbsPaths);
       // console.log({foundAbsPaths})
       Helpers.taskDone(
         `Looking for directories done. Found: ${foundAbsPaths.length}`,
