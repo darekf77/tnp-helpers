@@ -717,6 +717,10 @@ Please provide proper commit message for lastest changes in your project:
     return [];
   }
 
+  skipLintOnPush():boolean {
+    return true;
+  }
+
   cleanRepoFromAnyFilesExceptDotGitFolder(): void {
     //#region @backendFunc
     return HelpersTaon.git.cleanRepoFromAnyFilesExceptDotGitFolder(
@@ -1267,6 +1271,10 @@ Please provide proper commit message for lastest changes in your project:
     //#endregion
 
     //#region lint
+    if(this.skipLintOnPush()) {
+      skipLint = true;
+    }
+
     if (commitData.typeOfCommit === 'release') {
       skipLint = true;
     }
