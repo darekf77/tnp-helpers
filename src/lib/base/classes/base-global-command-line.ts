@@ -3491,4 +3491,14 @@ ${lastCommitMessage}
     this._exit();
     //#endregion
   }
+
+  //#region split ts into js
+  async stripTsTypesIntoJs() {
+    Helpers.info('Transforming Ts into JS')
+    await HelpersTaon.stripTsTypesIntoJs(
+       crossPlatformPath([this.cwd,this.args[0]]),
+       crossPlatformPath([this.cwd,this.args[1]]),
+    );
+    this._exit();
+  }
 }

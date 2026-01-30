@@ -3884,6 +3884,55 @@ ${HelpersTaon.terminalLine()}\n`;
     CLASS.setName(f, name);
     return f;
   };
+
+  /**
+   * Strips TypeScript types and emits plain JS files.
+   * - No type-checking
+   * - No bundling
+   * - No tsconfig
+   * - Preserves folder structure
+   */
+  export const stripTsTypesIntoJs = async (
+    entrypointFolderAbsPathWithIndexTs: string,
+    outFolderWithIndexJS: string,
+  ): Promise<void> => {
+    //#region @backendFunc
+    entrypointFolderAbsPathWithIndexTs = crossPlatformPath(
+      entrypointFolderAbsPathWithIndexTs,
+    );
+    const srcRoot = (entrypointFolderAbsPathWithIndexTs);
+    const outRoot = (outFolderWithIndexJS);
+    const esbuildImportName = 'esbuild';
+    const esbuild = await import(esbuildImportName);
+    await esbuild.build({
+      entryPoints: [path.join(srcRoot, '**/*.ts')],
+
+      outdir: outRoot,
+      outbase: srcRoot,
+
+      bundle: false, // 🚫 no graph walking
+      format: 'esm', // matches your barrel exports
+      platform: 'node',
+      target: 'node20',
+
+      sourcemap: false,
+      minify: false,
+
+      logOverride: {
+        'unsupported-require-call': 'silent',
+      },
+
+      tsconfig: undefined, // 🚫 NO tsconfig
+      logLevel: 'warning',
+
+      loader: {
+        '.ts': 'ts',
+      },
+    });
+
+    //#endregion
+  };
+
   export const bundleCodeIntoSingleFile = async (
     pathToJsFile: string,
     outputFilePath: string,
@@ -3972,6 +4021,9 @@ ${HelpersTaon.terminalLine()}\n`;
         ? {
             tsconfigRaw: {
               compilerOptions: {
+                skipLibCheck: true,
+                strict: false,
+                jsx: 'preserve',
                 experimentalDecorators: true,
                 emitDecoratorMetadata: true, // if you use TypeORM / Angular DI
                 useDefineForClassFields: false, // Angular-safe default
