@@ -3900,6 +3900,7 @@ ${HelpersTaon.terminalLine()}\n`;
       additionalReplaceWithNothing?: string[];
       skipFixingSQLlite?: boolean;
       minify?: boolean;
+      prod?: boolean;
     },
   ): Promise<void> => {
     //#region @backendFunc
@@ -3909,6 +3910,7 @@ ${HelpersTaon.terminalLine()}\n`;
       additionalReplaceWithNothing,
       skipFixingSQLlite,
       minify,
+      prod,
       strategy,
     } = options || {};
     if (!strategy) {
@@ -3966,13 +3968,17 @@ ${HelpersTaon.terminalLine()}\n`;
       write: false, // don’t write to disk, just return the result
       logLevel: 'silent', // like quiet: true
       format: 'cjs', // CommonJS output like NCC
-      tsconfigRaw: {
-        compilerOptions: {
-          experimentalDecorators: true,
-          emitDecoratorMetadata: true, // if you use TypeORM / Angular DI
-          useDefineForClassFields: false, // Angular-safe default
-        },
-      },
+      ...(prod
+        ? {
+            tsconfigRaw: {
+              compilerOptions: {
+                experimentalDecorators: true,
+                emitDecoratorMetadata: true, // if you use TypeORM / Angular DI
+                useDefineForClassFields: false, // Angular-safe default
+              },
+            },
+          }
+        : {}),
     } as BuildOptions);
     let output = data.outputFiles[0].text;
     // const data = await require('@vercel/ncc')(pathToJsFile, {
