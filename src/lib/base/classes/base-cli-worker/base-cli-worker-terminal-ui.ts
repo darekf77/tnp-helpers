@@ -50,7 +50,6 @@ export class BaseCliWorkerTerminalUI<
    * override whole terminal header
    */
   protected async header(): Promise<void> {
-
     //#region @backendFunc
     const headerText = await this.headerText();
     if (headerText) {
@@ -60,7 +59,6 @@ export class BaseCliWorkerTerminalUI<
       });
     }
     //#endregion
-
   }
   //#endregion
 
@@ -68,7 +66,6 @@ export class BaseCliWorkerTerminalUI<
   async infoMessageBelowHeader(
     options?: BaseCliWorkerGuiUrlOptions,
   ): Promise<void> {
-
     //#region @backendFunc
     options = options || {};
     Helpers.info(
@@ -81,7 +78,6 @@ export class BaseCliWorkerTerminalUI<
         `,
     );
     //#endregion
-
   }
   //#endregion
 
@@ -111,7 +107,6 @@ export class BaseCliWorkerTerminalUI<
     exitIsOnlyReturn?: boolean;
     chooseAction?: boolean;
   }): BaseWorkerTerminalActionReturnType {
-
     //#region @backendFunc
     options = options || {};
     options.chooseAction = _.isBoolean(options.chooseAction)
@@ -141,14 +136,15 @@ export class BaseCliWorkerTerminalUI<
               message: 'Are you sure you want to shut down service?',
             })
           ) {
-            await this.worker.kill();
+            await this.worker.kill({
+              reason: 'user kill from menu',
+            });
             process.exit(0);
           }
         },
       },
     };
     //#endregion
-
   }
   //#endregion
 
@@ -200,5 +196,4 @@ export class BaseCliWorkerTerminalUI<
     console.log(this.worker.SPECIAL_WORKER_READY_MESSAGE);
   }
   //#endregion
-
 }

@@ -1,5 +1,5 @@
 //#region imports
-import { Helpers, CoreModels, UtilsTerminal, _ } from 'tnp-core/src';
+import { Helpers, CoreModels, UtilsTerminal, _, config } from 'tnp-core/src';
 
 import { Port, PortStatusArr } from '../../index';
 import { BaseCliWorkerTerminalUI } from '../classes/base-cli-worker/base-cli-worker-terminal-ui';
@@ -252,26 +252,37 @@ export class TcpUdpPortsTerminalUI extends BaseCliWorkerTerminalUI<PortsWorker> 
   //#region methods / display menu with items
   protected async displayItemsForPortsStatus(status: PortStatus) {
     //#region @backendFunc
-    const controller = await this.worker.getRemoteControllerFor({
-      methodOptions: {
-        calledFrom: `displayItemsForPortsStatus:${status}`,
-      },
-    });
-    const portsData = await controller.getPortsByStatus(status).request();
-    const ports = portsData.body.json.map(c => c.titleOnList);
-    if (ports.length === 0) {
-      Helpers.info(`
+    while (true) {
+      try {
+        const controller = await this.worker.getRemoteControllerFor({
+          methodOptions: {
+            calledFrom: `displayItemsForPortsStatus:${status}`,
+          },
+        });
+        const portsData = await controller.getPortsByStatus(status).request();
+        const ports = portsData.body.json.map(c => c.titleOnList);
+        if (ports.length === 0) {
+          Helpers.info(`
 
-        No ports with status "${status}" as taken by os yet...
+            No ports with status "${status}" as taken by os yet...
 
-        `);
+            `);
 
-      await UtilsTerminal.pressAnyKeyToContinueAsync({
-        message: 'Press any key to continue',
-      });
-    } else {
-      await UtilsTerminal.previewLongList(ports.join('\n'));
+          await UtilsTerminal.pressAnyKeyToContinueAsync({
+            message: 'Press any key to continue',
+          });
+        } else {
+          await UtilsTerminal.previewLongList(ports.join('\n'));
+        }
+        break;
+      } catch (error) {
+        console.error(error);
+        if (!(await UtilsTerminal.pressAnyKeyToTryAgainErrorOccurred(error))) {
+          break;
+        }
+      }
     }
+
     //#endregion
   }
   //#endregion

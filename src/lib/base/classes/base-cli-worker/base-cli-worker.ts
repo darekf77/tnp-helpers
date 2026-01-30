@@ -136,13 +136,13 @@ export abstract class BaseCliWorker<
     /**
      * external command that will start service
      */
-    public readonly startCommandFn: ()=>string,
+    public readonly startCommandFn: () => string,
     /**
      * unique id for service
      */
     public readonly serviceVersion: string,
   ) {
-    BaseCliWorker.workers.set(this.serviceID, this);
+    BaseCliWorker.workers.set(serviceID, this);
   }
   //#endregion
 
@@ -195,45 +195,48 @@ export abstract class BaseCliWorker<
    * stop if started
    */
   public async kill(options?: {
+    reason?: string;
+    skipDependencies?: boolean;
     methodOptions?: Partial<BaseCliMethodOptions>;
-    dontRemoveConfigFile?: boolean;
   }): Promise<void> {
     //#region @backendFunc
     options = options || ({} as any);
     options.methodOptions = BaseCliMethodOptions.from(options.methodOptions);
 
-    if (this.dependencyWorkers.size > 0) {
-      for (const [serviceId, worker] of this.dependencyWorkers) {
-        Helpers.info(`Killing dependency worker "${serviceId}"...`);
-        await worker.kill({
-          methodOptions: options.methodOptions,
-          dontRemoveConfigFile: options.dontRemoveConfigFile,
+    Helpers.info(`Killing service "${this.serviceID}"... `);
+    Helpers.logInfo(`Reason "${options.reason || '-'}"`);
+
+    const killRequest = async (
+      worker: BaseCliWorker<any>,
+      reason: string,
+    ): Promise<void> => {
+      try {
+        const ctrl = await worker.getRemoteControllerFor({
+          methodOptions: options.methodOptions.clone(opt => {
+            opt.calledFrom = `${opt.calledFrom}.kill`;
+            return opt;
+          }),
         });
+
+        await ctrl.baseCLiWorkerCommand_kill(reason).request();
+        await Utils.waitMilliseconds(200);
+        Helpers.log(`Service "${worker.serviceID}" killed...`);
+      } catch (error) {
+        Helpers.log(error);
+        Helpers.log(`Service "${worker.serviceID}" not killed...   `);
+      }
+    };
+
+    if (!!options && !options.skipDependencies) {
+      if (this.dependencyWorkers.size > 0) {
+        for (const [serviceId, worker] of this.dependencyWorkers) {
+          Helpers.info(`Killing dependency worker "${serviceId}"...`);
+          await killRequest(worker, `killing as dependency`);
+        }
       }
     }
+    await killRequest(this, options.reason);
 
-    Helpers.info(`Killing service "${this.serviceID}"...`);
-    if (this.processLocalInfoObj.isEmpty) {
-      Helpers.log(
-        `Service "${this.serviceID}" not started - nothing to kill...`,
-      );
-      return;
-    }
-    const ctrl = await this.getRemoteControllerFor({
-      methodOptions: options.methodOptions.clone(opt => {
-        opt.calledFrom = `${opt.calledFrom}.kill`;
-        return opt;
-      }),
-    });
-    try {
-      await ctrl
-        .baseCLiWorkerCommand_kill(options.dontRemoveConfigFile)
-        .request();
-      Helpers.log(`Service "${this.serviceID}" killed...`);
-    } catch (error) {
-      Helpers.log(error);
-      Helpers.log(`Service "${this.serviceID}" not killed...   `);
-    }
     //#endregion
   }
   //#endregion
@@ -250,6 +253,7 @@ export abstract class BaseCliWorker<
     options.methodOptions = BaseCliMethodOptions.from(options.methodOptions);
 
     await this.kill({
+      reason: 'restart of cloud',
       methodOptions: options.methodOptions,
     });
     //longer because os is disposing process previous process
@@ -298,6 +302,7 @@ export abstract class BaseCliWorker<
 
     if (methodOptions.cliParams.kill) {
       await this.kill({
+        reason: 'kill from parm arg',
         methodOptions,
       });
       process.exit(0);
@@ -491,7 +496,6 @@ export abstract class BaseCliWorker<
     });
 
     Helpers.info(`Service started !`);
-    this.preventExternalConfigChange();
 
     if (_.isFunction(options.actionBeforeTerminalUI)) {
       await options.actionBeforeTerminalUI();
@@ -504,26 +508,6 @@ export abstract class BaseCliWorker<
       [${config.frameworkName}-helpers] No terminal UI configured. Not displaying anything.
       `);
     }
-    //#endregion
-  }
-  //#endregion
-
-  //#region protected methods / prevent external config change
-  protected preventExternalConfigChange(): void {
-    //#region @backendFunc
-    Helpers.info(`watching: ${this.pathToProcessLocalInfoJson}`);
-    const currentConfig = this.processLocalInfoObj;
-    chokidar.watch(this.pathToProcessLocalInfoJson).on('change', () => {
-      Helpers.log(`Service data changed...`);
-      if (!this.processLocalInfoObj.isEquals(currentConfig)) {
-        UtilsTerminal.clearConsole();
-        Helpers.error(
-          `Service config data externally changed... killing service`,
-          false,
-          true,
-        );
-      }
-    });
     //#endregion
   }
   //#endregion
@@ -594,10 +578,10 @@ export abstract class BaseCliWorker<
           `[${this.serviceID}] Killing service with lower version...`,
         );
         await this.kill({
-          dontRemoveConfigFile: true,
+          reason: 'kill because lower version of framework',
           methodOptions: options.methodOptions,
+          skipDependencies: true,
         });
-        await UtilsTerminal.wait(1);
       }
     } catch (error) {
       Helpers.logInfo(`Probably no need to kill worker with lower version`);
@@ -752,14 +736,17 @@ export abstract class BaseCliWorker<
           ` Starting in current terminal
           "${chalk.bold(this.startCommandFn())}"...`,
       );
-      await UtilsProcess.startAsyncChildProcessCommandUntil(this.startCommandFn(), {
-        untilOptions: {
-          stdout: [this.SPECIAL_WORKER_READY_MESSAGE],
-          stderr: [this.SPECIAL_WORKER_READY_MESSAGE],
+      await UtilsProcess.startAsyncChildProcessCommandUntil(
+        this.startCommandFn(),
+        {
+          untilOptions: {
+            stdout: [this.SPECIAL_WORKER_READY_MESSAGE],
+            stderr: [this.SPECIAL_WORKER_READY_MESSAGE],
+          },
+          displayOutputInParentProcess: Helpers.getIsVerboseMode(),
+          resolveAfterAnyExitCode: true,
         },
-        displayOutputInParentProcess: Helpers.getIsVerboseMode(),
-        resolveAfterAnyExitCode: true,
-      });
+      );
     } else {
       Helpers.logInfo(
         `[${this.serviceID}][startDetached] ` +

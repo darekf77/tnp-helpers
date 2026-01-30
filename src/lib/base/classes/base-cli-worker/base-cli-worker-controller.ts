@@ -33,47 +33,38 @@ export abstract class TaonBaseCliWorkerController<
     @Body('serviceId') serviceId: string,
     @Body('serviceVersion') serviceVersion: string,
   ): Taon.Response<void> {
-
     //#region @backendFunc
     return async () => {
       this.cliWorkerServiceId = serviceId;
       this.cliWorkerServiceVersion = serviceVersion;
     };
     //#endregion
-
   }
   //#endregion
 
   //#region api methods / kill
   @GET()
   baseCLiWorkerCommand_kill(
-    @Query('dontRemoveConfigFile')
-    dontRemoveConfigFile?: boolean,
+    @Query('reason')
+    reason: string,
   ): Taon.Response<void> {
-
     //#region @backendFunc
     return async () => {
       console.log(`Killing worker "${this.cliWorkerServiceId}"...`);
+      console.log(`Reason ${reason}`);
       setTimeout(async () => {
         console.log(
           `Destroying context worker "${this.cliWorkerServiceId}"...`,
         );
-        await this.ctx.destroy();
-        if (!dontRemoveConfigFile) {
-          Helpers.removeFileIfExists(
-            BaseCliWorkerUtils.getPathToProcessLocalInfoJson(
-              this.cliWorkerServiceId,
-            ),
-          );
-        }
-        Helpers.clearConsole();
-        setTimeout(() => {
-          process.exit(0);
-        });
+        Helpers.removeFileIfExists(
+          BaseCliWorkerUtils.getPathToProcessLocalInfoJson(
+            this.cliWorkerServiceId,
+          ),
+        );
+        process.exit(0);
       }); // TODO may be change to 0
     };
     //#endregion
-
   }
   //#endregion
 
@@ -83,7 +74,6 @@ export abstract class TaonBaseCliWorkerController<
     path: '/info',
   })
   info(): Taon.ResponseHtml {
-
     //#region @backendFunc
     return async () => {
       return `
@@ -99,7 +89,6 @@ export abstract class TaonBaseCliWorkerController<
       `;
     };
     //#endregion
-
   }
   //#endregion
 
@@ -108,7 +97,6 @@ export abstract class TaonBaseCliWorkerController<
   baseCLiWorkerCommand_isHealthy(
     @Body() checkingProcessConfig: BaseCliWorkerConfig,
   ): Taon.Response<boolean> {
-
     //#region @backendFunc
     return async (req, res) => {
       checkingProcessConfig = BaseCliWorkerConfig.from(checkingProcessConfig);
@@ -123,7 +111,6 @@ export abstract class TaonBaseCliWorkerController<
       return checkingProcessConfig.isEquals(currentConfig);
     };
     //#endregion
-
   }
   //#endregion
 
@@ -132,7 +119,6 @@ export abstract class TaonBaseCliWorkerController<
   baseCLiWorkerCommand_hasUpToDateVersion(
     @Body() checkingProcessConfig: BaseCliWorkerConfig,
   ): Taon.Response<boolean> {
-
     //#region @backendFunc
     return async (req, res) => {
       checkingProcessConfig = BaseCliWorkerConfig.from(checkingProcessConfig);
@@ -149,8 +135,6 @@ export abstract class TaonBaseCliWorkerController<
       );
     };
     //#endregion
-
   }
   //#endregion
-
 }
