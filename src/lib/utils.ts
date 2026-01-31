@@ -98,6 +98,7 @@ import {
   createLanguageService,
   CodeFixAction,
   ImportsNotUsedAsValues,
+  transpileModule,
 } from 'typescript';
 import type * as ts from 'typescript';
 import { CLASS } from 'typescript-class-helpers/src';
@@ -3759,6 +3760,57 @@ export namespace UtilsTypescript {
     //#endregion
   };
   //#endregion
+
+  export const stripTsTypesIntoJs = async (
+    entrypointFolderAbsPathWithIndexTs: string,
+    outFolderWithIndexJS: string,
+  ): Promise<void> => {
+    //#region @backendFunc
+    const srcRoot = crossPlatformPath(entrypointFolderAbsPathWithIndexTs);
+    const outRoot = crossPlatformPath(outFolderWithIndexJS);
+
+    const tsFiles = UtilsFilesFoldersSync.getFilesFrom(srcRoot, {
+      recursive: true,
+    }).filter(f => f.endsWith('.ts') || f.endsWith('.tsx'));
+
+    for (const absTsFile of tsFiles) {
+      const relPath = crossPlatformPath(path.relative(srcRoot, absTsFile));
+      const outJsFile = crossPlatformPath(path.join(outRoot, relPath))
+        .replace(/\.ts$/, '.js')
+        .replace(/\.tsx$/, '.js');
+
+      Helpers.mkdirp(path.dirname(outJsFile));
+
+      const tsContent = Helpers.readFile(absTsFile);
+
+      const jsContent = transpileModule(tsContent, {
+        compilerOptions: {
+          // 🔥 ONLY syntax stripping
+          target: ScriptTarget.ES2022,
+          module: ModuleKind.ESNext,
+
+          noEmitHelpers: true,
+          experimentalDecorators: true,
+          emitDecoratorMetadata: false,
+          useDefineForClassFields: false,
+
+          // no emit tricks
+          removeComments: false,
+          importHelpers: false,
+          sourceMap: false,
+
+          // critical: no lib, no types, no checking
+          noLib: true,
+          isolatedModules: true,
+        },
+        fileName: absTsFile,
+        reportDiagnostics: false,
+      }).outputText;
+
+      UtilsFilesFoldersSync.writeFile(outJsFile, jsContent);
+    }
+    //#endregion
+  };
 }
 
 //#endregion

@@ -36,7 +36,7 @@ import { Helpers } from 'tnp-core/src';
 import { BaseProject } from 'tnp-helpers/src';
 import { CLASS } from 'typescript-class-helpers/src';
 
-import { UtilsQuickFixes } from '../utils';
+import { UtilsQuickFixes, UtilsTypescript } from '../utils';
 export { Helpers } from 'tnp-core/src';
 //#endregion
 
@@ -3897,38 +3897,41 @@ ${HelpersTaon.terminalLine()}\n`;
     outFolderWithIndexJS: string,
   ): Promise<void> => {
     //#region @backendFunc
-    entrypointFolderAbsPathWithIndexTs = crossPlatformPath(
-      entrypointFolderAbsPathWithIndexTs,
-    );
-    const srcRoot = entrypointFolderAbsPathWithIndexTs;
-    const outRoot = outFolderWithIndexJS;
-    const esbuildImportName = 'esbuild';
-    const esbuild = await import(esbuildImportName);
-    await esbuild.build({
-      entryPoints: [path.join(srcRoot, '**/*.ts')],
+    UtilsTypescript.stripTsTypesIntoJs(entrypointFolderAbsPathWithIndexTs,outFolderWithIndexJS);
+    return;
+    // ESBULD does "extra" things to js output
+    // entrypointFolderAbsPathWithIndexTs = crossPlatformPath(
+    //   entrypointFolderAbsPathWithIndexTs,
+    // );
+    // const srcRoot = entrypointFolderAbsPathWithIndexTs;
+    // const outRoot = outFolderWithIndexJS;
+    // const esbuildImportName = 'esbuild';
+    // const esbuild = await import(esbuildImportName);
+    // await esbuild.build({
+    //   entryPoints: [path.join(srcRoot, '**/*.ts')],
 
-      outdir: outRoot,
-      outbase: srcRoot,
+    //   outdir: outRoot,
+    //   outbase: srcRoot,
 
-      bundle: false, // 🚫 no graph walking
-      format: 'esm', // matches your barrel exports
-      platform: 'node',
-      target: 'node20',
+    //   bundle: false, // 🚫 no graph walking
+    //   format: 'esm', // matches your barrel exports
+    //   platform: 'node',
+    //   target: 'node20',
 
-      sourcemap: false,
-      minify: false,
+    //   sourcemap: false,
+    //   minify: false,
 
-      logOverride: {
-        'unsupported-require-call': 'silent',
-      },
+    //   logOverride: {
+    //     'unsupported-require-call': 'silent',
+    //   },
 
-      tsconfig: undefined, // 🚫 NO tsconfig
-      logLevel: 'warning',
+    //   tsconfig: undefined, // 🚫 NO tsconfig
+    //   logLevel: 'warning',
 
-      loader: {
-        '.ts': 'ts',
-      },
-    });
+    //   loader: {
+    //     '.ts': 'ts',
+    //   },
+    // });
 
     //#endregion
   };
