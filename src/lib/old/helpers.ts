@@ -201,34 +201,6 @@ export function optionsFix(options?: ProcesOptions) {
 /**
  * @deprecated
  */
-export function crossPlatformPath(pathStringOrPathParts: string | string[]) {
-  if (Array.isArray(pathStringOrPathParts)) {
-    pathStringOrPathParts = pathStringOrPathParts.join('/');
-  }
-
-  //#region @backend
-  if (process.platform !== 'win32') {
-    return pathStringOrPathParts;
-  }
-  //#endregion
-
-  if (typeof pathStringOrPathParts !== 'string') {
-    return pathStringOrPathParts;
-  }
-
-  const isExtendedLengthPath = /^\\\\\?\\/.test(pathStringOrPathParts);
-  const hasNonAscii = /[^\u0000-\u0080]+/.test(pathStringOrPathParts);
-
-  if (isExtendedLengthPath || hasNonAscii) {
-    return pathStringOrPathParts;
-  }
-
-  return pathStringOrPathParts.replace(/\\/g, '/');
-}
-
-/**
- * @deprecated
- */
 export async function getModuleName(value: string = 'Filename') {
   const vscode = getVscode();
   const result = await vscode.window.showInputBox({

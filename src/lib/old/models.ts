@@ -2,7 +2,7 @@ import { CoreModels } from 'tnp-core/src';
 
 import type { ExecCommandType } from './execute-command';
 
-export type CommandType = {
+export  interface CommandType  {
   command?: string;
   exec?: ExecCommandType;
   title?: string;

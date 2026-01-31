@@ -2,6 +2,7 @@ import * as child from 'child_process';
 import * as fse from 'fs';
 import * as path from 'path';
 
+import { crossPlatformPath } from 'tnp-core/src';
 import type { ExtensionContext, Uri } from 'vscode';
 
 import {
@@ -13,13 +14,13 @@ import {
   escapeStringForRegEx,
   deepClone,
   valueFromCommand,
-  crossPlatformPath,
   getVscode,
 } from './helpers';
 import { ProcesOptions, ProgressData, ResolveVariable } from './models';
 
-export type ExecCommandTypeOpt = {
+export interface ExecCommandTypeOpt {
   vscode?: typeof import('vscode');
+  resolveVariables: ResolveVariable[];
   log?: Log;
   context?: ExtensionContext;
   cwd?: string;
@@ -488,8 +489,9 @@ export function executeCommand(
                       cwd,
                       uri,
                       selectedUris,
+                      resolveVariables,
                       rootFolderPath:
-                        vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
+                        crossPlatformPath(vscode.workspace.workspaceFolders?.[0]?.uri.fsPath) ,
                     });
                     finishAction(titleOfTask);
                   } catch (error) {
