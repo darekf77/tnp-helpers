@@ -3900,8 +3900,8 @@ ${HelpersTaon.terminalLine()}\n`;
     entrypointFolderAbsPathWithIndexTs = crossPlatformPath(
       entrypointFolderAbsPathWithIndexTs,
     );
-    const srcRoot = (entrypointFolderAbsPathWithIndexTs);
-    const outRoot = (outFolderWithIndexJS);
+    const srcRoot = entrypointFolderAbsPathWithIndexTs;
+    const outRoot = outFolderWithIndexJS;
     const esbuildImportName = 'esbuild';
     const esbuild = await import(esbuildImportName);
     await esbuild.build({
@@ -3949,7 +3949,11 @@ ${HelpersTaon.terminalLine()}\n`;
       additionalReplaceWithNothing?: string[];
       skipFixingSQLlite?: boolean;
       minify?: boolean;
+      /**
+       * TODO
+       */
       prod?: boolean;
+      useTsConfig?: boolean;
     },
   ): Promise<void> => {
     //#region @backendFunc
@@ -3961,6 +3965,7 @@ ${HelpersTaon.terminalLine()}\n`;
       minify,
       prod,
       strategy,
+      useTsConfig,
     } = options || {};
     if (!strategy) {
       strategy = 'cli';
@@ -4017,7 +4022,7 @@ ${HelpersTaon.terminalLine()}\n`;
       write: false, // don’t write to disk, just return the result
       logLevel: 'silent', // like quiet: true
       format: 'cjs', // CommonJS output like NCC
-      ...(prod
+      ...(useTsConfig
         ? {
             tsconfigRaw: {
               compilerOptions: {
