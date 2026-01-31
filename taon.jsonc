@@ -44,7 +44,6 @@
 
   "isomorphicDependenciesForNpmLib": [
     "incremental-compiler",
-    "json10-writer",
     "magic-renamer",
     "ng2-logger",
     "taon",
