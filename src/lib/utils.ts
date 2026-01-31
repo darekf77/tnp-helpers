@@ -2643,9 +2643,6 @@ export namespace UtilsTypescript {
      *  namespacesMapObj: {
      *  'Utils.wait': 'Utils_wait',
      *  'Utils.waitMilliseconds': 'Utils_waitMilliseconds',
-     *  'Utils.uniqArray': 'Utils_uniqArray',
-     *  'Utils.seen': 'Utils_seen',
-     *  'Utils.sortKeys': 'Utils_sortKeys',
      * }
      */
     namespacesMapObj: { [namespaceDotPath: string]: string };
@@ -2654,24 +2651,22 @@ export namespace UtilsTypescript {
      *  Utils: [
      *  'Utils_DbBinaryFormat',
      *  'Utils_DbBinaryFormatEnum',
-     *  'Utils_DbBinaryFormatForBackend',
-     *  'Utils_DbBinaryFormatForBrowser',
-     *  'Utils_ansiRegex',
-     *  'Utils_binary_arrayBuffer',
-     *  'Utils_binary_arrayBufferToBlob',
-     *  'Utils_binary_base64toBlob',
-     *  'Utils_binary_base64toBuffer',
      *  ],
      *  UtilsCliClassMethod: [
      *  'UtilsCliClassMethod_CLI_METHOD_KEY',
      *  'UtilsCliClassMethod_argsToParse',
-     *  'UtilsCliClassMethod_classFnConstructor',
-     *  'UtilsCliClassMethod_className',
-     *  'UtilsCliClassMethod_decoratorMethod',
      *  ]
      * }
      */
     namespacesReplace: { [rootNamespace: string]: string[] };
+    /**
+     * Everything from namespacesMapObj except types, interfaces etc.
+     */
+    namespacesMapObjJS?: { [namespaceDotPath: string]: string };
+    /**
+     * Everything from namespacesReplace except types, interfaces etc.
+     */
+    namespacesReplaceJS?: { [rootNamespace: string]: string[] };
   }
   //#endregion
 
@@ -2703,18 +2698,28 @@ export namespace UtilsTypescript {
 
     const namespacesMapObj: { [k: string]: string } = {};
     const namespacesReplace: { [k: string]: string[] } = {};
+    const namespacesMapObjJS: { [k: string]: string } = {};
+    const namespacesReplaceJS: { [k: string]: string[] } = {};
 
     const inAnyRange = (pos: number, ranges: Range[]) =>
       ranges.some(r => pos >= r.start && pos <= r.end);
 
-    const intersectsAnyRange = (
-      spanStart: number,
-      spanEnd: number,
-      ranges: Range[],
-    ) =>
-      ranges.some(
-        r => Math.max(spanStart, r.start) <= Math.min(spanEnd, r.end),
+    const isRuntimeSymbol = (symbol: ts.Symbol): boolean => {
+      const flags = symbol.getFlags();
+
+      return (
+        (flags & SymbolFlags.Value) !== 0 && (flags & SymbolFlags.Type) === 0
       );
+    };
+
+    // const intersectsAnyRange = (
+    //   spanStart: number,
+    //   spanEnd: number,
+    //   ranges: Range[],
+    // ) =>
+    //   ranges.some(
+    //     r => Math.max(spanStart, r.start) <= Math.min(spanEnd, r.end),
+    //   );
 
     const applyEdits = (text: string, edits: Edit[]): string => {
       edits.sort((a, b) => b.start - a.start);
@@ -2814,6 +2819,7 @@ export namespace UtilsTypescript {
           const name = (node as any).name;
           if (name && isIdentifier(name)) {
             const symbol = checker.getSymbolAtLocation(name);
+            const isJS = symbol && isRuntimeSymbol(symbol);
             const ctx = nsStack.at(-1);
             if (symbol && ctx) {
               const newName = `${ctx.fullPrefix}${NSSPLITNAMESAPCE}${name.text}`;
@@ -2821,6 +2827,13 @@ export namespace UtilsTypescript {
               namespacesMapObj[`${ctx.dotPrefix}.${name.text}`] = newName;
               (namespacesReplace[ctx.fullPrefix.split(NSSPLITNAMESAPCE)[0]] ||=
                 []).push(newName);
+
+              if (isJS) {
+                namespacesMapObjJS[`${ctx.dotPrefix}.${name.text}`] = newName;
+                (namespacesReplaceJS[
+                  ctx.fullPrefix.split(NSSPLITNAMESAPCE)[0]
+                ] ||= []).push(newName);
+              }
             }
           }
         }
@@ -2831,6 +2844,7 @@ export namespace UtilsTypescript {
 
           if (isIdentifier(name)) {
             const symbol = checker.getSymbolAtLocation(name);
+            const isJS = symbol && isRuntimeSymbol(symbol);
             const ctx = nsStack.at(-1);
 
             if (symbol && ctx) {
@@ -2839,6 +2853,12 @@ export namespace UtilsTypescript {
               namespacesMapObj[`${ctx.dotPrefix}.${name.text}`] = newName;
               (namespacesReplace[ctx.fullPrefix.split(NSSPLITNAMESAPCE)[0]] ||=
                 []).push(newName);
+              if (isJS) {
+                namespacesMapObjJS[`${ctx.dotPrefix}.${name.text}`] = newName;
+                (namespacesReplaceJS[
+                  ctx.fullPrefix.split(NSSPLITNAMESAPCE)[0]
+                ] ||= []).push(newName);
+              }
             }
           }
         }
@@ -2997,6 +3017,8 @@ export namespace UtilsTypescript {
       content: applyEdits(renamedContent, nsEdits),
       namespacesMapObj,
       namespacesReplace,
+      namespacesMapObjJS,
+      namespacesReplaceJS,
     };
 
     //#endregion
