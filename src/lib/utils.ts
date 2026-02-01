@@ -99,6 +99,7 @@ import {
   CodeFixAction,
   ImportsNotUsedAsValues,
   transpileModule,
+  isExternalModuleReference,
 } from 'typescript';
 import type * as ts from 'typescript';
 import { CLASS } from 'typescript-class-helpers/src';
@@ -2706,11 +2707,54 @@ export namespace UtilsTypescript {
       ranges.some(r => pos >= r.start && pos <= r.end);
 
     const isRuntimeSymbol = (symbol: ts.Symbol): boolean => {
-      const flags = symbol.getFlags();
+      // Resolve aliases (import/export aliases etc.)
+      if (symbol.flags & SymbolFlags.Alias) {
+        symbol = checker.getAliasedSymbol(symbol);
+      }
 
-      return (
-        (flags & SymbolFlags.Value) !== 0 && (flags & SymbolFlags.Type) === 0
-      );
+      const decls = symbol.getDeclarations() ?? [];
+
+      for (const d of decls) {
+        // Type-only
+        if (isInterfaceDeclaration(d) || isTypeAliasDeclaration(d)) {
+          continue;
+        }
+
+        // Runtime
+        if (isFunctionDeclaration(d)) return true;
+        if (isClassDeclaration(d)) return true;
+
+        if (isEnumDeclaration(d)) {
+          // const enum has no runtime
+          const isConst =
+            canHaveModifiers(d) &&
+            (getModifiers(d)
+              ?.some(m => m.kind === SyntaxKind.ConstKeyword) ??
+              false);
+          if (!isConst) return true;
+          continue;
+        }
+
+        if (isVariableDeclaration(d)) return true;
+
+        // `export import X = require("...")` or `export import X = Y`
+        if (isImportEqualsDeclaration(d)) {
+          // if it’s a require() import => runtime
+          if (
+            isExternalModuleReference(d.moduleReference) &&
+            isStringLiteral(d.moduleReference.expression)
+          ) {
+            return true;
+          }
+          // otherwise could be alias to value or type; try to resolve:
+          const aliased = checker.getAliasedSymbol(symbol);
+          if (aliased !== symbol) {
+            return isRuntimeSymbol(aliased);
+          }
+        }
+      }
+
+      return false;
     };
 
     // const intersectsAnyRange = (
