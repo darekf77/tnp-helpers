@@ -3898,7 +3898,10 @@ ${HelpersTaon.terminalLine()}\n`;
     outFolderWithIndexJS: string,
   ): Promise<void> => {
     //#region @backendFunc
-    UtilsTypescript.stripTsTypesIntoJs(entrypointFolderAbsPathWithIndexTs,outFolderWithIndexJS);
+    UtilsTypescript.stripTsTypesIntoJs(
+      entrypointFolderAbsPathWithIndexTs,
+      outFolderWithIndexJS,
+    );
     return;
     // ESBULD does "extra" things to js output
     // entrypointFolderAbsPathWithIndexTs = crossPlatformPath(
@@ -3958,6 +3961,8 @@ ${HelpersTaon.terminalLine()}\n`;
        */
       prod?: boolean;
       useTsConfig?: boolean;
+      format?: BuildOptions['format'];
+      target?: BuildOptions['target'];
     },
   ): Promise<void> => {
     //#region @backendFunc
@@ -3970,10 +3975,20 @@ ${HelpersTaon.terminalLine()}\n`;
       prod,
       strategy,
       useTsConfig,
+      format,
+      target,
     } = options || {};
     if (!strategy) {
       strategy = 'cli';
     }
+    if (!format) {
+      format = 'cjs';
+    }
+
+    if (!target) {
+      target = 'node20';
+    }
+
     Helpers.info(`Bundling (strategy = ${strategy})
        ${pathToJsFile}
        to
@@ -3999,6 +4014,10 @@ ${HelpersTaon.terminalLine()}\n`;
     // }
     if (strategy === 'vscode-ext') {
       replaceWithNothing.push('ts-node');
+      if(prod) {
+        // target = 'es2020';
+        // format = 'esm';
+      }
     }
     if (strategy !== 'electron-app') {
       replaceWithNothing.push('electron');
@@ -4007,7 +4026,8 @@ ${HelpersTaon.terminalLine()}\n`;
       externals.push('sql.js');
     }
     Helpers.logInfo(
-      `Replace with 'nothing' in destination bundle: ${replaceWithNothing.join(',')}`,
+      `Replace with 'nothing' in destination bundle (format=${format}, target=${target}):
+       ${replaceWithNothing.join(',')}`,
     );
     Helpers.taskStarted(`Bundling node_modules for file: ${pathToJsFile}`);
     // debugger
@@ -4017,7 +4037,7 @@ ${HelpersTaon.terminalLine()}\n`;
       entryPoints: [pathToJsFile],
       bundle: true,
       platform: 'node',
-      target: 'node20', // closest to es2022 in runtime
+      target, // closest to es2022 in runtime
       minify: !!minify,
       sourcemap: false,
       treeShaking: true,
@@ -4025,7 +4045,7 @@ ${HelpersTaon.terminalLine()}\n`;
       // outfile: outputFilePath, // or use write: false if you want in-memory result
       write: false, // don’t write to disk, just return the result
       logLevel: 'silent', // like quiet: true
-      format: 'cjs', // CommonJS output like NCC
+      format, // CommonJS output like NCC
       ...(useTsConfig
         ? {
             tsconfigRaw: {
