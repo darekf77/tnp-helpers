@@ -33,10 +33,11 @@ import {
 } from 'tnp-core/src';
 import { UtilsOs, UtilsTerminal } from 'tnp-core/src';
 import { Helpers } from 'tnp-core/src';
-import { BaseProject } from 'tnp-helpers/src';
 import { CLASS } from 'typescript-class-helpers/src';
 
-import { UtilsQuickFixes, UtilsTypescript } from '../utils';
+import { BaseProject } from '../base/classes/base-project';
+import { UtilsQuickFixes } from '../utils';
+import { UtilsTypescript } from '../utils-typescript';
 export { Helpers } from 'tnp-core/src';
 //#endregion
 
