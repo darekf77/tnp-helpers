@@ -3761,6 +3761,44 @@ export namespace UtilsTypescript {
   };
   //#endregion
 
+  //#region strip ts from js
+  /**
+   * @param tsContent TypeScript file content
+   * @param absTsFile needed for debugging
+   * @returns js content
+   */
+  export const stripTsTypesIntoJsFromContent = (
+    tsContent: string,
+    absTsFile: string,
+  ): string => {
+    //#region @backendFunc
+    const jsContent = transpileModule(tsContent, {
+      compilerOptions: {
+        // 🔥 ONLY syntax stripping
+        target: ScriptTarget.ES2022,
+        module: ModuleKind.ESNext,
+
+        noEmitHelpers: true,
+        experimentalDecorators: true,
+        emitDecoratorMetadata: false,
+        useDefineForClassFields: false,
+
+        // no emit tricks
+        removeComments: false,
+        importHelpers: false,
+        sourceMap: false,
+
+        // critical: no lib, no types, no checking
+        noLib: true,
+        isolatedModules: true,
+      },
+      fileName: absTsFile,
+      reportDiagnostics: false,
+    }).outputText;
+    return jsContent;
+    //#endregion
+  };
+
   export const stripTsTypesIntoJs = async (
     entrypointFolderAbsPathWithIndexTs: string,
     outFolderWithIndexJS: string,
@@ -3782,35 +3820,12 @@ export namespace UtilsTypescript {
       Helpers.mkdirp(path.dirname(outJsFile));
 
       const tsContent = Helpers.readFile(absTsFile);
-
-      const jsContent = transpileModule(tsContent, {
-        compilerOptions: {
-          // 🔥 ONLY syntax stripping
-          target: ScriptTarget.ES2022,
-          module: ModuleKind.ESNext,
-
-          noEmitHelpers: true,
-          experimentalDecorators: true,
-          emitDecoratorMetadata: false,
-          useDefineForClassFields: false,
-
-          // no emit tricks
-          removeComments: false,
-          importHelpers: false,
-          sourceMap: false,
-
-          // critical: no lib, no types, no checking
-          noLib: true,
-          isolatedModules: true,
-        },
-        fileName: absTsFile,
-        reportDiagnostics: false,
-      }).outputText;
-
+      const jsContent = stripTsTypesIntoJsFromContent(tsContent, absTsFile);
       UtilsFilesFoldersSync.writeFile(outJsFile, jsContent);
     }
     //#endregion
   };
+  //#endregion
 }
 
 //#endregion
