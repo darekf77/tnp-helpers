@@ -469,6 +469,10 @@ export class BaseGlobalCommandLine<
     await this.update();
   }
 
+  async upForce() {
+    await this.forceUpdate();
+  }
+
   /**
    * alias for update
    */
