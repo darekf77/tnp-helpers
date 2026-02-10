@@ -254,7 +254,9 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
     //#region @backend
 
     await this.project.linkedProjects.saveAllLinkedProjectsToDB();
-    await this.changeTsConfigForLibrariesTypes();
+
+    // TODO fix this later (with whole navigatio for projects)
+    // await this.changeTsConfigForLibrariesTypes();
 
     //#region prepare parameters
     if (!Array.isArray(copylink_to_node_modules)) {
