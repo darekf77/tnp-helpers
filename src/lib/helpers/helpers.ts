@@ -3501,6 +3501,14 @@ ${HelpersTaon.terminalLine()}\n`;
     }
     //#endregion
   };
+
+  /**
+   * @deprecated use .copy and then .remove on
+   * source folder..
+   *
+   * This method is messing with parcel watcher
+   * (moved files are not detected)
+   */
   export const move = (
     from: string,
     to: string,
