@@ -1,5 +1,5 @@
 //#region imports
-import { config } from 'tnp-core/src';
+import { config, UtilsOs } from 'tnp-core/src';
 import { fse } from 'tnp-core/src';
 import { path, crossPlatformPath } from 'tnp-core/src';
 import { _, Helpers } from 'tnp-core/src';
@@ -18,6 +18,12 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
 
   projectsDb: ProjectDatabase = new ProjectDatabase(this);
 
+  async editor(): Promise<UtilsOs.Editor> {
+    return (
+      UtilsOs.detectEditor() || (await this.configDb.codeEditor.getValue())
+    );
+  }
+
   readonly portsWorker: PortsWorker;
 
   //#region fields
@@ -35,9 +41,8 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
   //#region constructor
   constructor(
     protected readonly classFn: any,
-    public readonly cliToolNameFn: ()=> string,
+    public readonly cliToolNameFn: () => string,
   ) {
-
     // console.log("global.frameworkName",global.frameworkName)
     // if (!UtilsOs.isRunningInVscodeExtension()) {
     // if (!this.cliToolName) {
@@ -45,7 +50,7 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
     // }
     this.portsWorker = new PortsWorker(
       'ports-worker', // BaseGlobalCommandLine.prototype.startCliServicePortsWorker
-      ()=> `${cliToolNameFn()} startCliServicePortsWorker --skipCoreCheck`,
+      () => `${cliToolNameFn()} startCliServicePortsWorker --skipCoreCheck`,
       CURRENT_PACKAGE_VERSION,
     );
   }

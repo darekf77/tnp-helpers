@@ -105,6 +105,7 @@ import type * as ts from 'typescript';
 import { CLASS } from 'typescript-class-helpers/src';
 import type * as vscodeType from 'vscode';
 
+import { BaseProject } from './base/classes/base-project';
 import {
   applicationConfigTemplate,
   ngMergeConfigTemplate,
@@ -743,6 +744,95 @@ export namespace UtilsVSCode {
     return vscode as typeof vscodeType;
     //#endregion
   };
+
+  //#region utils os / open folder in vscode
+  export const openFolder = async (
+    folderAbsPath: string,
+    editor?: UtilsOs.Editor,
+  ): Promise<void> => {
+    //#region @backendFunc
+    editor =
+      editor ||
+      UtilsOs.detectEditor() ||
+      (await BaseProject.ins.configDb.codeEditor.getValue());
+
+    if (!Helpers.exists(folderAbsPath)) {
+      Helpers.warn(
+        `Folder ${folderAbsPath} does not exists. Nothing to open.`,
+        true,
+      );
+      return;
+    }
+
+    if (!Helpers.isFolder(folderAbsPath)) {
+      Helpers.warn(`Can't open file as folder`, true);
+      await UtilsVSCode.openFile(folderAbsPath);
+      return;
+    }
+
+    Helpers.taskStarted(`Opening folder in VSCode: "${folderAbsPath}"`);
+    try {
+      Helpers.run(`${editor} .`, {
+        cwd: folderAbsPath,
+        silence: true,
+        output: false,
+      }).sync();
+      Helpers.taskDone(`Done opening folder in VSCode: "${folderAbsPath}"`);
+    } catch (error) {
+      Helpers.warn(`Not able to open in VSCode: "${folderAbsPath}"`, false);
+    }
+    //#endregion
+  };
+  //#endregion
+
+  //#region utils os / open folder in vscode
+  export const openFile = async (
+    fileAbsPath: string | string[],
+    options?: {
+      editor?: UtilsOs.Editor;
+      specyficLine?: number;
+    },
+  ): Promise<void> => {
+    //#region @backendFunc
+    fileAbsPath = crossPlatformPath(fileAbsPath);
+    options = options || {};
+    let { editor, specyficLine } = options;
+    editor =
+      editor ||
+      UtilsOs.detectEditor() ||
+      (await BaseProject.ins.configDb.codeEditor.getValue());
+
+    if (!Helpers.exists(fileAbsPath)) {
+      Helpers.warn(
+        `File ${fileAbsPath} does not exists. Nothing to open.`,
+        true,
+      );
+      return;
+    }
+
+    if (Helpers.isFolder(fileAbsPath)) {
+      Helpers.warn(`Can't open folder as file`, true);
+      await UtilsVSCode.openFolder(fileAbsPath, options.editor);
+      return;
+    }
+
+    Helpers.taskStarted(`Opening file in VSCode: "${fileAbsPath}"`);
+    try {
+      Helpers.run(
+        `${editor} --goto ${fileAbsPath}${specyficLine ? `:${specyficLine}:1` : ''}`,
+        {
+          cwd: process.cwd(),
+          silence: true,
+          output: false,
+        },
+      ).sync();
+      Helpers.taskDone(`Done opening file in VSCode: "${fileAbsPath}"`);
+    } catch (error) {
+      Helpers.warn(`Not able to open file in VSCode: "${fileAbsPath}"`, false);
+    }
+    //#endregion
+  };
+  //#endregion
 
   export const regenerateVsCodeSettingsColors = (
     cwd: string,

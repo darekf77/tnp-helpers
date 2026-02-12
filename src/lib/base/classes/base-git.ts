@@ -8,6 +8,7 @@ import {
   HelpersTaon,
   PushProcessOptions,
   TypeOfCommit,
+  UtilsVSCode,
 } from '../../index';
 import { translate } from '../translate';
 
@@ -405,7 +406,7 @@ Please provide proper commit message for lastest changes in your project:
 
         //#region handle actions
         if (selected === 'openInVscode') {
-          this.project.run(`${UtilsOs.detectEditor()} ${this.project.location}`).sync();
+          await this.project.openInEditor();
           await UtilsTerminal.pressAnyKeyToContinueAsync({
             message: `Press any key to continue when you done`,
           });
@@ -1190,7 +1191,7 @@ Please provide proper commit message for lastest changes in your project:
             });
 
         if (action === 'openInVscode') {
-          Helpers.run(`${UtilsOs.detectEditor()} .`, { cwd: this.project.location }).sync();
+          await this.project.openInEditor();
           continue;
         }
 

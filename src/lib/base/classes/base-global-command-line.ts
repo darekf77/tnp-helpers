@@ -147,11 +147,9 @@ export class BaseGlobalCommandLine<
   //#endregion
 
   //#region commands / hosts
-  hosts() {
+  async hosts() {
     //#region @backendFunc
-    Helpers.run(
-      `${UtilsOs.detectEditor()} ${crossPlatformPath(UtilsNetwork.getEtcHostsPath())}`,
-    ).sync();
+    await UtilsVSCode.openFile(UtilsNetwork.getEtcHostsPath());
     process.exit(0);
     //#endregion
   }
@@ -203,7 +201,7 @@ export class BaseGlobalCommandLine<
   //#region commands / set editor
   async setEditor() {
     //#region @backendFunc
-    await this.ins.configDb.selectCodeEditor();
+    await this.ins.configDb.codeEditor.selectCodeEditor();
     this._exit();
     //#endregion
   }
@@ -381,7 +379,7 @@ export class BaseGlobalCommandLine<
         continue;
       }
       if (resp === 'openInCode') {
-        project.run(`${UtilsOs.detectEditor()} . `).sync();
+        await project.openInEditor();
         continue;
       }
       if (resp === 'skipUpdate') {
@@ -609,8 +607,10 @@ export class BaseGlobalCommandLine<
 
     const openInEditor = async (proj: BaseProject) => {
       Helpers.taskStarted(`Getting code editor info...`);
-      const editor = await this.ins.configDb.getCodeEditor();
-      Helpers.taskDone(`Got code editor info...`);
+
+      // console.log(`Detected editor: ${detectedEditor}`);
+
+      // Helpers.taskDone(`Got code editor info...`);
       const embededProject = proj.linkedProjects.embeddedProject as BaseProject;
       const porjToOpen = embededProject || proj;
       const locaitonFolderToOpen = porjToOpen.location;
@@ -618,7 +618,7 @@ export class BaseGlobalCommandLine<
       try {
         await porjToOpen?.struct();
       } catch (error) {}
-      Helpers.run(`${editor} ${locaitonFolderToOpen}`).sync();
+      await UtilsVSCode.openFolder(locaitonFolderToOpen);
     };
 
     if (results.length === 1) {
@@ -1150,7 +1150,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
           this._exit();
         }
         if (res === 'open') {
-          this.project.run(`${UtilsOs.detectEditor()} . `).sync();
+          await this.project.openInEditor();
           continue;
         }
         if (res === 'continueForce') {
@@ -2009,12 +2009,10 @@ ${lastCommitMessage}
   //#endregion
 
   //#region commands / git config
-  gitConfig() {
+  async gitConfig() {
     //#region @backendFunc
     const root = HelpersTaon.git.findGitRoot(this.cwd);
-    Helpers.run(
-      `${UtilsOs.detectEditor()} ${crossPlatformPath([root, '.git', 'config'])}`,
-    ).sync();
+    await UtilsVSCode.openFile([root, '.git', 'config']);
     this._exit();
     //#endregion
   }
@@ -2157,9 +2155,7 @@ ${lastCommitMessage}
     opening in vscode...
 
     `);
-    Helpers.run(
-      `${UtilsOs.detectEditor()} ${this.project.linkedProjects.projectsDbLocation}`,
-    ).sync();
+    await UtilsVSCode.openFile(this.project.linkedProjects.projectsDbLocation);
     this._exit();
     //#endregion
   }
@@ -2309,9 +2305,7 @@ ${lastCommitMessage}
       this.params['provider'] || 'github',
       !!this.params['full'],
     );
-    Helpers.run(`${UtilsOs.detectEditor()} .`, {
-      cwd: this.project.staticPages.mainFolderAbsPath,
-    }).sync();
+    await UtilsVSCode.openFolder(this.project.staticPages.mainFolderAbsPath);
     this._exit();
     //#endregion
   }
@@ -2609,21 +2603,22 @@ ${lastCommitMessage}
     return UtilsOs.killAllEditor('code-oss');
   }
 
-  editor() {
+  async editor() {
     //#region @backendFunc
-    console.log(`Your current editor is: ${UtilsOs.detectEditor()}`);
+    console.log(`Your current editor is: ${await this.ins.editor()}`);
     this._exit();
     //#endregion
   }
 
-  editorSettings() {
+  async editorSettings() {
     //#region @backendFunc
+    const editor = await this.ins.editor();
     console.log(
       `
-      Your current editor is: ${UtilsOs.detectEditor()}
+      Your current editor is: ${editor}
 
       Your current editor settings path is:
-       ${UtilsOs.getEditorSettingsJsonPath(UtilsOs.detectEditor())}`,
+       ${UtilsOs.getEditorSettingsJsonPath(editor)}`,
     );
     this._exit();
     //#endregion
@@ -3498,10 +3493,10 @@ ${lastCommitMessage}
 
   //#region split ts into js
   async stripTsTypesIntoJs() {
-    Helpers.info('Transforming Ts into JS')
+    Helpers.info('Transforming Ts into JS');
     await HelpersTaon.stripTsTypesIntoJs(
-       crossPlatformPath([this.cwd,this.args[0]]),
-       crossPlatformPath([this.cwd,this.args[1]]),
+      crossPlatformPath([this.cwd, this.args[0]]),
+      crossPlatformPath([this.cwd, this.args[1]]),
     );
     this._exit();
   }

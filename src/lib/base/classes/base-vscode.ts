@@ -275,7 +275,7 @@ export class BaseVscodeHelpers<
     //#region @backendFunc
     options = options || {};
     options.extensions = options.extensions || this.getExtensions();
-    options.editor = options.editor || UtilsOs.detectEditor();
+    options.editor = await this.ins.editor();
     let extensions = options.extensions;
     const defaultSelectedAll = !!options.defaultSelectedAll;
     // console.log({ extensions });
@@ -325,7 +325,7 @@ export class BaseVscodeHelpers<
       try {
         Helpers.taskStarted(`Installing: ${extname}`);
         Helpers.run(
-          `${UtilsOs.detectEditor()} --install-extension ${extname}`,
+          `${await this.project.ins.editor()} --install-extension ${extname}`,
         ).sync();
         Helpers.taskDone(`Installed: ${extname}`);
       } catch (error) {
@@ -857,7 +857,7 @@ export class BaseVscodeHelpers<
       'tsconfig.json': 'json',
     };
 
-    settings["search.followSymlinks"] = false;
+    settings['search.followSymlinks'] = false;
     settings['search.useIgnoreFiles'] = false;
     settings['search.include'] = ['**/src/**'];
     settings['search.exclude'] = {

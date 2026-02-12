@@ -36,7 +36,7 @@ import { Helpers } from 'tnp-core/src';
 import { CLASS } from 'typescript-class-helpers/src';
 
 import { BaseProject } from '../base/classes/base-project';
-import { UtilsQuickFixes } from '../utils';
+import { UtilsQuickFixes, UtilsVSCode } from '../utils';
 import { UtilsTypescript } from '../utils-typescript';
 export { Helpers } from 'tnp-core/src';
 //#endregion
@@ -1409,9 +1409,7 @@ export namespace HelpersTaon {
               continue;
             }
             if (whatToDo === 'openInVscode') {
-              try {
-                Helpers.run(`${UtilsOs.detectEditor()} .`, { cwd }).sync();
-              } catch (error) {}
+              await UtilsVSCode.openFolder(cwd);
               continue;
             }
             if (whatToDo === 'skip') {
@@ -1537,7 +1535,7 @@ ${cwd}
           }
           if (whatToDo === 'openInVscode') {
             try {
-              Helpers.run(`${UtilsOs.detectEditor()} .`, { cwd }).sync();
+              await UtilsVSCode.openFolder(cwd);
             } catch (error) {}
             continue;
           }
@@ -4014,7 +4012,7 @@ ${HelpersTaon.terminalLine()}\n`;
     // }
     if (strategy === 'vscode-ext') {
       replaceWithNothing.push('ts-node');
-      if(prod) {
+      if (prod) {
         // target = 'es2020';
         // format = 'esm';
       }

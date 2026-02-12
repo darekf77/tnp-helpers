@@ -17,6 +17,7 @@ import {
   LinkedProject,
   UtilsTaonWorker,
   UtilsTypescript,
+  UtilsVSCode,
 } from '../../index';
 import {
   BaseProjectType,
@@ -703,6 +704,22 @@ export abstract class BaseProject<
     return Helpers.run(command, opt);
   }
   //#endregion
+
+  /**
+   * Open project location (or relative path to folder inside project)
+   * in default editor
+   */
+  async openInEditor(
+    relativePath?: string,
+    specyficEditor?: UtilsOs.Editor,
+  ): Promise<void> {
+    //#region @backendFunc
+    await UtilsVSCode.openFolder(
+      relativePath ? this.pathFor(relativePath) : this.location,
+      specyficEditor,
+    );
+    //#endregion
+  }
 
   //#region methods & getters / execute
   /**
