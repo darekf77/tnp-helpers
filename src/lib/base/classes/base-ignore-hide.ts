@@ -162,7 +162,6 @@ export class BaseIgnoreHideHelpers<
   //#region public methods / write ignore files§
   // TODO
   public writeGitIgnore(): void {
-
     //#region @backendFunc
     let filesAndFoldersToIgnoreInGit = this.recursivePatternTransformFn([
       ...this.alwaysIgnoredAndHiddenFilesAndFolders(),
@@ -191,7 +190,6 @@ export class BaseIgnoreHideHelpers<
       ).join('\n'),
     );
     //#endregion
-
   }
   //#endregion
 
@@ -202,7 +200,6 @@ export class BaseIgnoreHideHelpers<
   public getVscodeFilesFoldersAndPatternsToHide(): {
     [fileFolderOrPattern: string]: true;
   } {
-
     //#region @backendFunc
     const hideInVSCode = [
       ...this.alwaysIgnoredAndHiddenFilesAndFolders(),
@@ -212,7 +209,7 @@ export class BaseIgnoreHideHelpers<
       ...this.hiddenButNotNecessaryIgnoredInRepoPatterns(),
     ];
 
-    return hideInVSCode.reduce(
+    return this.recursivePatternTransformFn(hideInVSCode).reduce(
       (acc, curr) => {
         acc[curr] = true;
         return acc;
@@ -220,13 +217,11 @@ export class BaseIgnoreHideHelpers<
       {} as { [key: string]: true },
     );
     //#endregion
-
   }
   //#endregion
 
   //#region public methods / npm ignore
   public writeNpmIgnore(): void {
-
     //#region @backendFunc
     Helpers.writeFile(
       path.join(this.project.location, '.npmignore'),
@@ -235,8 +230,6 @@ export class BaseIgnoreHideHelpers<
         .join('\n'),
     );
     //#endregion
-
   }
   //#endregion
-
 }
