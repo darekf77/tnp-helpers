@@ -23,7 +23,6 @@
       "diff",
       "express",
       "express-fileupload",
-      "express-serve-static-core",
       "fs-extra",
       "glob",
       "http-proxy",
