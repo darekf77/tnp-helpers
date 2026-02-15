@@ -112,7 +112,6 @@ import {
 } from './utils-helpers/application-config-template';
 //#endregion
 
-
 export namespace UtilsTypescript {
   //#region remove region by name
   /**
@@ -2434,8 +2433,7 @@ export namespace UtilsTypescript {
           // const enum has no runtime
           const isConst =
             canHaveModifiers(d) &&
-            (getModifiers(d)
-              ?.some(m => m.kind === SyntaxKind.ConstKeyword) ??
+            (getModifiers(d)?.some(m => m.kind === SyntaxKind.ConstKeyword) ??
               false);
           if (!isConst) return true;
           continue;
@@ -3576,5 +3574,62 @@ export namespace UtilsTypescript {
     //#endregion
   };
   //#endregion
-}
 
+  export const fileHasDefaultExport = (absFilePath: string): boolean => {
+    return hasDefaultExport(UtilsFilesFoldersSync.readFile(absFilePath));
+  };
+
+  export const hasDefaultExport = (sourceText: string): boolean => {
+    //#region @backendFunc
+    const sourceFile = createSourceFile(
+      'temp.ts',
+      sourceText,
+      ScriptTarget.Latest,
+      true,
+      ScriptKind.TS,
+    );
+
+    let found = false;
+
+    const visit = (node: ts.Node) => {
+      // 1️⃣ export default X;
+      if (isExportAssignment(node) && !node.isExportEquals) {
+        found = true;
+        return;
+      }
+
+      // 2️⃣ export { something as default }
+      if (isExportDeclaration(node) && node.exportClause) {
+        if (isNamedExports(node.exportClause)) {
+          for (const element of node.exportClause.elements) {
+            if (element.name.text === 'default') {
+              found = true;
+              return;
+            }
+          }
+        }
+      }
+
+      // 3️⃣ export default class/function/interface/etc
+      if (
+        isClassDeclaration(node) ||
+        isFunctionDeclaration(node) ||
+        isInterfaceDeclaration(node) ||
+        isTypeAliasDeclaration(node) ||
+        isEnumDeclaration(node)
+      ) {
+        if (node.modifiers?.some(m => m.kind === SyntaxKind.DefaultKeyword)) {
+          found = true;
+          return;
+        }
+      }
+
+      forEachChild(node, visit);
+    };
+
+    visit(sourceFile);
+
+    return found;
+    //#endregion
+  };
+}
