@@ -2,6 +2,7 @@
 import { config, Helpers, UtilsOs } from 'tnp-core/src';
 import { chalk, dateformat, fse, Utils } from 'tnp-core/src';
 import { crossPlatformPath, path, _, UtilsTerminal } from 'tnp-core/src';
+import { GlobalTaskManager } from 'tnp-core/src';
 
 import {
   CommitData,
@@ -10,6 +11,7 @@ import {
   TypeOfCommit,
   UtilsVSCode,
 } from '../../index';
+import { PULL_ACTION_NAME, PUSH_ACTION_NAME } from '../constants';
 import { translate } from '../translate';
 
 import { BaseFeatureForProject } from './base-feature-for-project';
@@ -173,7 +175,10 @@ export class BaseGit<
    */
   addAndCommit(commitMessage: string): void {
     //#region @backendFunc
-    return HelpersTaon.git.stageAllAndCommit(this.project.location, commitMessage);
+    return HelpersTaon.git.stageAllAndCommit(
+      this.project.location,
+      commitMessage,
+    );
     //#endregion
   }
   //#endregion
@@ -222,7 +227,10 @@ export class BaseGit<
   //#region methods & getters / stage all and commit
   stageAllAndCommit(commitMessage: string): void {
     //#region @backendFunc
-    return HelpersTaon.git.stageAllAndCommit(this.project.location, commitMessage);
+    return HelpersTaon.git.stageAllAndCommit(
+      this.project.location,
+      commitMessage,
+    );
     //#endregion
   }
   //#endregion
@@ -235,7 +243,14 @@ export class BaseGit<
     forcePushNoQuestion?: boolean;
   }): Promise<boolean> {
     //#region @backendFunc
-    return await HelpersTaon.git.pushCurrentBranch(this.project.location, options);
+
+    const res = await HelpersTaon.git.pushCurrentBranch(
+      this.project.location,
+      options,
+    );
+    GlobalTaskManager.addProgress(PUSH_ACTION_NAME);
+
+    return res;
     //#endregion
   }
   //#endregion
@@ -500,7 +515,8 @@ Please provide proper commit message for lastest changes in your project:
     //#region @backendFunc
     const lastCommitMessage = this.lastCommitMessage() || '';
     return (
-      lastCommitMessage.trim() === HelpersTaon.git.getACTION_MSG_RESET_GIT_HARD_COMMIT()
+      lastCommitMessage.trim() ===
+      HelpersTaon.git.getACTION_MSG_RESET_GIT_HARD_COMMIT()
     );
     //#endregion
   }
@@ -548,7 +564,10 @@ Please provide proper commit message for lastest changes in your project:
     defaultHardResetCommits?: number;
   }): Promise<void> {
     //#region @backendFunc
-    await HelpersTaon.git.pullCurrentBranch(this.project.location, { ...options });
+    await HelpersTaon.git.pullCurrentBranch(this.project.location, {
+      ...options,
+    });
+    GlobalTaskManager.addProgress(PULL_ACTION_NAME);
     //#endregion
   }
   //#endregion
@@ -648,7 +667,9 @@ Please provide proper commit message for lastest changes in your project:
   //#region methods & getters / last commit message
   async penultimateCommitMessage(): Promise<string> {
     //#region @backendFunc
-    return await HelpersTaon.git.penultimateCommitMessage(this.project.location);
+    return await HelpersTaon.git.penultimateCommitMessage(
+      this.project.location,
+    );
     //#endregion
   }
   //#endregion
@@ -678,7 +699,10 @@ Please provide proper commit message for lastest changes in your project:
   //#region methods & getters / get commit hash by index
   async getCommitHashByIndex(index: number): Promise<string> {
     //#region @backendFunc
-    return await HelpersTaon.git.getCommitHashByIndex(this.project.location, index);
+    return await HelpersTaon.git.getCommitHashByIndex(
+      this.project.location,
+      index,
+    );
     //#endregion
   }
   //#endregion
@@ -718,7 +742,7 @@ Please provide proper commit message for lastest changes in your project:
     return [];
   }
 
-  skipLintOnPush():boolean {
+  skipLintOnPush(): boolean {
     return true;
   }
 
@@ -804,6 +828,7 @@ Please provide proper commit message for lastest changes in your project:
     return HelpersTaon.git.stagedFiles(this.project.location);
     //#endregion
   }
+
   get stagedFilesRelativePaths(): string[] {
     //#region @backendFunc
     return HelpersTaon.git.stagedFiles(this.project.location, true);
@@ -901,7 +926,9 @@ Please provide proper commit message for lastest changes in your project:
       if (res) {
         Helpers.tryRemoveDir(dest);
       } else {
-        HelpersTaon.pressKeyAndContinue('Operation not completed... press any key');
+        HelpersTaon.pressKeyAndContinue(
+          'Operation not completed... press any key',
+        );
         return false;
       }
     }
@@ -1116,7 +1143,10 @@ Please provide proper commit message for lastest changes in your project:
 
   async backupBranch(branchName?: string): Promise<string> {
     //#region @backendFunc
-    return await HelpersTaon.git.backupBranch(this.project.location, branchName);
+    return await HelpersTaon.git.backupBranch(
+      this.project.location,
+      branchName,
+    );
     //#endregion
   }
 
@@ -1205,7 +1235,8 @@ Please provide proper commit message for lastest changes in your project:
         if (action === 'useUpdateCommit') {
           force = true;
           forcePushNoQuestion = true;
-          overrideCommitMessage = HelpersTaon.git.getACTION_MSG_RESET_GIT_HARD_COMMIT();
+          overrideCommitMessage =
+            HelpersTaon.git.getACTION_MSG_RESET_GIT_HARD_COMMIT();
         }
 
         if (action === 'provideCommitMessage') {
@@ -1272,7 +1303,7 @@ Please provide proper commit message for lastest changes in your project:
     //#endregion
 
     //#region lint
-    if(this.skipLintOnPush()) {
+    if (this.skipLintOnPush()) {
       skipLint = true;
     }
 
@@ -1578,12 +1609,16 @@ Please provide proper commit message for lastest changes in your project:
       }
 
       if (!argsCommitData.message) {
-        argsCommitData.message = HelpersTaon.git.getACTION_MSG_RESET_GIT_HARD_COMMIT();
+        argsCommitData.message =
+          HelpersTaon.git.getACTION_MSG_RESET_GIT_HARD_COMMIT();
       }
       commitData = argsCommitData;
     }
 
-    if (commitData.message !== HelpersTaon.git.getACTION_MSG_RESET_GIT_HARD_COMMIT()) {
+    if (
+      commitData.message !==
+      HelpersTaon.git.getACTION_MSG_RESET_GIT_HARD_COMMIT()
+    ) {
       const { from, to } = this.transalteGitCommitFromArgs();
       if (from && to) {
         commitData.message = _.kebabCase(

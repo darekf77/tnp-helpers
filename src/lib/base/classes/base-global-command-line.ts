@@ -32,6 +32,7 @@ import { child_process } from 'tnp-core/src'; //@backend
 import { UtilsCliClassMethod } from 'tnp-core/src';
 import { win32Path } from 'tnp-core/src';
 import { UtilsSudo } from 'tnp-core/src';
+import { GlobalTaskManager } from 'tnp-core/src';
 
 import {
   CommandActionType,
@@ -45,6 +46,7 @@ import {
   UtilsTypescript,
 } from '../../index';
 import { TypeOfCommit, CommitData } from '../commit-data';
+import { PULL_ACTION_NAME, PUSH_ACTION_NAME } from '../constants';
 import { GhTempCode } from '../gh-temp-code';
 
 import { BaseCommandLineFeature } from './base-command-line-feature';
@@ -684,9 +686,11 @@ export class BaseGlobalCommandLine<
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
+    GlobalTaskManager.start(PULL_ACTION_NAME);
     await this.project.git.pullProcess({
       setOrigin: this.params['setOrigin'],
     });
+    GlobalTaskManager.stop(PULL_ACTION_NAME);
     this._exit();
     //#endregion
   }
@@ -1207,6 +1211,7 @@ ${lastCommitMessage}
   }
 
   async push(options: PushProcessOptions = {}): Promise<void> {
+    GlobalTaskManager.start(PUSH_ACTION_NAME);
     //#region @backendFunc
     // console.log('args', this.args);
     // console.log(`argsWithParams "${this.argsWithParams}"` );
@@ -1249,6 +1254,8 @@ ${lastCommitMessage}
       setOrigin: this.params['setOrigin'],
       currentOrigin: this.project.git.originURL,
     });
+    GlobalTaskManager.stop(PUSH_ACTION_NAME);
+
     if (options.noExit) {
       return;
     }
