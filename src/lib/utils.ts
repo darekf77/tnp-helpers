@@ -819,7 +819,7 @@ export namespace UtilsVSCode {
     Helpers.taskStarted(`Opening file in VSCode: "${fileAbsPath}"`);
     try {
       Helpers.run(
-        `${editor} --goto ${fileAbsPath}${specyficLine ? `:${specyficLine}:1` : ''}`,
+        `${editor} ${specyficLine ? '--goto' : ''} ${fileAbsPath}${specyficLine ? `:${specyficLine}:1` : ''}`,
         {
           cwd: process.cwd(),
           silence: true,
