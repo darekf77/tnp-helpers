@@ -1640,7 +1640,7 @@ ${lastCommitMessage}
   //#region copy and rename (vscode option)
   async $COPY_AND_RENAME() {
     //#region @backendFunc
-    // console.log(`>> ${args} <<`)
+    console.log(`>> ${this.argsWithParams} <<`)
     const ins = MagicRenamer.Instance(this.cwd);
     await ins.start(this.argsWithParams);
     this._exit();
