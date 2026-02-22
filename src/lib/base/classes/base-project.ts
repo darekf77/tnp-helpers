@@ -803,10 +803,11 @@ export abstract class BaseProject<
   //#endregion
 
   //#region methods & getters / read file
-  readFile(fileRelativeToProjectPath: string) {
+  readFile(fileRelativeToProjectPath: string | string[]): string {
     //#region @backendFunc
+    fileRelativeToProjectPath = crossPlatformPath(fileRelativeToProjectPath);
     const fullPath = path.resolve(
-      path.join(this.location, fileRelativeToProjectPath),
+      crossPlatformPath([this.location, fileRelativeToProjectPath]),
     );
     // console.log('fullPath', fullPath);
     return Helpers.readFile(fullPath);
