@@ -41,7 +41,6 @@ import { UtilsTypescript } from '../utils-typescript';
 export { Helpers } from 'tnp-core/src';
 //#endregion
 
-const log = Log.create('HelpersTaon', Level.__NOTHING);
 
 //#region models
 export interface GetRecrusiveFilesFromOptions {}
@@ -2320,14 +2319,13 @@ ${cwd}
   export const changeCwdWrapper = async (
     dir: string,
     functionToExecure: Function,
-    logLevel: Level = Level.__NOTHING,
   ) => {
     //#region @backendFunc
     const currentCwd = crossPlatformPath(process.cwd());
     HelpersTaon.changeCwd(dir);
-    Log.disableLogs(logLevel);
+    // Log.disableLogs(logLevel);
     await Helpers.runSyncOrAsync({ functionFn: functionToExecure });
-    Log.enableLogs();
+    // Log.enableLogs();
     HelpersTaon.changeCwd(currentCwd);
     //#endregion
   };

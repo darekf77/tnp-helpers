@@ -126,7 +126,8 @@ export class BaseVscodeHelpers<
       'natqe.reload',
       'nemesv.copy-file-name',
       // 'oven.bun-vscode', // errors in vscode cosole
-      'qwtel.sqlite-viewer',
+      // 'qwtel.sqlite-viewer', // 80$ not free
+      'keyshout.sqlite-db-viewer', // free version of qwtel.sqlite-viewer - no writes
       'redhat.vscode-xml',
       'ritwickdey.create-file-folder',
       'rogalmic.bash-debug',
@@ -140,7 +141,7 @@ export class BaseVscodeHelpers<
       'tommasov.hosts',
       'franklinteixeira205.primeflex',
       // 'vespa-dev-works.jestrunit',
-      'firsttris.vscode-jest-runner', // better for jest
+      'firsttris.vscode-jest-runner', // better for jest TODO include this for TAON
       // 'waderyan.gitblame',
 
       'wenfangdu.snippet-generator',
@@ -357,7 +358,6 @@ export class BaseVscodeHelpers<
     /**
      * Removes trailing version/OS tags from folder names:
      *  e.g. "mariusalchimavicius.json-to-ts-1.8.0" -> "mariusalchimavicius.json-to-ts"
-     *  e.g. "qwtel.sqlite-viewer-0.9.5-win32-x64" -> "qwtel.sqlite-viewer"
      */
 
     // Adjust the folder path as needed (Insiders, etc.)

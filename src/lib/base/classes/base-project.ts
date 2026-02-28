@@ -1,5 +1,5 @@
 //#region import
-import { config, dotTaonFolder, Helpers } from 'tnp-core/src';
+import { config, dotTaonFolder, Helpers, taonPackageName } from 'tnp-core/src';
 import { UtilsOs, UtilsTerminal } from 'tnp-core/src';
 import { CoreModels } from 'tnp-core/src';
 import { CLI } from 'tnp-core/src';
@@ -986,6 +986,9 @@ Would you like to update current project configuration?`)
           .request();
         return data.body.json.port;
       } catch (error) {
+        if (config.frameworkName === taonPackageName) {
+          console.log(error);
+        }
         Helpers.logWarn(
           `[${config.frameworkName}-helpers] Error while registering port for task "${taskName}":`,
         );
