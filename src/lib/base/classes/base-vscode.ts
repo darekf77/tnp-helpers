@@ -94,6 +94,7 @@ export class BaseVscodeHelpers<
       'Mikael.Angular-BeastCode',
       'SimonSiefke.svg-preview',
       'Zaczero.bootstrap-v4-snippets',
+      'scrapecrow.html-escape', // escape html
       'wcwhitehead.bootstrap-3-snippets',
       // 'abumalick.vscode-nvm', // test this before
       'aeschli.vscode-css-formatter',
