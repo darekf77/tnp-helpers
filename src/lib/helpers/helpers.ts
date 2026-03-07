@@ -3228,11 +3228,12 @@ ${HelpersTaon.terminalLine()}\n`;
     //#endregion
   };
   export const getValueFromJSONC = (
-    filepath: string,
+    filepath: string | string[],
     lodashGetPath: string,
     defaultValue = void 0,
   ): any => {
     //#region @backendFunc
+    filepath = crossPlatformPath(filepath);
     if (!fse.existsSync(filepath)) {
       return defaultValue;
     }
