@@ -835,15 +835,18 @@ export abstract class BaseProject<
 
   //#region methods & getters / copy files or folders
   /**
+   * @deprecated TODO replace whit with create copyFileTo function
+
    * copy files or folders from
    * project to destination
    */
   copy(filesOrFolderRelativePathes: string[]): {
-    to: (destination: string) => void;
+    to: (destination: string | string[]) => void;
   } {
     return {
-      to: (destination: string): void => {
+      to: (destination: string | string[]): void => {
         //#region @backendFunc
+        destination = crossPlatformPath(destination);
         for (
           let index = 0;
           index < filesOrFolderRelativePathes.length;
@@ -855,7 +858,7 @@ export abstract class BaseProject<
             filesOrFolderRelativePathes[index],
           ]);
           if (Helpers.isFolder(source)) {
-            HelpersTaon.copy(source, dest);
+            HelpersTaon.copy(source, dest, { recursive: true });
           } else {
             HelpersTaon.copyFile(source, dest);
           }
