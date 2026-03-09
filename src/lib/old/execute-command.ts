@@ -8,7 +8,7 @@ import type { ExtensionContext, Uri } from 'vscode';
 import {
   capitalizeFirstLetter,
   optionsFix,
-  Log,
+  // Log,
   getModuleName,
   shell,
   escapeStringForRegEx,
@@ -21,18 +21,20 @@ import { ProcesOptions, ProgressData, ResolveVariable } from './models';
 export interface ExecCommandTypeOpt {
   vscode?: typeof import('vscode');
   resolveVariables: ResolveVariable[];
-  log?: Log;
+  // log?: Log;
   context?: ExtensionContext;
   cwd?: string;
   uri: Uri;
   selectedUris: Uri[];
   rootFolderPath?: string;
-};
+}
 
 export type ExecCommandType =
   | string
   | string[]
   | ((opt: ExecCommandTypeOpt) => any);
+
+// const log = Log.instance(`execute-command`, 'logmsg');
 
 export function executeCommand(
   titleOfTask,
@@ -43,9 +45,8 @@ export function executeCommand(
   context?: ExtensionContext,
   debug?: boolean,
 ) {
-
   //#region @backendFunc
-  const log = Log.instance(`execute-command`, 'logmsg', debug);
+  // log.setDebugMode(debug);
   const commandToExecuteReadable =
     '"' +
     (Array.isArray(commandToExecute)
@@ -99,26 +100,26 @@ export function executeCommand(
       //#endregion
 
       //#region resovle cwd, relative path
-      log.data(`root path ${vscode.workspace.rootPath?.toString()}`);
+      // log.data(`root path ${vscode.workspace.rootPath?.toString()}`);
       var relativePathToFileFromWorkspaceRoot = uri
         ? vscode.workspace.asRelativePath(uri)
         : '';
-      log.data(`relativePath: '${relativePathToFileFromWorkspaceRoot}' `);
+      // log.data(`relativePath: '${relativePathToFileFromWorkspaceRoot}' `);
       const isAbsolute = !uri
         ? true
         : path.isAbsolute(relativePathToFileFromWorkspaceRoot);
-      log.data(`isAbsolute: ${isAbsolute} `);
+      // log.data(`isAbsolute: ${isAbsolute} `);
       relativePathToFileFromWorkspaceRoot = crossPlatformPath(
         relativePathToFileFromWorkspaceRoot,
       );
-      log.data(
-        `relativePath replaced \ '${relativePathToFileFromWorkspaceRoot}' `,
-      );
+      // log.data(
+      //   `relativePath replaced \ '${relativePathToFileFromWorkspaceRoot}' `,
+      // );
       // @ts-ignore
       const cwd = crossPlatformPath(vscode.workspace.rootPath);
-      log.data(`cwd: ${cwd} `);
+      // log.data(`cwd: ${cwd} `);
       if (typeof cwd !== 'string') {
-        log.error(`Not able to get cwd`);
+        // log.error(`Not able to get cwd`);
         return;
       }
       //#endregion
@@ -171,7 +172,6 @@ export function executeCommand(
 
         vscodeWindow.withProgress(
           {
-
             //#region initialize progress
             location: progressLocation,
             title: MAIN_TITLE,
@@ -240,7 +240,7 @@ export function executeCommand(
                           `%relativePath%`,
                           relativePathToFileFromWorkspaceRoot,
                         );
-                        log.data(`cmdToExec: ${cmdToExec}`);
+                        // log.data(`cmdToExec: ${cmdToExec}`);
                         const res = valueFromCommand({
                           command: cmdToExec,
                           cwd,
@@ -293,7 +293,7 @@ export function executeCommand(
                       item.variableValue = res?.option;
                     }
 
-                    log.data(`Resolve from select: ${item.variableValue}`);
+                    // log.data(`Resolve from select: ${item.variableValue}`);
                   } else {
                     if (typeof placeholder === 'function') {
                       placeHolder = placeholder({
@@ -323,7 +323,7 @@ export function executeCommand(
                     }
                     res = !res ? '' : res;
                     item.variableValue = res;
-                    log.data(`Resolve from input: ${item.variableValue}`);
+                    // log.data(`Resolve from input: ${item.variableValue}`);
                   }
                   //#endregion
 
@@ -390,7 +390,7 @@ export function executeCommand(
                       (!commandIsFunction && childResult
                         ? childResult.toString()
                         : '');
-                    log.data(message);
+                    // log.data(message);
                     vscodeWindow.showInformationMessage(message);
                   }
                 }
@@ -408,7 +408,7 @@ export function executeCommand(
             ${err}
             ${data}
             `;
-                log.error(message);
+                // log.error(message);
                 vscodeWindow.showErrorMessage(message);
                 resolve(void 0);
               }
@@ -422,7 +422,7 @@ export function executeCommand(
                   proc.kill('SIGINT');
                 }
                 const message = `User canceled command: ${commandToExecuteReadable}`;
-                log.data(message);
+                // log.data(message);
                 vscodeWindow.showWarningMessage(message);
               });
               //#endregion
@@ -437,23 +437,23 @@ export function executeCommand(
                         relativePathToFileFromWorkspaceRoot,
                       ),
                     );
-                log.data(
-                  `first newCwd : ${newCwd}, relativePath: "${relativePathToFileFromWorkspaceRoot}"`,
-                );
+                // log.data(
+                //   `first newCwd : ${newCwd}, relativePath: "${relativePathToFileFromWorkspaceRoot}"`,
+                // );
                 if (!fse.existsSync(newCwd as string)) {
                   // QUICK_FIX for vscode workspace
                   const cwdBase = path.basename(cwd as string);
-                  log.data(`cwdBase ${cwdBase}`);
+                  // log.data(`cwdBase ${cwdBase}`);
                   const testCwd = (newCwd as string).replace(
                     `/${cwdBase}/${cwdBase}/`,
                     `/${cwdBase}/`,
                   );
                   if (fse.existsSync(testCwd)) {
-                    log.data(`cwdBaseExists`);
+                    // log.data(`cwdBaseExists`);
                     newCwd = testCwd;
                   }
                 }
-                log.data(`newCwd: ${newCwd}`);
+                // log.data(`newCwd: ${newCwd}`);
                 if (fse.existsSync(newCwd as string)) {
                   if (!fse.lstatSync(newCwd as string).isDirectory()) {
                     newCwd = crossPlatformPath(path.dirname(newCwd as string));
@@ -469,7 +469,7 @@ export function executeCommand(
                     fse.lstatSync(cwdFixed).isDirectory()
                   ) {
                     newCwd = cwdFixed;
-                    log.data(`newCwd fixed: ${newCwd}`);
+                    // log.data(`newCwd fixed: ${newCwd}`);
                   } else {
                     vscodeWindow.showErrorMessage(
                       `[vscode] Cwd not found: ${newCwd}`,
@@ -484,14 +484,15 @@ export function executeCommand(
                   try {
                     await commandToExecute({
                       vscode,
-                      log,
+                      // log,
                       context,
                       cwd,
                       uri,
                       selectedUris,
                       resolveVariables,
-                      rootFolderPath:
-                        crossPlatformPath(vscode.workspace.workspaceFolders?.[0]?.uri.fsPath) ,
+                      rootFolderPath: crossPlatformPath(
+                        vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
+                      ),
                     });
                     finishAction(titleOfTask);
                   } catch (error) {
@@ -524,9 +525,9 @@ export function executeCommand(
                         .join(' && ');
                 //#endregion
 
-                log.data(
-                  `commandToExecuteReadable before: ${commandToExecuteReadable}`,
-                );
+                // log.data(
+                //   `commandToExecuteReadable before: ${commandToExecuteReadable}`,
+                // );
 
                 let execCommand = commandToExecuteReadable;
 
@@ -581,10 +582,10 @@ export function executeCommand(
                     // }
 
                     if (paramToResolve === '%relativePath%') {
-                      log.data(`paramToResolve: '${paramToResolve}'`);
-                      log.data(
-                        `relativePath: '${relativePathToFileFromWorkspaceRoot}'`,
-                      );
+                      // log.data(`paramToResolve: '${paramToResolve}'`);
+                      // log.data(
+                      //   `relativePath: '${relativePathToFileFromWorkspaceRoot}'`,
+                      // );
                       execCommand = execCommand.replace(
                         paramToResolve,
                         relativePathToFileFromWorkspaceRoot,
@@ -655,13 +656,12 @@ export function executeCommand(
                 }
                 //#endregion
 
-                log.data(`cmd after replacing: ${cmd}`);
-                log.data(`execCommand after replacing: ${execCommand}`);
+                // log.data(`cmd after replacing: ${cmd}`);
+                // log.data(`execCommand after replacing: ${execCommand}`);
 
                 dataToDisplayInLog += `commandToExecute: ${execCommand}`;
 
                 if (syncProcess) {
-
                   //#region handle sync process
                   let childResult = child.execSync(cmd, { shell });
                   progress.report({ increment: 50 });
@@ -671,9 +671,7 @@ export function executeCommand(
                   progress.report({ increment: 50 });
                   finishAction(showOutputDataOnSuccess ? childResult : '');
                   //#endregion
-
                 } else {
-
                   //#region handle async process events
                   if (isDefaultBuildCommand) {
                     var outputChannel =
@@ -691,7 +689,7 @@ export function executeCommand(
                   // @ts-ignore
                   proc.stdout.on('data', message => {
                     // tslint:disable-next-line: no-unused-expression
-                    log.data(message.toString());
+                    // log.data(message.toString());
                     if (isDefaultBuildCommand) {
                       outputChannel.appendLine(message.toString().trim());
                     } else {
@@ -784,7 +782,6 @@ export function executeCommand(
                     }
                   });
                   //#endregion
-
                 }
               } catch (err) {
                 finishError(err, dataToDisplayInLog);
@@ -798,5 +795,4 @@ export function executeCommand(
     },
   );
   //#endregion
-
 }

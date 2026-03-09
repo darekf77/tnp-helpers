@@ -218,57 +218,61 @@ export type LogMode = 'dialog' | 'logmsg';
 /**
  * @deprecated
  */
-export class Log {
-  outputChannel: OutputChannel;
-  constructor(
-    private name: string,
-    private mode: LogMode = 'dialog',
-    private debugMode = false,
-  ) {
-    const vscode = getVscode();
-    if (!vscode.window) {
-      return;
-    }
-    this.outputChannel = vscode.window.createOutputChannel(name);
-    if (debugMode) {
-      this.outputChannel.show();
-    }
-  }
+// export class Log {
+//   outputChannel: OutputChannel;
+//   constructor(
+//     private name: string,
+//     private mode: LogMode = 'dialog',
+//     private debugMode = false,
+//   ) {
+//     const vscode = getVscode();
+//     if (!vscode.window) {
+//       return;
+//     }
+//     this.outputChannel = vscode.window.createOutputChannel(name);
+//     if (debugMode) {
+//       this.outputChannel.show();
+//     }
+//   }
 
-  public static instance(name: string, mode: LogMode, debugMode = false) {
-    return new Log(name, mode, debugMode);
-  }
+//   setDebugMode(debug:boolean) {
+//     this.debugMode = debug;
+//   }
 
-  public data(data: string) {
-    if (!this.debugMode) {
-      return;
-    }
-    const message = `[${this.name}] ${data}`;
-    if (this.mode === 'dialog') {
-      const vscode = getVscode();
-      vscode.window.showInformationMessage(message);
-    } else {
-      this.outputChannel.appendLine(message);
-    }
-  }
+//   public static instance(name: string, mode: LogMode, debugMode = false) {
+//     return new Log(name, mode, debugMode);
+//   }
 
-  public info(data: string) {
-    const message = `[${this.name}] ${data}`;
-    if (this.mode === 'dialog') {
-      const vscode = getVscode();
-      vscode.window.showInformationMessage(message);
-    } else {
-      this.outputChannel.appendLine(message);
-    }
-  }
+//   public data(data: string) {
+//     if (!this.debugMode) {
+//       return;
+//     }
+//     const message = `[${this.name}] ${data}`;
+//     if (this.mode === 'dialog') {
+//       const vscode = getVscode();
+//       vscode.window.showInformationMessage(message);
+//     } else {
+//       this.outputChannel.appendLine(message);
+//     }
+//   }
 
-  public error(data: string) {
-    const message = `[${this.name}] ${data}`;
-    if (this.mode === 'dialog') {
-      const vscode = getVscode();
-      vscode.window.showErrorMessage(message);
-    } else {
-      this.outputChannel.appendLine(`[error] ${message}`);
-    }
-  }
-}
+//   public info(data: string) {
+//     const message = `[${this.name}] ${data}`;
+//     if (this.mode === 'dialog') {
+//       const vscode = getVscode();
+//       vscode.window.showInformationMessage(message);
+//     } else {
+//       this.outputChannel.appendLine(message);
+//     }
+//   }
+
+//   public error(data: string) {
+//     const message = `[${this.name}] ${data}`;
+//     if (this.mode === 'dialog') {
+//       const vscode = getVscode();
+//       vscode.window.showErrorMessage(message);
+//     } else {
+//       this.outputChannel.appendLine(`[error] ${message}`);
+//     }
+//   }
+// }
