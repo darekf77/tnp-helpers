@@ -771,7 +771,7 @@ export class CommitData {
       }
     }
 
-    return commitMsg.replace(': :', ': ');
+    return commitMsg.replace(': :', ': ').toLowerCase();
 
     //#endregion
   }
