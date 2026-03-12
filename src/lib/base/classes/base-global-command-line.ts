@@ -878,18 +878,15 @@ ${
   async soft() {
     //#region @backendFunc
     // TODO when aciton commit
-    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
-      return;
-    }
     const howManyCommits = Number(this.firstArg) || 1;
 
     _.times(howManyCommits, n => {
       console.log(
         `Resetting soft ${
           n + 1
-        } commit "${this.project.git.lastCommitMessage()}"`,
+        } commit "${HelpersTaon.git.lastCommitMessage(this.cwd)}"`,
       );
-      this.project.git.resetSoftHEAD(1);
+      HelpersTaon.git.resetSoftHEAD(this.cwd, 1);
     });
 
     this._exit();

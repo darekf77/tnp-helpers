@@ -1258,7 +1258,7 @@ export namespace HelpersTaon {
         child_process.execSync(`git reset --soft HEAD~${HEAD}`, { cwd });
       } catch (error) {
         Helpers.error(
-          `[${config.frameworkName}] not able to soft repository in ${self.location}`,
+          `[${config.frameworkName}] not able to soft repository in ${cwd}`,
         );
       }
     };
@@ -1281,7 +1281,7 @@ export namespace HelpersTaon {
         );
       } catch (error) {
         Helpers.error(
-          `[${config.frameworkName}] not able to reset repository in ${self.location}`,
+          `[${config.frameworkName}] not able to reset repository in ${cwd}`,
         );
       }
       //#endregion
