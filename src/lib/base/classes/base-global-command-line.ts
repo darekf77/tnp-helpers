@@ -2138,9 +2138,10 @@ ${lastCommitMessage}
       true,
     );
     Helpers.clearConsole();
-    await this.project.vsCodeHelpers.installExtensions({
+    await UtilsVSCode.installExtensions({
       extensions: extensions.recommendations,
       defaultSelectedAll: true,
+      editor: await this.project.ins.editor()
     });
     this._exit();
     //#endregion
