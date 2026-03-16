@@ -1721,6 +1721,22 @@ ${lastCommitMessage}
   }
   //#endregion
 
+  //#region commands / lint
+  /**
+   * TODO move somewhere
+   */
+  async lintStaged() {
+    //#region @backendFunc
+
+    await UtilsExecProc.spawnAsync(
+      `npm-run eslint $(git diff --name-only --cached -- '*.ts')`,
+    ).waitUntilDoneOrThrow();
+
+    this._exit();
+    //#endregion
+  }
+  //#endregion
+
   //#region commands / version
   /**
    * TODO move somewhere
@@ -2141,7 +2157,7 @@ ${lastCommitMessage}
     await UtilsVSCode.installExtensions({
       extensions: extensions.recommendations,
       defaultSelectedAll: true,
-      editor: await this.project.ins.editor()
+      editor: await this.project.ins.editor(),
     });
     this._exit();
     //#endregion
