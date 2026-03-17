@@ -15,6 +15,7 @@ import {
   glob,
   isElevated as isElevatedCore,
   spawn,
+  UtilsExecProc,
   UtilsFilesFoldersSync,
 } from 'tnp-core/src';
 import { os } from 'tnp-core/src';
@@ -40,7 +41,6 @@ import { UtilsQuickFixes, UtilsVSCode } from '../utils';
 import { UtilsTypescript } from '../utils-typescript';
 export { Helpers } from 'tnp-core/src';
 //#endregion
-
 
 //#region models
 export interface GetRecrusiveFilesFromOptions {}
@@ -1735,6 +1735,29 @@ ${cwd}
         Helpers.run(`git checkout ${fileReletivePath}`, { cwd }).sync();
       } catch (error) {}
     };
+
+    export function extractGithubOwner(repoUrl: string): string | null {
+      if (!repoUrl) return null;
+
+      repoUrl = repoUrl.trim();
+
+      // SSH format: git@github.com:owner/repo.git
+      const sshMatch = repoUrl.match(/^git@github\.com:(.+?)\/(.+?)(\.git)?$/);
+      if (sshMatch) {
+        return sshMatch[1];
+      }
+
+      // HTTPS format: https://github.com/owner/repo(.git)
+      const httpsMatch = repoUrl.match(
+        /^https?:\/\/github\.com\/(.+?)\/(.+?)(\.git)?$/,
+      );
+      if (httpsMatch) {
+        return httpsMatch[1];
+      }
+
+      return null;
+    }
+
     export const getRemoteProvider = (cwd: string): string => {
       //#region @backendFunc
       const remoteUrl = getOriginURL(cwd);
@@ -1883,10 +1906,17 @@ ${cwd}
               skip: {
                 name: 'Skip cloning this repository',
               },
+              create: {
+                name: 'Create repository',
+              },
               exit: {
                 name: 'Exit process',
               },
             };
+            if (!url.includes('github.com')) {
+              delete cloneLinkOpt.create;
+            }
+
             const res = await HelpersTaon.consoleGui.select<
               keyof typeof cloneLinkOpt
             >('What to do?', cloneLinkOpt);
@@ -1904,6 +1934,36 @@ ${cwd}
             }
             if (res === 'skip') {
               break;
+            }
+            if (res === 'create') {
+              Helpers.info(`Checking if github cli installed`);
+              const githubCliInstalled = await UtilsOs.commandExistsAsync('gh');
+              if (!githubCliInstalled) {
+                Helpers.info(`Github CLI not installed.. `);
+                await UtilsTerminal.pressAnyKeyToContinueAsync({
+                  message: `Press any key to try clone again..`,
+                });
+                continue;
+              }
+              try {
+                const orgOrAccount = HelpersTaon.git.extractGithubOwner(url);
+
+                const reponame = path.basename(url.replace('.git', ''));
+
+                await UtilsExecProc.spawnAsync(
+                  `gh repo create ${orgOrAccount}/${reponame} --private `,
+                ).waitUntilDoneOrThrow();
+
+                await UtilsTerminal.pressAnyKeyToContinueAsync({
+                  message: `REPO CREATED. Press any key to try clone again..`,
+                });
+                continue;
+              } catch (error) {
+                await UtilsTerminal.pressAnyKeyToContinueAsync({
+                  message: `REPO NOT CREATE. Press any key to try clone again..`,
+                });
+                continue;
+              }
             }
           }
         }
