@@ -751,10 +751,11 @@ export namespace UtilsVSCode {
 
   //#region utils os / open folder in vscode
   export const openFolder = async (
-    folderAbsPath: string,
+    folderAbsPath: string | string[],
     editor?: UtilsOs.Editor,
   ): Promise<void> => {
     //#region @backendFunc
+    folderAbsPath = crossPlatformPath(folderAbsPath);
     editor =
       editor ||
       UtilsOs.detectEditor() ||
