@@ -289,14 +289,22 @@ ${projectsInfo}
     //#region @backendFunc
     const { registry } = options || {};
     const accessPublic =
-      this.packageJson.name.startsWith('@') && this.packageJson.isPrivate
+      this.packageJson.name.startsWith('@') && !this.packageJson.isPrivate
         ? '--access public'
         : '';
     const registryOpt = registry ? `--registry ${registry}` : '';
 
+    const commandForPublish = `npm publish ${registryOpt} ${accessPublic}`
+    Helpers.info(`
+
+      Package: ${this.packageJson.name}
+      Command for publish: ${commandForPublish}
+      cwd: ${this.project.location}
+
+      `)
     try {
       await this.project
-        .run(`npm publish ${registryOpt} ${accessPublic}`, {
+        .run(commandForPublish, {
           output: true,
           silence: false,
         })
