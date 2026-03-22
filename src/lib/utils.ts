@@ -913,6 +913,7 @@ export namespace UtilsVSCode {
       'DavidAnson.vscode-markdownlint',
       'wmaurer.change-case',
       'earshinov.permute-lines',
+      'xabikos.javascriptsnippets',
       //  'mechatroner.rainbow-csv',
       // 'wenfangdu.snippet-generator', snippet generator
       //#region  to check
@@ -1025,7 +1026,6 @@ export namespace UtilsVSCode {
       'waderyan.gitblame',
       'ryu1kn.partial-diff',
       'nidu.copy-json-path',
-      'xabikos.javascriptsnippets',
       'firsttris.vscode-jest-runner', // better for jest TODO include this for TAON
       'franklinteixeira205.primeflex',
       'stepanog.angular1-inline',
@@ -1048,7 +1048,6 @@ export namespace UtilsVSCode {
       'ivangabriele.vscode-git-add-and-commit', // in taon
       'alexiv.vscode-angular2-files', // in taon
       'taddison.gitlazy', // in taon
-      'xabikos.JavaScriptSnippets', // old
     ];
   };
   //#endregion
