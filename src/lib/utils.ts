@@ -875,6 +875,7 @@ export namespace UtilsVSCode {
 
   //#region get extensions
   export const getExtensions = (): string[] => {
+    // wenfangdu.faster-new new file folder for codium
     return Utils.uniqArray([
       //#region @backend
       // 'Angular.ng-template', // high cpu usage

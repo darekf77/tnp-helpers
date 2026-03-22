@@ -1251,12 +1251,14 @@ ${lastCommitMessage}
       setOrigin: this.params['setOrigin'],
       currentOrigin: this.project.git.originURL,
     });
-    GlobalTaskManager.stop(PUSH_ACTION_NAME);
 
-    if (options.noExit) {
-      return;
-    }
-    this._exit();
+    GlobalTaskManager.stop(PUSH_ACTION_NAME, () => {
+      if (options.noExit) {
+        return;
+      }
+      this._exit();
+    });
+
     //#endregion
   }
   //#endregion
