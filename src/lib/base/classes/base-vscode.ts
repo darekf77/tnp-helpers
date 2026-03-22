@@ -90,7 +90,7 @@ export class BaseVscodeHelpers<
       this.relativePathExtensionJsonVScode,
       JSON.stringify(
         {
-          recommendations: UtilsVSCode.getExtensions(),
+          recommendations: UtilsVSCode.vscodeExtensions(),
         },
         null,
         2,

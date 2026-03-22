@@ -874,110 +874,90 @@ export namespace UtilsVSCode {
   //#endregion
 
   //#region get extensions
-  export const getExtensions = (): string[] => {
-    // wenfangdu.faster-new new file folder for codium
-    return Utils.uniqArray([
-      //#region @backend
-      // 'Angular.ng-template', // high cpu usage
+
+  export const commonRecommededExtensionsExtensions = (): string[] => {
+    return [
+      'taon-dev.taon',
       'EditorConfig.EditorConfig',
-      // 'GitHub.copilot', => deprecated
-      'GitHub.copilot-chat',
       'IBM.output-colorizer',
       'Mikael.Angular-BeastCode',
-      'SimonSiefke.svg-preview',
-      'Zaczero.bootstrap-v4-snippets',
-      'scrapecrow.html-escape', // escape html
-      'wcwhitehead.bootstrap-3-snippets',
-      // 'abumalick.vscode-nvm', // test this before
-      'aeschli.vscode-css-formatter',
+      // 'Angular.ng-template',
+      'sndst00m.vscode-native-svg-preview', // 'SimonSiefke.svg-preview',
+      'HansUXdev.bootstrap5-snippets', // 'Zaczero.bootstrap-v4-snippets', 'wcwhitehead.bootstrap-3-snippets', // very old
       'alefragnani.Bookmarks',
-      'alexdima.copy-relative-path',
-      // 'alexiv.vscode-angular2-files', // taon generator is better
       'amodio.toggle-excluded-files',
-      'cg-cnu.vscode-path-tools',
-      // 'chrisdias.vscode-opennewinstance', // no needed anymore (embeded in taon)
       'ctcuff.font-preview',
       'dbaeumer.vscode-eslint',
       'dnicolson.binary-plist',
       'eamodio.gitlens', // very nice inline git blame
-      'eg2.tslint',
       'esbenp.prettier-vscode',
-      // 'henry-li.vscode-import-formatter', not neede - eslint does it
-      'jack89ita.copy-filename',
       'johnpapa.Angular2',
       'marclipovsky.string-manipulation',
-      'marinhobrandao.angular2tests',
-      'mariusalchimavicius.json-to-ts',
-      'maximus136.change-string-case',
-      'mikebovenlander.formate',
-      'momoko8443.library-version',
-      'mrmlnc.vscode-json5',
       'ms-azuretools.vscode-docker',
-      'ms-vscode.live-server',
-      'msjsdiag.debugger-for-chrome',
-      'natewallace.angular2-inline',
-      'natqe.reload',
-      'nemesv.copy-file-name',
-      // 'oven.bun-vscode', // errors in vscode cosole
-      // 'qwtel.sqlite-viewer', // 80$ not free
+      'thebearingedge.vscode-sql-lit', // SQL templates extensions
       'keyshout.sqlite-db-viewer', // free version of qwtel.sqlite-viewer - no writes
+      'christian-kohler.path-intellisense', // asset pathes autocomplete
       'redhat.vscode-xml',
-      'ritwickdey.create-file-folder',
       'rogalmic.bash-debug',
-      'rssowl.copy-relative-path-posix',
-      'ryanlaws.toggle-case',
+      'Gruntfuggly.todo-tree',
       'saber2pr.file-git-history',
-      'shakram02.bash-beautify',
-      'stepanog.angular1-inline',
-      // 'taddison.gitlazy',
       'unifiedjs.vscode-mdx',
-      'tommasov.hosts',
-      'franklinteixeira205.primeflex',
-      // 'vespa-dev-works.jestrunit',
-      'firsttris.vscode-jest-runner', // better for jest TODO include this for TAON
-      // 'waderyan.gitblame',
-
-      'wenfangdu.snippet-generator',
-      'xabikos.javascriptsnippets',
-      // 'wmaurer.vscode-jumpy', // nice but I am not using it
-      'nidu.copy-json-path',
+      'Malo.copy-json-path',
       'aaron-bond.better-comments',
       'mikestead.dotenv',
-      'ryu1kn.partial-diff',
-      'Tyriar.sort-lines',
-      'ms-vscode-remote.remote-containers',
-      'ms-azuretools.vscode-docker',
-      'DavidAnson.vscode-markdownlint',
-      'bibhasdn.unique-lines',
+      'humao.rest-client',
+      'hediet.vscode-drawio',
+      'tomoki1207.pdf',
       'streetsidesoftware.code-spell-checker',
-      'tshino.kb-macro', // nice macros
+      'Tyriar.sort-lines',
+      'DavidAnson.vscode-markdownlint',
+      'wmaurer.change-case',
+      'earshinov.permute-lines',
+      //  'mechatroner.rainbow-csv',
+      // 'wenfangdu.snippet-generator', snippet generator
+      //#region  to check
+      // 'abumalick.vscode-nvm', // test this before
+      // , // there is prettiers
+
+      // 'alexdima.copy-relative-path', // already in taon
+      // 'alexiv.vscode-angular2-files', // taon generator is better
+
+      // , // no needed anymore (embeded in taon)
+
+      // 'eg2.tslint',
+
+      // 'henry-li.vscode-import-formatter', not neede - eslint does it
+      // 'jack89ita.copy-filename', // in taon
+
+      // 'momoko8443.library-version',
+
+      // 'oven.bun-vscode', // errors in vscode cosole
+      // 'qwtel.sqlite-viewer', // 80$ not free
+
+      // , already in taon
+
+      // 'taddison.gitlazy',
+
+      // 'vespa-dev-works.jestrunit',
+
+      // 'wmaurer.vscode-jumpy', // nice but I am not using it
+
       // 'usernamehw.errorlens', nice extension.. but to much input at once
 
       // 'pranaygp.vscode-css-peek', // high cpu usage
       // 'bengreenier.vscode-node-readme',
       // 'kisstkondoros.vscode-codemetrics', // TOO MUCH CPU USAGE
       // 'vscode-icons-team.vscode-icons',
-      'Gruntfuggly.todo-tree',
-      'ms-vscode-remote.remote-ssh',
-      'tomoki1207.pdf',
-      'hediet.vscode-drawio',
-      'humao.rest-client',
+
       // TODO nesting is so nice.. but I nee to modify it for taon
       // 'antfu.file-nesting',
-      // TODO CHECK asset pathes autocomplete
-      'christian-kohler.path-intellisense',
-      // SQL templates extensions
-      'thebearingedge.vscode-sql-lit',
+
       // 'frigus02.vscode-sql-tagged-template-literals', TODO CHECK
       // 'frigus02.vscode-sql-tagged-template-literals-syntax-only', TODO CHECK
       // -------
       // 'mihelcic.colored-regions', TODO I need modified version for taon
       // 'shardulm94.trailing-spaces',
 
-      // wsl
-      'ms-vscode-remote.remote-wsl',
-      'kgrzywocz.wsl-path',
-      'imgildev.vscode-angular-generator',
       //  'bierner.color-info', // nice to have color info in css/scss files
       // ---
       // 'skacekachna.win-opacity',
@@ -987,20 +967,88 @@ export namespace UtilsVSCode {
 
       // nice extension but not use for now in taon
       // csv thing
-      // 'mechatroner.rainbow-csv',
+      //
+      //#endregion
+    ];
+  };
+
+  export const codiumExtensions = (): string[] => {
+    return [
+      'Alexanderius.language-hosts',
+      ...commonRecommededExtensionsExtensions(),
+    ];
+  };
+  export const codeExtensions = (): string[] => {
+    // wenfangdu.faster-new new file folder for codium
+    return Utils.uniqArray([
+      ...commonRecommededExtensionsExtensions(),
+      'tommasov.hosts',
+      //#region @backend
+      // 'GitHub.copilot', => deprecated
+      // 'GitHub.copilot-chat',
+
+      //#region  TODO  find alternative FOR codium
+
+      'mariusalchimavicius.json-to-ts',
+      'natewallace.angular2-inline',
+
+      'tshino.kb-macro', // nice macros
+
+      //#endregion
 
       //#endregion
     ]).map(c => (c as string).toLowerCase());
   };
   //#endregion
 
+  export const vscodeExtensions = (editor?: UtilsOs.Editor): string[] => {
+    editor = editor ? editor : UtilsOs.detectEditor();
+    if (editor === 'code') {
+      return codeExtensions();
+    }
+    return codiumExtensions();
+  };
+
   //#region get deprecated extensions
-  export const getDeprecatedExtension = (): string[] => {
+  export const getDeprecatedExtension = (editor?: UtilsOs.Editor): string[] => {
     return [
-      'ivangabriele.vscode-git-add-and-commit',
-      'alexiv.vscode-angular2-files',
-      'taddison.gitlazy',
-      'xabikos.JavaScriptSnippets',
+      'bibhasdn.unique-lines',
+      'ms-vscode-remote.remote-ssh',
+      'scrapecrow.html-escape',
+      'marinhobrandao.angular2tests', // snipperts for test
+      'cg-cnu.vscode-path-tools',
+      'chrisdias.vscode-opennewinstance',
+      'aeschli.vscode-css-formatter',
+      'rssowl.copy-relative-path-posix',
+      'ms-vscode-remote.remote-containers',
+      'ms-azuretools.vscode-docker',
+      'waderyan.gitblame',
+      'ryu1kn.partial-diff',
+      'nidu.copy-json-path',
+      'xabikos.javascriptsnippets',
+      'firsttris.vscode-jest-runner', // better for jest TODO include this for TAON
+      'franklinteixeira205.primeflex',
+      'stepanog.angular1-inline',
+      'shakram02.bash-beautify',
+      'ryanlaws.toggle-case',
+      'ritwickdey.create-file-folder',
+      'ms-vscode-remote.remote-wsl',
+      'kgrzywocz.wsl-path',
+      'imgildev.vscode-angular-generator',
+      'nemesv.copy-file-name',
+      'natqe.reload', // in taon
+      'ms-vscode.live-server', // not needed
+      'msjsdiag.debugger-for-chrome', // old
+      'mikebovenlander.formate', // prettier
+      'mrmlnc.vscode-json5', // prettier
+      'jack89ita.copy-filename', // in taon
+      'eg2.tslint', // old
+      'rssowl.copy-relative-path-posix', // in taon
+      'alexdima.copy-relative-path', // in taon
+      'ivangabriele.vscode-git-add-and-commit', // in taon
+      'alexiv.vscode-angular2-files', // in taon
+      'taddison.gitlazy', // in taon
+      'xabikos.JavaScriptSnippets', // old
     ];
   };
   //#endregion
@@ -1019,6 +1067,43 @@ export namespace UtilsVSCode {
   //#endregion
 
   //#region install extensions
+  export const removeDeprecated = async (options?: {
+    editor?: UtilsOs.Editor;
+  }) => {
+    options = options || {};
+    options.editor = UtilsOs.detectEditor();
+
+    const deprecated = getDeprecatedExtension(options.editor);
+    // console.log({ deprecated });
+    // HelpersTaon.pressKeyOrWait('Press any key to continue...');
+    for (let index = 0; index < deprecated.length; index++) {
+      const extname = deprecated[index];
+      try {
+        Helpers.taskStarted(`Uninstalling: ${extname}`);
+        Helpers.run(
+          `${options.editor} --uninstall-extension  ${extname}`,
+        ).sync();
+        Helpers.taskDone(`Removed ${extname} done.`);
+        await Utils.wait(1);
+      } catch (error) {
+        // console.error(error);
+        Helpers.warn(`Not able to uninstall ${extname}`);
+        // await UtilsTerminal.pressAnyKeyToContinueAsync({
+        //   message: 'Press any key to continue...',
+        // });
+      }
+    }
+  };
+
+  export const installAndRemoveDeprecatedExtensions = async (options?: {
+    defaultSelectedAll?: boolean;
+    editor?: UtilsOs.Editor;
+    extensions?: string[];
+  }): Promise<void> => {
+    await installExtensions(options);
+    await removeDeprecated(options);
+  };
+
   export const installExtensions = async (options?: {
     defaultSelectedAll?: boolean;
     editor?: UtilsOs.Editor;
@@ -1026,8 +1111,9 @@ export namespace UtilsVSCode {
   }): Promise<void> => {
     //#region @backendFunc
     options = options || {};
-    options.extensions = options.extensions || UtilsVSCode.getExtensions();
     options.editor = UtilsOs.detectEditor();
+    options.extensions =
+      options.extensions || UtilsVSCode.vscodeExtensions(options?.editor);
     let extensions = options.extensions;
     const defaultSelectedAll = !!options.defaultSelectedAll;
     // console.log({ extensions });
