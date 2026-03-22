@@ -893,7 +893,7 @@ export namespace UtilsVSCode {
       'esbenp.prettier-vscode',
       'johnpapa.Angular2',
       'marclipovsky.string-manipulation',
-      'ms-azuretools.vscode-docker',
+
       'thebearingedge.vscode-sql-lit', // SQL templates extensions
       'keyshout.sqlite-db-viewer', // free version of qwtel.sqlite-viewer - no writes
       'christian-kohler.path-intellisense', // asset pathes autocomplete
@@ -1013,6 +1013,8 @@ export namespace UtilsVSCode {
   //#region get deprecated extensions
   export const getDeprecatedExtension = (editor?: UtilsOs.Editor): string[] => {
     return [
+      'ms-azuretools.vscode-containers',
+      'ms-azuretools.vscode-docker',
       'bibhasdn.unique-lines',
       'ms-vscode-remote.remote-ssh',
       'scrapecrow.html-escape',
