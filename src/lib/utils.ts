@@ -1117,24 +1117,24 @@ export namespace UtilsVSCode {
     let extensions = options.extensions;
     const defaultSelectedAll = !!options.defaultSelectedAll;
     // console.log({ extensions });
-    const alreadyInstalled = UtilsVSCode.installedExtensions();
-    Helpers.info(
-      `There are over all ${extensions.length} recommended extensions.`,
-    );
-    const alreadyInstalledNames = extensions.filter(ext =>
-      alreadyInstalled.includes(ext),
-    );
-    extensions = extensions.filter(ext => !alreadyInstalled.includes(ext));
+    // const alreadyInstalled = UtilsVSCode.installedExtensions();
+    // Helpers.info(
+    //   `There are over all ${extensions.length} recommended extensions.`,
+    // );
+    // const alreadyInstalledNames = extensions.filter(ext =>
+    //   alreadyInstalled.includes(ext),
+    // );
+    // extensions = extensions.filter(ext => !alreadyInstalled.includes(ext));
 
     const menuItems = extensions.map(r => {
       return { name: r, value: r, enabled: true, selected: true };
     });
 
-    Helpers.info(
-      `Already installed from list ` +
-        ` (${alreadyInstalledNames.length} extensions): `,
-    );
-    console.log(`${alreadyInstalledNames.join(', ')}`);
+    // Helpers.info(
+    //   `Already installed from list ` +
+    //     ` (${alreadyInstalledNames.length} extensions): `,
+    // );
+    // console.log(`${alreadyInstalledNames.join(', ')}`);
     // console.log(
     //   `Extensions to install: ${extensions.recommendations.join(', ')}`,
     // );
@@ -1175,6 +1175,9 @@ export namespace UtilsVSCode {
   //#endregion
 
   //#region installed extensions
+  /**
+   * @deprecated
+   */
   export const installedExtensions = (): string[] => {
     //#region @backendFunc
     /**
