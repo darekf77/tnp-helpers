@@ -1374,7 +1374,7 @@ ${lastCommitMessage}
       typeofCommit: 'release',
       commitMessageRequired: true,
       overrideCommitMessage:
-        `${_.first(this.project.releaseProcess.getReleaseWords())} ` +
+        `${_.first(this.project.releaseProcess.getReleaseWords())}: ` +
         `version ${this.project.packageJson.version}`,
     });
     //#endregion
