@@ -690,8 +690,9 @@ export class BaseGlobalCommandLine<
     await this.project.git.pullProcess({
       setOrigin: this.params['setOrigin'],
     });
-    GlobalTaskManager.stop(PULL_ACTION_NAME);
-    this._exit();
+    GlobalTaskManager.stop(PULL_ACTION_NAME, () => {
+      this._exit();
+    });
     //#endregion
   }
   //#endregion
