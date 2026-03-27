@@ -5,6 +5,7 @@ import { promisify } from 'node:util'; // @backend
 
 import * as ncp from 'copy-paste'; // @backend
 import * as semver from 'semver'; // @backend
+import * as sloc from 'sloc'; // @backend
 import {
   chalk,
   chokidar,
@@ -2860,6 +2861,7 @@ export namespace UtilsFileSync {
 }
 //#endregion
 
+//#region utils clipboard
 export namespace UtilsClipboard {
   export const copyText = async (textToCopy: string): Promise<void> => {
     //#region @backend
@@ -2935,3 +2937,145 @@ export namespace UtilsClipboard {
     return '';
   };
 }
+//#endregion
+
+//#region utils line count
+export namespace UtilsLineCount {
+  //#region utils line count / constatns
+  const skip = [
+    'node_modules',
+    '.',
+    'tmp-',
+    'environments',
+    'dist',
+    'docs',
+    'bundle',
+    'browser',
+  ];
+  const emptyTotal = {
+    source: 0,
+    comment: 0,
+    single: 0,
+    block: 0,
+    empty: 0,
+    total: 0,
+  };
+  //#endregion
+
+  //#region utils line count / walk
+  const walk = (
+    folder: string,
+    total: typeof emptyTotal,
+    extensions: string[],
+  ) => {
+    //#region @backendFunc
+
+    if (!fse.existsSync(folder)) {
+      return;
+    }
+    const entries = fse.readdirSync(folder, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(folder, entry.name);
+
+      if (skip.some(s => entry.name.startsWith(s))) {
+        continue;
+      }
+
+      if (entry.isDirectory()) {
+        // console.log('Processing: ', path.basename(fullPath));
+        walk(fullPath, total, extensions);
+      } else if (extensions.includes(path.extname(entry.name))) {
+        const code = fse.readFileSync(fullPath, 'utf8');
+        const stats = sloc(code, path.extname(entry.name).slice(1)); // e.g., "ts" or "js"
+        for (const key in total) {
+          total[key] += stats[key] ?? 0;
+        }
+      }
+    }
+    //#endregion
+  };
+  //#endregion
+
+  //#region utils line count / for porject
+  export const forPorject = (
+    project: BaseProject,
+    opt: {
+      extensionsOnly?: string[];
+      displayInfoChildren?: boolean;
+      displayInfoAll?: boolean;
+      /**
+       * by default src, libraries, projects
+       */
+      searchFolders?: string[];
+    },
+  ): {} => {
+    //#region @backendFunc
+    opt = opt || {};
+    opt.displayInfoAll = opt.displayInfoAll ?? true;
+    opt.displayInfoChildren = opt.displayInfoChildren ?? false;
+    opt.searchFolders = opt.searchFolders ?? [
+      'src',
+      'libraries',
+      'projects',
+      'custom',
+      'external',
+    ];
+    const extensions = opt.extensionsOnly ?? ['.ts', '.tsx', '.html', '.scss'];
+
+    console.log('Counting SLOC for extensions: ', extensions.join(', '));
+    const projectsTotal = [] as {
+      project: BaseProject;
+      total: typeof emptyTotal;
+    }[];
+
+    let totalAll = _.cloneDeep(emptyTotal);
+    let searchProjsCount = 0;
+
+    // walk(crossPlatformPath([this.cwd, 'src']));
+    const walkProject = (project: BaseProject) => {
+      if (project.getValueFromJSONC('taon.jsonc', 'isCoreProject')) {
+        return;
+      }
+      Helpers.info(`Processing ${project.genericName}`);
+      searchProjsCount++;
+      const stats = _.cloneDeep(emptyTotal) as typeof emptyTotal;
+      for (const folder of opt.searchFolders) {
+        walk(project.pathFor(folder), stats, extensions);
+      }
+
+      projectsTotal.push({
+        project,
+        total: stats,
+      });
+
+      if (opt.displayInfoChildren) {
+        console.log(`📊 SLOC Results ${chalk.bold(project.genericName)}:`);
+        console.table(stats);
+      }
+
+      for (const key in stats) {
+        totalAll[key] += stats[key] ?? 0;
+      }
+
+      for (const child of project.children) {
+        walkProject(child);
+      }
+    };
+
+    walkProject(project);
+
+    if (opt.displayInfoAll) {
+      console.log('📊 SLOC Results:');
+      console.table(totalAll);
+    }
+
+    return {
+      totalAll: typeof emptyTotal,
+      projectsTotal,
+    };
+    //#endregion
+  };
+  //#endregion
+}
+
+//#endregion

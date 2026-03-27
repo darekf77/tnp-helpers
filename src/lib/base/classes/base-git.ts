@@ -641,7 +641,7 @@ Please provide proper commit message for lastest changes in your project:
   //#endregion
 
   //#region methods & getters / last commit date
-  lastCommitDate() {
+  lastCommitDate(): Date | null {
     //#region @backendFunc
     return HelpersTaon.git.lastCommitDate(this.project.location);
     //#endregion

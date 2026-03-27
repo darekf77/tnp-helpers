@@ -850,7 +850,7 @@ export namespace HelpersTaon {
         return '';
       }
     };
-    export const lastCommitDate = (cwd: string): Date => {
+    export const lastCommitDate = (cwd: string): Date | null => {
       Helpers.log('[taon-helpers][lastCommitDate] ' + cwd, 1);
       try {
         let unixTimestamp =
