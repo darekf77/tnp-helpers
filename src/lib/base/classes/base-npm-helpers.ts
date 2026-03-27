@@ -288,38 +288,67 @@ ${projectsInfo}
   async publishToNpmRegistry(options?: { registry?: string }): Promise<void> {
     //#region @backendFunc
     const { registry } = options || {};
-    const accessPublic =
-      this.packageJson.name.startsWith('@') && !this.packageJson.isPrivate
-        ? '--access public'
-        : '';
-    const registryOpt = registry ? `--registry ${registry}` : '';
 
-    const commandForPublish = `npm publish ${registryOpt} ${accessPublic}`
-    Helpers.info(`
+    while (true) {
+      const accessPublic =
+        this.packageJson.name.startsWith('@') && !this.packageJson.isPrivate
+          ? '--access public'
+          : '';
+      const registryOpt = registry ? `--registry ${registry}` : '';
+
+      const commandForPublish = `npm publish ${registryOpt} ${accessPublic}`;
+      Helpers.info(`
 
       Package: ${this.packageJson.name}
       Command for publish: ${commandForPublish}
       cwd: ${this.project.location}
 
-      `)
-    try {
-      await this.project
-        .run(commandForPublish, {
-          output: true,
-          silence: false,
-        })
-        .sync();
-    } catch (error) {
-      console.log(error);
-      Helpers.error(
-        `
+      `);
+
+      try {
+        await this.project
+          .run(commandForPublish, {
+            output: true,
+            silence: false,
+          })
+          .sync();
+        break;
+      } catch (error) {
+        console.log(error);
+        Helpers.error(
+          `
 
         Not able to publish to npm registry project in ${this.project.location}
 
         `,
-        false,
-        true,
-      );
+          true,
+          true,
+        );
+        const choices = {
+          again: {
+            name: 'Try again publish',
+          },
+          skip: {
+            name: 'Skip publishing this porject',
+          },
+          exit: {
+            name: 'Exit program',
+          },
+        };
+
+        const selected = await UtilsTerminal.select<keyof typeof choices>({
+          choices,
+        });
+        if (selected === 'again') {
+          continue;
+        }
+        if (selected === 'skip') {
+          break;
+        }
+        if (selected === 'exit') {
+          process.exit(0);
+        }
+      }
     }
 
     //#endregion
