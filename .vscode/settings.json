@@ -222,7 +222,7 @@
     "tmp-*/**": true,
     "**/node_modules/**": true,
     "**/dist/**": true,
-    "**/.git/**": true
+    "**/dist-nocutsrc/**": true
   },
 
   "[markdown]": {
