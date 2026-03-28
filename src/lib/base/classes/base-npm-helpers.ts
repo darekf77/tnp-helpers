@@ -1,5 +1,5 @@
 //#region imports
-import { config } from 'tnp-core/src';
+import { config, UtilsExecProc } from 'tnp-core/src';
 import { UtilsTerminal } from 'tnp-core/src';
 import {
   chalk,
@@ -306,12 +306,9 @@ ${projectsInfo}
       `);
 
       try {
-        await this.project
-          .run(commandForPublish, {
-            output: true,
-            silence: false,
-          })
-          .sync();
+        await UtilsExecProc.spawnAsync(commandForPublish, {
+          cwd: this.project.location,
+        }).waitUntilDoneOrThrow();
         break;
       } catch (error) {
         console.log(error);

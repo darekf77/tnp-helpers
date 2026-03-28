@@ -1424,7 +1424,7 @@ Would you like to update current project configuration?`)
    * publish project to npm
    */
   async publish(publishOptions?: any): Promise<void> {
-    this.npmHelpers.publishToNpmRegistry();
+    await this.npmHelpers.publishToNpmRegistry();
   }
   //#endregion
 
