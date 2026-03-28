@@ -1361,6 +1361,26 @@ export namespace UtilsVSCode {
         command: '-editor.action.formatDocument',
         when: 'editorHasDocumentFormattingProvider && editorTextFocus && !editorReadonly && !inCompositeEditor',
       },
+      {
+        key: 'ctrl+c',
+        command: 'workbench.action.terminal.copySelection',
+        when: 'terminalTextSelectedInFocused || terminalFocus && terminalHasBeenCreated && terminalTextSelected || terminalFocus && terminalProcessSupported && terminalTextSelected || terminalFocus && terminalTextSelected && terminalTextSelectedInFocused || terminalHasBeenCreated && terminalTextSelected && terminalTextSelectedInFocused || terminalProcessSupported && terminalTextSelected && terminalTextSelectedInFocused',
+      },
+      {
+        key: 'ctrl+shift+c',
+        command: '-workbench.action.terminal.copySelection',
+        when: 'terminalTextSelectedInFocused || terminalFocus && terminalHasBeenCreated && terminalTextSelected || terminalFocus && terminalProcessSupported && terminalTextSelected || terminalFocus && terminalTextSelected && terminalTextSelectedInFocused || terminalHasBeenCreated && terminalTextSelected && terminalTextSelectedInFocused || terminalProcessSupported && terminalTextSelected && terminalTextSelectedInFocused',
+      },
+      {
+        key: 'ctrl+v',
+        command: 'workbench.action.terminal.paste',
+        when: 'terminalFocus && terminalHasBeenCreated || terminalFocus && terminalProcessSupported',
+      },
+      {
+        key: 'ctrl+shift+v',
+        command: '-workbench.action.terminal.paste',
+        when: 'terminalFocus && terminalHasBeenCreated || terminalFocus && terminalProcessSupported',
+      },
     ];
     //#endregion
 
