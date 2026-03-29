@@ -552,13 +552,14 @@ export namespace HelpersTaon {
       cwd: string,
       options: {
         newVersion: string;
-        autoReleaseUsingConfig: boolean;
+        skipAskingQuestionBeforePush: boolean;
         isCiProcess: boolean;
+        customOrigin?: string,
         skipTag?: boolean; // if true, it will not tag the commit
       },
     ): Promise<void> => {
       //#region @backendFunc
-      const { newVersion, autoReleaseUsingConfig, isCiProcess } = options;
+      const { newVersion, skipAskingQuestionBeforePush, isCiProcess, customOrigin } = options;
       const tagName = `v${newVersion}`;
       stageAllAndCommit(cwd, `release: ${tagName}`);
       const tagMessage = 'new version ' + newVersion;
@@ -575,7 +576,7 @@ export namespace HelpersTaon {
       // const lastCommitHash = project.git.lastCommitHash();
       // project.packageJson.setBuildHash(lastCommitHash);
       if (
-        autoReleaseUsingConfig ||
+        skipAskingQuestionBeforePush ||
         (await UtilsTerminal.confirm({
           message:
             `Push changes to git repo ` +
@@ -588,6 +589,7 @@ export namespace HelpersTaon {
         if (
           !(await pushCurrentBranch(cwd, {
             askToRetry: !isCiProcess,
+            origin: customOrigin,
           }))
         ) {
           throw `Not able to push to git repository`;

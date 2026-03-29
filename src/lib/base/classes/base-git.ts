@@ -547,7 +547,7 @@ Please provide proper commit message for lastest changes in your project:
     //#region @backendFunc
     return await HelpersTaon.git.tagAndPushToGitRepo(this.project.location, {
       newVersion,
-      autoReleaseUsingConfig,
+      skipAskingQuestionBeforePush: autoReleaseUsingConfig,
       isCiProcess,
     });
     //#endregion

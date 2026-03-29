@@ -499,6 +499,9 @@ export class BaseGlobalCommandLine<
   async docsUp() {
     await this.docsUpdate();
   }
+  async upDocs() {
+    await this.docsUpdate();
+  }
   //#endregion
 
   //#region commands / deep update
