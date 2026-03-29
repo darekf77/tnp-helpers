@@ -519,6 +519,35 @@ export namespace HelpersTaon {
   //#region git
   export namespace git {
     const tempGitCommitMsgFile = 'tmp-git-commit-name.txt';
+
+    export const addOriginIfNotExists = async (cwd:string, origin:string, originUrl:string): Promise<boolean> => {
+      //#region @backendFunc
+      if(!origin) {
+        Helpers.info(`[addOriginIfNotExists] Cant update empty origin for ${cwd}`)
+        return false;
+      }
+
+      if(!originUrl) {
+        Helpers.info(`[addOriginIfNotExists]  Cant update empty origin url for ${cwd}`)
+        return false;
+      }
+      const currentOriginUrl = getOriginURL(cwd,origin);
+      if(!currentOriginUrl || (_.isString(currentOriginUrl) && currentOriginUrl === '.git')) {
+        try {
+          Helpers.run(`git remote add ${origin} ${originUrl}`, {
+            cwd,
+            output: false,
+          }).sync();
+          return true;
+        } catch (error) {
+          Helpers.warn(`Not able add origin "${origin}" ${originUrl}
+            to ${cwd} `);
+          return false;
+        }
+      }
+      //#endregion
+    }
+
     export const tagAndPushToGitRepo = async (
       cwd: string,
       options: {
