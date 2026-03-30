@@ -1,61 +1,16 @@
 import * as child from 'child_process';
 import * as fse from 'fs';
 
+import { UtilsProcess } from 'tnp-core/src';
 import type { OutputChannel } from 'vscode';
 
-import { UtilsVSCode } from '../utils';
+import { UtilsVSCode } from '../utils-vscode';
 
 import { ProcesOptions } from './models';
 
 export const getVscode = () => {
   return UtilsVSCode.vscodeImport();
 };
-
-/**
- * @deprecated
- */
-function findGitBash() {
-  const possiblePaths = [
-    'C:\\Program Files\\Git\\bin\\bash.exe',
-    'C:\\Program Files (x86)\\Git\\bin\\bash.exe',
-    `${process.env.ProgramW6432}\\Git\\bin\\bash.exe`,
-    `${process.env.ProgramFiles}\\Git\\bin\\bash.exe`,
-    `${process.env['ProgramFiles(x86)']}\\Git\\bin\\bash.exe`,
-  ];
-
-  for (const gitBashPath of possiblePaths) {
-    if (fse.existsSync(gitBashPath)) {
-      return gitBashPath;
-    }
-  }
-
-  console.error('Git Bash not found. Please install Git Bash.');
-  process.exit(1);
-}
-
-/**
- * @deprecated
- */
-function getShell() {
-  if (process.platform === 'win32') {
-    // Windows platform
-    const gitBashPath = findGitBash();
-    if (fse.existsSync(gitBashPath)) {
-      return gitBashPath;
-    } else {
-      console.error('Git Bash not found. Please install Git Bash.');
-      process.exit(1);
-    }
-  } else {
-    // Unix-like platform (Linux, macOS)
-    return undefined; // '/bin/bash';
-  }
-}
-
-/**
- * @deprecated
- */
-export const shell = getShell();
 
 /**
  * @deprecated
@@ -70,6 +25,7 @@ export function valueFromCommand({
   bigBuffer?: boolean;
 }) {
   const decode = true;
+  const shell = UtilsProcess.getGitBashPath();
   let res = child
     .execSync(command, {
       cwd,
@@ -153,7 +109,6 @@ export function fixJSONString(s: string) {
  * @deprecated
  */
 export function optionsFix(options?: ProcesOptions) {
-
   //#region handle args
   if (!options) {
     options = {};

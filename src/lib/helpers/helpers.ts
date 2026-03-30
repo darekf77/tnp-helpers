@@ -37,8 +37,9 @@ import { Helpers } from 'tnp-core/src';
 import { CLASS } from 'typescript-class-helpers/src';
 
 import { BaseProject } from '../base/classes/base-project';
-import { UtilsQuickFixes, UtilsVSCode } from '../utils';
+import { UtilsQuickFixes } from '../utils';
 import { UtilsTypescript } from '../utils-typescript';
+import { UtilsVSCode } from '../utils-vscode';
 export { Helpers } from 'tnp-core/src';
 //#endregion
 
@@ -520,19 +521,30 @@ export namespace HelpersTaon {
   export namespace git {
     const tempGitCommitMsgFile = 'tmp-git-commit-name.txt';
 
-    export const addOriginIfNotExists = async (cwd:string, origin:string, originUrl:string): Promise<boolean> => {
+    export const addOriginIfNotExists = async (
+      cwd: string,
+      origin: string,
+      originUrl: string,
+    ): Promise<boolean> => {
       //#region @backendFunc
-      if(!origin) {
-        Helpers.info(`[addOriginIfNotExists] Cant update empty origin for ${cwd}`)
+      if (!origin) {
+        Helpers.info(
+          `[addOriginIfNotExists] Cant update empty origin for ${cwd}`,
+        );
         return false;
       }
 
-      if(!originUrl) {
-        Helpers.info(`[addOriginIfNotExists]  Cant update empty origin url for ${cwd}`)
+      if (!originUrl) {
+        Helpers.info(
+          `[addOriginIfNotExists]  Cant update empty origin url for ${cwd}`,
+        );
         return false;
       }
-      const currentOriginUrl = getOriginURL(cwd,origin);
-      if(!currentOriginUrl || (_.isString(currentOriginUrl) && currentOriginUrl === '.git')) {
+      const currentOriginUrl = getOriginURL(cwd, origin);
+      if (
+        !currentOriginUrl ||
+        (_.isString(currentOriginUrl) && currentOriginUrl === '.git')
+      ) {
         try {
           Helpers.run(`git remote add ${origin} ${originUrl}`, {
             cwd,
@@ -546,7 +558,7 @@ export namespace HelpersTaon {
         }
       }
       //#endregion
-    }
+    };
 
     export const tagAndPushToGitRepo = async (
       cwd: string,
@@ -554,12 +566,17 @@ export namespace HelpersTaon {
         newVersion: string;
         skipAskingQuestionBeforePush: boolean;
         isCiProcess: boolean;
-        customOrigin?: string,
+        customOrigin?: string;
         skipTag?: boolean; // if true, it will not tag the commit
       },
     ): Promise<void> => {
       //#region @backendFunc
-      const { newVersion, skipAskingQuestionBeforePush, isCiProcess, customOrigin } = options;
+      const {
+        newVersion,
+        skipAskingQuestionBeforePush,
+        isCiProcess,
+        customOrigin,
+      } = options;
       const tagName = `v${newVersion}`;
       stageAllAndCommit(cwd, `release: ${tagName}`);
       const tagMessage = 'new version ' + newVersion;

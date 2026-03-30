@@ -2,7 +2,7 @@ import * as child from 'child_process';
 import * as fse from 'fs';
 import * as path from 'path';
 
-import { crossPlatformPath } from 'tnp-core/src';
+import { crossPlatformPath, UtilsProcess } from 'tnp-core/src';
 import type { ExtensionContext, Uri } from 'vscode';
 
 import {
@@ -10,7 +10,6 @@ import {
   optionsFix,
   // Log,
   getModuleName,
-  shell,
   escapeStringForRegEx,
   deepClone,
   valueFromCommand,
@@ -55,6 +54,7 @@ export function executeCommand(
     '"';
   const vscode = getVscode();
   const vscodeWindow = vscode.window;
+  const shell = UtilsProcess.getGitBashPath();
   return vscode.commands.registerCommand(
     registerName,
     function (uri: Uri, selectedUris: Uri[]) {

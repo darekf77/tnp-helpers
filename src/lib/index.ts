@@ -1,4 +1,5 @@
 export * from './utils';
+export * from './utils-vscode';
 export * from './utils-typescript';
 export * from './helpers/helpers';
 export * from './base';
