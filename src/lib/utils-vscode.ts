@@ -422,6 +422,7 @@ export namespace UtilsVSCode {
   export const codiumExtensions = (): string[] => {
     return [
       'Alexanderius.language-hosts',
+      'jellydn.toggle-excluded-files', // for of 'amodio.toggle-excluded-files',
       ...commonRecommededExtensionsExtensions(),
     ];
   };
@@ -430,6 +431,7 @@ export namespace UtilsVSCode {
     return Utils.uniqArray([
       ...commonRecommededExtensionsExtensions(),
       'tommasov.hosts',
+      'amodio.toggle-excluded-files',
       //#region @backend
       // 'GitHub.copilot', => deprecated
       // 'GitHub.copilot-chat',
