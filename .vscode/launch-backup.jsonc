@@ -44,9 +44,7 @@
       "request": "launch",
       "name": "Debug/Start Server",
       "program": "${workspaceFolder}/run.js",
-      "args": [
-        "additionalEntrypointId=undefined"
-      ],
+      "args": [],
       "runtimeArgs": [
         "--preserve-symlinks"
       ]
@@ -94,6 +92,13 @@
       "preLaunchTask": "Update package.json vscode metadata"
     }
   ],
-  "compounds": []
+  "compounds": [
+    {
+      "name": "Run All Server",
+      "configurations": [
+        "Debug/Start Server"
+      ]
+    }
+  ]
 }
 // THIS FILE IS GENERATED - DO NOT MODIFY

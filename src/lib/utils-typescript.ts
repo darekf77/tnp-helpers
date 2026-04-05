@@ -3575,10 +3575,13 @@ export namespace UtilsTypescript {
   };
   //#endregion
 
+  //#region check if file has default export
   export const fileHasDefaultExport = (absFilePath: string): boolean => {
     return hasDefaultExport(UtilsFilesFoldersSync.readFile(absFilePath));
   };
+  //#endregion
 
+  //#region check if content has default export
   export const hasDefaultExport = (sourceText: string): boolean => {
     //#region @backendFunc
     const sourceFile = createSourceFile(
@@ -3632,7 +3635,9 @@ export namespace UtilsTypescript {
     return found;
     //#endregion
   };
+  //#endregion
 
+  //#region remove all first level regions in file
   export const removeFirstLevelRegionsInFile = (filePath: string): void => {
     //#region @backendFunc
     if (!Helpers.exists(filePath)) {
@@ -3645,7 +3650,9 @@ export namespace UtilsTypescript {
     );
     //#endregion
   };
+  //#endregion
 
+  //#region remove all first level regions from content
   export const removeFirstLevelRegions = (content: string): string => {
     //#region @backendFunc
     const lines = content.split('\n');
@@ -3693,4 +3700,39 @@ export namespace UtilsTypescript {
     return result.join('\n');
     //#endregion
   };
+  //#endregion
+
+  //#region add export to not exported first level symbols in file
+  export const addExportToNotExportedFirstLevelSymbolsInFile = (
+    filePath: string,
+  ): void => {
+    //#region @backendFunc
+    if (!Helpers.exists(filePath)) {
+      return;
+    }
+    const content = UtilsFilesFoldersSync.readFile(filePath);
+    UtilsFilesFoldersSync.writeFile(
+      filePath,
+      addExportToNotExportedFirstLevelSymbolsInContent(content || ''),
+    );
+    //#endregion
+  };
+  //#endregion
+
+  //#region add export to not exported first level symbols in content
+  export const addExportToNotExportedFirstLevelSymbolsInContent = (
+    content: string,
+  ): string => {
+    //#region @backendFunc
+
+    const regex = new RegExp(
+      '^(class\\s+[A-Za-z_$][\\w$]*\\b|function\\s+[A-Za-z_$][\\w$]*\\b|const' +
+        '\\s+[A-Za-z_$][\\w$]*\\b|let\\s+[A-Za-z_$][\\w$]*\\b|var\\s+[A-Za-z_$][\\w$]*\\b)',
+      'gm',
+    );
+
+    return content.replace(regex, 'export $1');
+    //#endregion
+  };
+  //#endregion
 }
