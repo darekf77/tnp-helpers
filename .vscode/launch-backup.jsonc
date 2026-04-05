@@ -44,7 +44,9 @@
       "request": "launch",
       "name": "Debug/Start Server",
       "program": "${workspaceFolder}/run.js",
-      "args": [],
+      "args": [
+        "additionalEntrypointId=undefined"
+      ],
       "runtimeArgs": [
         "--preserve-symlinks"
       ]

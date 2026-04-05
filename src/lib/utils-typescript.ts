@@ -3632,4 +3632,65 @@ export namespace UtilsTypescript {
     return found;
     //#endregion
   };
+
+  export const removeFirstLevelRegionsInFile = (filePath: string): void => {
+    //#region @backendFunc
+    if (!Helpers.exists(filePath)) {
+      return;
+    }
+    const content = UtilsFilesFoldersSync.readFile(filePath);
+    UtilsFilesFoldersSync.writeFile(
+      filePath,
+      removeFirstLevelRegions(content || ''),
+    );
+    //#endregion
+  };
+
+  export const removeFirstLevelRegions = (content: string): string => {
+    //#region @backendFunc
+    const lines = content.split('\n');
+
+    const regionStartRegex = new RegExp('^\\s*\\/\\/#reg' + 'ion\\b');
+    const regionEndRegex = new RegExp('^\\s*\\/\\/#end' + 'reg' + 'ion\\b');
+
+    const result: string[] = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const current = lines[i];
+
+      const isRegionStart = regionStartRegex.test(current);
+      const isRegionEnd = (line: string) => regionEndRegex.test(line);
+
+      if (isRegionStart) {
+        let j = i + 1;
+
+        // skip empty (whitespace-only) lines
+        while (j < lines.length && lines[j].trim() === '') {
+          j++;
+        }
+
+        // if next non-empty line is #endregion → empty region
+        if (j < lines.length && isRegionEnd(lines[j])) {
+          // replace region start
+          result.push(' ');
+
+          // replace intermediate lines
+          for (let k = i + 1; k < j; k++) {
+            result.push(' ');
+          }
+
+          // replace region end
+          result.push(' ');
+
+          i = j; // jump to endregion
+          continue;
+        }
+      }
+
+      result.push(current);
+    }
+
+    return result.join('\n');
+    //#endregion
+  };
 }
