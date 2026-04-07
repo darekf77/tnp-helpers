@@ -25,11 +25,11 @@ export function valueFromCommand({
   bigBuffer?: boolean;
 }) {
   const decode = true;
-  const shell = UtilsProcess.getGitBashPath();
+  // const shell = UtilsProcess.getGitBashPath();
   let res = child
     .execSync(command, {
       cwd,
-      shell,
+      // shell,
       encoding: 'utf8',
       maxBuffer: bigBuffer ? 50 * 1024 * 1024 : void 0,
     })

@@ -54,7 +54,8 @@ export function executeCommand(
     '"';
   const vscode = getVscode();
   const vscodeWindow = vscode.window;
-  const shell = UtilsProcess.getGitBashPath();
+  // const shell = UtilsProcess.getGitBashPath();
+  // console.log({ shell });
   return vscode.commands.registerCommand(
     registerName,
     function (uri: Uri, selectedUris: Uri[]) {
@@ -340,7 +341,7 @@ export function executeCommand(
                       // TODO @LAST refactor this
                       // @ts-ignore
                       child.execSync(`navi goto ${item.variableValue}`, {
-                        shell,
+                        // shell,
                       });
                     } catch (error) {}
                     resolve(void 0);
@@ -663,7 +664,9 @@ export function executeCommand(
 
                 if (syncProcess) {
                   //#region handle sync process
-                  let childResult = child.execSync(cmd, { shell });
+                  let childResult = child.execSync(cmd, {
+                    // shell
+                   });
                   progress.report({ increment: 50 });
                   if (typeof childResult !== 'object') {
                     throw `Child result is not a object`;
@@ -679,7 +682,9 @@ export function executeCommand(
                     outputChannel.show();
                   }
 
-                  var proc = child.exec(cmd, { cwd, shell });
+                  var proc = child.exec(cmd, { cwd,
+                    // shell
+                   });
                   if (!proc) {
                     await vscodeWindow.showErrorMessage(
                       `Incorrect execution of: ${cmd}`,
