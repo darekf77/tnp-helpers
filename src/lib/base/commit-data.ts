@@ -685,6 +685,7 @@ export class CommitData {
           // console.log({ jira, num, providerPrefix });
           return `${otherIssue.replace(`/${providerPrefix}-`, '#')}`;
         })
+        .map(c => c.toUpperCase())
         .join(',');
 
     if (issuesFromOtherProjectsConnected === ',') {
@@ -692,23 +693,24 @@ export class CommitData {
       issuesFromOtherProjectsConnected = '';
     }
 
-    const jiras = (jiraNumbers || []).map(d => {
+    const jiras = (jiraNumbers || []).map(jiraNumString => {
       if (
         // open source providers
         openSourceProvidersIssuePrefix
           .map(c => `${c}-`)
-          .some(gh => d.startsWith(gh))
+          .some(gh => jiraNumString.startsWith(gh))
       ) {
-        const [jira, num] = d.split('-');
-        return `#${num}`;
+        const [jira, num] = jiraNumString.split('-');
+        return `#${num.toUpperCase()}`;
       }
-      return d;
+      return (jiraNumString || '').toUpperCase();
     });
 
     let commitMsg = '';
 
     if (this.typeOfCommit === 'release') {
       commitMsg = `${(this.message || '')
+        .toLowerCase()
         .split('\n')
         .map(c => c.replace(/\-/g, ' '))
         .join('\n-')
@@ -718,6 +720,7 @@ export class CommitData {
         commitMsg = `${jiras.join(' - ') + issuesFromOtherProjectsConnected} - ${(
           this.message || ''
         )
+          .toLowerCase()
           .split('\n')
           .map(c => c.replace(/\-/g, ' '))
           .join('\n-')
@@ -727,6 +730,7 @@ export class CommitData {
           commitMsg =
             `${this.branchPrefix}${'(' + this.commitModuleName + ')'}:` +
             ` ${(this.message || '')
+              .toLowerCase()
               .split('\n')
               .map(c => c.replace(/\-/g, ' '))
               .join('\n-')
@@ -741,6 +745,7 @@ export class CommitData {
             commitMsg =
               `${this.branchPrefix}:` +
               ` ${(this.message || '')
+                .toLowerCase()
                 .split('\n')
                 .map(c => c.replace(/\-/g, ' '))
                 .join('\n-')
@@ -762,6 +767,7 @@ export class CommitData {
                   : ''
               }:` +
               ` ${(this.message || '')
+                .toLowerCase()
                 .split('\n')
                 .map(c => c.replace(/\-/g, ' '))
                 .join('\n-')
@@ -771,7 +777,7 @@ export class CommitData {
       }
     }
 
-    return commitMsg.replace(': :', ': ').toLowerCase();
+    return commitMsg.replace(': :', ': ');
 
     //#endregion
   }
