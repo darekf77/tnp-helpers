@@ -90,7 +90,7 @@ export class LinkedProject {
     })
       .filter(folderAbsPath => {
         if (notAllowedNames.includes(path.basename(folderAbsPath))) {
-          Helpers.warn(
+          Helpers.logWarn(
             `[${config.frameworkName}-helpers][linked-projects] ` +
               `Skipping folder ${folderAbsPath} because it has not allowed name`,
           );
