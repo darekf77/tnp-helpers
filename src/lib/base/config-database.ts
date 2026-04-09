@@ -3,7 +3,6 @@ import { CoreModels, crossPlatformPath, UtilsOs } from 'tnp-core/src';
 import { os } from 'tnp-core/src'; // @backend
 
 import { HelpersTaon } from '../index';
-import { Low } from '../lowdb'; // @backend
 
 import { BaseDb } from './classes/base-db';
 import type { BaseProjectResolver } from './classes/base-project-resolver';

@@ -7,9 +7,8 @@ import {
 } from 'tnp-core/src';
 import { os } from 'tnp-core/src';
 import { config } from 'tnp-core/src';
-
-import { Low } from '../../lowdb'; // @backend
-import { JSONFilePreset } from '../../lowdb/node'; // @backend
+import { Low } from 'tnp-core/src'; // @backend
+import { JSONFilePreset } from 'tnp-core/src'; // @backend
 
 import type { BaseProjectResolver } from './base-project-resolver';
 //#endregion
