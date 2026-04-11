@@ -457,20 +457,20 @@ export abstract class BaseProject<
     return [this.name];
   }
 
-  get titleBarName() {
+  get titleBarName(): string {
     const allPackagesNames =
       this.allNpmPackagesNames.filter(f => f !== this.basename).length === 0
         ? ''
         : `(${this.allNpmPackagesNames.filter(f => f !== this.basename).join(',')})`;
 
-    if (this.parent) {
-      return (
-        `${path.basename(path.dirname(this.parent.location))}/${this.parent.name}/` +
-        `${this.basename} ${allPackagesNames} [ \${activeEditorShort} ]`
-      );
-    }
+    // if (this.parent) {
+    //   return (
+    //     `${path.basename(path.dirname(this.parent.location))}/${this.parent.name}/` +
+    //     `${this.basename} ${allPackagesNames} [ \${activeEditorShort} ]`
+    //   );
+    // }
     return (
-      `${path.basename(path.dirname(this.location))}/` +
+      (this.parent ? `${path.basename(path.dirname(this.location))}/` : '') +
       `${this.basename} (${allPackagesNames}) [ \${activeEditorShort}]`
     );
   }
