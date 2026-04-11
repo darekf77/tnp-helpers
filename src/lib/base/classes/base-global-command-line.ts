@@ -1206,6 +1206,7 @@ ${lastCommitMessage}
 
     await this.project.git.pushCurrentBranch({
       forcePushNoQuestion: true,
+      askToRetry: true,
       force: true,
     });
     this._exit();
