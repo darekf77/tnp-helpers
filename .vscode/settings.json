@@ -196,7 +196,7 @@
     "**/src/**"
   ],
 
-  "window.title": "npm/taon-dev/tnp-helpers  [ ${activeEditorShort} ]",
+  "window.title": "taon-dev/tnp-helpers () [ ${activeEditorShort}]",
 
   "json.schemas": [
     {
