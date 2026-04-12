@@ -1423,8 +1423,8 @@ Would you like to update current project configuration?`)
   /**
    * publish project to npm
    */
-  async publish(publishOptions?: any): Promise<void> {
-    await this.npmHelpers.publishToNpmRegistry();
+  async publish(publishOptions?: CoreModels.NpmPublishOptions): Promise<void> {
+    await this.npmHelpers.publishToNpmRegistry(publishOptions);
   }
   //#endregion
 

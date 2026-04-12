@@ -285,7 +285,9 @@ ${projectsInfo}
   /**
    * @param registry when not specified, it will use the default npm registry
    */
-  async publishToNpmRegistry(options?: { registry?: string }): Promise<void> {
+  async publishToNpmRegistry(
+    options?: CoreModels.NpmPublishOptions,
+  ): Promise<void> {
     //#region @backendFunc
     const { registry } = options || {};
 
@@ -308,6 +310,7 @@ ${projectsInfo}
       try {
         await UtilsExecProc.spawnAsync(commandForPublish, {
           cwd: this.project.location,
+          shell: true,
         }).waitUntilDoneOrThrow();
         break;
       } catch (error) {

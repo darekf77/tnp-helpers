@@ -53,6 +53,10 @@ export class BasePackageJson extends BaseJsonFileReader<PackageJson> {
     return this.data?.name || '';
   }
 
+  get exists(): boolean {
+    return Helpers.exists(this.path);
+  }
+
   async setName(name: string): Promise<void> {
     //#region @backendFunc
     if (!this.data) {

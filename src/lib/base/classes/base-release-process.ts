@@ -150,13 +150,12 @@ export class BaseReleaseProcess<
    * @returns true if publish , faslse if just version bump
    */
   public async publishToNpm(
-    cwdForCode = this.project.pathFor('dist'),
-    automaticRelease = this.automaticRelease,
+    options?: CoreModels.NpmPublishOptions,
   ): Promise<boolean> {
     //#region   @backendFunc
-
-    if (!automaticRelease) {
-      await this.checkBundleQuestion(cwdForCode);
+    options = options || {};
+    if (!options.skipQuestionsToUser) {
+      await this.checkBundleQuestion(this.project.location);
 
       while (true) {
         const publishOpt = {
@@ -185,7 +184,7 @@ export class BaseReleaseProcess<
       }
     }
 
-    await this.project.publish();
+    await this.project.publish(options);
     return true;
     //#endregion
   }
