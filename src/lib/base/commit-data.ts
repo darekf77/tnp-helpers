@@ -752,8 +752,7 @@ export class CommitData {
                 .trim()} ` +
               `${
                 jirasExists
-                  ? [_.first(jiras)].join(',') +
-                    issuesFromOtherProjectsConnected
+                  ? jiras.join(' ') + issuesFromOtherProjectsConnected
                   : ''
               }`;
           } else {
