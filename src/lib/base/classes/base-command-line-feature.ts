@@ -13,7 +13,8 @@ import type { BaseProjectResolver } from './base-project-resolver';
 export abstract class BaseCommandLineFeature<
   PARAMS extends {} = any,
   PROJECT extends BaseProject<any, any> = BaseProject,
-  PROJECT_RESOLVER extends BaseProjectResolver<PROJECT> = BaseProjectResolver<PROJECT>,
+  PROJECT_RESOLVER extends BaseProjectResolver<PROJECT> =
+    BaseProjectResolver<PROJECT>,
 > {
   /**
    * params from command line
@@ -144,7 +145,8 @@ export abstract class BaseCommandLineFeature<
     //   delete this.params[deleteArgKey];
     // }
     // console.log({ clearArgs: allArgsToClear })
-    this.args = HelpersTaon.cliTool.removeArgsFromCommand(argsWithParams, allArgsToClear)
+    this.args = HelpersTaon.cliTool
+      .removeArgsFromCommand(argsWithParams, allArgsToClear)
       .split(' ')
       .filter(f => !!f);
 
@@ -175,7 +177,13 @@ export abstract class BaseCommandLineFeature<
   }
 
   public _exit(code = 0): void {
-    process.exit(code);
+    if (_.isFunction(this.project.ins.exitProgramCleaningFn)) {
+      this.project.ins.exitProgramCleaningFn().finally(() => {
+        process.exit(code);
+      });
+    } else {
+      process.exit(code);
+    }
   }
 
   protected __initialize__() {}

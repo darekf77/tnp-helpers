@@ -18,6 +18,11 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
 
   projectsDb: ProjectDatabase = new ProjectDatabase(this);
 
+  /**
+   * Assign it to do a clean up before exit program
+   */
+  public exitProgramCleaningFn: () => Promise<any>;
+
   async editor(): Promise<UtilsOs.Editor> {
     return (
       UtilsOs.detectEditor() || (await this.configDb.codeEditor.getValue())
