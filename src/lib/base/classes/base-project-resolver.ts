@@ -10,7 +10,7 @@ import { ConfigDatabase } from '../config-database';
 import { ProjectDatabase } from '../project-database';
 import { PortsWorker } from '../tcp-udp-ports';
 
-import { BaseProject } from './base-project';
+import type { BaseProject } from './base-project';
 //#endregion
 
 export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
@@ -53,11 +53,13 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
     // if (!this.cliToolName) {
     //   Helpers.throw(`cliToolName is not provided`);
     // }
-    this.portsWorker = new PortsWorker(
-      'ports-worker', // BaseGlobalCommandLine.prototype.startCliServicePortsWorker
-      () => `${cliToolNameFn()} startCliServicePortsWorker --skipCoreCheck`,
-      CURRENT_PACKAGE_VERSION,
-    );
+    if (cliToolNameFn) {
+      this.portsWorker = new PortsWorker(
+        'ports-worker', // BaseGlobalCommandLine.prototype.startCliServicePortsWorker
+        () => `${cliToolNameFn()} startCliServicePortsWorker --skipCoreCheck`,
+        CURRENT_PACKAGE_VERSION,
+      );
+    }
   }
   //#endregion
 
@@ -335,7 +337,7 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
 
   private applyOverrideOrder<T>(
     sorted: T[],
-    getName: (p: T) => string,
+    getOverrideKey: (p: T) => string,
     overrideOrder: string[],
   ): T[] {
     if (!overrideOrder?.length) {
@@ -346,25 +348,36 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
       overrideOrder.map(o => o.trim()).filter(Boolean),
     );
 
-    // Extract overridden projects (in topo order)
-    const overridden = sorted.filter(p => overrideSet.has(getName(p)));
+    // keep all matching projects, even if there are multiple with same "name-like" value
+    const overridden = sorted.filter(p => overrideSet.has(getOverrideKey(p)));
 
     if (!overridden.length) {
       return sorted;
     }
 
-    // Remove overridden projects from original list
-    const remaining = sorted.filter(p => !overrideSet.has(getName(p)));
+    const remaining = sorted.filter(p => !overrideSet.has(getOverrideKey(p)));
 
-    // Sort overridden projects according to overrideOrder
-    const overriddenSorted = overrideOrder
-      .map(name => overridden.find(p => getName(p) === name))
-      .filter((p): p is T => !!p);
+    // preserve duplicates properly and in exact overrideOrder sequence
+    const grouped = new Map<string, T[]>();
+    overridden.forEach(p => {
+      const key = getOverrideKey(p);
+      const arr = grouped.get(key) || [];
+      arr.push(p);
+      grouped.set(key, arr);
+    });
 
-    // Find insertion index: where the first overridden project originally was
-    const firstIndex = sorted.findIndex(p => overrideSet.has(getName(p)));
+    const overriddenSorted: T[] = [];
+    overrideOrder.forEach(key => {
+      const arr = grouped.get(key);
+      if (arr?.length) {
+        overriddenSorted.push(...arr);
+      }
+    });
 
-    // Rebuild final list
+    const firstIndex = sorted.findIndex(p =>
+      overrideSet.has(getOverrideKey(p)),
+    );
+
     return [
       ...remaining.slice(0, firstIndex),
       ...overriddenSorted,
@@ -374,52 +387,65 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
 
   //#region fields & getters / sort group of projects
   public sortGroupOfProject<
-    T extends BaseProject<any, any> = BaseProject<any, any>,
+    T extends { location?: string; name?: string } = BaseProject,
   >(
     projects: T[],
     resoveDepsArray: (proj: T) => string[],
     projNameToCompare: (proj: T) => string,
+    projUniqueKeyToCompare?: (proj: T) => string,
     overridePackagesOrder: string[] = [],
   ): T[] {
-    const visited: { [key: string]: boolean } = {};
-    const stack: { [key: string]: boolean } = {};
+    if(!projUniqueKeyToCompare) {
+      projUniqueKeyToCompare = projNameToCompare;
+    }
+
+    if(!overridePackagesOrder) {
+      overridePackagesOrder = []
+    }
+
+    const visited: Record<string, boolean> = {};
+    const stack: Record<string, boolean> = {};
     const result: T[] = [];
 
     const visit = (project: T) => {
-      if (stack[projNameToCompare(project)]) {
-        // Circular dependency detected
-        Helpers.error(
-          `Circular dependency detected involving project: ${projNameToCompare(
-            project,
-          )}`,
+      const uniqueKey = projUniqueKeyToCompare(project);
+
+      if (stack[uniqueKey]) {
+        throw new Error(
+          `Circular dependency detected involving project: ${uniqueKey}`,
         );
       }
 
-      if (!visited[projNameToCompare(project)]) {
-        visited[projNameToCompare(project)] = true;
-        stack[projNameToCompare(project)] = true;
-
-        const depsResolved = resoveDepsArray(project);
-        depsResolved.forEach(dependency => {
-          const dependentProject = projects.find(p => {
-            // console.log(`comparing :"${projNameToCompare(p)}" and "${dependency}"`)
-            return projNameToCompare(p) === dependency;
-          });
-          if (dependentProject) {
-            visit(dependentProject);
-          }
-        });
-
-        stack[projNameToCompare(project)] = false;
-        result.push(project);
+      if (visited[uniqueKey]) {
+        return;
       }
+
+      visited[uniqueKey] = true;
+      stack[uniqueKey] = true;
+
+      const depsResolved = resoveDepsArray(project);
+
+      depsResolved.forEach(dependency => {
+        // dependency is still resolved by logical project name
+        // so multiple projects with same name can all be included
+        const dependentProjects = projects.filter(
+          p => projNameToCompare(p) === dependency,
+        );
+
+        dependentProjects.forEach(dependentProject => {
+          visit(dependentProject);
+        });
+      });
+
+      stack[uniqueKey] = false;
+      result.push(project);
     };
 
     projects.forEach(project => visit(project));
 
     return this.applyOverrideOrder(
       result,
-      projNameToCompare,
+      projUniqueKeyToCompare,
       overridePackagesOrder,
     );
   }
