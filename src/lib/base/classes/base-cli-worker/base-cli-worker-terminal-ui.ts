@@ -150,6 +150,9 @@ export class BaseCliWorkerTerminalUI<
 
   //#region protected methods / info screen
   private headerDisplayed = false;
+
+  protected showWorkerInfoScreen = true;
+
   public async infoScreen(options?: {
     exitIsOnlyReturn?: boolean;
   }): Promise<void> {
@@ -163,17 +166,19 @@ export class BaseCliWorkerTerminalUI<
         await this.infoMessageBelowHeader();
       } else {
         this.headerDisplayed = true;
-        await this.header();
-        await UtilsTerminal.pressAnyKeyToContinueAsync({
-          message:
-            `\nWelcome to ${
-              chalk.bold(this.worker.serviceID) +
-              chalk.bold('@') +
-              chalk.bold(this.worker.serviceVersion)
-            } Terminal UI.` +
-            `\n
-            Press any key to continue...`,
-        });
+        if (this.showWorkerInfoScreen) {
+          await this.header();
+          await UtilsTerminal.pressAnyKeyToContinueAsync({
+            message:
+              `\nWelcome to ${
+                chalk.bold(this.worker.serviceID) +
+                chalk.bold('@') +
+                chalk.bold(this.worker.serviceVersion)
+              } Terminal UI.` +
+              `\n
+              Press any key to continue...`,
+          });
+        }
         UtilsTerminal.clearConsole();
         await this.infoMessageBelowHeader();
       }
