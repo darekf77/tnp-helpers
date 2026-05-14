@@ -1,5 +1,5 @@
 //#region imports
-import { config, UtilsOs } from 'tnp-core/src';
+import { config, UtilsOs, UtilsProjects } from 'tnp-core/src';
 import { fse } from 'tnp-core/src';
 import { path, crossPlatformPath } from 'tnp-core/src';
 import { _, Helpers } from 'tnp-core/src';
@@ -335,56 +335,6 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
   }
   //#endregion
 
-  private applyOverrideOrder<T>(
-    sorted: T[],
-    getOverrideKey: (p: T) => string,
-    overrideOrder: string[],
-  ): T[] {
-    if (!overrideOrder?.length) {
-      return sorted;
-    }
-
-    const overrideSet = new Set(
-      overrideOrder.map(o => o.trim()).filter(Boolean),
-    );
-
-    // keep all matching projects, even if there are multiple with same "name-like" value
-    const overridden = sorted.filter(p => overrideSet.has(getOverrideKey(p)));
-
-    if (!overridden.length) {
-      return sorted;
-    }
-
-    const remaining = sorted.filter(p => !overrideSet.has(getOverrideKey(p)));
-
-    // preserve duplicates properly and in exact overrideOrder sequence
-    const grouped = new Map<string, T[]>();
-    overridden.forEach(p => {
-      const key = getOverrideKey(p);
-      const arr = grouped.get(key) || [];
-      arr.push(p);
-      grouped.set(key, arr);
-    });
-
-    const overriddenSorted: T[] = [];
-    overrideOrder.forEach(key => {
-      const arr = grouped.get(key);
-      if (arr?.length) {
-        overriddenSorted.push(...arr);
-      }
-    });
-
-    const firstIndex = sorted.findIndex(p =>
-      overrideSet.has(getOverrideKey(p)),
-    );
-
-    return [
-      ...remaining.slice(0, firstIndex),
-      ...overriddenSorted,
-      ...remaining.slice(firstIndex),
-    ];
-  }
-
   //#region fields & getters / sort group of projects
   public sortGroupOfProject<
     T extends { location?: string; name?: string } = BaseProject,
@@ -395,59 +345,13 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
     projUniqueKeyToCompare?: (proj: T) => string,
     overridePackagesOrder: string[] = [],
   ): T[] {
-    if(!projUniqueKeyToCompare) {
-      projUniqueKeyToCompare = projNameToCompare;
-    }
-
-    if(!overridePackagesOrder) {
-      overridePackagesOrder = []
-    }
-
-    const visited: Record<string, boolean> = {};
-    const stack: Record<string, boolean> = {};
-    const result: T[] = [];
-
-    const visit = (project: T) => {
-      const uniqueKey = projUniqueKeyToCompare(project);
-
-      if (stack[uniqueKey]) {
-        throw new Error(
-          `Circular dependency detected involving project: ${uniqueKey}`,
-        );
-      }
-
-      if (visited[uniqueKey]) {
-        return;
-      }
-
-      visited[uniqueKey] = true;
-      stack[uniqueKey] = true;
-
-      const depsResolved = resoveDepsArray(project);
-
-      depsResolved.forEach(dependency => {
-        // dependency is still resolved by logical project name
-        // so multiple projects with same name can all be included
-        const dependentProjects = projects.filter(
-          p => projNameToCompare(p) === dependency,
-        );
-
-        dependentProjects.forEach(dependentProject => {
-          visit(dependentProject);
-        });
-      });
-
-      stack[uniqueKey] = false;
-      result.push(project);
-    };
-
-    projects.forEach(project => visit(project));
-
-    return this.applyOverrideOrder(
-      result,
+    return UtilsProjects.sortGroupOfProject({
+      projects,
+      resoveDepsArray,
+      projNameToCompare,
       projUniqueKeyToCompare,
       overridePackagesOrder,
-    );
+    });
   }
 
   //#endregion
