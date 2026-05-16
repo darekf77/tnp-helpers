@@ -177,7 +177,7 @@ export abstract class BaseCommandLineFeature<
   }
 
   public _exit(code = 0): void {
-    if (_.isFunction(this.project.ins.exitProgramCleaningFn)) {
+    if (_.isFunction(this.project?.ins?.exitProgramCleaningFn)) {
       this.project.ins.exitProgramCleaningFn().finally(() => {
         process.exit(code);
       });
