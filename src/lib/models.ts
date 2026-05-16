@@ -2,7 +2,7 @@
 import { ChildProcess, execSync } from 'child_process';
 
 import { Helpers, UtilsTerminal } from 'tnp-core/src';
-import { CoreModels, _ } from 'tnp-core/src';
+import { CoreModels, _, startAsync } from 'tnp-core/src';
 
 import type { BaseProject, TypeOfCommit } from './base';
 import type { BaseProcessManger } from './base/classes/base-process-manager';
@@ -13,7 +13,7 @@ export type BaseProjectType = CoreModels.BaseProjectType;
 export const BaseProjectTypeArr = CoreModels.BaseProjectTypeArr;
 //#endregion
 
-export type CommandActionType =  'deep' | 'first-level' | 'only-this';
+export type CommandActionType = 'deep' | 'first-level' | 'only-this';
 
 //#region ng project
 /**
@@ -175,7 +175,6 @@ export interface CommandProcessRunOptions {
 
 //#region command process
 export class CommandProcess {
-
   //#region fields and getters
   private state: CommandProcessState = CommandProcessState.NOT_STARTED;
   public readonly child_process?: ChildProcess;
@@ -237,7 +236,6 @@ export class CommandProcess {
   //#region run
 
   async start(options?: CommandProcessRunOptions): Promise<void> {
-
     //#region @backendFunc
     const { progress, resolveWhenFinish } = options || {};
 
@@ -260,29 +258,32 @@ export class CommandProcess {
 
       // console.log(`Running command: ${this.cmd}`);
 
-      await Helpers.execute(this.cmd, this.project.location, {
-        resolvePromiseMsg: {
-          stderr: _.isString(this.config.goToNextCommandWhenOutput)
-            ? this.config.goToNextCommandWhenOutput
-            : this.config.goToNextCommandWhenOutput?.stderrContains,
-          stdout: _.isString(this.config.goToNextCommandWhenOutput)
-            ? this.config.goToNextCommandWhenOutput
-            : this.config.goToNextCommandWhenOutput?.stdoutContains,
-        },
+      await startAsync(this.cmd, this.project.location, {
+        resolvePromiseMsg_stderr: _.isString(
+          this.config.goToNextCommandWhenOutput,
+        )
+          ? this.config.goToNextCommandWhenOutput
+          : this.config.goToNextCommandWhenOutput?.stderrContains,
+        resolvePromiseMsg_stdout: _.isString(
+          this.config.goToNextCommandWhenOutput,
+        )
+          ? this.config.goToNextCommandWhenOutput
+          : this.config.goToNextCommandWhenOutput?.stdoutContains,
+
         biggerBuffer: true,
-        resolvePromiseMsgCallback: {
-          stderr: finishSyncCallback,
-          stdout: finishSyncCallback,
-          exitCode: code => {
-            if (this.manager.watch) {
-              // TODO @LAST handle errors in watch mode
-              this.state = CommandProcessState.NOT_STARTED; // TODO maybe ERROR state better
-              this.manager.startedProcesses.delete(this);
-              resolve();
-            } else {
-              process.exit(code); // exit main process
-            }
-          },
+        resolvePromiseMsgCallback_anystd: () => {
+          finishSyncCallback();
+        },
+
+        onExitCallback: code => {
+          if (this.manager.watch) {
+            // TODO @LAST handle errors in watch mode
+            this.state = CommandProcessState.NOT_STARTED; // TODO maybe ERROR state better
+            this.manager.startedProcesses.delete(this);
+            resolve();
+          } else {
+            process.exit(code); // exit main process
+          }
         },
         askToTryAgainOnError: true,
         onChildProcessChange: (child_process: ChildProcess) => {
@@ -299,13 +300,11 @@ export class CommandProcess {
     });
 
     //#endregion
-
   }
   //#endregion
 
   //#region stop
   async stop(): Promise<void> {
-
     //#region @backendFunc
     if (!this.manager.watch) {
       console.warn(`Can't stop process in normal mode: ${this.name}`);
@@ -345,10 +344,8 @@ export class CommandProcess {
     }
 
     //#endregion
-
   }
   //#endregion
-
 }
 //#endregion
 

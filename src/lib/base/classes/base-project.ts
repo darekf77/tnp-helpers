@@ -7,7 +7,7 @@ import { path, crossPlatformPath } from 'tnp-core/src';
 import { fse, chalk } from 'tnp-core/src';
 import { _ } from 'tnp-core/src';
 import { Utils } from 'tnp-core/src';
-import { CommandOutputOptions } from 'tnp-core/src';
+import { CommandOutputOptions, ProcessStartOptions } from 'tnp-core/src';
 
 import {
   BaseNodeModules,
@@ -727,15 +727,15 @@ export abstract class BaseProject<
    */
   public async execute(
     command: string,
-    options?: CoreModels.ExecuteOptions & { showCommand?: boolean },
+    options?: Partial<ProcessStartOptions> & { showCommand?: boolean },
   ): Promise<any> {
     //#region @backendFunc
-    options = options || {};
+    options = options || {} as any;
     if (_.isUndefined(options.showCommand)) {
       options.showCommand = true;
     }
     if (!options) {
-      options = {};
+      options = {} as any;
     }
     const cwd = this.location;
     if (options.showCommand) {

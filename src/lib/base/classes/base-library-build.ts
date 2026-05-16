@@ -462,15 +462,12 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
       }),
       {
         outputLineReplace,
-        resolvePromiseMsg: {
-          stdout: lib.libraryBuild.getLibraryBuildSuccessComamnds,
-        },
-        resolvePromiseMsgCallback: {
-          stdout: () => {
-            if (strategy === 'copy') {
-              debouncedBuildCopyStrategy();
-            }
-          },
+        resolvePromiseMsg_stdout:
+          lib.libraryBuild.getLibraryBuildSuccessComamnds,
+        resolvePromiseMsgCallback_stdout: () => {
+          if (strategy === 'copy') {
+            debouncedBuildCopyStrategy();
+          }
         },
       },
     );
@@ -507,9 +504,8 @@ ${selected.map((c, i) => `${i + 1}. ${c.basename} ${chalk.bold(c.name)}`).join('
           watch: false,
         }),
         {
-          resolvePromiseMsg: {
-            stdout: lib.libraryBuild.getLibraryBuildSuccessComamnds,
-          },
+          resolvePromiseMsg_stdout:
+            lib.libraryBuild.getLibraryBuildSuccessComamnds,
           outputLineReplace,
         },
       );
