@@ -3089,7 +3089,7 @@ ${lastCommitMessage}
    *  npm i -g yt-dlp
    *  choco install ffmpeg
    */
-  MP3(args) {
+  MP3() {
     //#region @backendFunc
     const downloadPath = crossPlatformPath([
       UtilsOs.getRealHomeDir(),
@@ -3102,7 +3102,7 @@ ${lastCommitMessage}
 
     Helpers.run(
       `cd ${downloadPath} && yt-dlp --verbose --extract-audio --audio-format mp3 ` +
-        args,
+        this.args.join(' '),
       {
         output: true,
         cwd: downloadPath,
@@ -3124,7 +3124,7 @@ ${lastCommitMessage}
     // yt-dlp --print filename -o "%(uploader)s-%(upload_date)s-%(title)s.%(ext)s"
     Helpers.run(
       'yt-dlp --verbose  -S "res:1080,fps" -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" ' +
-        args,
+        this.args.join(' '),
       {
         output: true,
         cwd: downloadPath,
