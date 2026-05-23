@@ -1,6 +1,6 @@
 {
   "name": "tnp-helpers",
-  "version": "21.0.81",
+  "version": "21.0.82",
   "scripts": {
     "docs": "python3 -m mkdocs",
     "mkdocs": "python3 -m mkdocs",
@@ -183,6 +183,7 @@
     "@types/wait-on": "5.3.4",
     "@typescript-eslint/eslint-plugin": "~8.50.1",
     "@typescript-eslint/parser": "~8.50.1",
+    "@typescript/native-preview": "7.0.0-dev.20260522.1",
     "@vitest/browser-playwright": "4.0.15",
     "@vitest/coverage-v8": "4.0.15",
     "@vitest/ui": "4.0.15",

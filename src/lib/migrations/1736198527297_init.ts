@@ -12,10 +12,12 @@ export class MainContext_1736198527297_init extends TaonBaseMigration {
     return false;
   }
 
+  // @ts-ignore
   async up(queryRunner: QueryRunner): Promise<any> {
     // do "something" in db
   }
 
+  // @ts-ignore
   async down(queryRunner: QueryRunner): Promise<any> {
     // revert this "something" in db
   }
@@ -32,11 +34,13 @@ export class TaonPortsContext_1736198527297_init extends TaonBaseMigration {
     return true;
   }
 
+  // @ts-ignore
   async up(queryRunner: QueryRunner): Promise<any> {
     // do "something" in db
     // console.log('Hello from migration UP!')
   }
 
+  // @ts-ignore
   async down(queryRunner: QueryRunner): Promise<any> {
     // revert this "something" in db
     // console.log('Hello from migration DOWN!')

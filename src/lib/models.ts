@@ -290,7 +290,8 @@ export class CommandProcess {
           // @ts-expect-error overriding readonly property
           this.child_process = child_process;
         },
-        hideOutput: this.manager.hideOutput,
+        hideOutput_stderr: this.manager.hideOutput.stderr,
+        hideOutput_stdout: this.manager.hideOutput.stdout,
         outputBuffer: this.manager.outputBuffer,
       });
 
