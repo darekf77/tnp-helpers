@@ -3,7 +3,7 @@ import { config, Helpers } from 'tnp-core/src';
 import { _, crossPlatformPath, path } from 'tnp-core/src';
 import { CLASS } from 'typescript-class-helpers/src';
 
-import { HelpersTaon } from '../../index';
+import { HelpersTaon } from '../../helpers/helpers';
 
 import { BaseProject } from './base-project';
 import type { BaseProjectResolver } from './base-project-resolver';
