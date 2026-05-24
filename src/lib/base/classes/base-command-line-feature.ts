@@ -19,8 +19,8 @@ export abstract class BaseCommandLineFeature<
   /**
    * params from command line
    */
-  protected params: PARAMS;
-  protected ins: PROJECT_RESOLVER;
+  protected declare params: PARAMS;
+  protected declare ins: PROJECT_RESOLVER;
 
   protected __transformArgsBeforeResolvingParams__(args: string[]): string[] {
     const transformaed = args.map(a => {
@@ -35,7 +35,7 @@ export abstract class BaseCommandLineFeature<
   /**
    * clean args without params from command line
    */
-  args: string[];
+  declare args: string[];
   /**
    * first arg from args
    */
@@ -50,7 +50,7 @@ export abstract class BaseCommandLineFeature<
     return _.last(this.args);
   }
 
-  private __project: PROJECT;
+  private declare __project: PROJECT;
   protected get project(): PROJECT {
     return this.__project;
   }
@@ -65,7 +65,7 @@ export abstract class BaseCommandLineFeature<
     this.__project = v;
   }
 
-  readonly classNameOfMethodToCall: string;
+  readonly declare classNameOfMethodToCall: string;
 
   protected get allParamsAfterFrameworName(): string {
     //#region @backendFunc
