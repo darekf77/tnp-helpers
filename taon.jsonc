@@ -42,6 +42,10 @@
     },
   ],
 
+  "devModeDependenciesForNpmLib": [
+
+  ],
+
   "isomorphicDependenciesForNpmLib": [
     "incremental-compiler",
     "magic-renamer",
