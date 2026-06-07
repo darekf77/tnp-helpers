@@ -360,6 +360,9 @@ export namespace UtilsVSCode {
       'wmaurer.change-case',
       'earshinov.permute-lines',
       'xabikos.javascriptsnippets',
+      'esdete.tailwind-rainbow',
+      'bradlc.vscode-tailwindcss',
+      'imgildev.vscode-tailwindcss-snippets',
       //  'mechatroner.rainbow-csv',
       // 'wenfangdu.snippet-generator', snippet generator
       //#region  to check
@@ -477,7 +480,7 @@ export namespace UtilsVSCode {
       'ryu1kn.partial-diff',
       'nidu.copy-json-path',
       'firsttris.vscode-jest-runner', // better for jest TODO include this for TAON
-      'franklinteixeira205.primeflex',
+      // 'franklinteixeira205.primeflex',
       'stepanog.angular1-inline',
       'shakram02.bash-beautify',
       'ryanlaws.toggle-case',
