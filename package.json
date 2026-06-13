@@ -1,6 +1,6 @@
 {
   "name": "tnp-helpers",
-  "version": "21.0.89",
+  "version": "21.0.92",
   "scripts": {
     "docs": "python3 -m mkdocs",
     "mkdocs": "python3 -m mkdocs",
@@ -458,5 +458,9 @@
     "@parcel/watcher-linux-x64-glibc": "2.5.1",
     "@parcel/watcher-win32-x64-msvc": "2.5.1"
   },
-  "bin": {}
+  "bin": {
+    "tnp-helpers": "bin/tnp-helpers",
+    "tnp-helpers-debug": "bin/tnp-helpers-debug",
+    "tnp-helpers-debug-brk": "bin/tnp-helpers-debug-brk"
+  }
 }
