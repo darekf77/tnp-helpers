@@ -524,21 +524,34 @@ export class BaseGlobalCommandLine<
   //#endregion
 
   //#region commands / update all
-  async updateAll(): Promise<void> {
+  async _updateAll(force = false): Promise<void> {
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     await this.updateProject(this.project, {
       updateType: 'first-level',
+      force,
     });
     this._exit();
+  }
+
+  async updateAll(): Promise<void> {
+    await this._updateAll();
   }
 
   /**
    * alias for updateAll
    */
   async upAll() {
-    await this.updateAll();
+    await this._updateAll();
+  }
+
+  async upAllForce() {
+    await this._updateAll(true);
+  }
+
+  async upForceAll() {
+    await this._updateAll(true);
   }
   //#endregion
 
@@ -2683,8 +2696,8 @@ ${lastCommitMessage}
         true,
       );
     }
-    await UtilsHttp.startHttpServer(this.cwd, 80,{
-      resoveWhenStarted: true
+    await UtilsHttp.startHttpServer(this.cwd, 80, {
+      resoveWhenStarted: true,
     });
 
     const commandEvaluatedAsSudo = await this._runAsSudoIfNotElevated({
@@ -2693,7 +2706,7 @@ ${lastCommitMessage}
     if (!commandEvaluatedAsSudo) {
       await UtilsEtcHosts.simulateDomain(domain);
     }
-    this._exit()
+    this._exit();
     //#endregion
   }
 
