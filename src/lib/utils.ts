@@ -416,6 +416,7 @@ export namespace UtilsHttp {
     port: number,
     options?: {
       startMessage?: string;
+      resoveWhenStarted?: boolean;
     },
   ) => {
     //#region @backendFunc
@@ -433,6 +434,23 @@ export namespace UtilsHttp {
 
     Helpers.taskStarted(`Starting server.. http://localhost:${port}`);
     // Start the server
+
+    if (options.resoveWhenStarted) {
+      return await new Promise<void>((resolve, reject) => {
+        // Handle Ctrl+C (SIGINT) gracefully
+        const server = app.listen(port, () => {
+          Helpers.taskDone(
+            options.startMessage ||
+              `Server started at http://localhost:${port}, serving files from ${cwd}`,
+          );
+          process.on('SIGINT', () => {
+            server.close(() => resolve());
+          });
+          resolve();
+        });
+      });
+    }
+
     const server = app.listen(port, () => {
       Helpers.taskDone(
         options.startMessage ||
@@ -440,7 +458,7 @@ export namespace UtilsHttp {
       );
     });
 
-    return new Promise<void>((resolve, reject) => {
+    return await new Promise<void>((resolve, reject) => {
       // Handle Ctrl+C (SIGINT) gracefully
       process.on('SIGINT', () => {
         server.close(() => resolve());

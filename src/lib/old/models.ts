@@ -98,7 +98,7 @@ export class ProgressData implements IProgressData {
       }
     }
 
-    if (/\[\[\[.*\]\]\]/g.test(chunk)) {
+    if (/\[\[\[.*\]\]\]/.test(chunk)) {
       chunk = chunk.replace(/^\[\[\[/g, '').replace(/\]\]\]$/g, '');
       progress = chunk;
     }

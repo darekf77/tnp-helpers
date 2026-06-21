@@ -45,7 +45,7 @@ import {
   UtilsZip,
   UtilsTypescript,
 } from '../../index';
-import { UtilsLineCount } from '../../utils';
+import { UtilsHttp, UtilsLineCount } from '../../utils';
 import { TypeOfCommit, CommitData } from '../commit-data';
 import { PULL_ACTION_NAME, PUSH_ACTION_NAME } from '../constants';
 import { GhTempCode } from '../gh-temp-code';
@@ -2667,6 +2667,35 @@ ${lastCommitMessage}
     //#endregion
   }
   //#endregion
+
+  async serveOnDomain() {
+    //#region @backendFunc
+    const domain = this.firstArg;
+    if (!domain) {
+      Helpers.error(
+        `Please provide domain as argument.
+        example:
+        ${config.frameworkName} serve:on:domain my-domain.com
+
+
+        `,
+        false,
+        true,
+      );
+    }
+    await UtilsHttp.startHttpServer(this.cwd, 80,{
+      resoveWhenStarted: true
+    });
+
+    const commandEvaluatedAsSudo = await this._runAsSudoIfNotElevated({
+      globalCommandName: 'serveOnDomain',
+    });
+    if (!commandEvaluatedAsSudo) {
+      await UtilsEtcHosts.simulateDomain(domain);
+    }
+    this._exit()
+    //#endregion
+  }
 
   //#region commands / preview
   async preview(): Promise<void> {
