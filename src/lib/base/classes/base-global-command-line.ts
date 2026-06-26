@@ -2121,22 +2121,29 @@ ${lastCommitMessage}
   }
   //#endregion
 
-  //#region is terminal running inside cmd
+  //#region is running inside powershell / gitbash / cmd
   isRunningInWindowsCmd() {
     //#region @backendFunc
     console.log(
-      `Is terminal running insdie cmd.exe: ${UtilsOs.isRunningInWindowsCmd()}`,
+      `Is terminal running inside cmd.exe: ${UtilsOs.isRunningInWindowsCmd()}`,
     );
     this._exit();
     //#endregion
   }
-  //#endregion
 
-  //#region is running inside powershell
   isRunningInWindowsPowerShell() {
     //#region @backendFunc
     console.log(
-      `Is terminal running insdie powershell: ${UtilsOs.isRunningInWindowsPowerShell()}`,
+      `Is terminal running inside windows powershell/pwsh: ${UtilsOs.isRunningInWindowsPowerShell()}`,
+    );
+    this._exit();
+    //#endregion
+  }
+
+  isRunningInWindowsGitBash() {
+    //#region @backendFunc
+    console.log(
+      `Is terminal running inside windows gitbash: ${UtilsOs.isRunningInWindowsGitBash()}`,
     );
     this._exit();
     //#endregion
