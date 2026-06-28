@@ -1557,6 +1557,9 @@ ${cwd}
             force: {
               name: 'Try again with force push ?',
             },
+            pulAndPush: {
+              name: 'Try pull and then push ?',
+            },
             skip: {
               name: 'Skip pushing',
             },
@@ -1579,6 +1582,13 @@ ${cwd}
             } else {
               await HelpersTaon.git.changeRemoteFromHttpsToSSh(cwd);
             }
+          }
+          if (whatToDo === 'pulAndPush') {
+            await HelpersTaon.git.pullCurrentBranch(cwd, {
+              askToRetry,
+              exitOnError: false,
+            });
+            continue;
           }
           if (whatToDo === 'openInVscode') {
             try {
