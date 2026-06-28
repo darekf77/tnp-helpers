@@ -100,6 +100,8 @@ import {
   ImportsNotUsedAsValues,
   transpileModule,
   isExternalModuleReference,
+  isNumericLiteral,
+  isNoSubstitutionTemplateLiteral,
 } from 'typescript';
 import type * as ts from 'typescript';
 import { CLASS } from 'typescript-class-helpers/src';
@@ -137,6 +139,121 @@ export namespace UtilsTypescript {
     return result;
     //#endregion
   };
+  //#endregion
+
+  //#region extract gettext
+
+  export interface GettextExtracted {
+    lineNumber: number;
+    gettextString: string;
+    params?: Record<string, string> | null;
+    context?: string;
+  }
+
+  export function extractGettextFromTs(
+    sourceText: string,
+    fileName = 'file.ts',
+  ): GettextExtracted[] {
+    //#region @backendFunc
+    const source = createSourceFile(
+      fileName,
+      sourceText,
+      ScriptTarget.Latest,
+      true,
+      ScriptKind.TS,
+    );
+
+    const messages: GettextExtracted[] = [];
+
+    function getStaticString(node: ts.Node | undefined): string | undefined {
+      if (!node) return undefined;
+
+      if (isStringLiteral(node) || isNoSubstitutionTemplateLiteral(node)) {
+        return node.text;
+      }
+
+      return undefined;
+    }
+
+    function extractParams(
+      node: ts.Node | undefined,
+    ): Record<string, string> | null {
+      if (!node) return null;
+      if (node.kind === SyntaxKind.NullKeyword) return null;
+      if (!isObjectLiteralExpression(node)) return null;
+
+      const params: Record<string, string> = {};
+
+      for (const prop of node.properties) {
+        // { a }
+        if (isShorthandPropertyAssignment(prop)) {
+          params[prop.name.text] = prop.name.text;
+          continue;
+        }
+
+        // { a: something }
+        if (isPropertyAssignment(prop)) {
+          const key =
+            isIdentifier(prop.name) ||
+            isStringLiteral(prop.name) ||
+            isNumericLiteral(prop.name)
+              ? prop.name.text
+              : undefined;
+
+          if (!key) continue;
+
+          params[key] = prop.initializer.getText(source);
+        }
+      }
+
+      return Object.keys(params).length ? params : null;
+    }
+
+    function isGettextCall(node: ts.CallExpression): boolean {
+      // gettext(...)
+      if (isIdentifier(node.expression) && node.expression.text === 'gettext') {
+        return true;
+      }
+
+      // this.gettext(...)
+      if (
+        isPropertyAccessExpression(node.expression) &&
+        node.expression.name.text === 'gettext'
+      ) {
+        return true;
+      }
+
+      return false;
+    }
+
+    function visit(node: ts.Node): void {
+      if (isCallExpression(node) && isGettextCall(node)) {
+        const [msgArg, paramsArg, contextArg] = node.arguments;
+
+        const gettextString = getStaticString(msgArg);
+
+        if (gettextString !== undefined) {
+          const { line } = source.getLineAndCharacterOfPosition(
+            node.getStart(source),
+          );
+
+          messages.push({
+            lineNumber: line + 1,
+            gettextString,
+            params: extractParams(paramsArg),
+            context: getStaticString(contextArg),
+          });
+        }
+      }
+
+      forEachChild(node, visit);
+    }
+
+    visit(source);
+
+    return messages;
+    //#endregion
+  }
   //#endregion
 
   //#region remove region by name
