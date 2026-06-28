@@ -113,6 +113,32 @@ import {
 //#endregion
 
 export namespace UtilsTypescript {
+  //#region remove comments from ts file
+  export const removeCommentsFromTsContent = (
+    tsFileContent: string,
+  ): string => {
+    //#region @backendFunc
+    if (!tsFileContent) {
+      return tsFileContent;
+    }
+
+    const sourceFile = createSourceFile(
+      'file.ts',
+      tsFileContent,
+      ScriptTarget.Latest,
+      true,
+    );
+
+    const printer = createPrinter({
+      removeComments: true,
+    });
+
+    const result = printer.printFile(sourceFile);
+    return result;
+    //#endregion
+  };
+  //#endregion
+
   //#region remove region by name
   /**
    * Remove TypeScript region blocks by their name, including nested regions.
