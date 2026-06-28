@@ -146,8 +146,12 @@ export namespace UtilsTypescript {
   export interface GettextExtracted {
     lineNumber: number;
     gettextString: string;
-    params?: Record<string, string> | null;
+    // params?: Record<string, string> | null;
     context?: string;
+    /**
+     * translation for specyfic language
+     */
+    translation?: string;
   }
 
   export function extractGettextFromTs(
@@ -240,7 +244,7 @@ export namespace UtilsTypescript {
           messages.push({
             lineNumber: line + 1,
             gettextString,
-            params: extractParams(paramsArg),
+            // params: extractParams(paramsArg),
             context: getStaticString(contextArg),
           });
         }

@@ -2,6 +2,7 @@ export * from './utils';
 export * from './utils-vscode';
 export * from './utils-typescript';
 export * from './utils-html';
+export * from './utils-po-file';
 export * from './helpers/helpers';
 export * from './base';
 export * from './models';

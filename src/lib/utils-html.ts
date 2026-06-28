@@ -39,7 +39,7 @@ export namespace UtilsHtml {
       messages.push({
         lineNumber: node.sourceSpan.start.line + 1,
         gettextString: normalized,
-        params: params ?? null,
+        // params: params ?? null,
         context,
       });
     };
