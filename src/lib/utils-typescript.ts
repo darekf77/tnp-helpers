@@ -12,6 +12,7 @@ import {
   spawn,
   TAGS,
   UtilsFilesFoldersSync,
+  UtilsI18n,
 } from 'tnp-core/src';
 import {
   child_process,
@@ -143,21 +144,10 @@ export namespace UtilsTypescript {
 
   //#region extract gettext
 
-  export interface GettextExtracted {
-    lineNumber: number;
-    gettextString: string;
-    // params?: Record<string, string> | null;
-    context?: string;
-    /**
-     * translation for specyfic language
-     */
-    translation?: string;
-  }
-
   export function extractGettextFromTs(
     sourceText: string,
     fileName = 'file.ts',
-  ): GettextExtracted[] {
+  ): UtilsI18n.GettextExtracted[] {
     //#region @backendFunc
     const source = createSourceFile(
       fileName,
@@ -167,7 +157,7 @@ export namespace UtilsTypescript {
       ScriptKind.TS,
     );
 
-    const messages: GettextExtracted[] = [];
+    const messages: UtilsI18n.GettextExtracted[] = [];
 
     function getStaticString(node: ts.Node | undefined): string | undefined {
       if (!node) return undefined;
