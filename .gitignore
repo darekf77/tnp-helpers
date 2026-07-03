@@ -2,7 +2,6 @@
 /.DS_Store
 /.editorconfig
 /.firedev
-/.gitignore
 /.npmignore
 /.npmrc
 /.prettierignore
@@ -19,7 +18,6 @@
 /*.sqlite
 /**/.DS_Store
 /**/.editorconfig
-/**/.gitignore
 /**/.npmignore
 /**/.npmrc
 /**/.prettierignore
