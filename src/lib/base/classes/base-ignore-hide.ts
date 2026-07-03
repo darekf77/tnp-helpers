@@ -186,6 +186,7 @@ export class BaseIgnoreHideHelpers<
       Utils.uniqArray(
         filesAndFoldersToIgnoreInGit
           .sort((a, b) => a.localeCompare(b))
+          .filter(f => !f.includes('.gitignore'))
           .map(c => `/${c}`),
       ).join('\n'),
     );
