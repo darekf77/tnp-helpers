@@ -731,6 +731,15 @@ export namespace UtilsVSCode {
         command: '-kb-macro.playback',
         when: "!kb-macro.recording && config.keyboardMacro.recordingShortcuts == 'Option1'",
       },
+
+      {
+        key: 'ctrl+r',
+        command: `${config.frameworkName}.openRecentWorkspace`,
+      },
+      {
+        key: 'ctrl+r',
+        command: '-workbench.action.openRecent',
+      },
       //#endregion
     ];
 
