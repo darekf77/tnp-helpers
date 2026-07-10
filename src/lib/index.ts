@@ -1,6 +1,7 @@
 export * from './utils';
 export * from './utils-vscode';
 export * from './utils-typescript';
+export * from './utils-cjs-package';
 export * from './helpers/helpers';
 export * from './base';
 export * from './models';
