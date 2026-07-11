@@ -670,18 +670,6 @@ export namespace UtilsVSCode {
     //#region @backendFunc
     options = options || {};
     options.editor = options.editor || UtilsOs.detectEditor();
-    const keybindingPathLinux = path.join(
-      crossPlatformPath(os.userInfo().homedir),
-      '.config/Code/User/keybindings.json',
-    );
-    const keybindingPathMacOS = path.join(
-      crossPlatformPath(os.userInfo().homedir),
-      `Library/Application Support/Code/User/keybindings.json`,
-    );
-    const keybindingPathWindows = path.join(
-      crossPlatformPath(os.userInfo().homedir),
-      'AppData/Roaming/Code/User/keybindings.json',
-    );
 
     const taonBuildTask = [
       {
@@ -853,11 +841,20 @@ export namespace UtilsVSCode {
     //#endregion
 
     if (process.platform === 'win32') {
-      Helpers.writeFile(keybindingPathWindows, keysWindows);
+      Helpers.writeFile(
+        UtilsOs.getEditorKeybindingPath(options.editor),
+        keysWindows,
+      );
     } else if (process.platform === 'linux') {
-      Helpers.writeFile(keybindingPathLinux, keysLinux);
+      Helpers.writeFile(
+        UtilsOs.getEditorKeybindingPath(options.editor),
+        keysLinux,
+      );
     } else if (process.platform === 'darwin') {
-      Helpers.writeFile(keybindingPathMacOS, keysMac);
+      Helpers.writeFile(
+        UtilsOs.getEditorKeybindingPath(options.editor),
+        keysMac,
+      );
     }
 
     //#region global / windows only settings
