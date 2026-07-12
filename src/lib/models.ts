@@ -76,6 +76,14 @@ export interface ChangelogData {
 }
 //#endregion
 
+export type SshOrHttpOrigin = 'ssh' | 'http';
+
+export interface PullProcessOptions {
+  updateType?: CommandActionType;
+  skipCloneGitChildren?: boolean;
+  setOrigin?: SshOrHttpOrigin;
+}
+
 //#region push process options
 export interface PushProcessOptions {
   force?: boolean;
@@ -83,11 +91,12 @@ export interface PushProcessOptions {
   mergeUpdateCommits?: boolean;
   askToConfirmPush?: boolean;
   askToConfirmCommit?: boolean;
+  updateType?: CommandActionType;
   skipLint?: boolean;
   askToConfirmBranchChange?: boolean;
   origin?: string;
   args?: string[];
-  setOrigin?: 'ssh' | 'http';
+  setOrigin?: SshOrHttpOrigin;
   exitCallBack?: () => void;
   forcePushNoQuestion?: boolean;
   overrideCommitMessage?: string;
@@ -100,7 +109,6 @@ export interface PushProcessOptions {
    * taon pfix proper input my-username/my-repo#344
    */
   currentOrigin?: string;
-  skipChildren?: boolean;
   noExit?: boolean;
 }
 //#endregion

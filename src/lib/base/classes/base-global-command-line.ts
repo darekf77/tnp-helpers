@@ -44,6 +44,7 @@ import {
   UtilsVSCode,
   UtilsZip,
   UtilsTypescript,
+  SshOrHttpOrigin,
 } from '../../index';
 import { UtilsHttp, UtilsLineCount } from '../../utils';
 import { TypeOfCommit, CommitData } from '../commit-data';
@@ -686,19 +687,35 @@ export class BaseGlobalCommandLine<
       return;
     }
     await this.project.git.resetHard({ HEAD: 10 });
-    await this.pull();
+    await this.pullDeep();
     //#endregion
   }
   //#endregion
 
   //#region commands / pull
   async pul() {
-    //#region @backendFunc
-    await this.pull();
-    //#endregion
+    Helpers.warn(`
+
+      Please use pul:deep instead pull
+
+  `);
+    await this.pullDeep();
   }
 
   async pull() {
+    Helpers.warn(`
+
+      Please use pull:deep instead pull
+
+  `);
+    await this.pullDeep();
+  }
+
+  async pulDeep() {
+    await this.pullDeep();
+  }
+
+  async pullDeep() {
     //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
@@ -712,6 +729,7 @@ export class BaseGlobalCommandLine<
     });
     //#endregion
   }
+
   //#endregion
 
   //#region commands / pull all
@@ -1073,7 +1091,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
     for (let index = 0; index < remotes.length; index++) {
       const { origin, url } = remotes[index];
       Helpers.taskStarted(`Pushing to ${chalk.bold(origin)} (${url})...`);
-      await this.push({ force, origin, noExit: true });
+      await this.pushDeep({ force, origin, noExit: true });
       Helpers.taskDone(`Pushed to ${origin}`);
     }
     this._exit();
@@ -1084,13 +1102,13 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
   //#region commands / push force
   async forcePush(): Promise<void> {
     //#region @backendFunc
-    await this.push({ force: true, typeofCommit: 'feature' });
+    await this.pushDeep({ force: true, typeofCommit: 'feature' });
     //#endregion
   }
 
   async pushForce(): Promise<void> {
     //#region @backendFunc
-    await this.push({ force: true, typeofCommit: 'feature' });
+    await this.pushDeep({ force: true, typeofCommit: 'feature' });
     //#endregion
   }
   //#endregion
@@ -1120,7 +1138,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
       exitCallBack: () => {
         this._exit();
       },
-      skipChildren: true,
+      updateType: 'only-this',
       overrideCommitMessage: this.args.join(' '),
       setOrigin: this.params['setOrigin'],
       currentOrigin: this.project.git.originURL,
@@ -1189,7 +1207,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
 
   async quickPush(): Promise<void> {
     //#region @backendFunc
-    await this.push({ skipLint: true });
+    await this.pushDeep({ skipLint: true });
     //#endregion
   }
 
@@ -1226,9 +1244,9 @@ ${lastCommitMessage}
     //#endregion
   }
 
-  async push(options: PushProcessOptions = {}): Promise<void> {
-    GlobalTaskManager.start(PUSH_ACTION_NAME);
+  async pushDeep(options: PushProcessOptions = {}): Promise<void> {
     //#region @backendFunc
+    GlobalTaskManager.start(PUSH_ACTION_NAME);
     // console.log('args', this.args);
     // console.log(`argsWithParams "${this.argsWithParams}"` );
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
@@ -1279,6 +1297,15 @@ ${lastCommitMessage}
     });
 
     //#endregion
+  }
+
+  async push(options: PushProcessOptions = {}): Promise<void> {
+    Helpers.warn(`
+
+      Please use push:deep instead push
+
+    `);
+    await this.pushDeep(options);
   }
   //#endregion
 
@@ -1389,7 +1416,7 @@ ${lastCommitMessage}
   async pushRelease() {
     //#region @backendFunc
     await this.meltUpdateCommits();
-    await this.push({
+    await this.pushDeep({
       typeofCommit: 'release',
       commitMessageRequired: true,
       overrideCommitMessage:
@@ -1438,7 +1465,7 @@ ${lastCommitMessage}
   async meltPush(force = false) {
     //#region @backendFunc
     await this.meltUpdateCommits();
-    await this.push({
+    await this.pushDeep({
       mergeUpdateCommits: true,
       force,
     });
@@ -1448,7 +1475,11 @@ ${lastCommitMessage}
   async pushFeature() {
     //#region @backendFunc
     await this.meltUpdateCommits();
-    await this.push({ typeofCommit: 'feature', commitMessageRequired: true });
+    await this.pushDeep({
+      typeofCommit: 'feature',
+      commitMessageRequired: true,
+      updateType: 'only-this',
+    });
     //#endregion
   }
   //#endregion
@@ -1457,7 +1488,11 @@ ${lastCommitMessage}
   async pushFix() {
     //#region @backendFunc
     await this.meltUpdateCommits();
-    await this.push({ typeofCommit: 'bugfix', commitMessageRequired: true });
+    await this.pushDeep({
+      typeofCommit: 'bugfix',
+      commitMessageRequired: true,
+      updateType: 'only-this',
+    });
     //#endregion
   }
 
@@ -1472,7 +1507,11 @@ ${lastCommitMessage}
   async pushChore() {
     //#region @backendFunc
     await this.meltUpdateCommits();
-    await this.push({ typeofCommit: 'chore', commitMessageRequired: true });
+    await this.pushDeep({
+      typeofCommit: 'chore',
+      commitMessageRequired: true,
+      updateType: 'only-this',
+    });
     //#endregion
   }
 
@@ -1487,7 +1526,11 @@ ${lastCommitMessage}
   async pushRefactor() {
     //#region @backendFunc
     await this.meltUpdateCommits();
-    await this.push({ typeofCommit: 'refactor', commitMessageRequired: true });
+    await this.pushDeep({
+      typeofCommit: 'refactor',
+      commitMessageRequired: true,
+      updateType: 'only-this',
+    });
     //#endregion
   }
 
@@ -1508,7 +1551,11 @@ ${lastCommitMessage}
   async pushStyle() {
     //#region @backendFunc
     await this.meltUpdateCommits();
-    await this.push({ typeofCommit: 'style', commitMessageRequired: true });
+    await this.pushDeep({
+      typeofCommit: 'style',
+      updateType: 'only-this',
+      commitMessageRequired: true,
+    });
     //#endregion
   }
 
@@ -1529,7 +1576,11 @@ ${lastCommitMessage}
   async pushDocs() {
     //#region @backendFunc
     await this.meltUpdateCommits();
-    await this.push({ typeofCommit: 'docs', commitMessageRequired: true });
+    await this.pushDeep({
+      typeofCommit: 'docs',
+      updateType: 'only-this',
+      commitMessageRequired: true,
+    });
     //#endregion
   }
 
@@ -1550,7 +1601,11 @@ ${lastCommitMessage}
   async pushTest() {
     //#region @backendFunc
     await this.meltUpdateCommits();
-    await this.push({ typeofCommit: 'test', commitMessageRequired: true });
+    await this.pushDeep({
+      typeofCommit: 'test',
+      updateType: 'only-this',
+      commitMessageRequired: true,
+    });
     //#endregion
   }
 
@@ -1571,9 +1626,10 @@ ${lastCommitMessage}
   async pushPerf() {
     //#region @backendFunc
     await this.meltUpdateCommits();
-    await this.push({
+    await this.pushDeep({
       typeofCommit: 'performance',
       commitMessageRequired: true,
+      updateType: 'only-this',
     });
     //#endregion
   }
@@ -1583,7 +1639,11 @@ ${lastCommitMessage}
   async pushCi() {
     //#region @backendFunc
     await this.meltUpdateCommits();
-    await this.push({ typeofCommit: 'ci', commitMessageRequired: true });
+    await this.pushDeep({
+      typeofCommit: 'ci',
+      updateType: 'only-this',
+      commitMessageRequired: true,
+    });
     //#endregion
   }
   //#endregion
@@ -1620,7 +1680,11 @@ ${lastCommitMessage}
   async pushBuild() {
     //#region @backendFunc
     await this.meltUpdateCommits();
-    await this.push({ typeofCommit: 'build', commitMessageRequired: true });
+    await this.pushDeep({
+      typeofCommit: 'build',
+      updateType: 'only-this',
+      commitMessageRequired: true,
+    });
     //#endregion
   }
   //#endregion
@@ -2254,7 +2318,7 @@ ${lastCommitMessage}
   async clone() {
     //#region @backendFunc
     let url = this.firstArg;
-    const originType: 'ssh' | 'http' = this.params['setOrigin'];
+    const originType: SshOrHttpOrigin = this.params['setOrigin'];
 
     if (originType) {
       if (originType === 'ssh') {

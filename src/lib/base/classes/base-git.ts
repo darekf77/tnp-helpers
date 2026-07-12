@@ -7,7 +7,9 @@ import { GlobalTaskManager } from 'tnp-core/src';
 import {
   CommitData,
   HelpersTaon,
+  PullProcessOptions,
   PushProcessOptions,
+  SshOrHttpOrigin,
   TypeOfCommit,
   UtilsVSCode,
 } from '../../index';
@@ -983,7 +985,7 @@ Please provide proper commit message for lastest changes in your project:
 
   //#region getters & methods / set remote origin type
   protected async setRemoteOriginType(
-    setOrigin: 'ssh' | 'http',
+    setOrigin: SshOrHttpOrigin,
   ): Promise<void> {
     //#region @backendFunc
     if (setOrigin === ('https' as string)) {
@@ -999,12 +1001,7 @@ Please provide proper commit message for lastest changes in your project:
   //#endregion
 
   //#region methods & getters / push process
-  async pullProcess(
-    options: {
-      skipCloneGitChildren?: boolean;
-      setOrigin?: 'ssh' | 'http';
-    } = {},
-  ): Promise<void> {
+  async pullProcess(options: PullProcessOptions = {}): Promise<void> {
     //#region @backendFunc
     options = options || {};
     options.skipCloneGitChildren = !!options.skipCloneGitChildren;
@@ -1027,7 +1024,6 @@ Please provide proper commit message for lastest changes in your project:
       } catch (error) {}
     }
 
-
     await this.project.git.pullCurrentBranch({
       askToRetry: true,
       defaultHardResetCommits: 5,
@@ -1038,9 +1034,17 @@ Please provide proper commit message for lastest changes in your project:
     this.project.ins.add(this.project.ins.From(location) as any);
     await this.project.linkedProjects.saveLocationToDB();
 
-    if (this.automaticallyAddAllChangesWhenPushingToGit()) {
+    if (
+      this.automaticallyAddAllChangesWhenPushingToGit() ||
+      options.updateType === 'first-level' ||
+      options.updateType === 'deep'
+    ) {
+      const optForChildren = _.cloneDeep(options);
+      if (options.updateType === 'first-level') {
+        optForChildren.updateType = 'only-this';
+      }
       for (const child of this.gitChildren) {
-        await child.git.pullProcess(options);
+        await child.git.pullProcess(optForChildren);
       }
     }
     await this.project.linkedProjects.saveAllLinkedProjectsToDB();
@@ -1135,7 +1139,7 @@ Please provide proper commit message for lastest changes in your project:
   }
 
   protected async _afterPullProcessAction(
-    setOrigin: 'ssh' | 'http',
+    setOrigin: SshOrHttpOrigin,
     skipCloneGitChildren = false,
   ): Promise<void> {
     if (!skipCloneGitChildren) {
@@ -1166,11 +1170,12 @@ Please provide proper commit message for lastest changes in your project:
       exitCallBack,
       askToConfirmPush,
       askToConfirmCommit,
+      updateType,
       askToConfirmBranchChange,
       args = [],
       commitMessageRequired,
       overrideCommitMessage,
-      skipChildren,
+
       setOrigin,
       currentOrigin,
       mergeUpdateCommits,
@@ -1469,7 +1474,11 @@ Please provide proper commit message for lastest changes in your project:
       askToRetry: true,
     });
 
-    if (this.automaticallyAddAllChangesWhenPushingToGit() && !skipChildren) {
+    if (
+      this.automaticallyAddAllChangesWhenPushingToGit() ||
+      updateType === 'first-level' ||
+      updateType === 'deep'
+    ) {
       if (
         this.project.linkedProjects.getLinkedProjectsConfig().skipRecrusivePush
       ) {
@@ -1479,11 +1488,16 @@ Please provide proper commit message for lastest changes in your project:
         return;
       }
 
+      const optForChildren = _.cloneDeep(options);
+      if (updateType === 'first-level') {
+        optForChildren.updateType = 'only-this';
+      }
+
       for (const child of this.gitChildren) {
         if (mergeUpdateCommits) {
           await child.git.meltActionCommits();
         }
-        await child.git.pushProcess(options);
+        await child.git.pushProcess(optForChildren);
       }
     }
     await this.project.linkedProjects.saveAllLinkedProjectsToDB();
