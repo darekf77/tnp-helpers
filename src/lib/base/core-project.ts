@@ -27,7 +27,7 @@ const defaultDb = {
 //#endregion
 
 //#region core project command args options
-export type CoreCommandArgOptions<PROJECT extends BaseProject<any, any>> = {
+export interface CoreCommandArgOptions<PROJECT extends BaseProject<any, any>> {
   project?: PROJECT;
   /**
    * watch mode
