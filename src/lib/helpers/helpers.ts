@@ -1340,9 +1340,15 @@ export namespace HelpersTaon {
         branchName?: string;
         defaultHardResetCommits?: number;
       },
-    ) => {
+    ): void => {
       let { branchName, defaultHardResetCommits } = options || {};
       if (_.isNumber(defaultHardResetCommits)) {
+        const howManyAlreadyCommits = countCommits(cwd);
+
+        if (howManyAlreadyCommits - defaultHardResetCommits < 1) {
+          defaultHardResetCommits = howManyAlreadyCommits - 1;
+        }
+
         resetHard(cwd, { HEAD: defaultHardResetCommits });
       } else {
         resetHard(cwd);

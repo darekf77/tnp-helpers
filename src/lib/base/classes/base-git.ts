@@ -1027,7 +1027,11 @@ Please provide proper commit message for lastest changes in your project:
       } catch (error) {}
     }
 
-    await this.project.git.pullCurrentBranch({ askToRetry: true });
+
+    await this.project.git.pullCurrentBranch({
+      askToRetry: true,
+      defaultHardResetCommits: 5,
+    });
     await this._afterPullProcessAction(setOrigin, skipCloneGitChildren);
     const location = this.project.location;
     this.project.ins.unload(this as any);
