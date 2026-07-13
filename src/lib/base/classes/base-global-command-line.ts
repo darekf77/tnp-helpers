@@ -3235,6 +3235,9 @@ ${lastCommitMessage}
       'mp4-from-websites',
     ]);
     // yt-dlp --print filename -o "%(uploader)s-%(upload_date)s-%(title)s.%(ext)s"
+    if (!Helpers.exists(downloadPath)) {
+      Helpers.mkdirp(downloadPath);
+    }
     Helpers.run(
       'yt-dlp --verbose  -S "res:1080,fps" -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" ' +
         this.args.join(' '),
