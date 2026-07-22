@@ -1361,6 +1361,7 @@ export namespace HelpersTaon {
       cwd: string,
       options?: {
         askToRetry?: boolean;
+        // forceOverrideTags?: boolean;
         /**
          * default true, when false it will throw error instead process.exit(0)
          */
@@ -1425,6 +1426,9 @@ export namespace HelpersTaon {
               again: {
                 name: 'Try pull again',
               },
+              forceOverrideTags: {
+                name: 'Force override tags and try pull again',
+              },
               normalButSshOrHttpOrigin: {
                 name: `Try pull again with ${isSsh ? 'HTTPS' : 'SSH'} origin ?`,
               },
@@ -1454,6 +1458,14 @@ export namespace HelpersTaon {
               } else {
                 await HelpersTaon.git.changeRemoteFromHttpsToSSh(cwd);
               }
+            }
+            if (whatToDo === 'forceOverrideTags') {
+              try {
+                child_process.execSync(`git fetch origin --tags --force`, {
+                  cwd,
+                });
+              } catch (error) {}
+              continue;
             }
             if (whatToDo === 'resetHardLast5Commits') {
               try {
