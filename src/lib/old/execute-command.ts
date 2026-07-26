@@ -3,7 +3,7 @@ import * as fse from 'fs';
 import * as path from 'path';
 
 import { crossPlatformPath, UtilsProcess } from 'tnp-core/src';
-import type { ExtensionContext, Uri } from 'vscode';
+import type { ExtensionContext, Progress, Uri } from 'vscode';
 
 import {
   capitalizeFirstLetter,
@@ -24,6 +24,10 @@ export interface ExecCommandTypeOpt {
   context?: ExtensionContext;
   cwd?: string;
   uri: Uri;
+  progress?: Progress<{
+    message?: string;
+    increment?: number;
+  }>;
   selectedUris: Uri[];
   rootFolderPath?: string;
 }
@@ -39,6 +43,7 @@ export function executeCommand(
   titleOfTask,
   registerName: string,
   commandToExecute: ExecCommandType,
+
   pOptions?: ProcesOptions,
   isDefaultBuildCommand?: boolean,
   context?: ExtensionContext,
@@ -485,6 +490,7 @@ export function executeCommand(
                   try {
                     await commandToExecute({
                       vscode,
+                      progress,
                       // log,
                       context,
                       cwd,
@@ -666,7 +672,7 @@ export function executeCommand(
                   //#region handle sync process
                   let childResult = child.execSync(cmd, {
                     // shell
-                   });
+                  });
                   progress.report({ increment: 50 });
                   if (typeof childResult !== 'object') {
                     throw `Child result is not a object`;
@@ -682,9 +688,10 @@ export function executeCommand(
                     outputChannel.show();
                   }
 
-                  var proc = child.exec(cmd, { cwd,
+                  var proc = child.exec(cmd, {
+                    cwd,
                     // shell
-                   });
+                  });
                   if (!proc) {
                     await vscodeWindow.showErrorMessage(
                       `Incorrect execution of: ${cmd}`,
