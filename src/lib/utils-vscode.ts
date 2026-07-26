@@ -363,7 +363,7 @@ export namespace UtilsVSCode {
       'esdete.tailwind-rainbow',
       'bradlc.vscode-tailwindcss',
       'imgildev.vscode-tailwindcss-snippets',
-      'mrorz.language-gettext',
+      // 'mrorz.language-gettext', // is checkin ts file for some reason
       //  'mechatroner.rainbow-csv',
       // 'wenfangdu.snippet-generator', snippet generator
       //#region  to check
