@@ -125,8 +125,8 @@ export function optionsFix(options?: ProcesOptions) {
   if (typeof options.cancellable === 'undefined') {
     options.cancellable = true;
   }
-  if (typeof options.tnpNonInteractive === 'undefined') {
-    options.tnpNonInteractive = true;
+  if (typeof options.taonNonInteractive === 'undefined') {
+    options.taonNonInteractive = true;
   }
   if (typeof options.debug === 'undefined') {
     options.debug = false;
@@ -134,9 +134,7 @@ export function optionsFix(options?: ProcesOptions) {
   if (typeof options.askBeforeExecute === 'undefined') {
     options.askBeforeExecute = false;
   }
-  if (typeof options.tnpShowProgress === 'undefined') {
-    options.tnpShowProgress = true;
-  }
+
   if (typeof options.showOutputDataOnSuccess === 'undefined') {
     options.showOutputDataOnSuccess = false;
   }

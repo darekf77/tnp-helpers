@@ -1,8 +1,12 @@
-import * as child from 'child_process';
-import * as fse from 'fs';
-import * as path from 'path';
-
-import { crossPlatformPath, UtilsProcess } from 'tnp-core/src';
+import {
+  crossPlatformPath,
+  UtilsProcess,
+  UtilsProgress,
+  _,
+  child_process as child,
+  path,
+  fse,
+} from 'tnp-core/src';
 import type { ExtensionContext, Progress, Uri } from 'vscode';
 
 import {
@@ -15,7 +19,7 @@ import {
   valueFromCommand,
   getVscode,
 } from './helpers';
-import { ProcesOptions, ProgressData, ResolveVariable } from './models';
+import { ProcesOptions, ResolveVariable } from './models';
 
 export interface ExecCommandTypeOpt {
   vscode?: typeof import('vscode');
@@ -79,10 +83,9 @@ export function executeCommand(
         syncProcess,
         cancellable,
         titleWhenProcessing,
-        tnpNonInteractive,
+        taonNonInteractive,
         askBeforeExecute,
         resolveVariables,
-        tnpShowProgress,
         showOutputDataOnSuccess,
         showSuccessMessage,
       } = options;
@@ -427,7 +430,7 @@ export function executeCommand(
                 if (proc) {
                   proc.kill('SIGINT');
                 }
-                const message = `User canceled command: ${commandToExecuteReadable}`;
+                const message = `User canceled command: ${_.isString(commandToExecuteReadable) ? commandToExecuteReadable : titleOfTask}`;
                 // log.data(message);
                 vscodeWindow.showWarningMessage(message);
               });
@@ -510,8 +513,8 @@ export function executeCommand(
 
                 //#region applying flags
                 const flags = [
-                  tnpShowProgress && '--tnpShowProgress',
-                  tnpNonInteractive && '--tnpNonInteractive',
+
+                  taonNonInteractive && '--taonNonInteractive',
                   findNearestProject && '--findNearestProject',
                   findNearestProjectWithGitRoot &&
                     '--findNearestProjectWithGitRoot',
@@ -706,11 +709,13 @@ export function executeCommand(
                       outputChannel.appendLine(message.toString().trim());
                     } else {
                       dataToDisplayInLog += message.toString();
-                      ProgressData.resolveFrom(message.toString(), json => {
-                        progress.report({
-                          message: json.msg,
-                          increment: json.value / 100,
-                        });
+                      UtilsProgress.resolveFrom(message.toString(), {
+                        callbackOnFounded: json => {
+                          progress.report({
+                            message: json.message,
+                            increment: json ? Number(json?.value) / 100 : 0,
+                          });
+                        },
                       });
                     }
                   });
@@ -752,11 +757,13 @@ export function executeCommand(
                         outputChannel.appendLine(message.toString().trim());
                       } else {
                         dataToDisplayInLog += message.toString();
-                        ProgressData.resolveFrom(message.toString(), json => {
-                          progress.report({
-                            message: json.msg,
-                            increment: json.value / 100,
-                          });
+                        UtilsProgress.resolveFrom(message.toString(), {
+                          callbackOnFounded: json => {
+                            progress.report({
+                              message: json.message,
+                              increment: json ? Number(json.value) / 100 : 0,
+                            });
+                          },
                         });
                       }
                     }

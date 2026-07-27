@@ -274,8 +274,8 @@ export namespace HelpersTaon {
       );
       let options = require('minimist')(argsv);
       const toCheck = {
-        tnpShowProgress: void 0,
-        tnpNonInteractive: void 0,
+
+        taonNonInteractive: void 0,
         findNearestProject: void 0,
         findNearestProjectWithGitRoot: void 0,
         findNearestProjectType: void 0,
@@ -287,8 +287,8 @@ export namespace HelpersTaon {
       });
       options = _.cloneDeep(toCheck);
       let {
-        tnpShowProgress,
-        tnpNonInteractive,
+
+        taonNonInteractive,
         findNearestProject,
         findNearestProjectWithGitRoot,
         findNearestProjectType,
@@ -1376,7 +1376,7 @@ export namespace HelpersTaon {
         exitOnError = true;
       }
       Helpers.log('[taon-helpers][pullCurrentBranch] ' + cwd, 1);
-      if (global['tnpNonInteractive']) {
+      if (global['taonNonInteractive']) {
         askToRetry = false;
       }
       Helpers.log(`askToRetry: ${askToRetry}`);
