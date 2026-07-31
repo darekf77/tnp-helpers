@@ -222,9 +222,15 @@ export class BaseVscodeHelpers<
       'javascript.suggest.autoImports': false,
     };
 
+    // settings['files.associations'] = {
+    //   'tsconfig.json': 'json',
+    // };
+
     settings['files.associations'] = {
-      'tsconfig.json': 'json',
-    };
+      'tsconfig.json': 'plaintext',
+      "**/tsconfig.json": "plaintext",
+      "**/tsconfig.*.json": "plaintext"
+    }
 
     settings['search.followSymlinks'] = false;
     settings['search.useIgnoreFiles'] = false;
