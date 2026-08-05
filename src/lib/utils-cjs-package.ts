@@ -2,8 +2,10 @@ import type { BuildOptions } from 'esbuild';
 import {
   crossPlatformPath,
   fse,
+  Helpers,
   path,
   UtilsFilesFoldersSync,
+  UtilsJson,
 } from 'tnp-core/src';
 
 export namespace UtilsCjsPackage {
@@ -60,27 +62,41 @@ export namespace UtilsCjsPackage {
     options: Omit<BuildCjsVersionOptions, 'outputFolder'> = {},
   ): Promise<void> {
     //#region @backendFunc
-    const nodeModulesRoot = path.resolve(pathToNodeModulesRoot);
-    const packageRoot = crossPlatformPath(
-      path.join(nodeModulesRoot, ...packageName.split('/')),
-    );
+
+    if (!packageName) {
+      Helpers.warn(`Trying to cjs compile empty package name `);
+      return;
+    }
+
+    const packageRoot = crossPlatformPath([pathToNodeModulesRoot, packageName]);
 
     const packageJsonPath = crossPlatformPath([packageRoot, 'package.json']);
+    // console.log({
+    //   packageName,
+    //   pathToNodeModulesRoot,
+    //   overrideOutputFolder,
+    //   options,
+    //   packageRoot,
+    //   packageJsonPath,
+    // });
+
+    const cjsInsidePackagePath = crossPlatformPath([
+      packageRoot,
+      overrideOutputFolder,
+    ]);
     const packageJsonCjsPath = crossPlatformPath([
       packageRoot,
       overrideOutputFolder,
       'package.json',
     ]);
 
-    if (!(await fse.pathExists(packageJsonPath))) {
-      throw new Error(
-        `Cannot build CJS version of "${packageName}". ` +
-          `Package does not exist at: ${packageRoot}`,
-      );
+    if (Helpers.exists(cjsInsidePackagePath) && !options.force) {
+      Helpers.logInfo(`CJS Already builded for ${packageName}`);
+      return;
     }
+    Helpers.remove(cjsInsidePackagePath);
 
-    const packageJsonContent = await fse.readFile(packageJsonPath, 'utf8');
-    const packageJson = JSON.parse(packageJsonContent) as PackageJsonLike;
+    const packageJson = UtilsJson.readJson(packageJsonPath) as PackageJsonLike;
 
     const outputFolder = normalizeRelativePath(overrideOutputFolder);
     const exportSubpath =
@@ -100,15 +116,20 @@ export namespace UtilsCjsPackage {
       packageJson.main;
 
     if (!sourceEntryRelative) {
+      // console.log({ packageJson });
       throw new Error(
-        `Cannot determine JavaScript entry for "${packageName}". ` +
-          `No usable exports["."], module, or main field was found.`,
+        `Cannot determine JavaScript entry for "${packageName}".
+          No usable exports["."], module, or main field was found.
+
+          ${packageJsonPath}
+
+          `,
       );
     }
 
     const sourceEntry = resolveInsidePackage(packageRoot, sourceEntryRelative);
 
-    if (!(await fse.pathExists(sourceEntry))) {
+    if (!Helpers.exists(sourceEntry)) {
       throw new Error(
         `Resolved JavaScript entry for "${packageName}" does not exist:\n` +
           `${sourceEntry}\n` +
@@ -125,12 +146,26 @@ export namespace UtilsCjsPackage {
       ? resolveInsidePackage(packageRoot, sourceTypesRelative)
       : undefined;
 
+    // console.log({
+    //   sourceTypesRelative,
+    //   packageJsonTypes: packageJson.types,
+    //   packageJsonTypings: packageJson.typings,
+    // });
+
     const outputRoot = path.join(packageRoot, outputFolder);
     const outputEntry = path.join(outputRoot, 'index.js');
 
     let outputTypes: string | undefined;
 
-    if (sourceTypes && (await fse.pathExists(sourceTypes))) {
+    // console.log({
+    //   rootExport,
+    //   sourceEntryRelative,
+    //   sourceTypes, // WRONG
+    //   outputRoot,
+    //   outputEntry,
+    // });
+
+    if (sourceTypes && Helpers.exists(sourceTypes)) {
       outputTypes = await copyTypesForCjsExport({
         packageRoot,
         sourceTypes,
@@ -275,7 +310,7 @@ export namespace UtilsCjsPackage {
     //#endregion
   }
 
-  function findConditionalPath(
+  export function findConditionalPath(
     value: PackageExportValue | undefined,
     preferredConditions: string[],
   ): string | undefined {
@@ -406,6 +441,15 @@ export namespace UtilsCjsPackage {
 
     const outputTypesRoot = path.join(outputRoot, 'types');
 
+    // console.log({
+    //   packageRoot,
+    //   sourceTypes,
+    //   outputRoot,
+    //   sourceTypesDir,
+    //   sourceTypesFileName,
+    //   outputTypesRoot,
+    // });
+
     /*
      * Copy the whole directory, not only the entry .d.ts.
      *
@@ -413,6 +457,9 @@ export namespace UtilsCjsPackage {
      *
      * import { Something } from './internal';
      */
+    Helpers.info(
+      `Copying files/directoryes from ${sourceTypesDir} to ${outputTypesRoot}`,
+    );
     await fse.remove(outputTypesRoot);
     await fse.copy(sourceTypesDir, outputTypesRoot, {
       overwrite: true,
@@ -447,9 +494,11 @@ export namespace UtilsCjsPackage {
     packageRelativePath: string,
   ): string {
     //#region @backendFunc
-    const cleaned = packageRelativePath.replace(/^\.\//, '');
+    const cleaned = packageRelativePath
+      .replace(/\\/g, '/')
+      .replace(/^\.\/+/, '');
 
-    const result = path.resolve(packageRoot, cleaned);
+    const result = crossPlatformPath([packageRoot, cleaned]);
 
     assertInsideDirectory(packageRoot, result);
 

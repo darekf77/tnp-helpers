@@ -66,6 +66,7 @@ export class BaseGlobalCommandLine<
     Helpers.error('Please select git command');
   }
 
+  //#region run as sudo if not elevated
   /**
    * @returns true is sudo was used to restart the process
    */
@@ -96,6 +97,7 @@ export class BaseGlobalCommandLine<
     return false;
     //#endregion
   }
+  //#endregion
 
   //#region commands / prevent cwd is not project
   /**
@@ -350,6 +352,7 @@ export class BaseGlobalCommandLine<
   }
   //#endregion
 
+  //#region commands / update project
   private async updateProject(
     project: PROJECT,
     options?: {
@@ -435,6 +438,7 @@ export class BaseGlobalCommandLine<
     }
     //#endregion
   }
+  //#endregion
 
   //#region commands / force update
   async forceUpdate(): Promise<void> {
@@ -2439,58 +2443,59 @@ ${lastCommitMessage}
   //#region @notForNpm
   async procMenu() {
     //#region @backendFunc
-    const { BaseProcessManger, CommandConfig } =
-      await import('./base-process-manager');
+    throw `[tnp-helpers] BaseProcessManger not implementeed yet`;
+    // const { BaseProcessManger, CommandConfig } =
+    //   await import('./base-process-manager');
 
-    const ngBuildLibCommand = CommandConfig.from({
-      name: 'TSC',
-      cmd: 'node -e "let i = 0; setInterval(() => console.log(\'TSC lib Compiled success \' + (++i)), 1000)"',
-      goToNextCommandWhenOutput: {
-        stdoutContains: 'TSC lib Compiled success 5',
-      },
-    });
+    // const ngBuildLibCommand = CommandConfig.from({
+    //   name: 'TSC',
+    //   cmd: 'node -e "let i = 0; setInterval(() => console.log(\'TSC lib Compiled success \' + (++i)), 1000)"',
+    //   goToNextCommandWhenOutput: {
+    //     stdoutContains: 'TSC lib Compiled success 5',
+    //   },
+    // });
 
-    const angularNormalNgServe = CommandConfig.from({
-      shouldBeActiveOrAlreadyBuild: [ngBuildLibCommand],
-      name: 'NG Normal',
-      cmd: 'node -e "let i = 0; setInterval(() => console.log(\'NG NORMAL: Hello from ng --watch \' + (++i)), 1200)"',
-      goToNextCommandWhenOutput: {
-        stdoutContains: 'NG NORMAL: Hello from ng --watch 5',
-      },
-    });
+    // const angularNormalNgServe = CommandConfig.from({
+    //   shouldBeActiveOrAlreadyBuild: [ngBuildLibCommand],
+    //   name: 'NG Normal',
+    //   cmd: 'node -e "let i = 0; setInterval(() => console.log(\'NG NORMAL: Hello from ng --watch \' + (++i)), 1200)"',
+    //   goToNextCommandWhenOutput: {
+    //     stdoutContains: 'NG NORMAL: Hello from ng --watch 5',
+    //   },
+    // });
 
-    const angularWebsqlNgServe = CommandConfig.from({
-      shouldBeActiveOrAlreadyBuild: [ngBuildLibCommand],
-      name: 'NG websql',
-      cmd: 'node -e "let i = 0; setInterval(() => console.log(\'NG WEBSQL: Hello from ng --watch \' + (++i)), 1200)"',
-      goToNextCommandWhenOutput: {
-        stdoutContains: 'NG WEBSQL: Hello from ng --watch 5',
-      },
-    });
+    // const angularWebsqlNgServe = CommandConfig.from({
+    //   shouldBeActiveOrAlreadyBuild: [ngBuildLibCommand],
+    //   name: 'NG websql',
+    //   cmd: 'node -e "let i = 0; setInterval(() => console.log(\'NG WEBSQL: Hello from ng --watch \' + (++i)), 1200)"',
+    //   goToNextCommandWhenOutput: {
+    //     stdoutContains: 'NG WEBSQL: Hello from ng --watch 5',
+    //   },
+    // });
 
-    const electronNormalNgServe = CommandConfig.from({
-      shouldBeActiveOrAlreadyBuild: [angularNormalNgServe],
-      name: 'ELECTRON Normal',
-      cmd: 'node -e "let i = 0; setInterval(() => console.log(\'ELECTRON Normal: Hello from electron \' + (++i)), 1500)"',
-    });
+    // const electronNormalNgServe = CommandConfig.from({
+    //   shouldBeActiveOrAlreadyBuild: [angularNormalNgServe],
+    //   name: 'ELECTRON Normal',
+    //   cmd: 'node -e "let i = 0; setInterval(() => console.log(\'ELECTRON Normal: Hello from electron \' + (++i)), 1500)"',
+    // });
 
-    const updateAssets = CommandConfig.from({
-      name: 'Update assets',
-      cmd: 'node -e "let i = 0; setInterval(() => console.log(\'Updated assets \' + (++i)), 1000)"',
-    });
+    // const updateAssets = CommandConfig.from({
+    //   name: 'Update assets',
+    //   cmd: 'node -e "let i = 0; setInterval(() => console.log(\'Updated assets \' + (++i)), 1000)"',
+    // });
 
-    await new BaseProcessManger(this.project).init({
-      title: 'What do you want to build?',
-      header: 'Starting process selection...',
-      watch: true,
-      commands: [
-        ngBuildLibCommand,
-        angularNormalNgServe,
-        angularWebsqlNgServe,
-        electronNormalNgServe,
-        updateAssets,
-      ],
-    });
+    // await new BaseProcessManger(this.project).init({
+    //   title: 'What do you want to build?',
+    //   header: 'Starting process selection...',
+    //   watch: true,
+    //   commands: [
+    //     ngBuildLibCommand,
+    //     angularNormalNgServe,
+    //     angularWebsqlNgServe,
+    //     electronNormalNgServe,
+    //     updateAssets,
+    //   ],
+    // });
     //#endregion
   }
   //#endregion
@@ -2696,33 +2701,46 @@ ${lastCommitMessage}
   }
   //#endregion
 
+  //#region commands / kill all code
   killAllCode() {
     return UtilsOs.killAllEditor('code');
   }
+  //#endregion
 
+  //#region commands / kill all codium
   killAllCodium() {
     return UtilsOs.killAllEditor('codium');
   }
+  //#endregion
 
+  //#region commands / kill all cursor
   killAllCursor() {
     return UtilsOs.killAllEditor('cursor');
   }
+  //#endregion
 
+  //#region commands / kill all theia
   killAllTheia() {
     return UtilsOs.killAllEditor('theia');
   }
+  //#endregion
 
-  killAllCodeOSS() {
+  //#region commands / kill all editors
+  killAllEditors() {
     return UtilsOs.killAllEditor('code-oss');
   }
+  //#endregion
 
+  //#region commands / editor
   async editor() {
     //#region @backendFunc
     console.log(`Your current editor is: ${await this.ins.editor()}`);
     this._exit();
     //#endregion
   }
+  //#endregion
 
+  //#region commands / editor settings
   async editorSettings() {
     //#region @backendFunc
     const editor = await this.ins.editor();
@@ -2736,6 +2754,7 @@ ${lastCommitMessage}
     this._exit();
     //#endregion
   }
+  //#endregion
 
   //#region commands / simulate domain
   async simulateDomain(): Promise<void> {
@@ -2752,6 +2771,7 @@ ${lastCommitMessage}
   }
   //#endregion
 
+  //#region commands / serve on domain
   async serveOnDomain() {
     //#region @backendFunc
     const domain = this.firstArg;
@@ -2780,6 +2800,7 @@ ${lastCommitMessage}
     this._exit();
     //#endregion
   }
+  //#endregion
 
   //#region commands / preview
   async preview(): Promise<void> {
@@ -3542,6 +3563,7 @@ ${lastCommitMessage}
   }
   //#endregion
 
+  //#region commands / split namespaces
   splitNamespaces() {
     this.splitNamespace();
   }
@@ -3572,7 +3594,9 @@ ${lastCommitMessage}
     this._exit();
     //#endregion
   }
+  //#endregion
 
+  //#region commands / normalize broken lines
   normalizeBrokenLines() {
     //#region @backendFunc
     let namespacePath = path.isAbsolute(this.firstArg)
@@ -3589,6 +3613,24 @@ ${lastCommitMessage}
     this._exit();
     //#endregion
   }
+  //#endregion
+
+  //#region commands / temp folder path
+  tempOsFolderPath() {
+    console.log(UtilsOs.getTempFolder());
+    this._exit(0);
+  }
+  //#endregion
+
+  //#region commands / temp folder path
+  testExpFolderUtil() {
+    console.log(UtilsOs.getTempFolder({
+      deleteAfterDays: 1,
+      prefix: 'test-expiry'
+    }));
+    this._exit(0);
+  }
+  //#endregion
 
   //#region split ts into js
   async stripTsTypesIntoJs() {
@@ -3599,4 +3641,5 @@ ${lastCommitMessage}
     );
     this._exit();
   }
+  //#endregion
 }

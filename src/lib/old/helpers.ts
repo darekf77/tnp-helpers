@@ -1,8 +1,4 @@
-import * as child from 'child_process';
-import * as fse from 'fs';
-
-import { UtilsProcess } from 'tnp-core/src';
-import type { OutputChannel } from 'vscode';
+import { child_process } from 'tnp-core/src';
 
 import { UtilsVSCode } from '../utils-vscode';
 
@@ -26,7 +22,7 @@ export function valueFromCommand({
 }) {
   const decode = true;
   // const shell = UtilsProcess.getGitBashPath();
-  let res = child
+  let res = child_process
     .execSync(command, {
       cwd,
       // shell,

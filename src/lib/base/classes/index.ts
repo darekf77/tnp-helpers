@@ -16,7 +16,7 @@ export * from './base-compiler-for-project';
 export * from './base-debounce-compiler-for-project';
 export * from './base-quick-fixes';
 export * from './base-cli-worker';
-export * from './base-process-manager';
+// export * from './base-process-manager';
 export * from './base-command-line-feature';
 export * from './base-file-folders-operations';
 export * from './base-start-config.backend'; // @backend

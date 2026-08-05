@@ -5,7 +5,7 @@ import { Helpers, UtilsTerminal } from 'tnp-core/src';
 import { CoreModels, _, startAsync } from 'tnp-core/src';
 
 import type { BaseProject, TypeOfCommit } from './base';
-import type { BaseProcessManger } from './base/classes/base-process-manager';
+// import type { BaseProcessManger } from './base/classes/base-process-manager';
 //#endregion
 
 //#region base project type
@@ -237,7 +237,7 @@ export class CommandProcess {
   constructor(
     private project: BaseProject,
     private config: CommandConfig,
-    private manager: BaseProcessManger,
+    // private manager: BaseProcessManger,
   ) {}
   //#endregion
 
@@ -245,68 +245,69 @@ export class CommandProcess {
 
   async start(options?: CommandProcessRunOptions): Promise<void> {
     //#region @backendFunc
-    const { progress, resolveWhenFinish } = options || {};
+    throw '[tnp-helpers] BaseProcessManger not implemented yet';
+    // const { progress, resolveWhenFinish } = options || {};
 
-    this.state = CommandProcessState.RUNNING;
-    // console.log('Starting process:', this.name);
+    // this.state = CommandProcessState.RUNNING;
+    // // console.log('Starting process:', this.name);
 
-    await new Promise<void>(async resolve => {
-      const finishSyncCallback = async (): Promise<void> => {
-        if (resolveWhenFinish) {
-          resolve();
-        }
-        if (CommandProcessState.RUNNING) {
-          if (this.manager.watch) {
-            this.state = CommandProcessState.FINISHED_AND_RUNNING;
-          } else {
-            this.state = CommandProcessState.FINISHED;
-          }
-        }
-      };
+    // await new Promise<void>(async resolve => {
+    //   const finishSyncCallback = async (): Promise<void> => {
+    //     if (resolveWhenFinish) {
+    //       resolve();
+    //     }
+    //     if (CommandProcessState.RUNNING) {
+    //       if (this.manager.watch) {
+    //         this.state = CommandProcessState.FINISHED_AND_RUNNING;
+    //       } else {
+    //         this.state = CommandProcessState.FINISHED;
+    //       }
+    //     }
+    //   };
 
-      // console.log(`Running command: ${this.cmd}`);
+    //   // console.log(`Running command: ${this.cmd}`);
 
-      await startAsync(this.cmd, this.project.location, {
-        resolvePromiseMsg_stderr: _.isString(
-          this.config.goToNextCommandWhenOutput,
-        )
-          ? this.config.goToNextCommandWhenOutput
-          : this.config.goToNextCommandWhenOutput?.stderrContains,
-        resolvePromiseMsg_stdout: _.isString(
-          this.config.goToNextCommandWhenOutput,
-        )
-          ? this.config.goToNextCommandWhenOutput
-          : this.config.goToNextCommandWhenOutput?.stdoutContains,
+    //   await startAsync(this.cmd, this.project.location, {
+    //     resolvePromiseMsg_stderr: _.isString(
+    //       this.config.goToNextCommandWhenOutput,
+    //     )
+    //       ? this.config.goToNextCommandWhenOutput
+    //       : this.config.goToNextCommandWhenOutput?.stderrContains,
+    //     resolvePromiseMsg_stdout: _.isString(
+    //       this.config.goToNextCommandWhenOutput,
+    //     )
+    //       ? this.config.goToNextCommandWhenOutput
+    //       : this.config.goToNextCommandWhenOutput?.stdoutContains,
 
-        biggerBuffer: true,
-        resolvePromiseMsgCallback_anystd: () => {
-          finishSyncCallback();
-        },
+    //     biggerBuffer: true,
+    //     resolvePromiseMsgCallback_anystd: () => {
+    //       finishSyncCallback();
+    //     },
 
-        onExitCallback: code => {
-          if (this.manager.watch) {
-            // TODO @LAST handle errors in watch mode
-            this.state = CommandProcessState.NOT_STARTED; // TODO maybe ERROR state better
-            this.manager.startedProcesses.delete(this);
-            resolve();
-          } else {
-            process.exit(code); // exit main process
-          }
-        },
-        askToTryAgainOnError: true,
-        onChildProcessChange: (child_process: ChildProcess) => {
-          // @ts-expect-error overriding readonly property
-          this.child_process = child_process;
-        },
-        hideOutput_stderr: this.manager.hideOutput.stderr,
-        hideOutput_stdout: this.manager.hideOutput.stdout,
-        outputBuffer: this.manager.outputBuffer,
-      });
+    //     onExitCallback: code => {
+    //       if (this.manager.watch) {
+    //         // TODO @LAST handle errors in watch mode
+    //         this.state = CommandProcessState.NOT_STARTED; // TODO maybe ERROR state better
+    //         this.manager.startedProcesses.delete(this);
+    //         resolve();
+    //       } else {
+    //         process.exit(code); // exit main process
+    //       }
+    //     },
+    //     askToTryAgainOnError: true,
+    //     onChildProcessChange: (child_process: ChildProcess) => {
+    //       // @ts-expect-error overriding readonly property
+    //       this.child_process = child_process;
+    //     },
+    //     hideOutput_stderr: this.manager.hideOutput.stderr,
+    //     hideOutput_stdout: this.manager.hideOutput.stdout,
+    //     outputBuffer: this.manager.outputBuffer,
+    //   });
 
-      if (!resolveWhenFinish) {
-        resolve();
-      }
-    });
+    //   if (!resolveWhenFinish) {
+    //     resolve();
+    //   }
+    // });
 
     //#endregion
   }
@@ -315,42 +316,43 @@ export class CommandProcess {
   //#region stop
   async stop(): Promise<void> {
     //#region @backendFunc
-    if (!this.manager.watch) {
-      console.warn(`Can't stop process in normal mode: ${this.name}`);
-      await UtilsTerminal.wait(1);
-      return;
-    }
+    throw `[tnp-helpers][stop] BaseProcessManger not implementd`;
+    // if (!this.manager.watch) {
+    //   console.warn(`Can't stop process in normal mode: ${this.name}`);
+    //   await UtilsTerminal.wait(1);
+    //   return;
+    // }
 
-    this.state = CommandProcessState.NOT_STARTED;
-    this.manager.startedProcesses.delete(this);
+    // this.state = CommandProcessState.NOT_STARTED;
+    // this.manager.startedProcesses.delete(this);
 
-    if (
-      ![
-        CommandProcessState.RUNNING,
-        CommandProcessState.FINISHED_AND_RUNNING,
-      ].includes(this.state)
-    ) {
-      console.warn(`
+    // if (
+    //   ![
+    //     CommandProcessState.RUNNING,
+    //     CommandProcessState.FINISHED_AND_RUNNING,
+    //   ].includes(this.state)
+    // ) {
+    //   console.warn(`
 
-        Can't stop process that is not running: ${this.name}
+    //     Can't stop process that is not running: ${this.name}
 
-      `);
-      await UtilsTerminal.wait(1);
-      return;
-    }
+    //   `);
+    //   await UtilsTerminal.wait(1);
+    //   return;
+    // }
 
-    try {
-      if (this.pid) {
-        if (process.platform === 'win32') {
-          execSync(`taskkill /PID ${this.pid} /T /F`);
-        } else {
-          process.kill(-this.pid);
-        }
-      }
-    } catch (error) {
-      console.error(`Error while stopping process: ${this.name}`);
-      console.error(error);
-    }
+    // try {
+    //   if (this.pid) {
+    //     if (process.platform === 'win32') {
+    //       execSync(`taskkill /PID ${this.pid} /T /F`);
+    //     } else {
+    //       process.kill(-this.pid);
+    //     }
+    //   }
+    // } catch (error) {
+    //   console.error(`Error while stopping process: ${this.name}`);
+    //   console.error(error);
+    // }
 
     //#endregion
   }

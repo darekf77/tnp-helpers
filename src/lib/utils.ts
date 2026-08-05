@@ -1,124 +1,27 @@
 //#region imports
-import { ChildProcess, StdioOptions } from 'node:child_process';
-import { scrypt, randomBytes, timingSafeEqual } from 'node:crypto'; // @backend
-import { promisify } from 'node:util'; // @backend
+import type { ChildProcess, StdioOptions } from 'child_process';
 
-import * as ncp from 'copy-paste'; // @backend
-import * as semver from 'semver'; // @backend
-import * as sloc from 'sloc'; // @backend
-import {
-  chalk,
-  chokidar,
-  config,
-  spawn,
-  TAGS,
-  UtilsFilesFoldersSync,
-} from 'tnp-core/src';
+import { chalk, chokidar, config, UtilsFilesFoldersSync } from 'tnp-core/src';
 import {
   child_process,
   crossPlatformPath,
   fse,
   os,
   path,
-  UtilsDotFile,
   UtilsOs,
   UtilsTerminal,
 } from 'tnp-core/src';
 import { _, CoreModels, Utils } from 'tnp-core/src';
 import { Helpers } from 'tnp-core/src';
-import {
-  createPrinter,
-  createSourceFile,
-  isShorthandPropertyAssignment,
-  factory,
-  getLeadingCommentRanges,
-  isClassDeclaration,
-  isSourceFile,
-  NodeArray,
-  ScriptKind,
-  ScriptTarget,
-  SourceFile,
-  Statement,
-  transform,
-  TransformationContext,
-  visitEachChild,
-  Node,
-  isFunctionDeclaration,
-  isVariableStatement,
-  isIdentifier,
-  NodeFlags,
-  isEnumDeclaration,
-  isTypeAliasDeclaration,
-  isInterfaceDeclaration,
-  isModuleDeclaration,
-  isExportAssignment,
-  forEachChild,
-  Declaration,
-  getCombinedModifierFlags,
-  ModifierFlags,
-  SyntaxKind,
-  isVariableDeclaration,
-  isCallExpression,
-  isPropertyAccessExpression,
-  isObjectLiteralExpression,
-  isPropertyAssignment,
-  isStringLiteral,
-  canHaveDecorators,
-  getDecorators,
-  visitNode,
-  isExportDeclaration,
-  isImportDeclaration,
-  Expression,
-  isNamedImports,
-  isNamedExports,
-  NewLineKind,
-  TransformerFactory,
-  isDecorator,
-  isEmptyStatement,
-  isExpressionStatement,
-  isPropertyDeclaration,
-  isMethodDeclaration,
-  getTrailingCommentRanges,
-  isArrayLiteralExpression,
-  isExportSpecifier,
-  flattenDiagnosticMessageText,
-  DiagnosticCategory,
-  createProgram,
-  createCompilerHost,
-  isModuleBlock,
-  EmitHint,
-  getModifiers,
-  canHaveModifiers,
-  isImportEqualsDeclaration,
-  isGetAccessorDeclaration,
-  SymbolFlags,
-  ModuleKind,
-  isQualifiedName,
-  ScriptSnapshot,
-  getDefaultLibFilePath,
-  createLanguageService,
-  CodeFixAction,
-  ImportsNotUsedAsValues,
-  transpileModule,
-  isExternalModuleReference,
-} from 'typescript';
-import type * as ts from 'typescript';
-import { CLASS } from 'typescript-class-helpers/src';
-import type * as vscodeType from 'vscode';
 
 import { BaseProject } from './base/classes/base-project';
-import { HelpersTaon } from './helpers/helpers';
-import {
-  applicationConfigTemplate,
-  ngMergeConfigTemplate,
-  serverNgPartTemplates,
-} from './utils-helpers/application-config-template';
 //#endregion
 
 //#region utils npm
 export namespace UtilsNpm {
   export const isProperVersion = (npmVersion: string) => {
     //#region @backendFunc
+    const semver = require('semver');
     return semver.valid(npmVersion) !== null;
     //#endregion
   };
@@ -204,6 +107,7 @@ export namespace UtilsNpm {
     },
   ): Promise<string> => {
     //#region @backendFunc
+    const semver = require('semver');
     let {
       currentPackageVersion,
       latestType = 'major',
@@ -1378,6 +1282,7 @@ export namespace UtilsPasswords {
   //#region hash password
   export const hashPassword = (password: string): Promise<string> => {
     //#region @backendFunc
+    const { scrypt, randomBytes, timingSafeEqual } = require('crypto');
     return new Promise((resolve, reject) => {
       const salt = randomBytes(16);
       scrypt(password, salt, 64, (err, derivedKey) => {
@@ -1396,6 +1301,7 @@ export namespace UtilsPasswords {
     stored: string,
   ): Promise<boolean> => {
     //#region @backendFunc
+    const { scrypt, randomBytes, timingSafeEqual } = require('crypto');
     return new Promise((resolve, reject) => {
       const [saltHex, keyHex] = stored.split(':');
       const salt = Buffer.from(saltHex, 'hex');
@@ -1439,6 +1345,7 @@ export namespace UtilsDocker {
   ): Promise<void> => {
     //#region @backendFunc
     const label = `${labelKey}=${labelValue}`;
+    const { promisify } = require('util');
     const execAsync = promisify(child_process.exec);
 
     if (!(await UtilsOs.isDockerAvailable())) {
@@ -1704,6 +1611,7 @@ export namespace UtilsFileSync {
   const STABILIZATION_MS = 5000; // 5 seconds is bulletproof
 
   //#region @backend
+  const { promisify } = require('util');
   const execAsync = promisify(child_process.exec);
   //#endregion
 
@@ -1950,6 +1858,7 @@ export namespace UtilsFileSync {
 export namespace UtilsClipboard {
   export const copyText = async (textToCopy: string): Promise<void> => {
     //#region @backend
+    const ncp = require('copy-paste'); // @backend
     await new Promise(resolve => {
       ncp.copy(textToCopy, function () {
         Helpers.log(`Copied to clipboard !`);
@@ -1987,6 +1896,7 @@ export namespace UtilsClipboard {
 
   export const pasteText = async (): Promise<string> => {
     //#region @backend
+    const ncp = require('copy-paste'); // @backend
     return await new Promise<string>((resolve, reject) => {
       ncp.paste(function (__, p) {
         Helpers.log(`Paster from to clipboard !`);
@@ -2070,6 +1980,7 @@ export namespace UtilsLineCount {
         // console.log('Processing: ', path.basename(fullPath));
         walk(fullPath, total, extensions);
       } else if (extensions.includes(path.extname(entry.name))) {
+        const sloc = require('sloc');
         const code = fse.readFileSync(fullPath, 'utf8');
         const stats = sloc(code, path.extname(entry.name).slice(1)); // e.g., "ts" or "js"
         for (const key in total) {

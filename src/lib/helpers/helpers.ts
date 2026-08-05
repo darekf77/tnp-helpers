@@ -1,15 +1,8 @@
 //#region imports
-
-import { ChildProcess, exec } from 'child_process';
-import { createHash } from 'crypto'; // @backend
-import { promisify } from 'util'; // @backend
+import type { ChildProcess } from 'child_process';
 
 import type { BuildOptions } from 'esbuild';
 import type { CopyOptionsSync } from 'fs-extra';
-import * as ini from 'ini';
-import { Log, Level } from 'ng2-logger/src';
-import simpleGit from 'simple-git';
-import * as Task from 'task.js';
 import {
   BaselineSiteJoinprefix,
   glob,
@@ -274,7 +267,6 @@ export namespace HelpersTaon {
       );
       let options = require('minimist')(argsv);
       const toCheck = {
-
         taonNonInteractive: void 0,
         findNearestProject: void 0,
         findNearestProjectWithGitRoot: void 0,
@@ -287,7 +279,6 @@ export namespace HelpersTaon {
       });
       options = _.cloneDeep(toCheck);
       let {
-
         taonNonInteractive,
         findNearestProject,
         findNearestProjectWithGitRoot,
@@ -617,6 +608,7 @@ export namespace HelpersTaon {
     };
     export const getAllTags = async (cwd: string) => {
       //#region @backendFunc
+      const simpleGit = require('simple-git');
       const git = simpleGit(cwd);
       try {
         const tags = await git.tags();
@@ -923,6 +915,7 @@ export namespace HelpersTaon {
     ): Promise<string> => {
       //#region @backendFunc
       try {
+        const simpleGit = require('simple-git');
         const git = simpleGit(cwd);
         const log = await git.log({
           // from: hash.trim(), TODO this is not working with "to" ... very weird
@@ -947,6 +940,7 @@ export namespace HelpersTaon {
     ): Promise<string> => {
       //#region @backendFunc
       try {
+        const simpleGit = require('simple-git');
         const git = simpleGit(cwd);
         // Get the list of commits with their messages
         const log = await git.log();
@@ -972,6 +966,7 @@ export namespace HelpersTaon {
     ): Promise<string> => {
       //#region @backendFunc
       try {
+        const simpleGit = require('simple-git');
         const git = simpleGit(cwd);
         // Get the list of commits with their messages
         const log = await git.log();
@@ -1130,6 +1125,7 @@ export namespace HelpersTaon {
       // Read the contents of the .git/config file synchronously
       try {
         const configFile = fse.readFileSync(gitConfigPath, 'utf-8');
+        const ini = require('ini');
         const config = ini.parse(configFile);
         // Extract remotes from the config object
         const remotes = Object.keys(config)
@@ -1144,6 +1140,108 @@ export namespace HelpersTaon {
         return [];
       }
     };
+
+    function gitPath(cwd: string, name: string): string {
+      return child_process
+        .execSync(`git rev-parse --git-path ${name}`, {
+          cwd,
+          encoding: 'utf8',
+          stdio: ['ignore', 'pipe', 'ignore'],
+        })
+        .trim();
+    }
+
+    export function isRebasing(cwd: string): boolean {
+      return (
+        fse.existsSync(gitPath(cwd, 'rebase-merge')) ||
+        fse.existsSync(gitPath(cwd, 'rebase-apply'))
+      );
+    }
+
+    export function isMerging(cwd: string): boolean {
+      return fse.existsSync(gitPath(cwd, 'MERGE_HEAD'));
+    }
+
+    export function isCherryPicking(cwd: string): boolean {
+      return fse.existsSync(gitPath(cwd, 'CHERRY_PICK_HEAD'));
+    }
+
+    export function isReverting(cwd: string): boolean {
+      return fse.existsSync(gitPath(cwd, 'REVERT_HEAD'));
+    }
+
+    export function isBisecting(cwd: string): boolean {
+      return fse.existsSync(gitPath(cwd, 'BISECT_LOG'));
+    }
+
+    function abortOperation(cwd: string, command: string): boolean {
+      try {
+        child_process.execSync(command, {
+          cwd,
+          stdio: 'ignore',
+        });
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    export function abortRebase(cwd: string): boolean {
+      return abortOperation(cwd, 'git rebase --abort');
+    }
+
+    export function abortMerge(cwd: string): boolean {
+      return abortOperation(cwd, 'git merge --abort');
+    }
+
+    export function abortCherryPick(cwd: string): boolean {
+      return abortOperation(cwd, 'git cherry-pick --abort');
+    }
+
+    export function abortRevert(cwd: string): boolean {
+      return abortOperation(cwd, 'git revert --abort');
+    }
+
+    export function abortBisect(cwd: string): boolean {
+      return abortOperation(cwd, 'git bisect reset');
+    }
+
+    export function abortAllGitTemporaryOperations(cwd: string): void {
+      abortRebase(cwd);
+      abortMerge(cwd);
+      abortCherryPick(cwd);
+      abortRevert(cwd);
+      abortBisect(cwd);
+    }
+
+    export function abortAnyGitTemporaryOperations(cwd: string): void {
+      if (isRebasing(cwd)) {
+        abortRebase(cwd);
+      }
+      if (isMerging(cwd)) {
+        abortMerge(cwd);
+      }
+      if (isCherryPicking(cwd)) {
+        abortCherryPick(cwd);
+      }
+      if (isReverting(cwd)) {
+        abortRevert(cwd);
+      }
+      if (isBisecting(cwd)) {
+        abortBisect(cwd);
+      }
+    }
+
+    export function isInAnyTemporaryGitOperation(cwd: string): boolean {
+      return (
+        isRebasing(cwd) ||
+        isMerging(cwd) ||
+        isCherryPicking(cwd) ||
+        isReverting(cwd) ||
+        isBisecting(cwd)
+      );
+    }
+
     export const currentBranchName = (cwd: string): string => {
       Helpers.log('[taon-helpers][currentBranchName] ' + cwd, 1);
       try {
@@ -1310,6 +1408,7 @@ export namespace HelpersTaon {
         );
       }
     };
+
     export const resetHard = (
       cwd: string,
       options?: {
@@ -1334,6 +1433,73 @@ export namespace HelpersTaon {
       }
       //#endregion
     };
+
+    export function resetToCurrentCommonHeadWithRemote(
+      cwd: string,
+      options?: {
+        branchName?: string;
+        remoteName?: string;
+      },
+    ): string {
+      //#region @backendFunc
+      const remoteName = options?.remoteName ?? 'origin';
+
+      const exec = (command: string): string => {
+        return child_process
+          .execSync(command, {
+            cwd,
+            encoding: 'utf8',
+            stdio: ['ignore', 'pipe', 'inherit'],
+          })
+          .trim();
+      };
+
+      const branchName =
+        options?.branchName || exec('git branch --show-current');
+
+      if (!branchName) {
+        throw new Error(
+          `Cannot synchronize Git heads in detached HEAD state: ${cwd}`,
+        );
+      }
+
+      // Make sure origin/<branch> represents the latest remote state.
+      child_process.execSync(
+        `git fetch ${quoteGitArg(remoteName)} ${quoteGitArg(branchName)} --tags`,
+        {
+          cwd,
+          stdio: 'inherit',
+        },
+      );
+
+      const remoteBranch = `${remoteName}/${branchName}`;
+
+      // Verify that the remote-tracking branch exists.
+      exec(`git rev-parse --verify ${quoteGitArg(remoteBranch)}`);
+
+      const commonHead = exec(
+        `git merge-base HEAD ${quoteGitArg(remoteBranch)}`,
+      );
+
+      if (!commonHead) {
+        throw new Error(
+          `No common commit exists between HEAD and ${remoteBranch}: ${cwd}`,
+        );
+      }
+
+      child_process.execSync(`git reset --hard ${quoteGitArg(commonHead)}`, {
+        cwd,
+        stdio: 'inherit',
+      });
+
+      return commonHead;
+      //#endregion
+    }
+
+    function quoteGitArg(value: string): string {
+      return `"${value.replace(/["\\$`]/g, '\\$&')}"`;
+    }
+
     export const _pull = (
       cwd: string,
       options?: {
@@ -1388,7 +1554,8 @@ export namespace HelpersTaon {
         return;
       }
       Helpers.info(
-        `[taon-helpers][${dateformat(new Date(), 'dd-mm-yyyy HH:MM:ss')}] Pulling git changes in "${cwd}", origin=${HelpersTaon.git.getOriginURL(cwd)}  `,
+        `[taon-helpers][${dateformat(new Date(), 'dd-mm-yyyy HH:MM:ss')}] ` +
+          `Pulling git changes in "${cwd}", origin=${HelpersTaon.git.getOriginURL(cwd)}  `,
       );
       let acknowledgeBeforePull = false;
       while (true) {
@@ -1399,11 +1566,17 @@ export namespace HelpersTaon {
               'Press any key to continue pulling...',
             );
           }
+
+          abortAnyGitTemporaryOperations(cwd);
+
           let currentLocalBranch = currentBranchName(cwd);
           HelpersTaon.git._pull(cwd, {
             ...options,
             branchName: currentLocalBranch,
           });
+          if (isInAnyTemporaryGitOperation(cwd)) {
+            throw `Repo in temporary git state`;
+          }
           Helpers.info(
             `[taon-helpers] Branch "${currentLocalBranch}" updated successfully in ${path.basename(cwd)}`,
           );
@@ -1428,6 +1601,9 @@ export namespace HelpersTaon {
               },
               forceOverrideTags: {
                 name: 'Force override tags and try pull again',
+              },
+              abortGitTemporaryOperations: {
+                name: 'Abort all temporary git operations (merge,rebase etc.) and try pull again',
               },
               normalButSshOrHttpOrigin: {
                 name: `Try pull again with ${isSsh ? 'HTTPS' : 'SSH'} origin ?`,
@@ -1458,6 +1634,16 @@ export namespace HelpersTaon {
               } else {
                 await HelpersTaon.git.changeRemoteFromHttpsToSSh(cwd);
               }
+            }
+            if (whatToDo === 'abortGitTemporaryOperations') {
+              abortAnyGitTemporaryOperations(cwd);
+              try {
+                resetToCurrentCommonHeadWithRemote(cwd, {
+                  branchName: currentBranchName(cwd),
+                  remoteName: 'origin',
+                });
+              } catch (error) {}
+              continue;
             }
             if (whatToDo === 'forceOverrideTags') {
               try {
@@ -2276,6 +2462,7 @@ ${cwd}
     ): Promise<string[]> => {
       //#region @backendFunc
       try {
+        const simpleGit = require('simple-git');
         const git = simpleGit(cwd);
         const diffSummary = await git.diffSummary([`${hash}^!`]);
         return diffSummary.files.map(file => file.file);
@@ -2291,6 +2478,7 @@ ${cwd}
     ): Promise<string[]> => {
       //#region @backendFunc
       try {
+        const simpleGit = require('simple-git');
         const git = simpleGit(cwd);
         const log = await git.log();
         if (index >= log.total) {
@@ -2313,6 +2501,7 @@ ${cwd}
     ): Promise<string> => {
       //#region @backendFunc
       try {
+        const simpleGit = require('simple-git');
         const git = simpleGit(cwd);
         const changesSummary = (await git.status()).files.map(c => c.path);
         return (
@@ -2518,7 +2707,7 @@ ${cwd}
     });
     //#endregion
   };
-  export const pressKeyAndContinue = async (
+  export const pressKeyAndContinue = (
     message = 'Press enter to continue..',
   ) => {
     //#region @backendFunc
@@ -2742,7 +2931,7 @@ ${cwd}
           ? 'tasklist /fi "imagename eq node.exe" /fo csv'
           : 'ps -A -o pid,command | grep node';
       // Execute the command to list processes
-      exec(
+      child_process.exec(
         listProcessesCommand,
         { shell: process.platform === 'win32' ? 'cmd.exe' : void 0 },
         (error, stdout, stderr) => {
@@ -2790,7 +2979,7 @@ ${cwd}
               process.platform === 'win32'
                 ? `taskkill /pid ${id} /f`
                 : `kill ${id}`;
-            exec(killCommand, error => {
+            child_process.exec(killCommand, error => {
               if (error) {
                 console.error(
                   `Error occurred while killing process ${id}:`,
@@ -3345,6 +3534,7 @@ ${HelpersTaon.terminalLine()}\n`;
     const fileContent = path.isAbsolute(absolutePathToFileOrContent)
       ? Helpers.readFile(absolutePathToFileOrContent)
       : absolutePathToFileOrContent;
+    const { createHash } = require('crypto');
     return createHash(algorithm || 'md5')
       .update(fileContent, 'utf8')
       .digest('hex');
@@ -3474,20 +3664,7 @@ ${HelpersTaon.terminalLine()}\n`;
   };
   export const getTempFolder = () => {
     //#region @backendFunc
-    let tmp = '/tmp';
-    if (process.platform === 'darwin') {
-      tmp = '/private/tmp';
-    }
-    if (process.platform === 'win32') {
-      tmp = crossPlatformPath([
-        UtilsOs.getRealHomeDir(),
-        '/AppData/Local/Temp',
-      ]);
-    }
-    if (!Helpers.exists(tmp)) {
-      Helpers.mkdirp(tmp);
-    }
-    return tmp;
+     return UtilsOs.getTempFolder();
     //#endregion
   };
   export const isPlainFileOrFolder = (filePath: string): boolean => {
@@ -3932,6 +4109,7 @@ ${HelpersTaon.terminalLine()}\n`;
       // -R = recursive, -p = preserve permissions
       command = `cp -Rp ${fromEscaped} ${toEscaped}`;
     }
+    const { promisify } = require('util');
     const execAsync = promisify(child_process.exec);
     try {
       const { stdout, stderr } = await execAsync(command);
@@ -4439,6 +4617,7 @@ ${HelpersTaon.terminalLine()}\n`;
       ((chunks, n) => {
         const dataChunk = chunks[n];
         Helpers.log(`worker ${n} ` + dataChunk.join(',\t'));
+        const Task = require('task.js');
         // Helpers.log('pass to worker', Helpers)
         let task = new Task({
           globals: _.merge(globals, {

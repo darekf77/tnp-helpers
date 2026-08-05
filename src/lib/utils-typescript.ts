@@ -1,16 +1,7 @@
 //#region imports
-import { ChildProcess, StdioOptions } from 'node:child_process';
-import { scrypt, randomBytes, timingSafeEqual } from 'node:crypto'; // @backend
-import { promisify } from 'node:util'; // @backend
-
-import * as ncp from 'copy-paste'; // @backend
-import * as semver from 'semver'; // @backend
 import {
-  chalk,
-  chokidar,
   config,
   spawn,
-  TAGS,
   UtilsFilesFoldersSync,
   UtilsI18n,
 } from 'tnp-core/src';
@@ -18,13 +9,9 @@ import {
   child_process,
   crossPlatformPath,
   fse,
-  os,
   path,
-  UtilsDotFile,
-  UtilsOs,
-  UtilsTerminal,
 } from 'tnp-core/src';
-import { _, CoreModels, Utils } from 'tnp-core/src';
+import { _, Utils } from 'tnp-core/src';
 import { Helpers } from 'tnp-core/src';
 import {
   createPrinter,
@@ -73,7 +60,6 @@ import {
   isNamedExports,
   NewLineKind,
   TransformerFactory,
-  isDecorator,
   isEmptyStatement,
   isExpressionStatement,
   isPropertyDeclaration,
@@ -94,19 +80,12 @@ import {
   SymbolFlags,
   ModuleKind,
   isQualifiedName,
-  ScriptSnapshot,
-  getDefaultLibFilePath,
-  createLanguageService,
-  CodeFixAction,
-  ImportsNotUsedAsValues,
   transpileModule,
   isExternalModuleReference,
   isNumericLiteral,
   isNoSubstitutionTemplateLiteral,
 } from 'typescript';
 import type * as ts from 'typescript';
-import { CLASS } from 'typescript-class-helpers/src';
-import type * as vscodeType from 'vscode';
 
 import {
   applicationConfigTemplate,

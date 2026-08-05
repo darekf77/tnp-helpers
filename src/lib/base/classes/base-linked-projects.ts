@@ -1,5 +1,6 @@
 //#region import
-import { load } from 'tnp-core/src';
+import { JsonValue, updateJsoncContent } from 'tnp-core/src';
+// import { JsonValue, updateJsoncContent, loadJsonC } from 'tnp-core/src';
 import { config } from 'tnp-core/src';
 import {
   _,
@@ -221,14 +222,21 @@ export class BaseLinkedProjects<
       return;
     }
 
-    const writer = load(orgContent);
-    writer.write(linkedPorjectsConfig);
+    // OLD
+    // const writer = loadJsonC(orgContent);
+    // writer.write(linkedPorjectsConfig);
 
-    const newContent = writer.toSource({
-      quote: 'double',
-      trailingComma: true,
-      quotaKey: true,
-    });
+    // const newContent = writer.toSource({
+    //   quote: 'double',
+    //   trailingComma: true,
+    //   quotaKey: true,
+    // });
+    // OLD END
+
+    const newContent = updateJsoncContent(
+      orgContent || '',
+      linkedPorjectsConfig as JsonValue,
+    );
 
     Helpers.writeJson(this.linkedProjectsConfigTempPath, linkedPorjectsConfig);
     Helpers.writeFile(this.linkedProjectsConfigPath, newContent);

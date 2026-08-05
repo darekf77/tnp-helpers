@@ -556,6 +556,30 @@ Please provide proper commit message for lastest changes in your project:
   }
   //#endregion
 
+  isInTemporaryGitOperation(): boolean {
+    return HelpersTaon.git.isInAnyTemporaryGitOperation(this.project.location);
+  }
+
+  isRebasing(): boolean {
+    return HelpersTaon.git.isRebasing(this.project.location);
+  }
+
+  isMerging(): boolean {
+    return HelpersTaon.git.isMerging(this.project.location);
+  }
+
+  isCherryPicking(): boolean {
+    return HelpersTaon.git.isCherryPicking(this.project.location);
+  }
+
+  isReverting(): boolean {
+    return HelpersTaon.git.isReverting(this.project.location);
+  }
+
+  isBisecting(): boolean {
+    return HelpersTaon.git.isBisecting(this.project.location);
+  }
+
   //#region methods & getters / pull current branch
   async pullCurrentBranch(options?: {
     askToRetry?: boolean;

@@ -1,118 +1,18 @@
 //#region imports
-import { ChildProcess, StdioOptions } from 'node:child_process';
-import { scrypt, randomBytes, timingSafeEqual } from 'node:crypto'; // @backend
-import { promisify } from 'node:util'; // @backend
-
-import * as ncp from 'copy-paste'; // @backend
-import * as semver from 'semver'; // @backend
-import * as sloc from 'sloc'; // @backend
+import { config } from 'tnp-core/src';
 import {
-  chalk,
-  chokidar,
-  config,
-  spawn,
-  TAGS,
-  UtilsFilesFoldersSync,
-} from 'tnp-core/src';
-import {
-  child_process,
   crossPlatformPath,
   fse,
   os,
-  path,
-  UtilsDotFile,
   UtilsOs,
   UtilsTerminal,
 } from 'tnp-core/src';
-import { _, CoreModels, Utils } from 'tnp-core/src';
+import { _, Utils } from 'tnp-core/src';
 import { Helpers } from 'tnp-core/src';
-import {
-  createPrinter,
-  createSourceFile,
-  isShorthandPropertyAssignment,
-  factory,
-  getLeadingCommentRanges,
-  isClassDeclaration,
-  isSourceFile,
-  NodeArray,
-  ScriptKind,
-  ScriptTarget,
-  SourceFile,
-  Statement,
-  transform,
-  TransformationContext,
-  visitEachChild,
-  Node,
-  isFunctionDeclaration,
-  isVariableStatement,
-  isIdentifier,
-  NodeFlags,
-  isEnumDeclaration,
-  isTypeAliasDeclaration,
-  isInterfaceDeclaration,
-  isModuleDeclaration,
-  isExportAssignment,
-  forEachChild,
-  Declaration,
-  getCombinedModifierFlags,
-  ModifierFlags,
-  SyntaxKind,
-  isVariableDeclaration,
-  isCallExpression,
-  isPropertyAccessExpression,
-  isObjectLiteralExpression,
-  isPropertyAssignment,
-  isStringLiteral,
-  canHaveDecorators,
-  getDecorators,
-  visitNode,
-  isExportDeclaration,
-  isImportDeclaration,
-  Expression,
-  isNamedImports,
-  isNamedExports,
-  NewLineKind,
-  TransformerFactory,
-  isDecorator,
-  isEmptyStatement,
-  isExpressionStatement,
-  isPropertyDeclaration,
-  isMethodDeclaration,
-  getTrailingCommentRanges,
-  isArrayLiteralExpression,
-  isExportSpecifier,
-  flattenDiagnosticMessageText,
-  DiagnosticCategory,
-  createProgram,
-  createCompilerHost,
-  isModuleBlock,
-  EmitHint,
-  getModifiers,
-  canHaveModifiers,
-  isImportEqualsDeclaration,
-  isGetAccessorDeclaration,
-  SymbolFlags,
-  ModuleKind,
-  isQualifiedName,
-  ScriptSnapshot,
-  getDefaultLibFilePath,
-  createLanguageService,
-  CodeFixAction,
-  ImportsNotUsedAsValues,
-  transpileModule,
-  isExternalModuleReference,
-} from 'typescript';
-import type * as ts from 'typescript';
-import { CLASS } from 'typescript-class-helpers/src';
 import type * as vscodeType from 'vscode';
 
 import { BaseProject } from './base/classes/base-project';
 import { HelpersTaon } from './helpers/helpers';
-import {
-  applicationConfigTemplate,
-  ngMergeConfigTemplate,
-  serverNgPartTemplates,
-} from './utils-helpers/application-config-template';
 //#endregion
 
 //#region utils vscode
@@ -1048,6 +948,7 @@ export namespace UtilsVSCode {
           },
         ],
       },
+      "json.validate.enable": false
     };
     //#endregion
 
