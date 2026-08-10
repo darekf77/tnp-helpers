@@ -670,12 +670,6 @@ export class BaseGlobalCommandLine<
     this._exit();
     //#endregion
   }
-
-  async dev() {
-    //#region @backendFunc
-    return await this.develop();
-    //#endregion
-  }
   //#endregion
 
   //#region commands / repulll

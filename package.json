@@ -1,6 +1,6 @@
 {
   "name": "tnp-helpers",
-  "version": "21.0.106",
+  "version": "21.0.99",
   "scripts": {
     "docs": "python3 -m mkdocs",
     "mkdocs": "python3 -m mkdocs",
@@ -308,6 +308,7 @@
     "json10": "~21.0.0",
     "json5": "~2.2.3",
     "json5-writer": "0.2.0",
+    "jsonc-parser": "~3.3.1",
     "jsonwebtoken": "~9.0.2",
     "jszip": "3.10.1",
     "karma-cli": "~1.0.1",

@@ -948,7 +948,7 @@ export namespace UtilsVSCode {
           },
         ],
       },
-      "json.validate.enable": false
+      // "json.validate.enable": false
     };
     //#endregion
 
