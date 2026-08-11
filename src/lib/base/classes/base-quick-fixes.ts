@@ -1,5 +1,5 @@
 //#region imports
-import { config } from 'tnp-core/src';
+import { config, UtilsFilesFoldersSync } from 'tnp-core/src';
 import { _, fse, path } from 'tnp-core/src';
 import { Helpers } from 'tnp-core/src';
 import { PackageJson } from 'type-fest';
@@ -24,31 +24,44 @@ export class BaseQuickFixes<
    *
    * @param filesRelativeAbsPaths\ Quick fix for typescript check
    */
-  excludeNodeModulesDtsFromTypescriptCheck(filesRelativeAbsPaths:string[]) {
-
+  excludeNodeModulesDtsFromTypescriptCheck(filesRelativeAbsPaths: string[]) {
     //#region @backendFunc
+    const processFile = (fileAbsPath: string) => {
+      Helpers.logInfo(`Processing .d.ts ${fileAbsPath}`)
+      const fileContent = Helpers.readFile(fileAbsPath) || '';
+      if (fileContent) {
+        if (!fileContent.startsWith(`// @ts-${'nocheck'}`)) {
+          const contentFixed = `// @ts-${'nocheck'}\n${fileContent}`;
+          if (fileContent !== contentFixed) {
+            Helpers.writeFile(fileAbsPath, contentFixed);
+          }
+        }
+      }
+    };
+
     for (const absPath of filesRelativeAbsPaths) {
-      if(!Helpers.exists(absPath)) {
+      if (!Helpers.exists(absPath)) {
         Helpers.warn(`File for quick fix not found: ${absPath}`);
         continue;
       }
-      const fileContent = Helpers.readFile(absPath) || '';
-      if(fileContent) {
-         if(!fileContent.startsWith(`// @ts-${'nocheck'}`)) {
-          const contentFixed = `// @ts-${'nocheck'}\n${fileContent}`;
-          if(fileContent !== contentFixed) {
-            Helpers.writeFile(absPath, contentFixed);
-          }
-         }
+      const files = absPath.endsWith('.d.ts')
+        ? [absPath]
+        : UtilsFilesFoldersSync.getFilesFrom(absPath, {
+            recursive: true,
+            followSymlinks: false,
+            // omitPatterns: UtilsFilesFoldersSync.IGNORE_FOLDERS_FILES_PATTERNS,
+          }).filter(f => f.endsWith('.d.ts'));
+
+      for (let index = 0; index < files.length; index++) {
+        const fileAbsPath = files[index];
+        processFile(fileAbsPath);
       }
     }
     //#endregion
-
   }
 
   //#region fix sqlite pacakge in node_modules
   fixSQLLiteModuleInNodeModules() {
-
     //#region @backendFunc
     const filePath = this.project.pathFor(
       `${config.folder.node_modules}/sql.js/dist/sql-wasm.js`,
@@ -61,13 +74,11 @@ export class BaseQuickFixes<
     const fixedContent = UtilsQuickFixes.replaceKnownFaultyCode(content);
     Helpers.writeFile(filePath, fixedContent);
     //#endregion
-
   }
   //#endregion
 
   //#region add missing empty libs
   public createDummyEmptyLibsReplacements(missingLibsNames: string[] = []) {
-
     //#region @backendFunc
     missingLibsNames.forEach(missingLibName => {
       const pathInProjectNodeModules = path.join(
@@ -108,8 +119,6 @@ export default _default;
       );
     });
     //#endregion
-
   }
   //#endregion
-
 }
