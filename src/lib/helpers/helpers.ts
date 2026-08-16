@@ -3604,11 +3604,14 @@ ${HelpersTaon.terminalLine()}\n`;
     //#endregion
   };
   export const setValueToJSONC = (
-    filepath: string,
+    filepath: string | string[],
     lodashGetPath: string,
     value: any,
   ): void => {
     //#region @backendFunc
+    if (_.isArray(filepath)) {
+      filepath = crossPlatformPath(filepath);
+    }
     if (!fse.existsSync(filepath)) {
       Helpers.warn(`Recreating unexised json file: ${filepath}`);
       Helpers.writeFile(filepath, '{}');
