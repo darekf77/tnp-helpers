@@ -1761,6 +1761,9 @@ ${cwd}
             force: {
               name: 'Try again with force push ?',
             },
+            rebasePullAndPush: {
+              name: 'Try abort git oper. + restet HEAD~10 + pull + normal push ?',
+            },
             pulAndPush: {
               name: 'Try pull and then push ?',
             },
@@ -1788,6 +1791,18 @@ ${cwd}
             }
           }
           if (whatToDo === 'pulAndPush') {
+            await HelpersTaon.git.pullCurrentBranch(cwd, {
+              askToRetry,
+              exitOnError: false,
+            });
+            continue;
+          }
+
+          if (whatToDo === 'rebasePullAndPush') {
+            abortAllGitTemporaryOperations(cwd);
+            resetHard(cwd, {
+              HEAD: 10,
+            });
             await HelpersTaon.git.pullCurrentBranch(cwd, {
               askToRetry,
               exitOnError: false,
@@ -3667,7 +3682,7 @@ ${HelpersTaon.terminalLine()}\n`;
   };
   export const getTempFolder = () => {
     //#region @backendFunc
-     return UtilsOs.getTempFolder();
+    return UtilsOs.getTempFolder();
     //#endregion
   };
   export const isPlainFileOrFolder = (filePath: string): boolean => {
