@@ -16,7 +16,7 @@ export const TaonPortsContextTemplate = Taon.createContextTemplate(() => ({
   entities: { Port },
   migrations: { ...MIGRATIONS_CLASSES_FOR_TaonPortsContext },
   skipWritingServerRoutes: true,
-  ...getBaseCliWorkerDatabaseConfig('ports-worker', 'DROP_DB+MIGRATIONS'),
+  ...getBaseCliWorkerDatabaseConfig('ports-worker', 'DROP_DB__RUN_MIGRATIONS'),
   logs: {
     migrations: true,
   },

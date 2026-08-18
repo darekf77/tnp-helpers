@@ -1,18 +1,23 @@
 import { Models } from 'taon/src';
-import { crossPlatformPath, dotTaonFolder, Helpers, path, UtilsOs } from 'tnp-core/src';
+import {
+  crossPlatformPath,
+  dotTaonFolder,
+  Helpers,
+  path,
+  UtilsOs,
+} from 'tnp-core/src';
 
 /**
  * Get taon service database config
  * (database is stored in user's home directory)
  * @param serviceNameUniqueInSystem - unique name of the service in the system
- * @param recreateMode - mode of database recreation, default is 'DROP_DB+MIGRATIONS'
+ * @param recreateMode - mode of database recreation, default is 'DROP_DB__RUN_MIGRATIONS'
  * @returns DatabaseConfig object with location and recreateMode
  */
 export const getBaseCliWorkerDatabaseConfig = (
   serviceNameUniqueInSystem: string,
-  recreateMode: Models.DBRecreateMode = 'DROP_DB+MIGRATIONS',
+  recreateMode: Models.DBRecreateModeType = 'DROP_DB__RUN_MIGRATIONS',
 ) => {
-
   //#region @backendFunc
   const serviceLocation = crossPlatformPath([
     UtilsOs.getRealHomeDir(),
@@ -29,5 +34,4 @@ export const getBaseCliWorkerDatabaseConfig = (
     },
   };
   //#endregion
-
 };
