@@ -1,7 +1,13 @@
 //#region imports
 import type { ChildProcess, StdioOptions } from 'child_process';
 
-import { chalk, chokidar, config, UtilsFilesFoldersSync } from 'tnp-core/src';
+import {
+  chalk,
+  chokidar,
+  config,
+  UtilsFilesFoldersSync,
+  UtilsMdDocs,
+} from 'tnp-core/src';
 import {
   child_process,
   crossPlatformPath,
@@ -375,73 +381,45 @@ export namespace UtilsHttp {
 //#endregion
 
 //#region utils md
+/**
+ * @deprecated use UtilsMdDocs
+ */
 export namespace UtilsMd {
   /**
+   * @deprecated use UtilsMdDocs.getAssets
    * extract assets pathes from .md file
    */
   export const getAssets = (mdfileContent: string): string[] => {
     //#region @backendFunc
-    // Regular expressions for detecting assets
-    const markdownImgRegex = /!\[.*?\]\((.*?)\)/g; // Markdown image syntax ![alt](src)
-    const htmlImgRegex = /<img.*?src=["'](.*?)["']/g; // HTML image syntax <img src="path">
-
-    const assets: string[] = [];
-
-    let match: RegExpExecArray | null;
-
-    // Extract Markdown image links
-    while ((match = markdownImgRegex.exec(mdfileContent)) !== null) {
-      assets.push(match[1]); // Get the image path
-    }
-
-    // Extract HTML image links
-    while ((match = htmlImgRegex.exec(mdfileContent)) !== null) {
-      assets.push(match[1]); // Get the image path
-    }
-
-    return assets.map(r => r.replace(new RegExp(/^\.\//), ''));
+    return UtilsMdDocs.getAssets(mdfileContent);
     //#endregion
   };
 
+  /**
+   *  @deprecated use UtilsMdDocs.getAssetsFromFile
+   */
   export const getAssetsFromFile = (absPathToFile: string): string[] => {
     //#region @backendFunc
-    if (!Helpers.exists(absPathToFile)) {
-      return [];
-    }
-    if (path.extname('absPathToFile').toLowerCase() !== '.md') {
-      return [];
-    }
-    return getAssets(Helpers.readFile(absPathToFile));
+     return UtilsMdDocs.getAssetsFromFile(absPathToFile);
     //#endregion
   };
 
+  /**
+   *  @deprecated use UtilsMdDocs.getLinksToOtherMdFiles
+   */
   /**
    * Extract links to other Markdown files from a given Markdown content.
    * @param mdfileContent
    */
   export const getLinksToOtherMdFiles = (mdfileContent: string): string[] => {
     //#region @backendFunc
-    // Regex pattern to match Markdown and HTML links to .md files
-    const mdLinkPattern = /\[.*?\]\(([^)]+\.md)\)/g; // Matches [text](link.md)
-    // const htmlLinkPattern = /<a\s+href=["']([^"']+\.md)["'].*?>/g; // Matches <a href="link.md">
-
-    const links = new Set<string>(); // Use a Set to avoid duplicate links
-
-    // Find all Markdown-style links
-    let match;
-    while ((match = mdLinkPattern.exec(mdfileContent)) !== null) {
-      links.add(match[1]);
-    }
-
-    // Find all HTML-style links
-    // while ((match = htmlLinkPattern.exec(mdfileContent)) !== null) {
-    //   links.add(match[1]);
-    // }
-
-    return Array.from(links); // Convert Set to Array and return
+    return UtilsMdDocs.getLinksToOtherMdFiles(mdfileContent);
     //#endregion
   };
 
+  /**
+   *  @deprecated
+   */
   export const moveAssetsPathsToLevelFromFile = (
     absFilePath: string,
     level = 1,
@@ -465,6 +443,7 @@ export namespace UtilsMd {
   /**
    * Move asset paths to a higher directory level by adding "../" before each path.
    *
+   *  @deprecated
    * @param mdfileContent - The content of the .md file.
    * @param level - The number of levels to go up (default is 1).
    * @returns The modified content with updated asset paths.

@@ -1,6 +1,7 @@
 //#region imports
 import {
   config,
+  Replacement,
   spawn,
   UtilsFilesFoldersSync,
   UtilsI18n,
@@ -1519,7 +1520,7 @@ export namespace UtilsTypescript {
   //#region remove tagged imports/exports
   export function removeTaggedImportExport(
     tsFileContent: string,
-    tags: string[],
+    tags: Replacement[],
     replaceWithEmptyLine: boolean = false,
     // debug = false,
   ): string {
