@@ -1319,7 +1319,7 @@ Would you like to update current project configuration?`)
 
   //#region getters & methods / to string
   toString = () => {
-    return `${this.name}=>${this.location}`;
+    return `${this.nameForNpmPackage}=>${this.location}`;
   };
   //#endregion
 
