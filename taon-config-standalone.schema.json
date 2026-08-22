@@ -5405,6 +5405,9 @@
           },
           "description": "what projects should be included for genrated docs"
         },
+        "gitignoreGenDocsFiles": {
+          "type": "boolean"
+        },
         "storeGeneratedAssetsInRepository": {
           "type": "boolean",
           "description": "(STANDALONE) By default generated assets from logo.png are not stored in repository",
