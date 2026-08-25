@@ -406,9 +406,9 @@ export class BaseGlobalCommandLine<
       }
     }
 
-    try {
-      await project.packageJson.bumpPatchVersion();
-    } catch (error) {}
+    // try {
+    //   await project.packageJson.bumpPatchVersion();
+    // } catch (error) {}
     try {
       project.git.addAndCommit(
         `${options.commitType}: ${
