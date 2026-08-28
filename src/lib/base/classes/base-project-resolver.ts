@@ -154,7 +154,7 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
 
     let type = this.typeFrom(location);
     if (type) {
-      let resultProject = new this.classFn() as BaseProject;
+      let resultProject = new this.classFn(location) as BaseProject;
 
       const pj = Helpers.readJson(
         crossPlatformPath([location, config.file.package_json]),
@@ -222,6 +222,7 @@ export class BaseProjectResolver<PROJECT extends Partial<BaseProject> = any> {
           path.dirname(absoluteLocation as string),
         );
       }
+      // console.log({ absoluteLocation, options });
       project = this.From(absoluteLocation, options) as any;
       // console.log(`is project  ${!!project} ${absoluteLocation}`);
       if (_.isString(type)) {

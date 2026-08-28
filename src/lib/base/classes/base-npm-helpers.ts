@@ -44,6 +44,8 @@ export class BaseNpmHelpers<
 
   //#region constructor
   constructor(project: PROJECT) {
+    // console.log('project', !!project);
+    // console.log('project.location', !!project.location);
     super(project);
     this.project = project;
     if (this._packageJsonType === this._packageJsonTypeOriginal) {

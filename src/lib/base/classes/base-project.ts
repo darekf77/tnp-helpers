@@ -131,7 +131,8 @@ export abstract class BaseProject<
     location: string,
   ) {
     this.location = location;
-
+    // console.log('location', location);
+    // console.log('this.location', this.location);
     //#region @backend
     // @ts-ignore
     this.libraryBuild = new (require('./base-library-build')
@@ -730,7 +731,7 @@ export abstract class BaseProject<
     options?: Partial<ProcessStartOptions> & { showCommand?: boolean },
   ): Promise<any> {
     //#region @backendFunc
-    options = options || {} as any;
+    options = options || ({} as any);
     if (_.isUndefined(options.showCommand)) {
       options.showCommand = true;
     }
