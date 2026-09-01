@@ -125,7 +125,7 @@ taon-config-container.schema.json
 
   async start(throwInstedExit = false) {
     //#region @backend
-    const files = this.project.git.stagedFiles.filter(f => Helpers.exists(f));
+    const files = this.project.git.stagedFiles.filter(f => Helpers.exists(this.project.pathFor(f)));
 
     const allRelatives = files
       .filter(f => !f.endsWith('.pot')) // TODO QUICK_FIX

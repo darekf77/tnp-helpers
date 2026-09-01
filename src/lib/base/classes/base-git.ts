@@ -320,7 +320,7 @@ export class BaseGit<
     const getUncommitedFiles = (): string[] => {
       return Utils.uniqArray([
         ...this.uncommitedFiles,
-        ...this.stagedFilesRelativePaths,
+        ...this.stagedFiles,
       ]);
     };
 
@@ -852,12 +852,6 @@ Please provide proper commit message for lastest changes in your project:
   get stagedFiles(): string[] {
     //#region @backendFunc
     return HelpersTaon.git.stagedFiles(this.project.location);
-    //#endregion
-  }
-
-  get stagedFilesRelativePaths(): string[] {
-    //#region @backendFunc
-    return HelpersTaon.git.stagedFiles(this.project.location, true);
     //#endregion
   }
 

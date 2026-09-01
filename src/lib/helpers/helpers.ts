@@ -2307,7 +2307,7 @@ ${cwd}
               f = f?.trim();
               return !!f;
             });
-        return list;
+        return (list || []).map(c => crossPlatformPath(c));
       } catch (error) {
         return [];
       }
@@ -2348,18 +2348,12 @@ ${cwd}
         }
       });
     };
-    export const stagedFiles = (
-      cwd: string,
-      outputRelatieve = false,
-    ): string[] => {
+    export const stagedFiles = (cwd: string): string[] => {
       cwd = crossPlatformPath(cwd).replace(/\/$/, '');
       const command = `git diff --name-only --cached`.trim();
       const result = Helpers.commandOutputAsString(command, cwd, {}) || '';
       return (result ? result.split('\n') : []).map(relative => {
-        if (outputRelatieve) {
-          return crossPlatformPath(relative);
-        }
-        return crossPlatformPath([cwd, relative]);
+        return crossPlatformPath(relative);
       });
     };
     export const getChangedFiles = async (
