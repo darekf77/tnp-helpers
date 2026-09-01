@@ -1804,7 +1804,7 @@ ${lastCommitMessage}
   }
   //#endregion
 
-  //#region commands / lint
+  //#region commands / lint staged
   /**
    * TODO move somewhere
    */
@@ -2608,7 +2608,8 @@ ${lastCommitMessage}
   }
   //#endregion
 
-  isSymlinkFileExitedOrUnexisted() {
+  //#region commands  / is symlink file existed or unexisted
+  isSymlinkFileExitedOrUnexisted(): void {
     //#region @backendFunc
     const firstArg = crossPlatformPath(this.firstArg);
     const pathToFileOrFolder = path.isAbsolute(firstArg)
@@ -2621,6 +2622,7 @@ ${lastCommitMessage}
     this._exit();
     //#endregion
   }
+  //#endregion
 
   //#region commands / remove symlinks
   removeSymlinksDryRun() {
@@ -3618,11 +3620,54 @@ ${lastCommitMessage}
 
   //#region commands / temp folder path
   testExpFolderUtil() {
-    console.log(UtilsOs.getTempFolder({
-      deleteAfterDays: 1,
-      prefix: 'test-expiry'
-    }));
+    console.log(
+      UtilsOs.getTempFolder({
+        deleteAfterDays: 1,
+        prefix: 'test-expiry',
+      }),
+    );
     this._exit(0);
+  }
+  //#endregion
+
+  //#region commands / unstaged
+  async unstaged() {
+    //#region @backendFunc
+    const showInfo = (proj: BaseProject) => {
+      if (!proj.git.isGitRoot) {
+        return;
+      }
+
+      const uncommitedFiles = Utils.uniqArray([
+        ...proj.git.uncommitedFiles,
+        ...proj.git.stagedFiles,
+      ]);
+
+      if (uncommitedFiles.length > 0) {
+        console.log(
+          chalk.bold(
+            `${proj.name}${proj.name !== proj.nameForNpmPackage ? `(${proj.nameForNpmPackage})` : ''} (${uncommitedFiles.length})`,
+          ),
+        );
+        for (const fileRelative of uncommitedFiles) {
+          console.log(chalk.gray.underline(`${proj.basename}/${fileRelative}`));
+        }
+      } else {
+        console.log(
+          chalk.blue(
+            `${proj.name}${proj.name !== proj.nameForNpmPackage ? `(${proj.nameForNpmPackage})` : ''} < nothing >`,
+          ),
+        );
+      }
+
+      for (const child of proj.children) {
+        showInfo(child);
+      }
+    };
+
+    showInfo(this.project);
+    this._exit();
+    //#endregion
   }
   //#endregion
 
