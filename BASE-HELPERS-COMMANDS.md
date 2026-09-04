@@ -84,17 +84,21 @@
 
 `taon pull`  => pull current branch or current workspace projects one after another
 
+`taon pull:all`  => pull current repo branch and first level of children projects
+
+`taon pull:deep`  => pull current repo branch and all projects deep
+
 `taon pul` => `taon pushall`
-
-`taon repull`  => `git reset hard --HEAD~10` + `taon pull`
-
-`taon pushall` => push code to all remotes(origins) defined in .git/config
 
 `taon pall` => `taon pushall`
 
-`taon push`  => (optionally git add +)  commit with message based on branch name + push current branch
+`taon push`  =>  push current project repo with temp message
 
-`taon pp` =>  push and pull
+`taon push`  =>  push current project (+ first level children) repo with temp message
+
+`taon push:deep`  => push current project (+ deep children repos) repo with temp message
+
+`taon pushallorigins` => push code to all remotes(origins) defined in .git/config
 
 ### Smart Conventional Commits Branching
 

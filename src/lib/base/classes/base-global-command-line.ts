@@ -45,6 +45,7 @@ import {
   UtilsZip,
   UtilsTypescript,
   SshOrHttpOrigin,
+  PullProcessOptions,
 } from '../../index';
 import { UtilsHttp, UtilsLineCount } from '../../utils';
 import { TypeOfCommit, CommitData } from '../commit-data';
@@ -685,42 +686,38 @@ export class BaseGlobalCommandLine<
       return;
     }
     await this.project.git.resetHard({ HEAD: 10 });
-    await this.pullDeep();
+    await this.pullDeep({
+      updateType: 'only-this',
+    });
     //#endregion
   }
   //#endregion
 
   //#region commands / pull
   async pul() {
-    Helpers.warn(`
-
-      Please use pul:deep instead pull
-
-  `);
-    await this.pullDeep();
+    await this.pull();
   }
 
   async pull() {
-    Helpers.warn(`
-
-      Please use pull:deep instead pull
-
-  `);
-    await this.pullDeep();
+    await this.pullDeep({
+      updateType: 'only-this',
+    });
   }
 
   async pulDeep() {
     await this.pullDeep();
   }
 
-  async pullDeep() {
+  async pullDeep(options?: PullProcessOptions) {
     //#region @backendFunc
+    options = options || {};
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
     GlobalTaskManager.start(PULL_ACTION_NAME);
     await this.project.git.pullProcess({
       setOrigin: this.params['setOrigin'],
+      ...options,
     });
     GlobalTaskManager.stop(PULL_ACTION_NAME, () => {
       this._exit();
@@ -738,6 +735,7 @@ export class BaseGlobalCommandLine<
     }
     await this.project.git.pullProcess({
       setOrigin: this.params['setOrigin'],
+      updateType: 'first-level',
     });
     this._exit();
     //#endregion
@@ -1047,7 +1045,10 @@ ${
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
-    await this.pushAll(true);
+    await this.pushDeep({
+      updateType: 'first-level',
+      force: true,
+    });
     //#endregion
   }
 
@@ -1065,14 +1066,16 @@ ${
 
   async pAll(): Promise<void> {
     //#region @backendFunc
-    await this.pushAll();
+    await this.pushDeep({
+      updateType: 'first-level',
+    });
     //#endregion
   }
 
   /**
    * push to all origins
    */
-  async pushAll(force = false): Promise<void> {
+  async pushAllOrigins(force = false): Promise<void> {
     //#region @backendFunc
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
@@ -1089,7 +1092,12 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
     for (let index = 0; index < remotes.length; index++) {
       const { origin, url } = remotes[index];
       Helpers.taskStarted(`Pushing to ${chalk.bold(origin)} (${url})...`);
-      await this.pushDeep({ force, origin, noExit: true });
+      await this.pushDeep({
+        force,
+        origin,
+        noExit: true,
+        updateType: 'first-level',
+      });
       Helpers.taskDone(`Pushed to ${origin}`);
     }
     this._exit();
@@ -1100,13 +1108,21 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
   //#region commands / push force
   async forcePush(): Promise<void> {
     //#region @backendFunc
-    await this.pushDeep({ force: true, typeofCommit: 'feature' });
+    await this.pushDeep({
+      force: true,
+      typeofCommit: 'feature',
+      updateType: 'only-this',
+    });
     //#endregion
   }
 
   async pushForce(): Promise<void> {
     //#region @backendFunc
-    await this.pushDeep({ force: true, typeofCommit: 'feature' });
+    await this.pushDeep({
+      force: true,
+      typeofCommit: 'feature',
+      updateType: 'only-this',
+    });
     //#endregion
   }
   //#endregion
@@ -1205,7 +1221,7 @@ ${remotes.map((r, i) => `${i + 1}. ${r.origin} ${r.url}`).join('\n')}
 
   async quickPush(): Promise<void> {
     //#region @backendFunc
-    await this.pushDeep({ skipLint: true });
+    await this.pushDeep({ skipLint: true, updateType: 'only-this' });
     //#endregion
   }
 
@@ -1298,12 +1314,9 @@ ${lastCommitMessage}
   }
 
   async push(options: PushProcessOptions = {}): Promise<void> {
-    Helpers.warn(`
-
-      Please use push:deep instead push
-
-    `);
-    await this.pushDeep(options);
+    await this.pushDeep({
+      updateType: 'only-this',
+    });
   }
   //#endregion
 
@@ -1417,6 +1430,7 @@ ${lastCommitMessage}
     await this.pushDeep({
       typeofCommit: 'release',
       commitMessageRequired: true,
+      updateType: 'only-this',
       overrideCommitMessage:
         `${_.first(this.project.releaseProcess.getReleaseWords())}: ` +
         `version ${this.project.packageJson.version}`,
@@ -1465,6 +1479,7 @@ ${lastCommitMessage}
     await this.meltUpdateCommits();
     await this.pushDeep({
       mergeUpdateCommits: true,
+      updateType: 'only-this',
       force,
     });
     //#endregion
