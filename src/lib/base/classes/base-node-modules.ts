@@ -183,10 +183,12 @@ export class BaseNodeModules<
   //#endregion
 
   //#region reinstall node modules
-  async reinstall(options?: Omit<CoreModels.NpmInstallOptions, 'pkg'>) {
+  async reinstall(
+    reinstallOptions?: Omit<CoreModels.NpmInstallOptions, 'pkg'>,
+  ) {
     //#region @backendFunc
-
-    options = _.cloneDeep(options || {});
+    // console.log({ reinstallOptions });
+    const options = _.cloneDeep(reinstallOptions || {});
     if (_.isUndefined(options.useYarn)) {
       options.useYarn = this.npmHelpers.preferYarnOverNpm();
     }
@@ -222,6 +224,9 @@ with ${options.useYarn ? 'yarn' : 'npm'}
           again: {
             name: 'Try again normal installation',
           },
+          againUnautorized: {
+            name: 'Try again normal installation with NODE_TLS_REJECT_UNAUTHORIZED',
+          },
           againForce: {
             name: 'Try again force installation',
           },
@@ -235,6 +240,10 @@ with ${options.useYarn ? 'yarn' : 'npm'}
         const res = await HelpersTaon.consoleGui.select<
           keyof typeof nodeModulesInstallFailOptions
         >('What to do?', nodeModulesInstallFailOptions);
+        if (res === 'againUnautorized') {
+          options.NODE_TLS_REJECT_UNAUTHORIZED = true;
+          continue;
+        }
         if (res === 'again') {
           options.force = false;
           continue;
@@ -380,6 +389,7 @@ with ${options.useYarn ? 'yarn' : 'npm'}
       force,
       removeYarnOrPackageJsonLock,
       generateYarnOrPackageJsonLock,
+      NODE_TLS_REJECT_UNAUTHORIZED,
     } = options || {};
 
     force = true; // TODO QUICK_FIX @UNCOMMENT
@@ -387,18 +397,27 @@ with ${options.useYarn ? 'yarn' : 'npm'}
     let command = '';
     const commonOptions = `--ignore-engines`;
 
+    const envPrefix =
+      NODE_TLS_REJECT_UNAUTHORIZED === true
+        ? `npx --yes cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 `
+        : '';
+
     if (useYarn) {
       //#region yarn
       const argsForFasterInstall = `${force ? '--force' : ''} ${commonOptions} `;
+
       if (removeYarnOrPackageJsonLock) {
         const yarnLock = crossPlatformPath([cwd, config.file.yarn_lock]);
+
         try {
           fse.unlinkSync(yarnLock);
         } catch (error) {}
+
         fse.writeFileSync(yarnLock, ''); // simulate touch
       }
 
       command =
+        `${envPrefix}` +
         `yarn ${pkg ? (pkg?.installType === 'remove' ? 'remove' : 'add') : 'install'} ${pkg ? pkg.name : ''} ` +
         ` ${generateYarnOrPackageJsonLock ? '' : '--no-lockfile'} ` +
         ` ${argsForFasterInstall} ` +
@@ -415,13 +434,16 @@ with ${options.useYarn ? 'yarn' : 'npm'}
           cwd,
           config.file.package_lock_json,
         ]);
+
         try {
           fse.unlinkSync(packageLock);
         } catch (error) {}
+
         fse.writeFileSync(packageLock, ''); // simulate touch
       }
 
       command =
+        `${envPrefix}` +
         `npx --node-options=--max-old-space-size=8000 npm ` +
         `${pkg?.installType === 'remove' ? 'uninstall' : 'install'} ${pkg ? pkg.name : ''} ` +
         ` ${generateYarnOrPackageJsonLock ? '' : '--no-package-lock'} ` +
@@ -429,11 +451,13 @@ with ${options.useYarn ? 'yarn' : 'npm'}
         ` ${argsForFasterInstall} `;
       //#endregion
     }
+
     Helpers.info(`Command for npm install:
 
       ${command}
 
       `);
+
     return command;
     //#endregion
   }
