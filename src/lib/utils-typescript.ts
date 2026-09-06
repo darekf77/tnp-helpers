@@ -6,12 +6,7 @@ import {
   UtilsFilesFoldersSync,
   UtilsI18n,
 } from 'tnp-core/src';
-import {
-  child_process,
-  crossPlatformPath,
-  fse,
-  path,
-} from 'tnp-core/src';
+import { child_process, crossPlatformPath, fse, path } from 'tnp-core/src';
 import { _, Utils } from 'tnp-core/src';
 import { Helpers } from 'tnp-core/src';
 import {
@@ -1136,7 +1131,10 @@ export namespace UtilsTypescript {
 
     readonly parenthesisType: 'single' | 'double' | 'tics';
 
-    readonly importElements: string[] = [];
+    public importElements: string[] = [];
+
+    public markForDeletion = false;
+
     //#endregion
 
     //#region constructor
