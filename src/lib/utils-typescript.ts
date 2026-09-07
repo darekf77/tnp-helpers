@@ -1133,7 +1133,9 @@ export namespace UtilsTypescript {
 
     public importElements: string[] = [];
 
-    public markForDeletion = false;
+    public markForDeletion: boolean = false;
+
+    public markForDeletionImportElems: string[] = [];
 
     //#endregion
 
