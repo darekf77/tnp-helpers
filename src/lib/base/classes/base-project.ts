@@ -9,21 +9,17 @@ import { _ } from 'tnp-core/src';
 import { Utils } from 'tnp-core/src';
 import { CommandOutputOptions, ProcessStartOptions } from 'tnp-core/src';
 
-import {
-  BaseNodeModules,
-  BasePackageJson,
-  CoreProject,
-  HelpersTaon,
-  LinkedProject,
-  UtilsTaonWorker,
-  UtilsTypescript,
-  UtilsVSCode,
-} from '../../index';
+import { BaseNodeModules } from '../../base/classes/base-node-modules';
+import { BasePackageJson } from '../../base/classes/base-package-json';
+import { CoreProject } from '../../base/core-project';
+import { LinkedProject } from '../../base/linked-project';
+import { HelpersTaon, UtilsTaonWorker, UtilsVSCode } from '../../index';
 import {
   BaseProjectType,
   CommandActionType,
   PushProcessOptions,
 } from '../../models';
+import { UtilsTypescript } from '../../utils-typescript'; // @esmRemove
 
 import { BaseDocker } from './base-docker';
 import { BaseFileFoldersOperations } from './base-file-folders-operations';
@@ -605,16 +601,19 @@ export abstract class BaseProject<
   //#region methods & getters / format file(s) with prettier
   formatFile(specificRelativePath: string | string[]) {
     //#region @backendFunc
+    //#region @esmRemove
     const absPathToFile = this.pathFor(specificRelativePath);
     UtilsTypescript.formatFile(absPathToFile);
-
+    //#endregion
     //#endregion
   }
 
   formatAllFiles() {
     //#region @backendFunc
-    Helpers.info(`Formatting all files in ${this.genericName}`);
+    //#region @esmRemove
+    Helpers.info(`Formatting all files in with prettier ${this.genericName}`);
     UtilsTypescript.formatAllFilesInsideFolder(this.location);
+    //#endregion
     //#endregion
   }
   //#endregion

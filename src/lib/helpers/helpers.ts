@@ -31,7 +31,7 @@ import { CLASS } from 'typescript-class-helpers/src';
 
 import { BaseProject } from '../base/classes/base-project';
 import { UtilsQuickFixes } from '../utils';
-import { UtilsTypescript } from '../utils-typescript';
+import { UtilsTypescript } from '../utils-typescript'; // @esmRemove
 import { UtilsVSCode } from '../utils-vscode';
 export { Helpers } from 'tnp-core/src';
 //#endregion
@@ -4218,6 +4218,7 @@ ${HelpersTaon.terminalLine()}\n`;
   };
 
   /**
+   * @deprecated DONT USE THIS
    * Strips TypeScript types and emits plain JS files.
    * - No type-checking
    * - No bundling
@@ -4229,10 +4230,12 @@ ${HelpersTaon.terminalLine()}\n`;
     outFolderWithIndexJS: string,
   ): Promise<void> => {
     //#region @backendFunc
-    UtilsTypescript.stripTsTypesIntoJs(
+    //#region @esmRemove
+    await UtilsTypescript.stripTsTypesIntoJs(
       entrypointFolderAbsPathWithIndexTs,
       outFolderWithIndexJS,
     );
+    //#endregion
     return;
     // ESBULD does "extra" things to js output
     // entrypointFolderAbsPathWithIndexTs = crossPlatformPath(
@@ -4320,7 +4323,7 @@ ${HelpersTaon.terminalLine()}\n`;
       target = 'node20';
     }
 
-    Helpers.info(`Bundling (strategy = ${strategy})
+    Helpers.info(`Bundling to single file (strategy = ${strategy})
        ${pathToJsFile}
        to
         ${outputFilePath}

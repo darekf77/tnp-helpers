@@ -12,13 +12,13 @@ import {
 } from 'tnp-core/src';
 import { Helpers } from 'tnp-core/src';
 
+import { LinkedProject } from '../../base/linked-project';
 import {
   HelpersTaon,
   LinkedPorjectsConfig,
-  LinkedProject,
   SshOrHttpOrigin,
-  UtilsTypescript,
 } from '../../index';
+import { UtilsTypescript } from '../../utils-typescript';
 
 import { BaseFeatureForProject } from './base-feature-for-project';
 import type { BaseProject } from './base-project';

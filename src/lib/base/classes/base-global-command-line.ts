@@ -38,16 +38,15 @@ import {
   CommandActionType,
   BaseCLiWorkerStartMode,
   HelpersTaon,
-  LinkedProject,
   PushProcessOptions,
   UtilsJava,
   UtilsVSCode,
   UtilsZip,
-  UtilsTypescript,
   SshOrHttpOrigin,
   PullProcessOptions,
 } from '../../index';
 import { UtilsHttp, UtilsLineCount } from '../../utils';
+import { UtilsTypescript } from '../../utils-typescript';
 import { TypeOfCommit, CommitData } from '../commit-data';
 import { PULL_ACTION_NAME, PUSH_ACTION_NAME } from '../constants';
 import { GhTempCode } from '../gh-temp-code';

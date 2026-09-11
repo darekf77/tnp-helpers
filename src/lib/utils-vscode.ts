@@ -87,11 +87,14 @@ export namespace UtilsVSCode {
 
   export const vscodeImport = () => {
     //#region @backendFunc
+    //#region @esmRemove
     if (!UtilsOs.isRunningInVscodeExtension()) {
       return {} as typeof vscodeType;
     }
     const vscode = require('vsc' + 'ode');
     return vscode as typeof vscodeType;
+    //#endregion
+    return void 0 as any;
     //#endregion
   };
 

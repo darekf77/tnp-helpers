@@ -80,7 +80,7 @@ import {
   isExternalModuleReference,
   isNumericLiteral,
   isNoSubstitutionTemplateLiteral,
-} from 'typescript';
+} from 'typescript'; // @esmRemove
 import type * as ts from 'typescript';
 
 import {
@@ -96,6 +96,7 @@ export namespace UtilsTypescript {
     tsFileContent: string,
   ): string => {
     //#region @backendFunc
+    //#region @esmRemove
     if (!tsFileContent) {
       return tsFileContent;
     }
@@ -114,6 +115,8 @@ export namespace UtilsTypescript {
     const result = printer.printFile(sourceFile);
     return result;
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
   //#endregion
 
@@ -124,6 +127,7 @@ export namespace UtilsTypescript {
     fileName = 'file.ts',
   ): UtilsI18n.GettextExtracted[] {
     //#region @backendFunc
+    //#region @esmRemove
     const source = createSourceFile(
       fileName,
       sourceText,
@@ -222,6 +226,8 @@ export namespace UtilsTypescript {
 
     return messages;
     //#endregion
+    return void 0 as any;
+    //#endregion
   }
   //#endregion
 
@@ -238,6 +244,7 @@ export namespace UtilsTypescript {
     regionName: string,
   ): string => {
     //#region @backendFunc
+    //#region @esmRemove
     // Create a source file using TypeScript's compiler API
     const sourceFile = createSourceFile(
       'temp.ts',
@@ -250,7 +257,7 @@ export namespace UtilsTypescript {
     // Prepare a printer to convert the modified AST back to code
     const printer = createPrinter();
 
-    // Traverse the AST and remove specified //#region blocks
+    // Traverse the AST and remove specified //#reg ion blocks
     const transformer = <T extends Node>(context: TransformationContext) => {
       const visit = (node: T): T | undefined => {
         // @ts-ignore
@@ -280,6 +287,8 @@ export namespace UtilsTypescript {
 
     return modifiedCode;
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
 
   /**
@@ -290,10 +299,11 @@ export namespace UtilsTypescript {
    * @returns Modified list of statements without the specified regions.
    */
   const removeRegions = (
-    statements: NodeArray<Statement>,
+    statements: ts.NodeArray<ts.Statement>,
     regionName: string,
-  ): Statement[] => {
+  ): ts.Statement[] => {
     //#region @backendFunc
+    //#region @esmRemove
     const result: Statement[] = [];
     const stack: { insideTargetRegion: boolean; level: number }[] = [];
     let currentLevel = 0;
@@ -307,7 +317,7 @@ export namespace UtilsTypescript {
         const comment = commentText.slice(range.pos, range.end).trim();
 
         // Detect start of a region
-        const regionMatch = comment.match(/^\/\/#region (.*)/);
+        const regionMatch = comment.match(new RegExp('^//#reg' + 'ion (.*)'));
         if (regionMatch) {
           currentLevel++;
           const name = regionMatch[1].trim();
@@ -330,7 +340,7 @@ export namespace UtilsTypescript {
         }
 
         // Detect end of a region
-        if (comment.startsWith('//#endregion')) {
+        if (comment.startsWith('//#end' + 'reg' + 'ion')) {
           if (
             stack.length > 0 &&
             stack[stack.length - 1].level === currentLevel
@@ -354,6 +364,8 @@ export namespace UtilsTypescript {
 
     return result;
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
   //#endregion
 
@@ -362,10 +374,13 @@ export namespace UtilsTypescript {
   //#region helper function to check if a node is exported
   const isExported = (node: Node): boolean => {
     //#region @backendFunc
+    //#region @esmRemove
     return (
       (getCombinedModifierFlags(node as Declaration) & ModifierFlags.Export) !==
         0 || node.parent?.kind === SyntaxKind.SourceFile // For top-level exports
     );
+    //#endregion
+    return void 0 as any;
     //#endregion
   };
   //#endregion
@@ -393,11 +408,14 @@ export namespace UtilsTypescript {
    */
   export const exportsFromFile = (filePath: string): ExportInfo[] => {
     //#region @backendFunc
+    //#region @esmRemove
     if (!filePath.endsWith('.ts')) {
       return [];
     }
     const file = Helpers.readFile(filePath);
     return exportsFromContent(file);
+    //#endregion
+    return void 0 as any;
     //#endregion
   };
 
@@ -406,6 +424,7 @@ export namespace UtilsTypescript {
    */
   export const exportsFromContent = (fileContent: string): ExportInfo[] => {
     //#region @backendFunc
+    //#region @esmRemove
     // Read the content of the file
     const sourceCode = fileContent;
 
@@ -479,6 +498,8 @@ export namespace UtilsTypescript {
 
     return exports;
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
   //#endregion
 
@@ -499,6 +520,7 @@ export namespace UtilsTypescript {
     fileContent: string,
   ): RedefinedExportInfo[] => {
     //#region @backendFunc
+    //#region @esmRemove
     const sourceFile = createSourceFile(
       'temp.ts',
       fileContent,
@@ -555,6 +577,8 @@ export namespace UtilsTypescript {
 
     return exports;
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
 
   /**
@@ -564,11 +588,14 @@ export namespace UtilsTypescript {
     filePath: string,
   ): RedefinedExportInfo[] => {
     //#region @backendFunc
+    //#region @esmRemove
     if (!filePath.endsWith('.ts')) {
       return [];
     }
     const file = Helpers.readFile(filePath);
     return exportsRedefinedFromContent(file);
+    //#endregion
+    return void 0 as any;
     //#endregion
   };
 
@@ -580,6 +607,7 @@ export namespace UtilsTypescript {
     sourceCode: string,
   ): string | undefined => {
     //#region @backendFunc
+    //#region @esmRemove
     const sourceFile = createSourceFile(
       'temp.ts',
       sourceCode,
@@ -601,10 +629,13 @@ export namespace UtilsTypescript {
     checkNode(sourceFile);
     return defaultClassName;
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
 
   export const extractClassNameFromString = (sourceCode: string): string[] => {
     //#region @backendFunc
+    //#region @esmRemove
     const sourceFile = createSourceFile(
       'temp.ts',
       sourceCode,
@@ -623,24 +654,32 @@ export namespace UtilsTypescript {
     checkNode(sourceFile);
     return classNames;
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
 
   export const extractClassNamesFromFile = (
     absoluteFilePath: string,
   ): string[] => {
     //#region @backendFunc
+    //#region @esmRemove
     if (!absoluteFilePath.endsWith('.ts')) {
       return [];
     }
     const sourceCode = Helpers.readFile(absoluteFilePath);
     return extractClassNameFromString(sourceCode);
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
 
   export const extractDefaultClassNameFromFile = (absoluteFilePath: string) => {
     //#region @backendFunc
+    //#region @esmRemove
     const sourceCode = Helpers.readFile(absoluteFilePath);
     return extractDefaultClassNameFromString(sourceCode);
+    //#endregion
+    return void 0 as any;
     //#endregion
   };
   //#endregion
@@ -648,35 +687,43 @@ export namespace UtilsTypescript {
   //#region format file(s) with prettier
   export const formatFile = (absPathToFile: string | string[]): void => {
     //#region @backendFunc
+    //#region @esmRemove
     absPathToFile = crossPlatformPath(absPathToFile);
     if (Helpers.exists(absPathToFile)) {
-      const { execSync } = require('child_process');
       Helpers.logInfo(`Formatting file: ${absPathToFile}`);
       try {
-        execSync(`prettier --write ${path.basename(absPathToFile)}`, {
-          cwd: path.dirname(absPathToFile),
-        });
+        child_process.execSync(
+          `npx --yes prettier --write ${path.basename(absPathToFile)}`,
+          {
+            cwd: path.dirname(absPathToFile),
+          },
+        );
       } catch (error) {
         console.warn(`Not able to format file: ${absPathToFile}`);
       }
       Helpers.taskDone(`Formatting file done.`);
     }
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
 
   export const formatAllFilesInsideFolder = (absPathToFolder: string): void => {
     //#region @backendFunc
+    //#region @esmRemove
     if (Helpers.exists(absPathToFolder)) {
       if (!Helpers.isFolder(absPathToFolder)) {
         Helpers.error(`"${absPathToFolder}" is not a folder`);
       }
-      const { execSync } = require('child_process');
+
       try {
-        execSync(`prettier --write .`, { cwd: absPathToFolder });
+        child_process.execSync(`npx --yes prettier --write .`, { cwd: absPathToFolder });
       } catch (error) {
         console.warn(`Not able to prettier all files in: ${absPathToFolder}`);
       }
     }
+    //#endregion
+    return void 0 as any;
     //#endregion
   };
   //#endregion
@@ -684,6 +731,7 @@ export namespace UtilsTypescript {
   //#region lint file(s) with eslint
   export const eslintFixFile = (absPathToFile: string | string[]): void => {
     //#region @backendFunc
+    //#region @esmRemove
     absPathToFile = crossPlatformPath(absPathToFile);
     if (Helpers.exists(absPathToFile)) {
       Helpers.logInfo(`Fixing file with eslint: ${absPathToFile}`);
@@ -702,12 +750,15 @@ export namespace UtilsTypescript {
       Helpers.taskDone(`Eslint file fix done.`);
     }
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
 
   export const eslintFixAllFilesInsideFolderAsync = async (
     absPathToFolder: string | string[],
   ): Promise<void> => {
     //#region @backendFunc
+    //#region @esmRemove
     absPathToFolder = crossPlatformPath(absPathToFolder);
 
     if (!Helpers.exists(absPathToFolder)) {
@@ -744,6 +795,8 @@ export namespace UtilsTypescript {
 
     Helpers.info(`Eslint fixing files done.`);
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
 
   /**
@@ -753,6 +806,7 @@ export namespace UtilsTypescript {
     absPathToFolder: string | string[],
   ): void => {
     //#region @backendFunc
+    //#region @esmRemove
     absPathToFolder = crossPlatformPath(absPathToFolder);
     if (Helpers.exists(absPathToFolder)) {
       Helpers.info(`Fixing files with eslint in: ${absPathToFolder}`);
@@ -769,12 +823,15 @@ export namespace UtilsTypescript {
       Helpers.info(`Eslint fixing files done.`);
     }
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
   //#endregion
 
   //#region extract Taon contexts from file
   export const getTaonContextFromContent = (fileContent: string): string[] => {
     //#region @backendFunc
+    //#region @esmRemove
     const sourceFile = createSourceFile(
       'tempFile.ts',
       fileContent,
@@ -827,13 +884,18 @@ export namespace UtilsTypescript {
 
     return contextNames;
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
 
   export const getTaonContextsNamesFromFile = (
     tsAbsFilePath: string,
   ): string[] => {
     //#region @backendFunc
+    //#region @esmRemove
     return getTaonContextFromContent(Helpers.readFile(tsAbsFilePath));
+    //#endregion
+    return void 0 as any;
     //#endregion
   };
 
@@ -844,6 +906,7 @@ export namespace UtilsTypescript {
     fileAbsPath: string,
   ): { className: string; selector: string }[] => {
     //#region @backendFunc
+    //#region @esmRemove
     const sourceFile = createSourceFile(
       fileAbsPath,
       Helpers.readFile(fileAbsPath),
@@ -891,6 +954,8 @@ export namespace UtilsTypescript {
     visit(sourceFile);
     return selectors;
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
   //#endregion
 
@@ -900,6 +965,7 @@ export namespace UtilsTypescript {
     absDestFilePath: string,
   ) => {
     //#region @backendFunc
+    //#region @esmRemove
     const ext = path.extname(absDestFilePath).toLowerCase();
     let commentSyntax;
 
@@ -923,6 +989,8 @@ export namespace UtilsTypescript {
         commentSyntax = oneLineComment;
     }
     return commentSyntax;
+    //#endregion
+    return void 0 as any;
     //#endregion
   };
   //#endregion
@@ -950,6 +1018,7 @@ export namespace UtilsTypescript {
     },
   ): void => {
     //#region @backendFunc
+    //#region @esmRemove
     const sourceText = Helpers.readFile(tsAbsFilePath);
     const sourceFile = createSourceFile(
       tsAbsFilePath,
@@ -1081,6 +1150,8 @@ export namespace UtilsTypescript {
     Helpers.writeFile(tsAbsFilePath, newContent);
     result.dispose();
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
 
   //#endregion
@@ -1140,6 +1211,7 @@ export namespace UtilsTypescript {
     //#endregion
 
     //#region constructor
+    //#region @esmRemove
     constructor(
       type: 'export' | 'import' | 'async-import' | 'require',
       embeddedPathToFile: string,
@@ -1161,6 +1233,7 @@ export namespace UtilsTypescript {
       this.parenthesisType = parenthesisType;
       this.importElements = importElements;
     }
+    //#endregion
     //#endregion
 
     //#region remove quotes
@@ -1226,9 +1299,12 @@ export namespace UtilsTypescript {
   //#region recognize imports from file / get quote type
   const getQuoteType = (text: string): 'single' | 'double' | 'tics' => {
     //#region @websqlFunc
+    //#region @esmRemove
     if (text.startsWith('`')) return 'tics';
     if (text.startsWith("'")) return 'single';
     return 'double';
+    //#endregion
+    return void 0 as any;
     //#endregion
   };
   //#endregion
@@ -1236,6 +1312,7 @@ export namespace UtilsTypescript {
   //#region recognize imports from file / extract import export elements
   const extractImportExportElements = (node: ts.Node): string[] => {
     //#region @websqlFunc
+    //#region @esmRemove
     const elements: string[] = [];
 
     if (isImportDeclaration(node) && node.importClause) {
@@ -1257,6 +1334,8 @@ export namespace UtilsTypescript {
 
     return elements;
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
   //#endregion
 
@@ -1265,8 +1344,11 @@ export namespace UtilsTypescript {
     fileAbsPAth: string,
   ): TsImportExport[] => {
     //#region @backendFunc
+    //#region @esmRemove
     const content = Helpers.readFile(fileAbsPAth);
     return recognizeImportsFromContent(content);
+    //#endregion
+    return void 0 as any;
     //#endregion
   };
   //#endregion
@@ -1275,6 +1357,8 @@ export namespace UtilsTypescript {
   export const recognizeImportsFromContent = (
     fileContent: string,
   ): TsImportExport[] => {
+    //#region @backendFunc
+    //#region @esmRemove
     if (!fileContent) {
       return [];
     }
@@ -1358,6 +1442,9 @@ export namespace UtilsTypescript {
     forEachChild(sourceFile, visit);
 
     return results;
+    //#endregion
+    return void 0 as any;
+    //#endregion
   };
   //#endregion
 
@@ -1374,6 +1461,7 @@ export namespace UtilsTypescript {
     content: string,
   ): RenamedImportOrExport[] => {
     //#region @backendFunc
+    //#region @esmRemove
     if (!content?.trim()) return [];
 
     const sf = createSourceFile(
@@ -1436,6 +1524,8 @@ export namespace UtilsTypescript {
     visit(sf);
     return out;
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
 
   //#endregion
@@ -1449,6 +1539,7 @@ export namespace UtilsTypescript {
     sourceText: string,
   ): string {
     //#region @backendFunc
+    //#region @esmRemove
     return sourceText.replace(
       /@Component\s*\(\s*\{([\s\S]*?)\}\s*\)/g,
       (full, propsBlock) => {
@@ -1479,6 +1570,8 @@ export namespace UtilsTypescript {
       },
     );
     //#endregion
+    return void 0 as any;
+    //#endregion
   }
   //#endregion
 
@@ -1494,6 +1587,7 @@ export namespace UtilsTypescript {
 
   export const fixHtmlTemplatesInDir = (directoryPath: string): void => {
     //#region @backendFunc
+    //#region @esmRemove
     Helpers.taskStarted(`(before prettier) Fixing HTML templates in`);
     const files = Helpers.filesFrom(directoryPath, true, false);
 
@@ -1514,6 +1608,8 @@ export namespace UtilsTypescript {
     }
     Helpers.taskDone(`(before prettier) Fixing HTML templates done.`);
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
   //#endregion
 
@@ -1524,6 +1620,8 @@ export namespace UtilsTypescript {
     replaceWithEmptyLine: boolean = false,
     // debug = false,
   ): string {
+    //#region @backendFunc
+    //#region @esmRemove
     const sourceFile = createSourceFile(
       'temp.ts',
       tsFileContent,
@@ -1572,6 +1670,9 @@ export namespace UtilsTypescript {
 
     const result = lines.join('\n');
     return result;
+    //#endregion
+    return void 0 as any;
+    //#endregion
   }
   //#endregion
 
@@ -1581,6 +1682,8 @@ export namespace UtilsTypescript {
     tags: string[],
     replaceWithEmptyLine: boolean = false,
   ): string {
+    //#region @backendFunc
+    //#region @esmRemove
     const sourceFile = createSourceFile(
       'temp.ts',
       tsFileContent,
@@ -1651,6 +1754,9 @@ export namespace UtilsTypescript {
     visit(sourceFile);
 
     return lines.join('\n');
+    //#endregion
+    return void 0 as any;
+    //#endregion
   }
   //#endregion
 
@@ -1660,6 +1766,8 @@ export namespace UtilsTypescript {
     tags: string[],
     replaceWithEmptyLine: boolean = false,
   ): string {
+    //#region @backendFunc
+    //#region @esmRemove
     const lines = tsFileContent.split(/\r?\n/);
 
     const tagRegex = new RegExp(
@@ -1684,6 +1792,9 @@ export namespace UtilsTypescript {
     }
 
     return lines.join('\n');
+    //#endregion
+    return void 0 as any;
+    //#endregion
   }
   //#endregion
 
@@ -1693,6 +1804,8 @@ export namespace UtilsTypescript {
     placeholderTag: string,
     contentToAdd: string,
   ): string {
+    //#region @backendFunc
+    //#region @esmRemove
     const lines = tsFileContent.split(/\r?\n/);
     const insertLines = contentToAdd.split(/\r?\n/);
 
@@ -1710,6 +1823,9 @@ export namespace UtilsTypescript {
     }
 
     return lines.join('\n');
+    //#endregion
+    return void 0 as any;
+    //#endregion
   }
   //#endregion
 
@@ -1718,9 +1834,10 @@ export namespace UtilsTypescript {
     fileContent: string,
   ): string => {
     //#region @backendFunc
+    //#region @esmRemove
     const importRegion = `//#re` + `gion`;
-    const importRegionStart = `${importRegion} imports`;
-    const importRegionEnd = `//#end` + `region`;
+    const importRegionStart = `${importRegion} impo` + `rts`;
+    const importRegionEnd = `//#end` + `reg` + `ion`;
 
     if (fileContent.startsWith(importRegionStart)) {
       return fileContent; // already wrapped
@@ -1790,6 +1907,8 @@ export namespace UtilsTypescript {
       .filter(f => f !== undefined)
       .join('\n');
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
   //#endregion
 
@@ -1798,12 +1917,17 @@ export namespace UtilsTypescript {
     original: string,
     edits: { pos: number; text: string }[],
   ): string => {
+    //#region @backendFunc
+    //#region @esmRemove
     edits.sort((a, b) => b.pos - a.pos); // apply from end to start
     let result = original;
     for (const edit of edits) {
       result = result.slice(0, edit.pos) + edit.text + result.slice(edit.pos);
     }
     return result;
+    //#endregion
+    return void 0 as any;
+    //#endregion
   };
 
   /**
@@ -1812,9 +1936,10 @@ export namespace UtilsTypescript {
    */
   export function wrapContentClassMembersDecoratorsWithRegion(
     classFileContent: string,
-    wrapTag = '@websql',
+    wrapTag = '@web' + 'sql',
   ): string {
     //#region @backendFunc
+    //#region @esmRemove
     const sourceFile = createSourceFile(
       'temp.ts',
       classFileContent,
@@ -1862,6 +1987,8 @@ export namespace UtilsTypescript {
     visit(sourceFile);
     return applyEdits(classFileContent, edits);
     //#endregion
+    return void 0 as any;
+    //#endregion
   }
   //#endregion
 
@@ -1873,6 +2000,8 @@ export namespace UtilsTypescript {
   };
 
   const buildQualifiedRegex = (qualifiedName: string): RegExp => {
+    //#region @backendFunc
+    //#region @esmRemove
     const parts = qualifiedName.split('.');
 
     const escapedParts = parts.map(p =>
@@ -1882,6 +2011,9 @@ export namespace UtilsTypescript {
     const pattern = '\\b' + escapedParts.join('\\s*\\.\\s*') + '\\b';
 
     return new RegExp(pattern, 'g');
+    //#endregion
+    return void 0 as any;
+    //#endregion
   };
 
   export function transformFlatImports(
@@ -1889,6 +2021,7 @@ export namespace UtilsTypescript {
     mapping: FlattenMapping,
   ): string {
     //#region @backendFunc
+    //#region @esmRemove
     let transformed = sourceText;
 
     const importsToAdd = new Map<string, Set<string>>();
@@ -1956,6 +2089,8 @@ export namespace UtilsTypescript {
 
     return transformed;
     //#endregion
+    return void 0 as any;
+    //#endregion
   }
   //#endregion
 
@@ -1965,6 +2100,7 @@ export namespace UtilsTypescript {
     seen = new Set<string>(),
   ): void => {
     //#region @backendFunc
+    //#region @esmRemove
     const resolvedPath = require.resolve(modulePath);
     const mod = require.cache[resolvedPath];
 
@@ -1978,6 +2114,8 @@ export namespace UtilsTypescript {
     }
 
     delete require.cache[resolvedPath];
+    //#endregion
+    return void 0 as any;
     //#endregion
   };
   //#endregion
@@ -2001,6 +2139,8 @@ export namespace UtilsTypescript {
     identifiers: string | string[],
     fromModule: string,
   ): string => {
+    //#region @backendFunc
+    //#region @esmRemove
     const idents = Array.isArray(identifiers) ? identifiers : [identifiers];
 
     const impRegex = new RegExp(
@@ -2029,19 +2169,20 @@ export namespace UtilsTypescript {
     }
 
     // ----------------------------------------------------
-    // 2. Import does NOT exist → insert into //#region imports
+    // 2. Import does NOT exist → insert into //#reg ion imports
     // ----------------------------------------------------
     const newImport = `${'imp' + 'ort'} { ${idents.join(', ')} } from '${fromModule}';\n`;
 
     const regRegex = new RegExp(
-      `\\/\\/\\#${'reg' + 'ion'} imports\\s*\\n([\\s\\S]*?)\\/\\/\\#${'endr' + 'egion'}`,
+      `\\/\\/\\#${'reg' + 'ion'} impo` +
+        `rts\\s*\\n([\\s\\S]*?)\\/\\/\\#${'endr' + 'egion'}`,
       'm',
     );
 
-    const regionMatch = tsFileContent.match(regRegex);
+    const regMatch = tsFileContent.match(regRegex);
 
-    if (regionMatch) {
-      const regStart = regionMatch.index! + regionMatch[0].indexOf('\n') + 1;
+    if (regMatch) {
+      const regStart = regMatch.index! + regMatch[0].indexOf('\n') + 1;
 
       return (
         tsFileContent.slice(0, regStart) +
@@ -2062,6 +2203,9 @@ export namespace UtilsTypescript {
     }
 
     return newImport + tsFileContent;
+    //#endregion
+    return void 0 as any;
+    //#endregion
   };
   //#endregion
 
@@ -2071,6 +2215,7 @@ export namespace UtilsTypescript {
     projectName: string,
   ): string => {
     //#region @backendFunc
+    //#region @esmRemove
     const sourceFile = createSourceFile(
       'app.ts',
       tsFileContent,
@@ -2220,6 +2365,8 @@ export namespace UtilsTypescript {
 
     return text;
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
   //#endregion
 
@@ -2239,6 +2386,7 @@ export namespace UtilsTypescript {
     fileRelativePathTo: string,
   ): string => {
     //#region @backendFunc
+    //#region @esmRemove
     // normalize to posix (important on Windows)
     const from = fileRelativePathFrom.replace(/\\/g, '/');
     const to = fileRelativePathTo.replace(/\\/g, '/');
@@ -2259,6 +2407,8 @@ export namespace UtilsTypescript {
 
     return relative;
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
   //#endregion
 
@@ -2268,6 +2418,7 @@ export namespace UtilsTypescript {
     importsToAdd: string[],
   ): string => {
     //#region @backendFunc
+    //#region @esmRemove
     if (!importsToAdd.length) {
       return content;
     }
@@ -2292,6 +2443,8 @@ export namespace UtilsTypescript {
     // Fallback: prepend to file
     return importsBlock + content;
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
   //#endregion
 
@@ -2306,6 +2459,8 @@ export namespace UtilsTypescript {
   }
 
   function categoryToString(cat?: number) {
+    //#region @backendFunc
+    //#region @esmRemove
     return cat === DiagnosticCategory.Error
       ? 'error'
       : cat === DiagnosticCategory.Warning
@@ -2315,12 +2470,16 @@ export namespace UtilsTypescript {
           : cat === DiagnosticCategory.Message
             ? 'message'
             : 'unknown';
+    //#endregion
+    return void 0 as any;
+    //#endregion
   }
 
   export function parseTsDiagnostic(
     diagnostic: ts.Diagnostic | any,
   ): ParsedTsDiagnostic[] {
     //#region @backendFunc
+    //#region @esmRemove
     const out: ParsedTsDiagnostic[] = [];
 
     const visit = (d: any) => {
@@ -2363,6 +2522,8 @@ export namespace UtilsTypescript {
     visit(diagnostic);
     return out;
     //#endregion
+    return void 0 as any;
+    //#endregion
   }
   //#endregion
 
@@ -2379,6 +2540,7 @@ export namespace UtilsTypescript {
 
   export const normalizeBrokenLines = (code: string): string => {
     //#region @backendFunc
+    //#region @esmRemove
     code = hoistTrailingChainComments(code);
 
     const sourceFile = createSourceFile(
@@ -2452,6 +2614,8 @@ export namespace UtilsTypescript {
     output = collapseFluentChains(output);
     return output;
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
 
   export const collapseFluentChains = (code: string): string => {
@@ -2499,6 +2663,7 @@ export namespace UtilsTypescript {
     content: string,
   ): SplitNamespaceResult => {
     //#region @backendFunc
+    //#region @esmRemove
     const getRootQualifiedName = (qn: ts.QualifiedName): ts.QualifiedName => {
       let current = qn;
       while (isQualifiedName(current.parent)) {
@@ -2888,14 +3053,19 @@ export namespace UtilsTypescript {
     };
 
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
   //#endregion
 
   //#region spliting namespaces / split for file
   export const splitNamespaceForFile = (fileAbsPath: string): string => {
     //#region @backendFunc
+    //#region @esmRemove
     return splitNamespaceForContent(UtilsFilesFoldersSync.readFile(fileAbsPath))
       .content;
+    //#endregion
+    return void 0 as any;
     //#endregion
   };
   //#endregion
@@ -2906,6 +3076,7 @@ export namespace UtilsTypescript {
     namespacesMapObj: SplitNamespaceResult['namespacesMapObj'],
   ): string => {
     //#region @backendFunc
+    //#region @esmRemove
     if (!content || Object.keys(namespacesMapObj || {}).length === 0) {
       return content;
     }
@@ -2931,6 +3102,8 @@ export namespace UtilsTypescript {
     }
     return content;
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
   //#endregion
 
@@ -2943,6 +3116,7 @@ export namespace UtilsTypescript {
     replaceInAllImports = false,
   ): string => {
     //#region @backendFunc
+    //#region @esmRemove
     if (
       !content ||
       !namespacesReplace ||
@@ -3210,6 +3384,8 @@ export namespace UtilsTypescript {
 
     return out;
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
   //#endregion
 
@@ -3219,6 +3395,7 @@ export namespace UtilsTypescript {
     renamedList: RenamedImportOrExport[],
   ): SplitNamespaceResult => {
     //#region @backendFunc
+    //#region @esmRemove
     if (!result) {
       return { namespacesMapObj: {}, namespacesReplace: {} };
     }
@@ -3296,17 +3473,18 @@ export namespace UtilsTypescript {
 
     return next;
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
   //#endregion
 
+  //#region pliting namespaces / update split namespaces re exports
   export const updateSplitNamespaceReExports = (
-    splitNamespacesForPackages: Map<
-      string,
-      UtilsTypescript.SplitNamespaceResult
-    >,
-    reExports: Map<string, UtilsTypescript.GatheredExportsMap>,
+    splitNamespacesForPackages: Map<string, SplitNamespaceResult>,
+    reExports: Map<string, GatheredExportsMap>,
   ): void => {
     //#region @backendFunc
+    //#region @esmRemove
     for (const [pkgName, exportedMap] of reExports.entries()) {
       const targetSplit = splitNamespacesForPackages.get(pkgName);
       if (!targetSplit) continue;
@@ -3348,7 +3526,10 @@ export namespace UtilsTypescript {
       }
     }
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
+  //#endregion
 
   //#region spliting namespaces / gather exported third-party namespaces
   type PackageName = string;
@@ -3365,6 +3546,7 @@ export namespace UtilsTypescript {
     onlyConsideThisIsomorphicImport: Map<PackageName, SplitNamespaceResult>,
   ): GatheredExportsMap => {
     //#region @backendFunc
+    //#region @esmRemove
     const checker = program.getTypeChecker();
     const result: GatheredExportsMap = {};
 
@@ -3424,6 +3606,8 @@ export namespace UtilsTypescript {
 
     return result;
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
 
   export const gatherExportsMapFromIndex = (
@@ -3431,6 +3615,7 @@ export namespace UtilsTypescript {
     isomorphicImportsMap: Map<PackageName, SplitNamespaceResult>,
   ): GatheredExportsMap => {
     //#region @backendFunc
+    //#region @esmRemove
     const program = createProgram({
       rootNames: [pathToIndexTs],
       options: {
@@ -3447,6 +3632,8 @@ export namespace UtilsTypescript {
 
     return exportsMap;
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
 
   //#endregion
@@ -3455,6 +3642,8 @@ export namespace UtilsTypescript {
 
   //#region get clean import
   export const getCleanImport = (importName: string): string | undefined => {
+    //#region @backendFunc
+    //#region @esmRemove
     if (!importName) {
       return importName;
     }
@@ -3468,6 +3657,9 @@ export namespace UtilsTypescript {
       .replace(new RegExp(Utils.escapeStringForRegEx(`/browser`) + '$'), '')
       .replace(new RegExp(Utils.escapeStringForRegEx(`/websql`) + '$'), '')
       .replace(new RegExp(Utils.escapeStringForRegEx(`/lib`) + '$'), '');
+    //#endregion
+    return void 0 as any;
+    //#endregion
   };
   //#endregion
 
@@ -3475,6 +3667,7 @@ export namespace UtilsTypescript {
 
   export const refactorClassToNamespace = (sourceText: string): string => {
     //#region @backendFunc
+    //#region @esmRemove
     const sourceFile = createSourceFile(
       'temp.ts',
       sourceText,
@@ -3493,6 +3686,7 @@ export namespace UtilsTypescript {
      */
     const rewriteThis = (block?: ts.Block): ts.Block | undefined => {
       //#region @backendFunc
+      //#region @esmRemove
       if (!block) return block;
 
       const transformer: ts.TransformerFactory<ts.Node> = context => root => {
@@ -3511,6 +3705,8 @@ export namespace UtilsTypescript {
       const result = transform(block, [transformer]);
       return result.transformed[0] as ts.Block;
       //#endregion
+      return void 0 as any;
+      //#endregion
     };
 
     /**
@@ -3522,6 +3718,8 @@ export namespace UtilsTypescript {
       type: ts.TypeNode | undefined,
       body: ts.Block | undefined,
     ): ts.Statement => {
+      //#region @backendFunc
+      //#region @esmRemove
       return factory.createVariableStatement(
         [factory.createModifier(SyntaxKind.ExportKeyword)],
         factory.createVariableDeclarationList(
@@ -3543,6 +3741,9 @@ export namespace UtilsTypescript {
           NodeFlags.Const,
         ),
       );
+      //#endregion
+      return void 0 as any;
+      //#endregion
     };
 
     sourceFile.forEachChild(node => {
@@ -3623,6 +3824,8 @@ export namespace UtilsTypescript {
     const newFile = factory.updateSourceFile(sourceFile, statements);
     return printer.printFile(newFile);
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
   //#endregion
 
@@ -3637,6 +3840,7 @@ export namespace UtilsTypescript {
     absTsFile: string,
   ): string => {
     //#region @backendFunc
+    //#region @esmRemove
     const jsContent = transpileModule(tsContent, {
       compilerOptions: {
         // 🔥 ONLY syntax stripping
@@ -3662,6 +3866,8 @@ export namespace UtilsTypescript {
     }).outputText;
     return jsContent;
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
 
   export const stripTsTypesIntoJs = async (
@@ -3669,6 +3875,7 @@ export namespace UtilsTypescript {
     outFolderWithIndexJS: string,
   ): Promise<void> => {
     //#region @backendFunc
+    //#region @esmRemove
     const srcRoot = crossPlatformPath(entrypointFolderAbsPathWithIndexTs);
     const outRoot = crossPlatformPath(outFolderWithIndexJS);
 
@@ -3689,18 +3896,26 @@ export namespace UtilsTypescript {
       UtilsFilesFoldersSync.writeFile(outJsFile, jsContent);
     }
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
   //#endregion
 
   //#region check if file has default export
   export const fileHasDefaultExport = (absFilePath: string): boolean => {
+    //#region @backendFunc
+    //#region @esmRemove
     return hasDefaultExport(UtilsFilesFoldersSync.readFile(absFilePath));
+    //#endregion
+    return void 0 as any;
+    //#endregion
   };
   //#endregion
 
   //#region check if content has default export
   export const hasDefaultExport = (sourceText: string): boolean => {
     //#region @backendFunc
+    //#region @esmRemove
     const sourceFile = createSourceFile(
       'temp.ts',
       sourceText,
@@ -3751,12 +3966,15 @@ export namespace UtilsTypescript {
 
     return found;
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
   //#endregion
 
   //#region remove all first level regions in file
   export const removeFirstLevelRegionsInFile = (filePath: string): void => {
     //#region @backendFunc
+    //#region @esmRemove
     if (!Helpers.exists(filePath)) {
       return;
     }
@@ -3766,12 +3984,15 @@ export namespace UtilsTypescript {
       removeFirstLevelRegions(content || ''),
     );
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
   //#endregion
 
   //#region remove all first level regions from content
   export const removeFirstLevelRegions = (content: string): string => {
     //#region @backendFunc
+    //#region @esmRemove
     const lines = content.split('\n');
 
     const regionStartRegex = new RegExp('^\\s*\\/\\/#reg' + 'ion\\b');
@@ -3816,6 +4037,8 @@ export namespace UtilsTypescript {
 
     return result.join('\n');
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
   //#endregion
 
@@ -3824,6 +4047,7 @@ export namespace UtilsTypescript {
     filePath: string,
   ): void => {
     //#region @backendFunc
+    //#region @esmRemove
     if (!Helpers.exists(filePath)) {
       return;
     }
@@ -3833,6 +4057,8 @@ export namespace UtilsTypescript {
       addExportToNotExportedFirstLevelSymbolsInContent(content || ''),
     );
     //#endregion
+    return void 0 as any;
+    //#endregion
   };
   //#endregion
 
@@ -3841,7 +4067,7 @@ export namespace UtilsTypescript {
     content: string,
   ): string => {
     //#region @backendFunc
-
+    //#region @esmRemove
     const regex = new RegExp(
       '^(class\\s+[A-Za-z_$][\\w$]*\\b|function\\s+[A-Za-z_$][\\w$]*\\b|const' +
         '\\s+[A-Za-z_$][\\w$]*\\b|let\\s+[A-Za-z_$][\\w$]*\\b|var\\s+[A-Za-z_$][\\w$]*\\b)',
@@ -3849,6 +4075,8 @@ export namespace UtilsTypescript {
     );
 
     return content.replace(regex, 'export $1');
+    //#endregion
+    return void 0 as any;
     //#endregion
   };
   //#endregion

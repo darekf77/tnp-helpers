@@ -4,7 +4,8 @@ import { _, path } from 'tnp-core/src';
 import { Helpers } from 'tnp-core/src';
 import { CLASS } from 'typescript-class-helpers/src';
 
-import { HelpersTaon, type BaseCommandLineFeature } from '../../index';
+import { BaseCommandLineFeature } from '../../base/classes/base-command-line-feature';
+import { HelpersTaon } from '../../index';
 
 import { BaseProject } from './base-project';
 //#endregion
@@ -12,7 +13,6 @@ import { BaseProject } from './base-project';
 export type BaseStartConfigOptions = Partial<BaseStartConfig>;
 
 export class BaseStartConfig {
-
   //#region prepareArgs
   /**
    * @deprecated
@@ -83,7 +83,6 @@ export class BaseStartConfig {
 
   //#region constructor
   constructor(options: BaseStartConfigOptions) {
-
     options = options ? options : {};
     for (const key in options) {
       if (Object.prototype.hasOwnProperty.call(options, key)) {
@@ -239,5 +238,4 @@ export class BaseStartConfig {
     }
   }
   //#endregion
-
 }

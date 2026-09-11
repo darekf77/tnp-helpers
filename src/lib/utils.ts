@@ -400,7 +400,7 @@ export namespace UtilsMd {
    */
   export const getAssetsFromFile = (absPathToFile: string): string[] => {
     //#region @backendFunc
-     return UtilsMdDocs.getAssetsFromFile(absPathToFile);
+    return UtilsMdDocs.getAssetsFromFile(absPathToFile);
     //#endregion
   };
 
@@ -1555,7 +1555,7 @@ export namespace UtilsDocker {
           ? `@echo off\r\nwsl podman %*`
           : `@echo off\r\n"${podmanExe}" %*`;
 
-        require('fs').writeFileSync(dockerBatPath, batContent);
+        fse.writeFileSync(dockerBatPath, batContent);
         console.log(`Created docker.bat shim → ${dockerBatPath}`);
         console.log(
           'Note: You may need to restart your terminal for PATH to update.',
@@ -1588,11 +1588,6 @@ export namespace UtilsFileSync {
 
   // How long we wait after the file stops growing before processing
   const STABILIZATION_MS = 5000; // 5 seconds is bulletproof
-
-  //#region @backend
-  const { promisify } = require('util');
-  const execAsync = promisify(child_process.exec);
-  //#endregion
 
   //#endregion
 
@@ -1731,6 +1726,10 @@ export namespace UtilsFileSync {
   //#region is hevc
   async function isHevc(file: string): Promise<boolean> {
     //#region @backendFunc
+    //#region @backend
+    const { promisify } = require('util');
+    const execAsync = promisify(child_process.exec);
+    //#endregion
     try {
       const { stdout } = await execAsync(
         `ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of csv=p=0 "${file}"`,
@@ -1750,6 +1749,10 @@ export namespace UtilsFileSync {
     wacherData?: WacherData,
   ): Promise<void> => {
     //#region @backendFunc
+    //#region @backend
+    const { promisify } = require('util');
+    const execAsync = promisify(child_process.exec);
+    //#endregion
     if (wacherData.processed.has(filePath)) return;
 
     const ext = path.extname(filePath).toLowerCase();

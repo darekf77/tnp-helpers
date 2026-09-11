@@ -4,8 +4,8 @@ import { chalk, dateformat, fse, Utils } from 'tnp-core/src';
 import { crossPlatformPath, path, _, UtilsTerminal } from 'tnp-core/src';
 import { GlobalTaskManager } from 'tnp-core/src';
 
+import { CommitData } from '../../base/commit-data';
 import {
-  CommitData,
   HelpersTaon,
   PullProcessOptions,
   PushProcessOptions,
@@ -318,10 +318,7 @@ export class BaseGit<
     };
 
     const getUncommitedFiles = (): string[] => {
-      return Utils.uniqArray([
-        ...this.uncommitedFiles,
-        ...this.stagedFiles,
-      ]);
+      return Utils.uniqArray([...this.uncommitedFiles, ...this.stagedFiles]);
     };
 
     let hadMeltedActionCommits = false;
