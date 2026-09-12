@@ -442,9 +442,16 @@ with ${options.useYarn ? 'yarn' : 'npm'}
         fse.writeFileSync(packageLock, ''); // simulate touch
       }
 
+      const isArch =
+        process.platform === 'linux' &&
+        fse.existsSync('/etc/os-release') &&
+        fse.readFileSync('/etc/os-release', 'utf8').includes('ID=arch');
+
+      const archNpmParam = isArch ? `SHARP_IGNORE_GLOBAL_LIBVIPS=1 ` : '';
+
       command =
         `${envPrefix}` +
-        `npx --node-options=--max-old-space-size=8000 npm ` +
+        `${archNpmParam} npx --node-options=--max-old-space-size=8000 npm ` +
         `${pkg?.installType === 'remove' ? 'uninstall' : 'install'} ${pkg ? pkg.name : ''} ` +
         ` ${generateYarnOrPackageJsonLock ? '' : '--no-package-lock'} ` +
         ` ${pkg && pkg.installType ? pkg.installType : ''} ` +
