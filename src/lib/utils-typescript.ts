@@ -3500,7 +3500,7 @@ export namespace UtilsTypescript {
 
         for (const ns of namespacesToImport) {
           // ---------- namespacesReplace ----------
-          const sourceReplaceArr = sourceSplit.namespacesReplace[ns];
+          const sourceReplaceArr = ((sourceSplit.namespacesReplace || {})[ns] || []);
           if (sourceReplaceArr?.length) {
             targetSplit.namespacesReplace[ns] ??= [];
             targetSplit.namespacesReplace[ns].push(...sourceReplaceArr);
@@ -3508,7 +3508,7 @@ export namespace UtilsTypescript {
 
           // ---------- namespacesMapObj ----------
           for (const [dotPath, flatName] of Object.entries(
-            sourceSplit.namespacesMapObj,
+            sourceSplit.namespacesMapObj || {},
           )) {
             if (dotPath === ns || dotPath.startsWith(ns + '.')) {
               targetSplit.namespacesMapObj[dotPath] ??= flatName;
