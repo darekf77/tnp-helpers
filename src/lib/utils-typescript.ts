@@ -80,6 +80,8 @@ import {
   isExternalModuleReference,
   isNumericLiteral,
   isNoSubstitutionTemplateLiteral,
+  createScanner,
+  LanguageVariant,
 } from 'typescript'; // @esmRemove
 import type * as ts from 'typescript';
 
@@ -92,14 +94,29 @@ import {
 
 export namespace UtilsTypescript {
   //#region remove comments from ts file
+
   export const removeCommentsFromTsContent = (
     tsFileContent: string,
+    opt?: {
+      /**
+       * By default false.
+       */
+      removeRegions?: boolean;
+
+      /**
+       * By default false.
+       */
+      removeImportTags?: boolean;
+    },
   ): string => {
     //#region @backendFunc
     //#region @esmRemove
+
     if (!tsFileContent) {
       return tsFileContent;
     }
+
+    opt = opt || {};
 
     const sourceFile = createSourceFile(
       'file.ts',
@@ -108,12 +125,78 @@ export namespace UtilsTypescript {
       true,
     );
 
-    const printer = createPrinter({
-      removeComments: true,
-    });
+    const comments = new Map<
+      string,
+      {
+        pos: number;
+        end: number;
+      }
+    >();
 
-    const result = printer.printFile(sourceFile);
+    const addCommentRanges = (
+      ranges:
+        | readonly {
+            pos: number;
+            end: number;
+          }[]
+        | undefined,
+    ): void => {
+      for (const range of ranges || []) {
+        comments.set(`${range.pos}:${range.end}`, {
+          pos: range.pos,
+          end: range.end,
+        });
+      }
+    };
+
+    const visit = (node: Node): void => {
+      addCommentRanges(
+        getLeadingCommentRanges(tsFileContent, node.getFullStart()),
+      );
+
+      addCommentRanges(getTrailingCommentRanges(tsFileContent, node.getEnd()));
+
+      forEachChild(node, visit);
+    };
+
+    visit(sourceFile);
+
+    // Comments before/after entire source file.
+    addCommentRanges(getLeadingCommentRanges(tsFileContent, 0));
+    addCommentRanges(
+      getTrailingCommentRanges(tsFileContent, sourceFile.getEnd()),
+    );
+
+    const rangesToRemove = [...comments.values()]
+      .filter(({ pos, end }) => {
+        const comment = tsFileContent.slice(pos, end);
+
+        const isRegion =
+          new RegExp('^//\\s*#reg' + 'ion\\b', 'i').test(comment) ||
+          new RegExp('^//\\s*#end' + 'reg' + 'ion\\b', 'i').test(comment);
+
+        const isImportTag = /^\/\/\s*@[a-zA-Z0-9_-]+(?:\s|$)/.test(comment);
+
+        if (isRegion && !opt.removeRegions) {
+          return false;
+        }
+
+        if (isImportTag && !opt.removeImportTags) {
+          return false;
+        }
+
+        return true;
+      })
+      .sort((a, b) => b.pos - a.pos);
+
+    let result = tsFileContent;
+
+    for (const range of rangesToRemove) {
+      result = result.slice(0, range.pos) + result.slice(range.end);
+    }
+
     return result;
+
     //#endregion
     return void 0 as any;
     //#endregion
@@ -717,7 +800,9 @@ export namespace UtilsTypescript {
       }
 
       try {
-        child_process.execSync(`npx --yes prettier --write .`, { cwd: absPathToFolder });
+        child_process.execSync(`npx --yes prettier --write .`, {
+          cwd: absPathToFolder,
+        });
       } catch (error) {
         console.warn(`Not able to prettier all files in: ${absPathToFolder}`);
       }
@@ -3500,7 +3585,8 @@ export namespace UtilsTypescript {
 
         for (const ns of namespacesToImport) {
           // ---------- namespacesReplace ----------
-          const sourceReplaceArr = ((sourceSplit.namespacesReplace || {})[ns] || []);
+          const sourceReplaceArr =
+            (sourceSplit.namespacesReplace || {})[ns] || [];
           if (sourceReplaceArr?.length) {
             targetSplit.namespacesReplace[ns] ??= [];
             targetSplit.namespacesReplace[ns].push(...sourceReplaceArr);
