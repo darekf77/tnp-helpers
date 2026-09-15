@@ -1,7 +1,7 @@
 //#region imports
 import type fs from 'fs';
 
-import { config, Helpers } from 'tnp-core/src';
+import { config, Helpers, UtilsTerminal } from 'tnp-core/src';
 import { UtilsOs } from 'tnp-core/src';
 import {
   CoreModels,
@@ -160,12 +160,11 @@ export class BaseNodeModules<
   async remove(options?: { skipQuestion?: boolean }): Promise<void> {
     //#region @backendFunc
     options = options || {};
-    if (
-      options.skipQuestion ||
-      (await Helpers.questionYesNo(
-        `You are about delete ${config.folder.node_modules} (Yes -> continue, No -> skip action) ?`,
-      ))
-    ) {
+    const deleteNodeModules = await UtilsTerminal.confirm({
+      message: `You are about delete ${config.folder.node_modules} (Yes -> continue, No -> skip action) ?`,
+      defaultValue: true,
+    });
+    if (options.skipQuestion || deleteNodeModules) {
       Helpers.removeSymlinks(this.path);
       Helpers.remove(this.path, true);
     }
