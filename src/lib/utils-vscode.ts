@@ -244,7 +244,8 @@ export namespace UtilsVSCode {
       'marclipovsky.string-manipulation',
 
       'thebearingedge.vscode-sql-lit', // SQL templates extensions
-      'keyshout.sqlite-db-viewer', // free version of qwtel.sqlite-viewer - no writes
+      // 'keyshout.sqlite-db-viewer', // free version of qwtel.sqlite-viewer - no writes, throws errors :/
+      'bowlerr.sqlite-intelliview-vscode', // new sqlite browser for new vscode
       'christian-kohler.path-intellisense', // asset pathes autocomplete
       'redhat.vscode-xml',
       'rogalmic.bash-debug',
