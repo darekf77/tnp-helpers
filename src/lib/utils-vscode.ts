@@ -591,6 +591,23 @@ export namespace UtilsVSCode {
         key: 'shift+alt+d',
         command: 'eslint.executeAutofix',
       },
+      {
+        key: 'shift+cmd+r',
+        command: '-sqlite-intelliview-vscode.refreshDatabase',
+      },
+      {
+        key: 'shift+cmd+o',
+        command: '-sqlite-intelliview-vscode.openDatabase',
+        when: 'explorerViewletVisible',
+      },
+      {
+        key: 'shift+cmd+e',
+        command: '-sqlite-intelliview-vscode.exportData',
+      },
+      {
+        key: 'shift+cmd+k',
+        command: '-sqlite-intelliview-vscode.connectWithKey',
+      },
 
       //#region macros start stop replay
       {
