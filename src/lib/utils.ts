@@ -1840,13 +1840,15 @@ export namespace UtilsFileSync {
 export namespace UtilsClipboard {
   export const copyText = async (textToCopy: string): Promise<void> => {
     //#region @backend
-    const ncp = require('copy-paste'); // @backend
+    //#region @esmRemove
+    const ncp = require('copy-paste');
     await new Promise(resolve => {
       ncp.copy(textToCopy, function () {
-        Helpers.log(`Copied to clipboard !`);
+        Helpers.info(`Copied to clipboard !`);
         resolve(void 0);
       });
     });
+    //#endregion
     //#endregion
 
     //#region @browser
