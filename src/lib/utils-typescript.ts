@@ -82,6 +82,11 @@ import {
   isNoSubstitutionTemplateLiteral,
   createScanner,
   LanguageVariant,
+  isTypeReferenceNode,
+  isArrowFunction,
+  isAsExpression,
+  isTypeAssertionExpression,
+  isParenthesizedExpression,
 } from 'typescript'; // @esmRemove
 import type * as ts from 'typescript';
 
@@ -93,6 +98,198 @@ import {
 //#endregion
 
 export namespace UtilsTypescript {
+  //#region travel and modify function prop string
+  export async function travelAndModifyFunctionsPropsString(options: {
+    envFileContent: string;
+
+    /**
+     * Receives the complete function expression, for example:
+     *
+     * () => `super secret shit`
+     * () => `s${'asd'}upe secret shit`
+     */
+    modify: (options: {
+      contentPropFunction: string;
+    }) => string | Promise<string>;
+  }): Promise<string> {
+    //#region @backendFunc
+    //#region @esmRemove
+    const { envFileContent, modify } = options;
+
+    const sourceFile = createSourceFile(
+      'env.ts',
+      envFileContent,
+      ScriptTarget.Latest,
+      true,
+      ScriptKind.TS,
+    );
+
+    interface FunctionProp {
+      start: number;
+      end: number;
+      contentPropFunction: string;
+    }
+
+    interface Replacement {
+      start: number;
+      end: number;
+      content: string;
+    }
+
+    const functionProps: FunctionProp[] = [];
+
+    //#region type helpers
+
+    const isEnvOptionsType = (type: ts.TypeNode | undefined): boolean => {
+      if (!type) {
+        return false;
+      }
+
+      // EnvOptions
+      if (
+        isTypeReferenceNode(type) &&
+        isIdentifier(type.typeName) &&
+        type.typeName.text === 'EnvOptions'
+      ) {
+        return true;
+      }
+
+      // Partial<EnvOptions>
+      if (
+        isTypeReferenceNode(type) &&
+        isIdentifier(type.typeName) &&
+        type.typeName.text === 'Partial' &&
+        type.typeArguments?.length === 1
+      ) {
+        return isEnvOptionsType(type.typeArguments[0]);
+      }
+
+      return false;
+    };
+
+    //#endregion
+
+    //#region travel env object
+
+    const travelEnvObject = (
+      objectLiteral: ts.ObjectLiteralExpression,
+    ): void => {
+      for (const property of objectLiteral.properties) {
+        if (!isPropertyAssignment(property)) {
+          continue;
+        }
+
+        let initializer = property.initializer;
+
+        // googleSecret: () => `...`
+        if (isArrowFunction(initializer)) {
+          functionProps.push({
+            start: initializer.getStart(sourceFile),
+            end: initializer.getEnd(),
+            contentPropFunction: initializer.getText(sourceFile),
+          });
+
+          continue;
+        }
+
+        // config: { ... }
+        if (isObjectLiteralExpression(initializer)) {
+          travelEnvObject(initializer);
+          continue;
+        }
+
+        // config: {
+        //   nested: {
+        //     ...
+        //   } as Something
+        // }
+        while (
+          isAsExpression(initializer) ||
+          isTypeAssertionExpression(initializer) ||
+          isParenthesizedExpression(initializer)
+        ) {
+          initializer = initializer.expression;
+        }
+
+        if (isObjectLiteralExpression(initializer)) {
+          travelEnvObject(initializer);
+        }
+      }
+    };
+
+    //#endregion
+
+    //#region find EnvOptions roots
+
+    const visit = (node: ts.Node): void => {
+      if (isVariableDeclaration(node) && node.initializer) {
+        const initializer = node.initializer;
+
+        // const env: EnvOptions = {...}
+        // const env: Partial<EnvOptions> = {...}
+        if (
+          isEnvOptionsType(node.type) &&
+          isObjectLiteralExpression(initializer)
+        ) {
+          travelEnvObject(initializer);
+          return;
+        }
+
+        // const env = {...} as EnvOptions
+        // const env = {...} as Partial<EnvOptions>
+        if (
+          isAsExpression(initializer) &&
+          isEnvOptionsType(initializer.type) &&
+          isObjectLiteralExpression(initializer.expression)
+        ) {
+          travelEnvObject(initializer.expression);
+          return;
+        }
+      }
+
+      forEachChild(node, visit);
+    };
+
+    visit(sourceFile);
+
+    //#endregion
+
+    //#region create replacements
+
+    const replacements: Replacement[] = [];
+
+    for (const functionProp of functionProps) {
+      replacements.push({
+        start: functionProp.start,
+        end: functionProp.end,
+        content: await modify({
+          contentPropFunction: functionProp.contentPropFunction,
+        }),
+      });
+    }
+
+    //#endregion
+
+    // Important: backwards so earlier offsets don't change.
+    replacements.sort((a, b) => b.start - a.start);
+
+    let result = envFileContent;
+
+    for (const replacement of replacements) {
+      result =
+        result.slice(0, replacement.start) +
+        replacement.content +
+        result.slice(replacement.end);
+    }
+
+    return result;
+    //#endregion
+
+    return void 0 as any;
+    //#endregion
+  }
+  //#endregion
+
   //#region remove comments from ts file
 
   export const removeCommentsFromTsContent = (
