@@ -110,6 +110,7 @@ export namespace UtilsTypescript {
      */
     modify: (options: {
       contentPropFunction: string;
+      stop: () => void;
     }) => string | Promise<string>;
   }): Promise<string> {
     //#region @backendFunc
@@ -258,13 +259,32 @@ export namespace UtilsTypescript {
 
     const replacements: Replacement[] = [];
 
+    let stopped = false;
+
+    const stop = (): void => {
+      stopped = true;
+    };
+
     for (const functionProp of functionProps) {
+      if (stopped) {
+        break;
+      }
+
+      const content = await modify({
+        contentPropFunction: functionProp.contentPropFunction,
+        stop,
+      });
+
+      // If stop() was called during modify(), don't apply
+      // the replacement that caused the stop.
+      if (stopped) {
+        break;
+      }
+
       replacements.push({
         start: functionProp.start,
         end: functionProp.end,
-        content: await modify({
-          contentPropFunction: functionProp.contentPropFunction,
-        }),
+        content,
       });
     }
 
