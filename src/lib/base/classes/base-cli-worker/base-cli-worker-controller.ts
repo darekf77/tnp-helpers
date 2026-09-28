@@ -7,6 +7,7 @@ import {
   Query,
   Taon,
   TaonBaseController,
+  TaonBaseSimpleStorageController,
   TaonController,
 } from 'taon/src';
 import { Helpers } from 'tnp-core/src';
@@ -19,7 +20,7 @@ import { BaseCliWorkerUtils } from './base-cli-worker.utils';
 })
 export abstract class TaonBaseCliWorkerController<
   UPLOAD_FILE_QUERY_PARAMS = {},
-> extends TaonBaseController<UPLOAD_FILE_QUERY_PARAMS> {
+> extends TaonBaseSimpleStorageController<UPLOAD_FILE_QUERY_PARAMS> {
   /**
    * service id
    */
