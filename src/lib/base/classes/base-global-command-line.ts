@@ -3664,7 +3664,15 @@ ${lastCommitMessage}
           ),
         );
         for (const fileRelative of uncommitedFiles) {
-          console.log(chalk.gray.underline(`${proj.basename}/${fileRelative}`));
+          if (!proj.git.isIgnoredInRepo(fileRelative)) {
+            console.log(
+              chalk.red.underline(`${proj.basename}/${fileRelative}`),
+            );
+          } else {
+            console.log(
+              chalk.gray.underline(`${proj.basename}/${fileRelative}`),
+            );
+          }
         }
       } else {
         console.log(

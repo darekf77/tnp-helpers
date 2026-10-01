@@ -226,6 +226,25 @@ export class BaseGit<
     //#endregion
   }
 
+
+  isIgnoredInRepo(relativeFilePath: string): boolean {
+    //#region @backendFunc
+    return HelpersTaon.git.isIgnoredInRepo(
+      relativeFilePath,
+      this.project.location,
+    );
+    //#endregion
+  }
+
+  isTrackedInRepo(relativeFilePath: string): boolean {
+    //#region @backendFunc
+    return HelpersTaon.git.isTrackedInRepo(
+      relativeFilePath,
+      this.project.location,
+    );
+    //#endregion
+  }
+
   //#region methods & getters / stage all and commit
   stageAllAndCommit(commitMessage: string): void {
     //#region @backendFunc

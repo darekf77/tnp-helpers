@@ -1399,6 +1399,69 @@ export namespace HelpersTaon {
       }
       return !!test;
     };
+
+    export const isTrackedInRepo = (
+      relativeFilePath: string,
+      cwd: string,
+    ): boolean => {
+      Helpers.log(`[taon-helpers][isTrackedInRepo] ${relativeFilePath}`, 1);
+
+      if (!HelpersTaon.git.isInsideGitRepo(cwd)) {
+        return false;
+      }
+
+      try {
+        const result = Helpers.run(`git ls-files -- "${relativeFilePath}"`, {
+          biggerBuffer: false,
+          cwd,
+          output: false,
+        }).sync();
+
+        const isTracked = !!(result || '')?.toString()?.trim();
+        console.log(`is tracked=${isTracked} `, { relativeFilePath });
+        return isTracked;
+      } catch (e) {
+        console.log(e);
+        console.log('is tracked error ', { relativeFilePath });
+        return false;
+      }
+    };
+
+    export const isIgnoredInRepo = (
+      relativeFilePath: string,
+      cwd: string,
+    ): boolean => {
+      //#region @backendFunc
+      Helpers.log(`[taon-helpers][isIgnoredInRepo] ${relativeFilePath}`, 1);
+
+      if (!fse.existsSync(path.resolve(cwd, relativeFilePath))) {
+        return false;
+      }
+
+      if (!HelpersTaon.git.isInsideGitRepo(cwd)) {
+        return false;
+      }
+
+      try {
+        child_process.execFileSync(
+          'git',
+          ['check-ignore', '-q', '--', relativeFilePath],
+          {
+            cwd,
+            stdio: 'ignore',
+          },
+        );
+
+        return true;
+      } catch {
+        // git check-ignore:
+        // 0 = ignored
+        // 1 = not ignored
+        return false;
+      }
+      //#endregion
+    };
+
     export const resetSoftHEAD = (cwd: string, HEAD = 1): void => {
       try {
         child_process.execSync(`git reset --soft HEAD~${HEAD}`, { cwd });
