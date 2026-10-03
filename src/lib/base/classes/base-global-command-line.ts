@@ -11,6 +11,7 @@ import {
   UtilsEtcHosts,
   UtilsExecProc,
   UtilsFilesFoldersSync,
+  UtilsTempFolder,
 } from 'tnp-core/src';
 import {
   chalk,
@@ -3626,16 +3627,16 @@ ${lastCommitMessage}
   //#endregion
 
   //#region commands / temp folder path
-  tempOsFolderPath() {
-    console.log(UtilsOs.getTempFolder());
+  async tempOsFolderPath() {
+    console.log(await UtilsTempFolder.getPath());
     this._exit(0);
   }
   //#endregion
 
   //#region commands / temp folder path
-  testExpFolderUtil() {
+  async testExpFolderUtil() {
     console.log(
-      UtilsOs.getTempFolder({
+     await UtilsTempFolder.getPath({
         deleteAfterDays: 1,
         prefix: 'test-expiry',
       }),

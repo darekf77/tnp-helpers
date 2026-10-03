@@ -3737,11 +3737,7 @@ ${HelpersTaon.terminalLine()}\n`;
     }
     //#endregion
   };
-  export const getTempFolder = () => {
-    //#region @backendFunc
-    return UtilsOs.getTempFolder();
-    //#endregion
-  };
+
   export const isPlainFileOrFolder = (filePath: string): boolean => {
     //#region @backendFunc
     return /^([a-zA-Z]|\-|\_|\@|\#|\$|\!|\^|\&|\*|\(|\))+$/.test(filePath);
