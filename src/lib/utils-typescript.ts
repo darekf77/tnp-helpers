@@ -87,6 +87,7 @@ import {
   isAsExpression,
   isTypeAssertionExpression,
   isParenthesizedExpression,
+  isFunctionExpression,
 } from 'typescript'; // @esmRemove
 import type * as ts from 'typescript';
 
@@ -98,6 +99,303 @@ import {
 //#endregion
 
 export namespace UtilsTypescript {
+  //#region wrap class namespaces methods and functions
+  interface RegionReplacement {
+    start: number;
+    end: number;
+    content: string;
+  }
+
+  export const wrapClassNamespacesMethodsAndFunctionsInFile = (
+    absFilePath: string,
+  ): void => {
+    //#region @backendFunc
+    //#region @esmRemove
+    const fileContent = Helpers.readFile(absFilePath);
+    const newContent = wrapClassNamespacesMethodsAndFunctions(fileContent);
+    Helpers.writeFile(absFilePath, newContent);
+    //#endregion
+    //#endregion
+  };
+
+  export const wrapClassNamespacesMethodsAndFunctions = (
+    fileContent: string,
+  ): string => {
+    //#region @backendFunc
+    //#region @esmRemove
+    const sourceFile = createSourceFile(
+      'source.ts',
+      fileContent,
+      ScriptTarget.Latest,
+      true,
+      ScriptKind.TS,
+    );
+
+    const replacements: RegionReplacement[] = [];
+
+    //#region helpers
+
+    const nameToRegionText = (name: string): string => {
+      return name
+        .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+        .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+        .replace(/[-_]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+    };
+
+    const getIndent = (position: number): string => {
+      const lineStart = fileContent.lastIndexOf('\n', position - 1) + 1;
+      const beforeNode = fileContent.slice(lineStart, position);
+
+      return beforeNode.match(/^[\t ]*/)?.[0] || '';
+    };
+
+    const hasModifier = (node: ts.Node, kind: ts.SyntaxKind): boolean => {
+      // @ts-ignore
+      return !!node.modifiers?.some(modifier => modifier.kind === kind);
+    };
+
+    const isPublicClassMethod = (node: ts.MethodDeclaration): boolean => {
+      return hasModifier(node, SyntaxKind.PublicKeyword);
+    };
+
+    const isExported = (node: ts.Node): boolean => {
+      return hasModifier(node, SyntaxKind.ExportKeyword);
+    };
+
+    const getNodeName = (
+      name: ts.PropertyName | ts.BindingName | undefined,
+    ): string | undefined => {
+      if (!name) {
+        return undefined;
+      }
+
+      if (isIdentifier(name)) {
+        return name.text;
+      }
+
+      if (isStringLiteral(name) || isNumericLiteral(name)) {
+        return name.text;
+      }
+
+      return undefined;
+    };
+
+    const isAlreadyWrapped = (node: ts.Node): boolean => {
+      const start = node.getFullStart();
+      const lineStart = fileContent.lastIndexOf('\n', start - 1) + 1;
+
+      const textBefore = fileContent.slice(
+        Math.max(0, lineStart - 300),
+        node.getStart(sourceFile),
+      );
+
+      const lines = textBefore
+        .split(/\r?\n/)
+        .map(line => line.trim())
+        .filter(Boolean);
+
+      const previousLine = lines.at(-1);
+
+      return previousLine?.startsWith(`//#${'reg' + 'ion'}`) ||
+        previousLine?.startsWith(`// #${'reg' + 'ion'}`)
+        ? true
+        : false;
+    };
+
+    const addRegion = (node: ts.Node, regionName: string): void => {
+      if (isAlreadyWrapped(node)) {
+        return;
+      }
+
+      const start = node.getStart(sourceFile);
+      const end = node.getEnd();
+      const indent = getIndent(start);
+      const originalContent = fileContent.slice(start, end);
+
+      replacements.push({
+        start,
+        end,
+        content: [
+          `//#${'reg' + 'ion'} ${regionName}`,
+          originalContent,
+          `${indent}//#end${'reg' + 'ion'}`,
+        ].join('\n'),
+      });
+    };
+
+    //#endregion
+
+    //#region class methods
+
+    const processClass = (classDeclaration: ts.ClassDeclaration): void => {
+      for (const member of classDeclaration.members) {
+        if (!isMethodDeclaration(member)) {
+          continue;
+        }
+
+        const methodName = getNodeName(member.name);
+
+        if (!methodName) {
+          continue;
+        }
+
+        const readableName = nameToRegionText(methodName);
+
+        addRegion(
+          member,
+          isPublicClassMethod(member)
+            ? `API / ${readableName}`
+            : `methods / ${readableName}`,
+        );
+      }
+    };
+
+    //#endregion
+
+    //#region namespace functions
+
+    const processNamespaceBody = (body: ts.ModuleBody): void => {
+      // Nested namespace:
+      //
+      // namespace A.B {
+      // }
+      //
+      // eventually resolves to the actual ModuleBlock.
+      if (isModuleDeclaration(body)) {
+        if (body.body) {
+          processNamespaceBody(body.body);
+        }
+
+        return;
+      }
+
+      if (!isModuleBlock(body)) {
+        return;
+      }
+
+      // IMPORTANT:
+      // only direct/first-level namespace statements.
+      for (const statement of body.statements) {
+        //
+        // export function foo() {}
+        //
+        if (isFunctionDeclaration(statement)) {
+          const functionName = statement.name?.text;
+
+          if (!functionName) {
+            continue;
+          }
+
+          const readableName = nameToRegionText(functionName);
+
+          addRegion(
+            statement,
+            isExported(statement) ? readableName : `helpers / ${readableName}`,
+          );
+
+          continue;
+        }
+
+        //
+        // export const foo = () => {};
+        // const foo = function () {};
+        //
+        if (isVariableStatement(statement)) {
+          for (const declaration of statement.declarationList.declarations) {
+            if (
+              !declaration.initializer ||
+              (!isArrowFunction(declaration.initializer) &&
+                !isFunctionExpression(declaration.initializer))
+            ) {
+              continue;
+            }
+
+            const functionName = getNodeName(declaration.name);
+
+            if (!functionName) {
+              continue;
+            }
+
+            const readableName = nameToRegionText(functionName);
+
+            // Wrap the whole variable statement.
+            //
+            // Normally this assumes:
+            // const foo = () => {};
+            //
+            // rather than:
+            // const foo = () => {}, bar = () => {};
+            addRegion(
+              statement,
+              isExported(statement)
+                ? readableName
+                : `helpers / ${readableName}`,
+            );
+
+            break;
+          }
+        }
+      }
+    };
+
+    const processNamespace = (
+      namespaceDeclaration: ts.ModuleDeclaration,
+    ): void => {
+      if (namespaceDeclaration.body) {
+        processNamespaceBody(namespaceDeclaration.body);
+      }
+    };
+
+    //#endregion
+
+    //#region travel source file
+
+    const visit = (node: Node): void => {
+      if (isClassDeclaration(node)) {
+        processClass(node);
+      }
+
+      if (isModuleDeclaration(node)) {
+        processNamespace(node);
+
+        // Don't recursively visit the namespace here because
+        // processNamespace explicitly handles its first-level members.
+        return;
+      }
+
+      forEachChild(node, visit);
+    };
+
+    visit(sourceFile);
+
+    //#endregion
+
+    //#region apply replacements
+
+    replacements.sort((a, b) => b.start - a.start);
+
+    let result = fileContent;
+
+    for (const replacement of replacements) {
+      result =
+        result.slice(0, replacement.start) +
+        replacement.content +
+        result.slice(replacement.end);
+    }
+
+    return result;
+
+    //#endregion
+
+    //#endregion
+    return void 0 as any;
+    //#endregion
+  };
+  //#endregion
+
   //#region travel and modify function prop string
   export async function travelAndModifyFunctionsPropsString(options: {
     envFileContent: string;
