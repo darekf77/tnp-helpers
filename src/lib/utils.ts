@@ -1258,39 +1258,120 @@ export namespace UtilsJava {
 
 //#region utils passwords
 export namespace UtilsPasswords {
+  const ITERATIONS = 100_000;
+  const SALT_LENGTH = 16;
+  const HASH_LENGTH = 32;
+
+  //#region helpers
+  const toBase64 = (bytes: Uint8Array): string => {
+    return btoa(String.fromCharCode(...bytes));
+  };
+
+  const fromBase64 = (value: string): Uint8Array => {
+    return Uint8Array.from(atob(value), char => char.charCodeAt(0));
+  };
+
+  const deriveKey = async (
+    password: string,
+    salt: Uint8Array,
+    iterations: number,
+  ): Promise<Uint8Array> => {
+    const encoder = new TextEncoder();
+
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(password),
+      'PBKDF2',
+      false,
+      ['deriveBits'],
+    );
+
+    const bits = await crypto.subtle.deriveBits(
+      {
+        name: 'PBKDF2',
+        hash: 'SHA-256', // @ts-ignore
+        salt,
+        iterations,
+      },
+      key,
+      HASH_LENGTH * 8,
+    );
+
+    return new Uint8Array(bits);
+  };
+
+  const timingSafeEqual = (a: Uint8Array, b: Uint8Array): boolean => {
+    if (a.length !== b.length) {
+      return false;
+    }
+
+    let diff = 0;
+
+    for (let i = 0; i < a.length; i++) {
+      diff |= a[i] ^ b[i];
+    }
+
+    return diff === 0;
+  };
+  //#endregion
+
   //#region hash password
-  export const hashPassword = (password: string): Promise<string> => {
+  export const hashPassword = async (password: string): Promise<string> => {
     //#region @backendFunc
-    const { scrypt, randomBytes, timingSafeEqual } = require('crypto');
-    return new Promise((resolve, reject) => {
-      const salt = randomBytes(16);
-      scrypt(password, salt, 64, (err, derivedKey) => {
-        if (err) return reject(err);
-        // store salt + hash (hex or base64)
-        resolve(salt.toString('hex') + ':' + derivedKey.toString('hex'));
-      });
-    });
+    const salt = crypto.getRandomValues(new Uint8Array(SALT_LENGTH));
+
+    const hash = await deriveKey(password, salt, ITERATIONS);
+
+    return [
+      'pbkdf2',
+      'sha256',
+      ITERATIONS,
+      toBase64(salt),
+      toBase64(hash),
+    ].join('$');
     //#endregion
   };
   //#endregion
 
   //#region verify password
-  export const verifyPassword = (
+  export const verifyPassword = async (
     password: string,
     stored: string,
   ): Promise<boolean> => {
     //#region @backendFunc
-    const { scrypt, randomBytes, timingSafeEqual } = require('crypto');
-    return new Promise((resolve, reject) => {
-      const [saltHex, keyHex] = stored.split(':');
-      const salt = Buffer.from(saltHex, 'hex');
-      const key = Buffer.from(keyHex, 'hex');
+    try {
+      const [
+        algorithm,
+        hashAlgorithm,
+        iterationsString,
+        saltBase64,
+        hashBase64,
+      ] = stored.split('$');
 
-      scrypt(password, salt, key.length, (err, derivedKey) => {
-        if (err) return reject(err);
-        resolve(timingSafeEqual(key, derivedKey));
-      });
-    });
+      if (algorithm !== 'pbkdf2' || hashAlgorithm !== 'sha256') {
+        return false;
+      }
+
+      const iterations = Number(iterationsString);
+
+      if (
+        !Number.isSafeInteger(iterations) ||
+        iterations <= 0 ||
+        !saltBase64 ||
+        !hashBase64
+      ) {
+        return false;
+      }
+
+      const salt = fromBase64(saltBase64);
+      const expectedHash = fromBase64(hashBase64);
+
+      const actualHash = await deriveKey(password, salt, iterations);
+
+      return timingSafeEqual(expectedHash, actualHash);
+    } catch {
+      return false;
+    }
     //#endregion
   };
   //#endregion
