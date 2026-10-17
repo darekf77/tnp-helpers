@@ -241,6 +241,8 @@ export class BaseVscodeHelpers<
       node_modules: true,
       '.build': true,
       '.vscode': true,
+      '.ai': true,
+      'databases': true,
       browser: true,
       dist: true,
       ['dist-*']: true,
