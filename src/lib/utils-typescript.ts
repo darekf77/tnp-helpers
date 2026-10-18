@@ -99,6 +99,30 @@ import {
 //#endregion
 
 export namespace UtilsTypescript {
+  //#region minify typescript source
+  export function minifyTypescriptSource(content: string): string {
+    //#region @backendFunc
+    //#region @esmRemove
+    const sourceFile = createSourceFile(
+      'source.ts',
+      content,
+      ScriptTarget.Latest,
+      true,
+      ScriptKind.TS,
+    );
+
+    const printer = createPrinter({
+      newLine: NewLineKind.LineFeed,
+      removeComments: true,
+    });
+
+    return printer.printFile(sourceFile);
+    //#endregion
+    return void 0 as any;
+    //#endregion
+  }
+  //#endregion
+
   //#region wrap class namespaces methods and functions
   interface RegionReplacement {
     start: number;
