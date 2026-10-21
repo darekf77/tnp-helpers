@@ -2694,6 +2694,7 @@ ${cwd}
     });
     //#endregion
   };
+  //#region os is mac os
   export const osIsMacOs = (versino: 'big-sur' | 'catalina') => {
     //#region @backendFunc
     if (versino == 'big-sur') {
@@ -2705,6 +2706,8 @@ ${cwd}
     // TODO other oses
     //#endregion
   };
+  //#endregion
+  //#region generated file wrap
   export const generatedFileWrap = (content: string) => {
     //#region @backendFunc
     return `${content}
@@ -2713,6 +2716,8 @@ ${cwd}
           `.trim();
     //#endregion
   };
+  //#endregion
+  //#region change cwd wrapper
   export const changeCwdWrapper = async (
     dir: string,
     functionToExecure: Function,
@@ -2726,6 +2731,8 @@ ${cwd}
     HelpersTaon.changeCwd(currentCwd);
     //#endregion
   };
+  //#endregion
+  //#region change cwd
   export const changeCwd = (dir?: string) => {
     //#region @backendFunc
     if (!dir) {
@@ -2734,6 +2741,8 @@ ${cwd}
     HelpersTaon.goToDir(dir);
     //#endregion
   };
+  //#endregion
+  //#region go to dir
   export const goToDir = (dir = '..') => {
     //#region @backendFunc
     const previous = crossPlatformPath(process.cwd());
@@ -2761,6 +2770,8 @@ ${cwd}
     return true;
     //#endregion
   };
+  //#endregion
+  //#region press key or wait
   export const pressKeyOrWait = async (
     message = 'Press enter try again',
     printWaitMessages = 0,
@@ -2779,6 +2790,8 @@ ${cwd}
     });
     //#endregion
   };
+  //#endregion
+  //#region press key and continue
   export const pressKeyAndContinue = (
     message = 'Press enter to continue..',
   ) => {
@@ -2786,6 +2799,8 @@ ${cwd}
     return UtilsTerminal.pressAnyKey({ message });
     //#endregion
   };
+  //#endregion
+  //#region list
   export const list = async <T = any>(
     question: string,
     choices:
@@ -2822,6 +2837,8 @@ ${cwd}
     return res.value as T;
     //#endregion
   };
+  //#endregion
+  //#region multiple choices ask
   export const multipleChoicesAsk = (
     question: string,
     choices: {
@@ -2843,6 +2860,8 @@ ${cwd}
     });
     //#endregion
   };
+  //#endregion
+  //#region input
   export const input = async (options: {
     defaultValue?: string;
     question: string;
@@ -2853,6 +2872,8 @@ ${cwd}
     return await UtilsTerminal.input(options);
     //#endregion
   };
+  //#endregion
+  //#region select choices ask
   export const selectChoicesAsk = async <T = any>(
     question: string,
     choices:
@@ -2896,6 +2917,8 @@ ${cwd}
     return res;
     //#endregion
   };
+  //#endregion
+  //#region autocomplete ask
   export const autocompleteAsk = async <T = any>(
     question: string,
     choices: {
@@ -2939,6 +2962,8 @@ ${cwd}
     return res.command;
     //#endregion
   };
+  //#endregion
+  //#region get working dir of process
   export const getWorkingDirOfProcess = (PID: number) => {
     //#region @backendFunc
     try {
@@ -2952,6 +2977,8 @@ ${cwd}
     }
     //#endregion
   };
+  //#endregion
+  //#region output to v scode
   export const outputToVScode = (
     data:
       | {
@@ -2972,6 +2999,8 @@ ${cwd}
     }
     //#endregion
   };
+  //#endregion
+  //#region action wrapper
   export const actionWrapper = async (
     fn: () => void,
     taskName: string = 'Task',
@@ -2987,11 +3016,15 @@ ${cwd}
     // global.spinner && global.spinner.stop()
     //#endregion
   };
+  //#endregion
+  //#region terminal line
   export const terminalLine = () => {
     //#region @backendFunc
     return _.times(process.stdout.columns, () => '-').join('');
     //#endregion
   };
+  //#endregion
+  //#region kill all node except current process
   export const killAllNodeExceptCurrentProcess = () => {
     //#region @backendFunc
     return new Promise<void>((resolve, reject) => {
@@ -3071,6 +3104,8 @@ ${cwd}
     });
     //#endregion
   };
+  //#endregion
+  //#region kill all node
   export const killAllNode = () => {
     //#region @backendFunc
     Helpers.info('Killing all node processes...');
@@ -3093,6 +3128,8 @@ ${cwd}
     Helpers.info('DONE KILL ALL NODE PROCESSES');
     //#endregion
   };
+  //#endregion
+  //#region format path
   export const formatPath = (pathToFileOrFolder: string) => {
     //#region @backendFunc
     if (!_.isString(pathToFileOrFolder)) {
@@ -3134,11 +3171,15 @@ ${
 ${HelpersTaon.terminalLine()}\n`;
     //#endregion
   };
+  //#endregion
+  //#region prepare watch command
   export const prepareWatchCommand = cmd => {
     //#region @backendFunc
     return os.platform() === 'win32' ? `"${cmd}"` : `'${cmd}'`;
     //#endregion
   };
+  //#endregion
+  //#region get string from
   export const getStringFrom = (
     command: string,
     descriptionOfCommand?: string,
@@ -3155,6 +3196,8 @@ ${HelpersTaon.terminalLine()}\n`;
     }
     //#endregion
   };
+  //#endregion
+  //#region wait for messege in stdout
   export const waitForMessegeInStdout = (
     proc: ChildProcess,
     message: string,
@@ -3186,6 +3229,7 @@ ${HelpersTaon.terminalLine()}\n`;
     });
     //#endregion
   };
+  //#endregion
 
   //#endregion
 
@@ -3598,6 +3642,7 @@ ${HelpersTaon.terminalLine()}\n`;
   }
   //#endregion
 
+  //#region checksum
   export const checksum = (
     absolutePathToFileOrContent: string,
     algorithm?: 'md5' | 'sha1',
@@ -3612,6 +3657,8 @@ ${HelpersTaon.terminalLine()}\n`;
       .digest('hex');
     //#endregion
   };
+  //#endregion
+  //#region get value from json
   export const getValueFromJSON = (
     filepath: string,
     lodashGetPath: string,
@@ -3625,6 +3672,8 @@ ${HelpersTaon.terminalLine()}\n`;
     return _.get(json, lodashGetPath, defaultValue);
     //#endregion
   };
+  //#endregion
+  //#region get value from jsonc
   export const getValueFromJSONC = (
     filepath: string | string[],
     lodashGetPath: string,
@@ -3639,6 +3688,8 @@ ${HelpersTaon.terminalLine()}\n`;
     return _.get(json, lodashGetPath, defaultValue);
     //#endregion
   };
+  //#endregion
+  //#region read value from json
   export const readValueFromJson = (
     filepath: string,
     lodashGetPath: string,
@@ -3648,6 +3699,8 @@ ${HelpersTaon.terminalLine()}\n`;
     return HelpersTaon.getValueFromJSON(filepath, lodashGetPath, defaultValue);
     //#endregion
   };
+  //#endregion
+  //#region read value from json c
   export const readValueFromJsonC = (
     filepath: string,
     lodashGetPath: string,
@@ -3657,6 +3710,8 @@ ${HelpersTaon.terminalLine()}\n`;
     return HelpersTaon.getValueFromJSONC(filepath, lodashGetPath, defaultValue);
     //#endregion
   };
+  //#endregion
+  //#region set value to json
   export const setValueToJSON = (
     filepath: string | string[],
     lodashGetPath: string,
@@ -3675,6 +3730,8 @@ ${HelpersTaon.terminalLine()}\n`;
     Helpers.writeJson(filepath, json);
     //#endregion
   };
+  //#endregion
+  //#region set value to jsonc
   export const setValueToJSONC = (
     filepath: string | string[],
     lodashGetPath: string,
@@ -3693,6 +3750,8 @@ ${HelpersTaon.terminalLine()}\n`;
     Helpers.writeJsonC(filepath, json);
     //#endregion
   };
+  //#endregion
+  //#region size
   export const size = (filePath: string): number => {
     //#region @backendFunc
     if (!Helpers.exists(filePath) || Helpers.isFolder(filePath)) {
@@ -3701,11 +3760,15 @@ ${HelpersTaon.terminalLine()}\n`;
     return fse.lstatSync(filePath).size;
     //#endregion
   };
+  //#endregion
+  //#region path from link
   export const pathFromLink = (filePath: string): string => {
     //#region @backendFunc
     return fse.readlinkSync(filePath);
     //#endregion
   };
+  //#endregion
+  //#region rename folder
   export const renameFolder = (
     from: string,
     to: string,
@@ -3715,6 +3778,8 @@ ${HelpersTaon.terminalLine()}\n`;
     HelpersTaon.renameFiles(from, to, cwd);
     //#endregion
   };
+  //#endregion
+  //#region rename files
   export const renameFiles = (from: string, to: string, cwd?: string): void => {
     //#region @backendFunc
     try {
@@ -3737,18 +3802,24 @@ ${HelpersTaon.terminalLine()}\n`;
     }
     //#endregion
   };
+  //#endregion
 
+  //#region is plain file or folder
   export const isPlainFileOrFolder = (filePath: string): boolean => {
     //#region @backendFunc
     return /^([a-zA-Z]|\-|\_|\@|\#|\$|\!|\^|\&|\*|\(|\))+$/.test(filePath);
     //#endregion
   };
+  //#endregion
+  //#region require uncached
   export const requireUncached = (module: string): any => {
     //#region @backendFunc
     delete require.cache[require.resolve(module)];
     return require(module);
     //#endregion
   };
+  //#endregion
+  //#region require js
   export const requireJs = (jsFilePath: string) => {
     //#region @backendFunc
     const orgPath = jsFilePath;
@@ -3825,6 +3896,8 @@ ${HelpersTaon.terminalLine()}\n`;
     return eval(fileContent);
     //#endregion
   };
+  //#endregion
+  //#region try recreate dir
   export const tryRecreateDir = (dirpath: string): void => {
     //#region @backendFunc
     try {
@@ -3836,6 +3909,8 @@ ${HelpersTaon.terminalLine()}\n`;
     }
     //#endregion
   };
+  //#endregion
+  //#region try copy from
   export const tryCopyFrom = (
     source: string,
     destination: string,
@@ -3884,6 +3959,7 @@ ${HelpersTaon.terminalLine()}\n`;
     }
     //#endregion
   };
+  //#endregion
 
   /**
    * @deprecated use .copy and then .remove on
@@ -3892,6 +3968,7 @@ ${HelpersTaon.terminalLine()}\n`;
    * This method is messing with parcel watcher
    * (moved files are not detected)
    */
+  //#region move
   export const move = (
     from: string,
     to: string,
@@ -3901,6 +3978,8 @@ ${HelpersTaon.terminalLine()}\n`;
   ): void => {
     UtilsFilesFoldersSync.move(from, to, options);
   };
+  //#endregion
+  //#region find children
   export const findChildren = <T = any>(
     location: string,
     createFn: (childLocation: string) => T,
@@ -3963,6 +4042,8 @@ ${HelpersTaon.terminalLine()}\n`;
       .filter(c => !!c);
     //#endregion
   };
+  //#endregion
+  //#region find children navi
   export const findChildrenNavi = <T = any>(
     location: string,
     createFn: (childLocation: string) => T,
@@ -4008,6 +4089,8 @@ ${HelpersTaon.terminalLine()}\n`;
       .filter(c => !!c);
     //#endregion
   };
+  //#endregion
+  //#region get recrusive files from
   export const getRecrusiveFilesFrom = (
     dir: string,
     ommitFolders: string[] = [],
@@ -4048,6 +4131,8 @@ ${HelpersTaon.terminalLine()}\n`;
     return files;
     //#endregion
   };
+  //#endregion
+  //#region check if name allowed for taon proj
   export const checkIfNameAllowedForTaonProj = (
     folderName: string,
   ): boolean => {
@@ -4072,6 +4157,8 @@ ${HelpersTaon.terminalLine()}\n`;
     return notAllowed.filter(p => p.test(folderName)).length === 0;
     //#endregion
   };
+  //#endregion
+  //#region get lines from files
   export const getLinesFromFiles = (
     filename: string,
     lineCount?: number,
@@ -4106,6 +4193,8 @@ ${HelpersTaon.terminalLine()}\n`;
     });
     //#endregion
   };
+  //#endregion
+  //#region get most recent file name
   export const getMostRecentFileName = (dir: string): string => {
     //#region @backendFunc
     let files = HelpersTaon.getRecrusiveFilesFrom(dir);
@@ -4121,6 +4210,8 @@ ${HelpersTaon.terminalLine()}\n`;
     });
     //#endregion
   };
+  //#endregion
+  //#region get most recent files names
   export const getMostRecentFilesNames = (dir: string): string[] => {
     //#region @backendFunc
     const allFiles = HelpersTaon.getRecrusiveFilesFrom(dir);
@@ -4132,6 +4223,8 @@ ${HelpersTaon.terminalLine()}\n`;
     });
     //#endregion
   };
+  //#endregion
+  //#region remove except
   export const removeExcept = (
     fromPath: string,
     exceptFolderAndFiles: string[],
@@ -4152,6 +4245,8 @@ ${HelpersTaon.terminalLine()}\n`;
       .forEach(af => Helpers.removeFileIfExists(af));
     //#endregion
   };
+  //#endregion
+  //#region copy folder os native
   export const copyFolderOsNative = async (
     from: string,
     to: string,
@@ -4193,6 +4288,8 @@ ${HelpersTaon.terminalLine()}\n`;
     }
     //#endregion
   };
+  //#endregion
+  //#region copy
   export const copy = (
     sourceDir: string | string[],
     destinationDir: string | string[],
@@ -4221,6 +4318,8 @@ ${HelpersTaon.terminalLine()}\n`;
   ): void => {
     UtilsFilesFoldersSync.copy(sourceDir, destinationDir, options);
   };
+  //#endregion
+  //#region filter dont copy
   export const filterDontCopy = (
     basePathFoldersTosSkip: string[],
     projectOrBasepath: string,
@@ -4230,6 +4329,8 @@ ${HelpersTaon.terminalLine()}\n`;
       projectOrBasepath,
     );
   };
+  //#endregion
+  //#region filter only copy
   export const filterOnlyCopy = (
     basePathFoldersOnlyToInclude: string[],
     projectOrBasepath: string,
@@ -4239,6 +4340,8 @@ ${HelpersTaon.terminalLine()}\n`;
       projectOrBasepath,
     );
   };
+  //#endregion
+  //#region copy file
   export const copyFile = (
     sourcePath: string | string[],
     destinationPath: string | string[],
@@ -4251,14 +4354,18 @@ ${HelpersTaon.terminalLine()}\n`;
   ): boolean => {
     return UtilsFilesFoldersSync.copyFile(sourcePath, destinationPath, options);
   };
+  //#endregion
 
   /**
    * @deprecated
    * use _.random()
    */
+  //#region random integer
   export const randomInteger = (max, min) =>
     Math.round(Math.random() * (max - min)) + min;
+  //#endregion
 
+  //#region resolve
   export const resolve = (fileOrFolderPath: string): string => {
     //#region @backendFunc
     if (fileOrFolderPath.startsWith('~')) {
@@ -4270,11 +4377,14 @@ ${HelpersTaon.terminalLine()}\n`;
     return crossPlatformPath(path.resolve(fileOrFolderPath));
     //#endregion
   };
+  //#endregion
 
+  //#region cliwrap
   export const CLIWRAP = (f: Function, name: string) => {
     CLASS.setName(f, name);
     return f;
   };
+  //#endregion
 
   /**
    * @deprecated DONT USE THIS
@@ -4284,6 +4394,7 @@ ${HelpersTaon.terminalLine()}\n`;
    * - No tsconfig
    * - Preserves folder structure
    */
+  //#region strip ts types into js
   export const stripTsTypesIntoJs = async (
     entrypointFolderAbsPathWithIndexTs: string,
     outFolderWithIndexJS: string,
@@ -4332,7 +4443,9 @@ ${HelpersTaon.terminalLine()}\n`;
 
     //#endregion
   };
+  //#endregion
 
+  //#region bundle code into single file
   export const bundleCodeIntoSingleFile = async (
     pathToJsFile: string,
     outputFilePath: string,
@@ -4512,6 +4625,8 @@ ${HelpersTaon.terminalLine()}\n`;
     Helpers.taskDone('[ncc] Bundling done');
     //#endregion
   };
+  //#endregion
+  //#region uniq array
   export const uniqArray = <T = any>(
     array: any[],
     uniqueProperty?: keyof T,
@@ -4521,11 +4636,15 @@ ${HelpersTaon.terminalLine()}\n`;
     return HelpersTaon.arrays.uniqArray<T>(array, uniqueProperty);
     //#endregion
   };
+  //#endregion
+  //#region slash
   export const slash = (pathFromWindowsOrUnixType: string) => {
     //#region @backendFunc
     return crossPlatformPath(pathFromWindowsOrUnixType);
     //#endregion
   };
+  //#endregion
+  //#region is elevated
   export const isElevated = async () => {
     //#region @backend
     if (!(await isElevatedCore())) {
@@ -4537,6 +4656,8 @@ ${HelpersTaon.terminalLine()}\n`;
     }
     //#endregion
   };
+  //#endregion
+  //#region mesure exection in ms
   export const mesureExectionInMs = async (
     description: string,
     functionToExecute: Function,
@@ -4559,6 +4680,8 @@ ${HelpersTaon.terminalLine()}\n`;
     //#endregion
     return end;
   };
+  //#endregion
+  //#region mesure exection in ms sync
   export const mesureExectionInMsSync = (
     description: string,
     functionToExecute: () => void,
@@ -4577,6 +4700,8 @@ ${HelpersTaon.terminalLine()}\n`;
     //#endregion
     return end;
   };
+  //#endregion
+  //#region wait for condition
   export const waitForCondition = (
     conditionFn: (any) => boolean,
     howOfftenCheckInMs = 1000,
@@ -4594,6 +4719,8 @@ ${HelpersTaon.terminalLine()}\n`;
       }
     });
   };
+  //#endregion
+  //#region get method name
   export const getMethodName = (classObject, method): string => {
     var methodName = null;
     Object.getOwnPropertyNames(classObject).forEach(prop => {
@@ -4610,6 +4737,8 @@ ${HelpersTaon.terminalLine()}\n`;
     }
     return null;
   };
+  //#endregion
+  //#region fix webpack env
   export const fixWebpackEnv = (env: Object) => {
     _.forIn(env, (v, k) => {
       const value: string = v as any;
@@ -4617,6 +4746,8 @@ ${HelpersTaon.terminalLine()}\n`;
       if (value === 'false') env[k] = false;
     });
   };
+  //#endregion
+  //#region worker calculate array
   export const workerCalculateArray = async (
     dataToSplit: any[],
     operation: (
@@ -4708,11 +4839,14 @@ ${HelpersTaon.terminalLine()}\n`;
     return await Promise.all(promises);
     //#endregion
   };
+  //#endregion
+  //#region check environment
   export const checkEnvironment = (deps?: CoreModels.GlobalDependencies) => {
     //#region @backendFunc
     return CLI.checkEnvironment(deps);
     //#endregion
   };
+  //#endregion
   /**
    * Mixing for multiclass inheritance
    *
@@ -4727,6 +4861,7 @@ ${HelpersTaon.terminalLine()}\n`;
    * @param derivedCtor Target Class
    * @param baseCtors Base Classes
    */
+  //#region apply mixins
   export function applyMixins(derivedCtor: any, baseCtors: any[]) {
     baseCtors.forEach(baseCtor => {
       Object.getOwnPropertyNames(baseCtor.prototype).forEach(name => {
@@ -4738,4 +4873,5 @@ ${HelpersTaon.terminalLine()}\n`;
       });
     });
   }
+  //#endregion
 }

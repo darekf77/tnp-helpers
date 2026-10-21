@@ -37,6 +37,21 @@ export type TypeOfCommit =
 //#endregion
 
 export type TypeOfMsgPrefix = 'feat' | 'fix' | 'perf' | CommonCommitMsgBranch;
+
+export const TypeOfMsgPrefixArr = [
+  'fix',
+  'build',
+  'feat',
+  'perf',
+  'chore',
+  'release',
+  'docs',
+  'test',
+  'ci',
+  'refactor',
+  'style',
+] as TypeOfMsgPrefix[];
+
 const regexTeamsID: RegExp = /[A-Z0-9]+\#/;
 
 const regexCommitModuleInArgs: RegExp = /\[[a-z|\-|\,]+\]/;
