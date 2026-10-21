@@ -226,7 +226,6 @@ export class BaseGit<
     //#endregion
   }
 
-
   isIgnoredInRepo(relativeFilePath: string): boolean {
     //#region @backendFunc
     return HelpersTaon.git.isIgnoredInRepo(
@@ -1037,32 +1036,69 @@ Please provide proper commit message for lastest changes in your project:
   //#region methods & getters / push process
   async pullProcess(options: PullProcessOptions = {}): Promise<void> {
     //#region @backendFunc
+
     options = options || {};
     options.skipCloneGitChildren = !!options.skipCloneGitChildren;
-    let { skipCloneGitChildren, setOrigin } = options;
+    // if (!options.projectsToTravel) {
+    //   debugger;
+    // }
 
-    await this._beforePullProcessAction(setOrigin, skipCloneGitChildren);
+    options.projectsToTravel = options.projectsToTravel || [];
+    let { skipCloneGitChildren, setOrigin, startFrom } = options;
 
-    await this.setRemoteOriginType(setOrigin);
+    const processedForPull = 'processedForPull';
 
-    let uncommitedChanges = this.project.git.thereAreSomeUncommitedChange;
-    if (uncommitedChanges) {
-      Helpers.warn(
-        `Stashing uncommit changes... in ${this.project.genericName}`,
-      );
-      try {
-        this.project.git.stageAllFiles();
-      } catch (error) {}
-      try {
-        this.project.git.stash();
-      } catch (error) {}
+    this.project.cache[processedForPull] = true;
+    const coundProcessed = options.projectsToTravel.filter(
+      f => f.cache[processedForPull],
+    );
+
+    const indexCurrent = options.projectsToTravel.findIndex(
+      c => c.location === this.project.location,
+    );
+    const indexStartFrom = options.projectsToTravel.findIndex(
+      c => c.name === startFrom || c.nameForNpmPackage === startFrom,
+    );
+    // console.log({ indexCurrent, indexStartFrom });
+
+    const shouldPullThisProject = !startFrom || indexCurrent >= indexStartFrom;
+
+    Helpers.info(
+      chalk.bold(
+        `Processing project ${coundProcessed.length}/${options.projectsToTravel.length}` +
+          ` [${this.project.name}${
+            this.project.name !== this.project.nameForNpmPackage
+              ? `(${this.project.nameForNpmPackage})`
+              : ''
+          }]`,
+      ),
+    );
+
+    if (shouldPullThisProject) {
+      await this._beforePullProcessAction(setOrigin, skipCloneGitChildren);
+
+      await this.setRemoteOriginType(setOrigin);
+
+      let uncommitedChanges = this.project.git.thereAreSomeUncommitedChange;
+      if (uncommitedChanges) {
+        Helpers.warn(
+          `Stashing uncommit changes... in ${this.project.genericName}`,
+        );
+        try {
+          this.project.git.stageAllFiles();
+        } catch (error) {}
+        try {
+          this.project.git.stash();
+        } catch (error) {}
+      }
+
+      await this.project.git.pullCurrentBranch({
+        askToRetry: true,
+        defaultHardResetCommits: 5,
+      });
+      await this._afterPullProcessAction(setOrigin, skipCloneGitChildren);
     }
 
-    await this.project.git.pullCurrentBranch({
-      askToRetry: true,
-      defaultHardResetCommits: 5,
-    });
-    await this._afterPullProcessAction(setOrigin, skipCloneGitChildren);
     const location = this.project.location;
     this.project.ins.unload(this as any);
     this.project.ins.add(this.project.ins.From(location) as any);
@@ -1073,11 +1109,16 @@ Please provide proper commit message for lastest changes in your project:
       options.updateType === 'first-level' ||
       options.updateType === 'deep'
     ) {
+      const projectsToVisit = options.projectsToTravel || [];
+      delete options.projectsToTravel;
+
       const optForChildren = _.cloneDeep(options);
+
       if (options.updateType === 'first-level') {
         optForChildren.updateType = 'only-this';
       }
       for (const child of this.gitChildren) {
+        optForChildren.projectsToTravel = projectsToVisit;
         await child.git.pullProcess(optForChildren);
       }
     }

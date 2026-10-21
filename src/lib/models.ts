@@ -82,6 +82,11 @@ export interface PullProcessOptions {
   updateType?: CommandActionType;
   skipCloneGitChildren?: boolean;
   setOrigin?: SshOrHttpOrigin;
+  projectsToTravel?: BaseProject[];
+  /**
+   * Start pull from project with name or name for npm package
+   */
+  startFrom?: string;
 }
 
 //#region push process options

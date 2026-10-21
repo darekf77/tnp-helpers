@@ -708,6 +708,33 @@ export class BaseGlobalCommandLine<
     await this.pullDeep();
   }
 
+  _countChildren(firstLevel = false): BaseProject[] {
+    //#region @backendFunc
+    const reposLocations: string[] = [];
+    const queue: BaseProject[] = [this.project];
+
+    while (queue.length > 0) {
+      const proj = queue.shift();
+
+      if (!proj) {
+        continue;
+      }
+
+      if (!reposLocations.includes(proj.location)) {
+        reposLocations.push(proj.location);
+      }
+
+      const children = (proj.children || []).filter(c => c.git.isGitRoot);
+
+      if (!firstLevel) {
+        queue.push(...children);
+      }
+    }
+
+    return reposLocations.map(location => this.project.ins.From(location));
+    //#endregion
+  }
+
   async pullDeep(options?: PullProcessOptions) {
     //#region @backendFunc
     options = options || {};
@@ -715,8 +742,13 @@ export class BaseGlobalCommandLine<
       return;
     }
     GlobalTaskManager.start(PULL_ACTION_NAME);
+    const projectsToTravel = this._countChildren();
+
     await this.project.git.pullProcess({
       setOrigin: this.params['setOrigin'],
+      projectsToTravel,
+      // @ts-ignore
+      startFrom: this.params.startFrom,
       ...options,
     });
     GlobalTaskManager.stop(PULL_ACTION_NAME, () => {
@@ -733,8 +765,11 @@ export class BaseGlobalCommandLine<
     if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
       return;
     }
+    const projectsToTravel = this._countChildren(true);
+
     await this.project.git.pullProcess({
       setOrigin: this.params['setOrigin'],
+      projectsToTravel,
       updateType: 'first-level',
     });
     this._exit();
@@ -3636,7 +3671,7 @@ ${lastCommitMessage}
   //#region commands / temp folder path
   async testExpFolderUtil() {
     console.log(
-     await UtilsTempFolder.getPath({
+      await UtilsTempFolder.getPath({
         deleteAfterDays: 1,
         prefix: 'test-expiry',
       }),
