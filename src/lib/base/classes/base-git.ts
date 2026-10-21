@@ -1065,7 +1065,7 @@ Please provide proper commit message for lastest changes in your project:
 
     Helpers.info(
       chalk.bold(
-        `Processing project ${coundProcessed.length}/${options.projectsToTravel.length}` +
+        `[Pull] Processing project ${coundProcessed.length}/${options.projectsToTravel.length}` +
           ` [${this.project.name}${
             this.project.name !== this.project.nameForNpmPackage
               ? `(${this.project.nameForNpmPackage})`
@@ -1250,104 +1250,134 @@ Please provide proper commit message for lastest changes in your project:
       args = [],
       commitMessageRequired,
       overrideCommitMessage,
-
+      startFrom,
       setOrigin,
       currentOrigin,
       mergeUpdateCommits,
     } = options;
 
-    await this._beforePushProcessAction(setOrigin);
+    options.projectsToTravel = options.projectsToTravel || [];
+    const processedForPull = 'processedForPush';
 
-    await this.setRemoteOriginType(setOrigin);
-
-    await this.project.linkedProjects.saveLocationToDB();
-    const commitData = await this._getCommitMessage(
-      typeofCommit,
-      args,
-      commitMessageRequired,
-      currentOrigin,
+    this.project.cache[processedForPull] = true;
+    const coundProcessed = options.projectsToTravel.filter(
+      f => f.cache[processedForPull],
     );
 
-    if (mergeUpdateCommits && this.project.git.stagedFiles.length > 0) {
-      //#region merge update commits
-      Helpers.logInfo(
-        `Pushing detailed changes to project: ${this.project.genericName}`,
+    const indexCurrent = options.projectsToTravel.findIndex(
+      c => c.location === this.project.location,
+    );
+    const indexStartFrom = options.projectsToTravel.findIndex(
+      c => c.name === startFrom || c.nameForNpmPackage === startFrom,
+    );
+    // console.log({ indexCurrent, indexStartFrom });
+
+    const shouldPushThisProject = !startFrom || indexCurrent >= indexStartFrom;
+
+    Helpers.info(
+      chalk.bold(
+        `[Push] Processing project ${coundProcessed.length}/${options.projectsToTravel.length}` +
+          ` [${this.project.name}${
+            this.project.name !== this.project.nameForNpmPackage
+              ? `(${this.project.nameForNpmPackage})`
+              : ''
+          }]`,
+      ),
+    );
+
+    if (shouldPushThisProject) {
+      await this._beforePushProcessAction(setOrigin);
+
+      await this.setRemoteOriginType(setOrigin);
+
+      await this.project.linkedProjects.saveLocationToDB();
+      const commitData = await this._getCommitMessage(
+        typeofCommit,
+        args,
+        commitMessageRequired,
+        currentOrigin,
       );
-      Helpers.logInfo(`Modified files... `);
-      Helpers.logInfo(
-        [...this.project.git.stagedFiles]
-          .map(f => ` - ${chalk.underline(f)}`)
-          .join('\n'),
-      );
-      while (true) {
-        const mergeAction = {
-          useUpdateCommit: {
-            name:
-              `Use temporary update commit ` +
-              `"${HelpersTaon.git.getACTION_MSG_RESET_GIT_HARD_COMMIT()}" and force push`,
-          },
-          provideCommitMessage: {
-            name: 'Provide commit message and force push',
-          },
-          resetRemoveChanges: {
-            name: 'Reset/remove changes and force push',
-          },
-          openInVscode: {
-            name: 'Open project in vscode',
-          },
-        };
 
-        const action = force
-          ? ('useUpdateCommit' as keyof typeof mergeAction)
-          : await UtilsTerminal.select<keyof typeof mergeAction>({
-              choices: mergeAction,
-              question: 'What to do ?',
-            });
+      if (mergeUpdateCommits && this.project.git.stagedFiles.length > 0) {
+        //#region merge update commits
+        Helpers.logInfo(
+          `Pushing detailed changes to project: ${this.project.genericName}`,
+        );
+        Helpers.logInfo(`Modified files... `);
+        Helpers.logInfo(
+          [...this.project.git.stagedFiles]
+            .map(f => ` - ${chalk.underline(f)}`)
+            .join('\n'),
+        );
+        while (true) {
+          const mergeAction = {
+            useUpdateCommit: {
+              name:
+                `Use temporary update commit ` +
+                `"${HelpersTaon.git.getACTION_MSG_RESET_GIT_HARD_COMMIT()}" and force push`,
+            },
+            provideCommitMessage: {
+              name: 'Provide commit message and force push',
+            },
+            resetRemoveChanges: {
+              name: 'Reset/remove changes and force push',
+            },
+            openInVscode: {
+              name: 'Open project in vscode',
+            },
+          };
 
-        if (action === 'openInVscode') {
-          await this.project.openInEditor();
-          continue;
+          const action = force
+            ? ('useUpdateCommit' as keyof typeof mergeAction)
+            : await UtilsTerminal.select<keyof typeof mergeAction>({
+                choices: mergeAction,
+                question: 'What to do ?',
+              });
+
+          if (action === 'openInVscode') {
+            await this.project.openInEditor();
+            continue;
+          }
+
+          if (action === 'resetRemoveChanges') {
+            force = true;
+            forcePushNoQuestion = true;
+            this.project.git.resetHard();
+            break;
+          }
+
+          if (action === 'useUpdateCommit') {
+            force = true;
+            forcePushNoQuestion = true;
+            overrideCommitMessage =
+              HelpersTaon.git.getACTION_MSG_RESET_GIT_HARD_COMMIT();
+          }
+
+          if (action === 'provideCommitMessage') {
+            force = true;
+            forcePushNoQuestion = true;
+            try {
+              overrideCommitMessage = await UtilsTerminal.input({
+                question: `Please provide commit message for current changes:`,
+                defaultValue: 'update',
+              });
+            } catch (error) {}
+          }
+
+          if (overrideCommitMessage) {
+            break;
+          }
+          //#endregion
         }
-
-        if (action === 'resetRemoveChanges') {
-          force = true;
-          forcePushNoQuestion = true;
-          this.project.git.resetHard();
-          break;
-        }
-
-        if (action === 'useUpdateCommit') {
-          force = true;
-          forcePushNoQuestion = true;
-          overrideCommitMessage =
-            HelpersTaon.git.getACTION_MSG_RESET_GIT_HARD_COMMIT();
-        }
-
-        if (action === 'provideCommitMessage') {
-          force = true;
-          forcePushNoQuestion = true;
-          try {
-            overrideCommitMessage = await UtilsTerminal.input({
-              question: `Please provide commit message for current changes:`,
-              defaultValue: 'update',
-            });
-          } catch (error) {}
-        }
-
-        if (overrideCommitMessage) {
-          break;
-        }
-        //#endregion
       }
-    }
 
-    // #region warning about missing sub-issue
-    if (
-      commitData.typeOfCommit === 'feature' &&
-      commitData.jiraNumbers?.length === 1 &&
-      commitData.issuesFromOtherProjects?.length === 0
-    ) {
-      Helpers.info(`
+      // #region warning about missing sub-issue
+      if (
+        commitData.typeOfCommit === 'feature' &&
+        commitData.jiraNumbers?.length === 1 &&
+        commitData.issuesFromOtherProjects?.length === 0
+      ) {
+        Helpers.info(`
 
         You current feature branch "${this.project.git.currentBranchName}"
         doesn't have ${chalk.bold('main-issue')} and ${chalk.bold('sub-issue')} inlcueded.
@@ -1355,23 +1385,23 @@ Please provide proper commit message for lastest changes in your project:
         Proper example: feature/JIRANUM-<number-of-sub-issue>-JIRANUM-<number-of-main-issue>-commit-name
 
           `);
-      if (!(await Helpers.questionYesNo('Continue without sub-issue?'))) {
-        process.exit(0);
+        if (!(await Helpers.questionYesNo('Continue without sub-issue?'))) {
+          process.exit(0);
+        }
       }
-    }
-    //#endregion
+      //#endregion
 
-    //#region automatic push to git
-    if (!this.automaticallyAddAllChangesWhenPushingToGit()) {
-      if (
-        commitData.commitMessage
-          ?.split(':')
-          .map(p => p.trim())
-          .every(p => p === this.project.git.currentBranchName)
-      ) {
-        // QUICK_FIX
-        Helpers.error(
-          `
+      //#region automatic push to git
+      if (!this.automaticallyAddAllChangesWhenPushingToGit()) {
+        if (
+          commitData.commitMessage
+            ?.split(':')
+            .map(p => p.trim())
+            .every(p => p === this.project.git.currentBranchName)
+        ) {
+          // QUICK_FIX
+          Helpers.error(
+            `
 
         Please provide more specific commit message than branch name
         or maybe you forgot ?
@@ -1379,63 +1409,63 @@ Please provide proper commit message for lastest changes in your project:
         - JIRA ISSUE? (example JIRA-1234)
 
         `,
-          false,
-          true,
-        );
+            false,
+            true,
+          );
+        }
       }
-    }
-    //#endregion
+      //#endregion
 
-    //#region lint
-    if (this.skipLintOnPush()) {
-      skipLint = true;
-    }
+      //#region lint
+      if (this.skipLintOnPush()) {
+        skipLint = true;
+      }
 
-    if (commitData.typeOfCommit === 'release') {
-      skipLint = true;
-    }
-    // console.log({ skipLint, typeofCommit });
-    const numberOfStagedFiles = this.project.git.stagedFiles.length;
-    if (numberOfStagedFiles === 0) {
-      Helpers.warn(`No staged files...`);
-      skipLint = true;
-    }
-    if (!skipLint) {
-      while (true) {
-        try {
-          await this.project.lint(options);
-          break;
-        } catch (error) {
-          Helpers.warn('Fix your code...');
-          if (
-            !(await HelpersTaon.consoleGui.question.yesNo(
-              'Try again lint before commit ?',
-            ))
-          ) {
+      if (commitData.typeOfCommit === 'release') {
+        skipLint = true;
+      }
+      // console.log({ skipLint, typeofCommit });
+      const numberOfStagedFiles = this.project.git.stagedFiles.length;
+      if (numberOfStagedFiles === 0) {
+        Helpers.warn(`No staged files...`);
+        skipLint = true;
+      }
+      if (!skipLint) {
+        while (true) {
+          try {
+            await this.project.lint(options);
             break;
+          } catch (error) {
+            Helpers.warn('Fix your code...');
+            if (
+              !(await HelpersTaon.consoleGui.question.yesNo(
+                'Try again lint before commit ?',
+              ))
+            ) {
+              break;
+            }
           }
         }
       }
-    }
-    //#endregion
+      //#endregion
 
-    if (
-      this.project.useFeatureInBranchNameForTests() &&
-      commitData.typeOfCommit === 'test'
-    ) {
-      commitData.useFeatureBranchForTestBranch = true;
-    }
+      if (
+        this.project.useFeatureInBranchNameForTests() &&
+        commitData.typeOfCommit === 'test'
+      ) {
+        commitData.useFeatureBranchForTestBranch = true;
+      }
 
-    if (!commitData.isActionCommit) {
-      const commitMessageFromBranch = (
-        await CommitData.getFromBranch(commitData.branchName, {
-          currentOrigin,
-          jiraIssuesAreOutsideBrackets:
-            this.project.git.jiraIssuesAreOutsideBrackets(),
-        })
-      ).commitMessage;
+      if (!commitData.isActionCommit) {
+        const commitMessageFromBranch = (
+          await CommitData.getFromBranch(commitData.branchName, {
+            currentOrigin,
+            jiraIssuesAreOutsideBrackets:
+              this.project.git.jiraIssuesAreOutsideBrackets(),
+          })
+        ).commitMessage;
 
-      Helpers.info(`
+        Helpers.info(`
 
       PROJECT: ${this.project.genericName}
 
@@ -1449,11 +1479,11 @@ Please provide proper commit message for lastest changes in your project:
           `
       }`);
 
-      if (
-        !overrideCommitMessage &&
-        commitMessageFromBranch !== commitData.commitMessage
-      ) {
-        Helpers.logWarn(`Commit from args and commit from branch are different
+        if (
+          !overrideCommitMessage &&
+          commitMessageFromBranch !== commitData.commitMessage
+        ) {
+          Helpers.logWarn(`Commit from args and commit from branch are different
         commit message from args: ${commitData.commitMessage}
         commit message from branch: ${commitMessageFromBranch}
 
@@ -1461,93 +1491,98 @@ Please provide proper commit message for lastest changes in your project:
         commit changes in one commit message
 
         `);
-      } else {
-        Helpers.logInfo(
-          chalk.gray(`Commit from args and commit from branch are the same...`),
-        );
-      }
-
-      const lastCommitMessage = this.project.git.lastCommitMessage();
-      if (
-        lastCommitMessage &&
-        [commitData.commitMessage, overrideCommitMessage]
-          .filter(f => !!f)
-          .some(m => m === lastCommitMessage)
-      ) {
-        if (
-          await Helpers.questionYesNo(
-            'Soft reset last commit with same message ?',
-          )
-        ) {
-          this.project.git.resetSoftHEAD(1);
+        } else {
+          Helpers.logInfo(
+            chalk.gray(
+              `Commit from args and commit from branch are the same...`,
+            ),
+          );
         }
-      }
 
-      if (!(await Helpers.questionYesNo('Commit and push this ?'))) {
-        exitCallBack();
-      }
-    }
-
-    if (this.automaticallyAddAllChangesWhenPushingToGit()) {
-      // my project
-      this.project.git.stageAllFiles();
-    }
-
-    if (this.useGitBranchesAsMetadataForCommits() && !overrideCommitMessage) {
-      Helpers.info('Checkingout branches (if needed)...');
-      if (
-        this.project.git.currentBranchName?.trim() !== commitData.branchName
-      ) {
-        if (askToConfirmBranchChange) {
-          Helpers.info(`Changing branch to: ${commitData.branchName}`);
-          if (!(await Helpers.questionYesNo('Confirm branch change ?'))) {
-            exitCallBack();
+        const lastCommitMessage = this.project.git.lastCommitMessage();
+        if (
+          lastCommitMessage &&
+          [commitData.commitMessage, overrideCommitMessage]
+            .filter(f => !!f)
+            .some(m => m === lastCommitMessage)
+        ) {
+          if (
+            await Helpers.questionYesNo(
+              'Soft reset last commit with same message ?',
+            )
+          ) {
+            this.project.git.resetSoftHEAD(1);
           }
         }
-        try {
-          this.project.git.checkout(commitData.branchName, {
-            createBranchIfNotExists: true,
-          });
-        } catch (error) {
-          Helpers.error('Please modyfiy you commit message or delete branch,');
+
+        if (!(await Helpers.questionYesNo('Commit and push this ?'))) {
+          exitCallBack();
         }
       }
-    }
 
-    if (askToConfirmCommit) {
-      Helpers.info(
-        `Commit message: ${
+      if (this.automaticallyAddAllChangesWhenPushingToGit()) {
+        // my project
+        this.project.git.stageAllFiles();
+      }
+
+      if (this.useGitBranchesAsMetadataForCommits() && !overrideCommitMessage) {
+        Helpers.info('Checkingout branches (if needed)...');
+        if (
+          this.project.git.currentBranchName?.trim() !== commitData.branchName
+        ) {
+          if (askToConfirmBranchChange) {
+            Helpers.info(`Changing branch to: ${commitData.branchName}`);
+            if (!(await Helpers.questionYesNo('Confirm branch change ?'))) {
+              exitCallBack();
+            }
+          }
+          try {
+            this.project.git.checkout(commitData.branchName, {
+              createBranchIfNotExists: true,
+            });
+          } catch (error) {
+            Helpers.error(
+              'Please modyfiy you commit message or delete branch,',
+            );
+          }
+        }
+      }
+
+      if (askToConfirmCommit) {
+        Helpers.info(
+          `Commit message: ${
+            overrideCommitMessage
+              ? overrideCommitMessage
+              : commitData.commitMessage
+          }`,
+        );
+        if (!(await Helpers.questionYesNo('Confirm commit ?'))) {
+          exitCallBack();
+        }
+      }
+      try {
+        this.project.git.commit(
           overrideCommitMessage
             ? overrideCommitMessage
-            : commitData.commitMessage
-        }`,
-      );
-      if (!(await Helpers.questionYesNo('Confirm commit ?'))) {
-        exitCallBack();
+            : commitData.commitMessage,
+        );
+      } catch (error) {
+        Helpers.warn(`Not commiting anything... `);
       }
-    }
-    try {
-      this.project.git.commit(
-        overrideCommitMessage
-          ? overrideCommitMessage
-          : commitData.commitMessage,
-      );
-    } catch (error) {
-      Helpers.warn(`Not commiting anything... `);
-    }
 
-    if (askToConfirmPush) {
-      if (!(await Helpers.questionYesNo('Confirm push ?'))) {
-        exitCallBack();
+      if (askToConfirmPush) {
+        if (!(await Helpers.questionYesNo('Confirm push ?'))) {
+          exitCallBack();
+        }
       }
-    }
 
-    await this.project.git.pushCurrentBranch({
-      force,
-      origin,
-      forcePushNoQuestion,
-      askToRetry: true,
-    });
+      await this.project.git.pushCurrentBranch({
+        force,
+        origin,
+        forcePushNoQuestion,
+        askToRetry: true,
+      });
+    }
 
     if (
       this.automaticallyAddAllChangesWhenPushingToGit() ||
@@ -1564,14 +1599,20 @@ Please provide proper commit message for lastest changes in your project:
       }
 
       const optForChildren = _.cloneDeep(options);
+
+      const projectsToVisit = options.projectsToTravel || [];
+      delete options.projectsToTravel;
+
       if (updateType === 'first-level') {
         optForChildren.updateType = 'only-this';
       }
 
       for (const child of this.gitChildren) {
+        optForChildren.projectsToTravel = projectsToVisit;
         if (mergeUpdateCommits) {
           await child.git.meltActionCommits();
         }
+
         await child.git.pushProcess(optForChildren);
       }
     }

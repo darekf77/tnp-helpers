@@ -115,6 +115,11 @@ export interface PushProcessOptions {
    */
   currentOrigin?: string;
   noExit?: boolean;
+  projectsToTravel?: BaseProject[];
+  /**
+   * Start pull from project with name or name for npm package
+   */
+  startFrom?: string;
 }
 //#endregion
 

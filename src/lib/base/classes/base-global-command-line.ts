@@ -1303,6 +1303,10 @@ ${lastCommitMessage}
     }
     await this._preventPushPullFromNotCorrectBranch();
 
+    const projectsToTravel = this._countChildren(
+      options?.updateType === 'first-level',
+    );
+
     if (
       !options.overrideCommitMessage &&
       this.project.git.useBranchNameDirectlyAsCommitMessage()
@@ -1328,6 +1332,9 @@ ${lastCommitMessage}
     await this.project.git.pushProcess({
       ...options,
       forcePushNoQuestion: options.force,
+      projectsToTravel,
+      // @ts-ignore
+      startFrom: this.params.startFrom,
       args: options?.overrideCommitMessage
         ? (options?.overrideCommitMessage || '').split(' ')
         : this.args,
