@@ -88,6 +88,8 @@ import {
   isTypeAssertionExpression,
   isParenthesizedExpression,
   isFunctionExpression,
+  isSetAccessorDeclaration,
+  isBlock,
 } from 'typescript'; // @esmRemove
 import type * as ts from 'typescript';
 
@@ -418,6 +420,249 @@ export namespace UtilsTypescript {
     return void 0 as any;
     //#endregion
   };
+  //#endregion
+
+  //#region wrap classes namespaces methods body with websql func
+
+  interface BodyRegionReplacement {
+    start: number;
+    end: number;
+    content: string;
+  }
+
+  export const wrapClassesNamespacesMethodsBodyWithWebsqlFuncInFile = (
+    absFilePath: string,
+  ): void => {
+    //#region @backendFunc
+    //#region @esmRemove
+    const fileContent = Helpers.readFile(absFilePath);
+    const newContent =
+      wrapClassesNamespacesMethodsBodyWithWebsqlFunc(fileContent);
+
+    Helpers.writeFile(absFilePath, newContent);
+    //#endregion
+    //#endregion
+  };
+
+  export const wrapClassesNamespacesMethodsBodyWithWebsqlFunc = (
+    fileContent: string,
+  ): string => {
+    //#region @backendFunc
+    //#region @esmRemove
+
+    const sourceFile = createSourceFile(
+      'source.ts',
+      fileContent,
+      ScriptTarget.Latest,
+      true,
+      ScriptKind.TS,
+    );
+
+    const replacements: BodyRegionReplacement[] = [];
+
+    //#region helpers
+
+    const getIndent = (position: number): string => {
+      const lineStart = fileContent.lastIndexOf('\n', position - 1) + 1;
+      const beforeNode = fileContent.slice(lineStart, position);
+
+      return beforeNode.match(/^[\t ]*/)?.[0] || '';
+    };
+
+    const getBodyContent = (body: ts.Block): string => {
+      return fileContent.slice(
+        body.getStart(sourceFile) + 1,
+        body.getEnd() - 1,
+      );
+    };
+
+    const isAlreadyWrapped = (body: ts.Block): boolean => {
+      const bodyContent = getBodyContent(body);
+
+      const firstMeaningfulLine = bodyContent
+        .split(/\r?\n/)
+        .map(line => line.trim())
+        .find(Boolean);
+
+      return (
+        firstMeaningfulLine === `//#${'reg' + 'ion'} @web` + `sql` + `Func` ||
+        firstMeaningfulLine === `// #${'reg' + 'ion'} @web` + `sql` + `Func`
+      );
+    };
+
+    /**
+     * Don't wrap bodies which already use Taon conditional regions.
+     *
+     * We don't want:
+     *
+     * //#region @websqlFunc
+     * //#region @backendFunc
+     * ...
+     * //#endregion
+     * //#endregion
+     *
+     * because these regions have transformation semantics.
+     */
+    const containsConditionalRegion = (body: ts.Block): boolean => {
+      const bodyContent = getBodyContent(body);
+
+      return new RegExp(
+        `\\/\\/\\s*#${'reg' + 'ion'}\\s+@(` +
+          [
+            `${'back' + 'end' + 'Func'}`,
+            `${'back' + 'end'}`,
+            `${'brow' + 'ser'}`,
+            `${'web' + 'sql' + 'Func'}`,
+            `${'web' + 'sql'}`,
+          ].join('|') +
+          `)\\b`,
+      ).test(bodyContent);
+    };
+
+    const wrapBody = (body: ts.Block): void => {
+      if (isAlreadyWrapped(body)) {
+        return;
+      }
+
+      const openBrace = body.getStart(sourceFile);
+      const closeBrace = body.getEnd() - 1;
+
+      const originalBody = fileContent.slice(openBrace + 1, closeBrace);
+
+      const blockIndent = getIndent(openBrace);
+      const contentIndent = `${blockIndent}  `;
+
+      //
+      // Empty body
+      //
+      if (!originalBody.trim()) {
+        replacements.push({
+          start: openBrace + 1,
+          end: closeBrace,
+          content: [
+            '',
+            `${contentIndent}//#${'reg' + 'ion'} @web` + `sql` + `Func`,
+            `${contentIndent}//#end${'reg' + 'ion'}`,
+            blockIndent,
+          ].join('\n'),
+        });
+
+        return;
+      }
+
+      //
+      // Opening region.
+      //
+      // Existing body already starts with:
+      //
+      // \n    firstStatement()
+      //
+      // so insert AFTER that first newline.
+      //
+      const firstNewLinePosition = openBrace + 1;
+
+      replacements.push({
+        start: firstNewLinePosition,
+        end: firstNewLinePosition,
+        content: `\n${contentIndent}//#${'reg' + 'ion'} @web` + `sql` + `Func`,
+      });
+
+      //
+      // Closing region.
+      //
+      // IMPORTANT:
+      //
+      // original body normally ends with:
+      //
+      //     statement();
+      //   ^ whitespace belonging to closing }
+      //
+      // We insert BEFORE that existing whitespace instead of adding
+      // another contentIndent.
+      //
+      const bodyEndText = fileContent.slice(openBrace + 1, closeBrace);
+      const trailingWhitespaceMatch = bodyEndText.match(/(\r?\n[\t ]*)$/);
+
+      const closingRegionPosition = trailingWhitespaceMatch
+        ? closeBrace - trailingWhitespaceMatch[0].length
+        : closeBrace;
+
+      replacements.push({
+        start: closingRegionPosition,
+        end: closingRegionPosition,
+        content: `\n${contentIndent}//#end${'reg' + 'ion'}`,
+      });
+    };
+
+    //#endregion
+
+    //#region visitor
+
+    const visit = (node: ts.Node): void => {
+      //
+      // Once we find a function-like node, wrap it and STOP traversal
+      // into that node. Nested functions/arrows must not be wrapped.
+      //
+
+      if (isMethodDeclaration(node) && node.body) {
+        wrapBody(node.body);
+        return;
+      }
+
+      if (isGetAccessorDeclaration(node) && node.body) {
+        wrapBody(node.body);
+        return;
+      }
+
+      if (isSetAccessorDeclaration(node) && node.body) {
+        wrapBody(node.body);
+        return;
+      }
+
+      if (isFunctionDeclaration(node) && node.body) {
+        wrapBody(node.body);
+        return;
+      }
+
+      if (isFunctionExpression(node) && node.body) {
+        wrapBody(node.body);
+        return;
+      }
+
+      if (isArrowFunction(node) && isBlock(node.body)) {
+        wrapBody(node.body);
+        return;
+      }
+
+      forEachChild(node, visit);
+    };
+
+    visit(sourceFile);
+
+    //#endregion
+
+    //#region apply replacements
+
+    replacements.sort((a, b) => b.start - a.start);
+
+    let result = fileContent;
+
+    for (const replacement of replacements) {
+      result =
+        result.slice(0, replacement.start) +
+        replacement.content +
+        result.slice(replacement.end);
+    }
+
+    return result;
+
+    //#endregion
+
+    //#endregion
+    return void 0 as any;
+    //#endregion
+  };
+
   //#endregion
 
   //#region travel and modify function prop string
