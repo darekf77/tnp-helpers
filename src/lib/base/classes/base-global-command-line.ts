@@ -1969,7 +1969,7 @@ ${lastCommitMessage}
     ) {
       return;
     }
-    Helpers.clearConsole();
+    // Helpers.clearConsole();
     Helpers.info(await this.project.info());
     await this.project.linkedProjects.saveAllLinkedProjectsToDB();
     this._exit();

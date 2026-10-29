@@ -1,5 +1,11 @@
 //#region imports
-import { config, fileName, folderName } from 'tnp-core/src';
+import {
+  config,
+  fileName,
+  folderName,
+  Utils,
+  UtilsFilesFoldersSync,
+} from 'tnp-core/src';
 import { Helpers, _, crossPlatformPath, fse, path } from 'tnp-core/src';
 
 import { HelpersTaon } from '../../index';
@@ -11,20 +17,29 @@ import type { BaseProject } from './base-project';
 export class BaseFileFoldersOperations<
   PROJECT extends BaseProject = any,
 > extends BaseFeatureForProject<PROJECT> {
-
   //#region files and folders to copy when copying project
   /**
    * Relative to project root
    * @returns list of files and folders to copy when copying project
    */
   protected fielsAndFoldersToCopy(): string[] {
-    return [
+    return Utils.uniqArray([
       folderName._bin,
       folderName.src,
+      '.github',
+      '.vscode',
+      'docs-config.jsonc',
+      'logo.png',
+      'sub-projects',
       folderName.docs,
+      fileName.taon_jsonc,
       fileName.package_json,
       fileName.README_MD,
-    ];
+      ...(HelpersTaon.getValueFromJSONC(
+        this.project.pathFor(fileName.taon_jsonc),
+        'resources',
+      ) || []),
+    ]);
   }
   //#endregion
 
@@ -37,7 +52,6 @@ export class BaseFileFoldersOperations<
 
   //#region delete project
   deleteProject(options?: { skipChildren?: boolean }): void {
-
     //#region @backendFunc
     options = options || {};
 
@@ -59,7 +73,6 @@ export class BaseFileFoldersOperations<
     Helpers.remove(this.project.location);
     // this.ins.remove(this.project);
     //#endregion
-
   }
   //#endregion
 
@@ -68,7 +81,6 @@ export class BaseFileFoldersOperations<
     destination: string,
     options?: { skipChildren?: boolean },
   ): Promise<void> {
-
     //#region @backendFunc
     options = options || {};
     const fielsAndFoldersToCopy = this.fielsAndFoldersToCopy();
@@ -84,14 +96,17 @@ export class BaseFileFoldersOperations<
 
         if (Helpers.exists(sourcePath)) {
           if (Helpers.isFolder(sourcePath)) {
-            console.log(`Copying folder ${sourcePath} to ${destPath}`);
-            HelpersTaon.copy(sourcePath, destPath);
+            Helpers.log(`Copying folder ${sourcePath} to ${destPath}`);
+            UtilsFilesFoldersSync.copy(sourcePath, destPath, {
+              copySymlinksAsFiles: false,
+              recursive: true,
+            });
           } else {
-            console.log(`Copying file ${sourcePath} to ${destPath}`);
-            HelpersTaon.copyFile(sourcePath, destPath);
+            Helpers.log(`Copying file ${sourcePath} to ${destPath}`);
+            UtilsFilesFoldersSync.copyFile(sourcePath, destPath);
           }
         } else {
-          console.warn(`Path ${sourcePath} does not exist. Skipping...`);
+          Helpers.warn(`Path ${sourcePath} does not exist. Skipping...`);
         }
       }
       // const copiedProject = this.project.ins.From([rootDest, proj.basename]);
@@ -123,8 +138,6 @@ export class BaseFileFoldersOperations<
     await copyProj(this.project, destination);
     // this.ins.add(this.ins.From(destination));
     //#endregion
-
   }
   //#endregion
-
 }
