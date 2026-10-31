@@ -5,6 +5,12 @@ import {
 } from './1736198527297_init';
 import { TaonPortsContext_1736199486472_addingNotAssignablePorts } from './1736199486472_addingNotAssignablePorts';
 import { TaonPortsContext_1736454437350_addFreePorts } from './1736454437350_addFreePorts';
+export {
+  MainContext_1736198527297_init,
+  TaonPortsContext_1736198527297_init,
+} from './1736198527297_init';
+export { TaonPortsContext_1736199486472_addingNotAssignablePorts } from './1736199486472_addingNotAssignablePorts';
+export { TaonPortsContext_1736454437350_addFreePorts } from './1736454437350_addFreePorts';
 // THIS FILE IS GENERATED - DO NOT MODIFY
 export const MIGRATIONS_CLASSES_FOR_MainContext = {
   /* 06-01-2025 22:22:07 */ MainContext_1736198527297_init,
