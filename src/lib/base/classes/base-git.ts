@@ -560,12 +560,14 @@ Please provide proper commit message for lastest changes in your project:
     newVersion: string,
     autoReleaseUsingConfig: boolean,
     isCiProcess: boolean,
+    commitWhenEmpty?: boolean
   ): Promise<void> {
     //#region @backendFunc
     return await HelpersTaon.git.tagAndPushToGitRepo(this.project.location, {
       newVersion,
       skipAskingQuestionBeforePush: autoReleaseUsingConfig,
       isCiProcess,
+      commitWhenEmpty,
     });
     //#endregion
   }

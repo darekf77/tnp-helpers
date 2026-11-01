@@ -559,6 +559,7 @@ export namespace HelpersTaon {
         isCiProcess: boolean;
         customOrigin?: string;
         skipTag?: boolean; // if true, it will not tag the commit
+        commitWhenEmpty?: boolean
       },
     ): Promise<void> => {
       //#region @backendFunc
@@ -569,7 +570,7 @@ export namespace HelpersTaon {
         customOrigin,
       } = options;
       const tagName = `v${newVersion}`;
-      stageAllAndCommit(cwd, `release: ${tagName}`);
+      stageAllAndCommit(cwd, `release: ${tagName}`, !!options.commitWhenEmpty);
       const tagMessage = 'new version ' + newVersion;
       if (!options.skipTag) {
         try {
@@ -1257,11 +1258,16 @@ export namespace HelpersTaon {
     export const stageAllAndCommit = (
       cwd: string,
       commitMessage?: string,
+      allowEmpty = false,
     ): void => {
       stageAllFiles(cwd);
-      commit(cwd, commitMessage);
+      commit(cwd, commitMessage, allowEmpty);
     };
-    export const commit = (cwd: string, commitMessage?: string): void => {
+    export const commit = (
+      cwd: string,
+      commitMessage?: string,
+      allowEmpty = false,
+    ): void => {
       Helpers.log('[taon-helpers][commit] ' + cwd, 1);
       if (!_.isString(commitMessage)) {
         commitMessage = 'update';
@@ -1273,7 +1279,7 @@ export namespace HelpersTaon {
       "${commitMessage}"
       location: ${cwd}
       `);
-        var commandToExecute = `git commit --no-verify -F "${tempCommitnameFile}"`;
+        var commandToExecute = `git commit ${allowEmpty ? '--allow-empty' : ''} --no-verify -F "${tempCommitnameFile}"`;
         // Helpers.info(`COMMITING WITH COMMAND: ${commandToExecute}`);
         // process.exit(0)
         Helpers.run(commandToExecute, { cwd }).sync();
