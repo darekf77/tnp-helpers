@@ -319,9 +319,9 @@ export namespace UtilsNpm {
 //#endregion
 
 //#region utils http
-export namespace UtilsHttp {
+export namespace UtilsHttpServer {
   //#region utils http / start http server
-  export const startHttpServer = async (
+  export const start = async (
     cwd: string,
     port: number,
     options?: {

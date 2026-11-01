@@ -415,3 +415,12 @@ export interface DockerVolume {
   name?: string;
 }
 //#endregion
+
+export interface ImageToDummyVideoOptions {
+  input: string;
+  output: string;
+  duration?: number;
+  width?: number;
+  height?: number;
+  fps?: number;
+}

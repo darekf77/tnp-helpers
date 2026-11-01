@@ -11,6 +11,7 @@ import {
   UtilsEtcHosts,
   UtilsExecProc,
   UtilsFilesFoldersSync,
+  UtilsHttp,
   UtilsTempFolder,
 } from 'tnp-core/src';
 import {
@@ -46,7 +47,8 @@ import {
   SshOrHttpOrigin,
   PullProcessOptions,
 } from '../../index';
-import { UtilsHttp, UtilsLineCount } from '../../utils';
+import { UtilsHttpServer, UtilsLineCount } from '../../utils';
+import { UtilsFFmpeg } from '../../utils-ffmpeg';
 import { UtilsTypescript } from '../../utils-typescript';
 import { TypeOfCommit, CommitData } from '../commit-data';
 import { PULL_ACTION_NAME, PUSH_ACTION_NAME } from '../constants';
@@ -505,6 +507,7 @@ export class BaseGlobalCommandLine<
   async docsUp() {
     await this.docsUpdate();
   }
+
   async upDocs() {
     await this.docsUpdate();
   }
@@ -2840,7 +2843,7 @@ ${lastCommitMessage}
         true,
       );
     }
-    await UtilsHttp.startHttpServer(this.cwd, 80, {
+    await UtilsHttpServer.start(this.cwd, 80, {
       resoveWhenStarted: true,
     });
 
@@ -3320,6 +3323,56 @@ ${lastCommitMessage}
         cwd: downloadPath,
       },
     ).sync();
+    this._exit();
+    //#endregion
+  }
+  //#endregion
+
+  //#region videoimage
+  async video() {
+    //#region @backendFunc
+    console.log(`Creating video.. `);
+    let pathToImage = path.isAbsolute(this.firstArg)
+      ? crossPlatformPath(this.firstArg)
+      : crossPlatformPath([this.cwd, this.firstArg]);
+    const orgPath = pathToImage;
+
+    if (
+      Helpers.exists(pathToImage) &&
+      Object.keys(UtilsHttp.mimeTypes).some(c => path.extname(pathToImage) == c)
+    ) {
+      const label = this.args.slice(1).join(' ');
+
+      if (label) {
+        const tempPath = crossPlatformPath([
+          UtilsTempFolder.getPathForNodeOnly({
+            deleteAfterDays: 1,
+            prefix: 'temp-dummy-images',
+          }),
+          `${_.kebabCase(path.dirname(pathToImage))}/${path.basename(pathToImage)}`,
+        ]);
+        Helpers.mkdirp(path.dirname(tempPath));
+
+        await UtilsFFmpeg.drawCenteredDummyLabel(pathToImage, tempPath, label);
+        pathToImage = tempPath;
+      }
+
+      await UtilsFFmpeg.imageToDummyVideo({
+        input: pathToImage,
+        output: orgPath.replace(
+          path.basename(orgPath),
+          `${path.basename(orgPath).replace(path.extname(orgPath), '')}__${
+            label ? _.kebabCase(label) : new Date().getTime()
+          }.mp4`,
+        ),
+        duration: 10,
+        width: 1920,
+        height: 1080,
+      });
+    } else {
+      Helpers.error(`File is not image.`, false, true);
+    }
+
     this._exit();
     //#endregion
   }
