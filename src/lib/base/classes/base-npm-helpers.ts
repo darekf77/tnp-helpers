@@ -300,7 +300,7 @@ ${projectsInfo}
           : '';
       const registryOpt = registry ? `--registry ${registry}` : '';
 
-      const commandForPublish = `npm publish ${registryOpt} ${accessPublic}`;
+      const commandForPublish = `npm publish --loglevel=warn ${registryOpt} ${accessPublic}`;
       Helpers.info(`
 
       Package: ${this.packageJson.name}
