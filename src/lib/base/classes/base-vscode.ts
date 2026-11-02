@@ -115,6 +115,12 @@ export class BaseVscodeHelpers<
       this.getExecuteParamsForSettings(),
     );
     _.merge(this.currentSettingsValue, settings);
+
+    // QUICK_FIX override, always up to date
+    this.currentSettingsValue['search.exclude'] = _.cloneDeep(
+      settings['search.exclude'],
+    ) as any;
+
     if (options.save) {
       this.saveCurrentSettings();
     }
@@ -139,8 +145,6 @@ export class BaseVscodeHelpers<
     //#endregion
   }
   //#endregion
-
-
 
   //#region get vscode bottom color
   /**
@@ -228,9 +232,9 @@ export class BaseVscodeHelpers<
 
     settings['files.associations'] = {
       'tsconfig.json': 'plaintext',
-      "**/tsconfig.json": "plaintext",
-      "**/tsconfig.*.json": "plaintext"
-    }
+      '**/tsconfig.json': 'plaintext',
+      '**/tsconfig.*.json': 'plaintext',
+    };
 
     settings['search.followSymlinks'] = false;
     settings['search.useIgnoreFiles'] = false;
@@ -242,13 +246,12 @@ export class BaseVscodeHelpers<
       '.build': true,
       '.vscode': true,
       '.ai': true,
-      'databases': true,
+      databases: true,
       browser: true,
       dist: true,
       ['dist-*']: true,
       'package-lock.json': true,
       'tmp-*': true,
-      'src/lib/env/**/*.*': true,
       '*.rest': true,
     };
 
