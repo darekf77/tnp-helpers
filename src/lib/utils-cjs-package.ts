@@ -8,7 +8,7 @@ import {
   UtilsJson,
 } from 'tnp-core/src';
 
-export namespace UtilsCjsPackage {
+export namespace UtilsCjsEsmPackage {
   //#region models
   export interface BuildCjsVersionOptions {
     /**
@@ -40,6 +40,14 @@ export namespace UtilsCjsPackage {
     /**
      * Additional esbuild configuration.
      */
+    esbuildOptions?: Partial<BuildOptions>;
+  }
+
+  export interface BuildEsmVersionOptions {
+    outputFolder?: string;
+    exportSubpath?: string;
+    target?: string;
+    force?: boolean;
     esbuildOptions?: Partial<BuildOptions>;
   }
 
@@ -243,6 +251,176 @@ export namespace UtilsCjsPackage {
       ),
     );
 
+    //#endregion
+  }
+  //#endregion
+
+  //#region build esm version for
+  export async function buildEsmVersionFor(
+    packageName: string,
+    pathToNodeModulesRoot: string,
+    overrideOutputFolder = 'esm',
+    options: Omit<BuildEsmVersionOptions, 'outputFolder'> = {},
+  ): Promise<void> {
+    //#region @backendFunc
+    if (!packageName) {
+      Helpers.warn('Trying to ESM compile empty package name');
+      return;
+    }
+
+    const packageRoot = crossPlatformPath([pathToNodeModulesRoot, packageName]);
+    const packageJsonPath = crossPlatformPath([packageRoot, 'package.json']);
+    const outputFolder = normalizeRelativePath(overrideOutputFolder);
+    const outputRoot = resolveInsidePackage(packageRoot, outputFolder);
+    const outputEntry = path.join(outputRoot, 'index.js');
+    const outputPackageJsonPath = path.join(outputRoot, 'package.json');
+
+    if (Helpers.exists(outputRoot) && !options.force) {
+      Helpers.logInfo(`ESM already built for ${packageName}`);
+      return;
+    }
+
+    const packageJsonInPackageRoot = UtilsJson.readJson(
+      packageJsonPath,
+    ) as PackageJsonLike;
+    const rootExport = getRootExport(packageJsonInPackageRoot.exports);
+    const sourceEntryRelative =
+      findConditionalPath(rootExport, [
+        'import',
+        'module',
+        'default',
+        'node',
+        'require',
+      ]) ??
+      packageJsonInPackageRoot.module ??
+      packageJsonInPackageRoot.main;
+
+    if (!sourceEntryRelative) {
+      throw new Error(
+        `Cannot determine JavaScript entry for "${packageName}". ` +
+          `No usable exports["."], module, or main field was found: ${packageJsonPath}`,
+      );
+    }
+
+    const sourceEntry = resolveInsidePackage(packageRoot, sourceEntryRelative);
+    if (!Helpers.exists(sourceEntry)) {
+      throw new Error(
+        `Resolved JavaScript entry for "${packageName}" does not exist: ` +
+          `${sourceEntry} (from ${sourceEntryRelative})`,
+      );
+    }
+
+    const sourceTypesRelative =
+      findConditionalPath(rootExport, ['types', 'typings']) ??
+      packageJsonInPackageRoot.types ??
+      packageJsonInPackageRoot.typings;
+    const sourceTypes = sourceTypesRelative
+      ? resolveInsidePackage(packageRoot, sourceTypesRelative)
+      : undefined;
+
+    // Resolve and validate everything before deleting an existing output.
+    if (
+      sourceEntry === outputEntry ||
+      sourceEntry.startsWith(outputRoot + path.sep)
+    ) {
+      throw new Error(
+        `ESM source entry is inside output folder: ${sourceEntry}`,
+      );
+    }
+    if (
+      sourceTypes &&
+      (sourceTypes === outputRoot ||
+        sourceTypes.startsWith(outputRoot + path.sep))
+    ) {
+      throw new Error(
+        `ESM source types are inside output folder: ${sourceTypes}`,
+      );
+    }
+
+    await fse.remove(outputRoot);
+    await fse.ensureDir(outputRoot);
+
+    let outputTypes: string | undefined;
+    if (sourceTypes && Helpers.exists(sourceTypes)) {
+      outputTypes = await copyTypesForCjsExport({
+        packageRoot,
+        sourceTypes,
+        outputRoot,
+      });
+    }
+
+    const esbuildImportName = 'esbuild';
+    const esbuild = await import(esbuildImportName);
+    await esbuild.build({
+      bundle: true,
+      platform: 'node',
+      target: options.target ?? 'node18',
+      packages: 'bundle',
+      external: ['node:*'],
+      sourcemap: true,
+      logLevel: 'info',
+      ...options.esbuildOptions,
+      // Controlled by this function regardless of user overrides.
+      entryPoints: [sourceEntry],
+      outfile: outputEntry,
+      format: 'esm',
+    });
+
+    // const exportSubpath =
+    //   options.exportSubpath ?? `./${outputFolder.replace(/\/+$/, '')}`;
+
+    // packageJsonInPackageRoot.exports = addSubpathExport(
+    //   packageJsonInPackageRoot.exports,
+    //   exportSubpath,
+    //   {
+    //     ...(outputTypes
+    //       ? {
+    //           types: toPackageJsonPath(path.relative(packageRoot, outputTypes)),
+    //         }
+    //       : {}),
+    //     import: toPackageJsonPath(path.relative(packageRoot, outputEntry)),
+    //     default: toPackageJsonPath(path.relative(packageRoot, outputEntry)),
+    //   },
+    // );
+
+    UtilsFilesFoldersSync.writeFile(
+      outputPackageJsonPath,
+      JSON.stringify(
+        {
+          name: packageJsonInPackageRoot.name,
+          version: packageJsonInPackageRoot.version,
+          type: 'module',
+          main: './index.js',
+          ...(outputTypes
+            ? {
+                types: toPackageJsonPath(
+                  path.relative(outputRoot, outputTypes),
+                ),
+              }
+            : {}),
+          exports: {
+            '.': {
+              ...(outputTypes
+                ? {
+                    types: toPackageJsonPath(
+                      path.relative(outputRoot, outputTypes),
+                    ),
+                  }
+                : {}),
+              import: './index.js',
+              default: './index.js',
+            },
+            './package.json': './package.json',
+          },
+        },
+        null,
+        2,
+      ),
+    );
+    UtilsFilesFoldersSync.writeFile(
+      packageJsonPath,
+      JSON.stringify(packageJsonInPackageRoot, null, 2),
+    );
     //#endregion
   }
   //#endregion
