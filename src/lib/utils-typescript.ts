@@ -2080,7 +2080,6 @@ export namespace UtilsTypescript {
     //#endregion
 
     //#region constructor
-    //#region @esmRemove
     constructor(
       type: 'export' | 'import' | 'async-import' | 'require',
       embeddedPathToFile: string,
@@ -2102,7 +2101,6 @@ export namespace UtilsTypescript {
       this.parenthesisType = parenthesisType;
       this.importElements = importElements;
     }
-    //#endregion
     //#endregion
 
     //#region remove quotes
@@ -2226,7 +2224,6 @@ export namespace UtilsTypescript {
   export const recognizeImportsFromContent = (
     fileContent: string,
   ): TsImportExport[] => {
-    //#region @backendFunc
     //#region @esmRemove
     if (!fileContent) {
       return [];
@@ -2313,7 +2310,6 @@ export namespace UtilsTypescript {
     return results;
     //#endregion
     return void 0 as any;
-    //#endregion
   };
   //#endregion
 
@@ -2489,7 +2485,6 @@ export namespace UtilsTypescript {
     replaceWithEmptyLine: boolean = false,
     // debug = false,
   ): string {
-    //#region @backendFunc
     //#region @esmRemove
     const sourceFile = createSourceFile(
       'temp.ts',
@@ -2541,7 +2536,6 @@ export namespace UtilsTypescript {
     return result;
     //#endregion
     return void 0 as any;
-    //#endregion
   }
   //#endregion
 
