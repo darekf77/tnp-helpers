@@ -9,7 +9,7 @@ import { Port, TaonPortsController } from '../base/tcp-udp-ports';
 })
 export class TaonPortsContext_1736454437350_addFreePorts extends TaonBaseMigration {
   protected portsController: TaonPortsController =
-    this.injectController(TaonPortsController);
+    this.inject(TaonPortsController);
 
   async up(queryRunner: QueryRunner): Promise<any> {
     const portsTableRepo = await queryRunner.manager.getRepository(Port);

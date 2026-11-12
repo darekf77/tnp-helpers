@@ -29,7 +29,7 @@ const portsWithDescription = {
 })
 export class TaonPortsContext_1736199486472_addingNotAssignablePorts extends TaonBaseMigration {
   protected portsController: TaonPortsController =
-    this.injectController(TaonPortsController);
+    this.inject(TaonPortsController);
 
   private readonly commonPortsFrom3000to6000: number[] =
     Object.keys(portsWithDescription).map(Number);
