@@ -559,7 +559,7 @@ export namespace HelpersTaon {
         isCiProcess: boolean;
         customOrigin?: string;
         skipTag?: boolean; // if true, it will not tag the commit
-        commitWhenEmpty?: boolean
+        commitWhenEmpty?: boolean;
       },
     ): Promise<void> => {
       //#region @backendFunc
@@ -796,6 +796,10 @@ export namespace HelpersTaon {
       }
       return '';
     };
+
+    /**
+     * @returns Relative paths
+     */
     export const getListOfCurrentGitChanges = (
       cwd: string,
     ): {

@@ -560,7 +560,7 @@ Please provide proper commit message for lastest changes in your project:
     newVersion: string,
     autoReleaseUsingConfig: boolean,
     isCiProcess: boolean,
-    commitWhenEmpty?: boolean
+    commitWhenEmpty?: boolean,
   ): Promise<void> {
     //#region @backendFunc
     return await HelpersTaon.git.tagAndPushToGitRepo(this.project.location, {
@@ -624,6 +624,9 @@ Please provide proper commit message for lastest changes in your project:
   //#endregion
 
   //#region methods & getters / list of current git changes
+  /**
+   * @returns Relative paths
+   */
   get listOfCurrentGitChanges(): {
     modified: string[];
     deleted: string[];
@@ -631,6 +634,25 @@ Please provide proper commit message for lastest changes in your project:
   } {
     //#region @backendFunc
     return HelpersTaon.git.getListOfCurrentGitChanges(this.project.location);
+    //#endregion
+  }
+  //#endregion
+
+  //#region methods & getters / list of current git changes
+  /**
+   * @returns Relative paths
+   */
+  get listOfAllCurrentGitChanges(): string[] {
+    //#region @backendFunc
+    const current = HelpersTaon.git.getListOfCurrentGitChanges(
+      this.project.location,
+    );
+    const changes = Utils.uniqArray([
+      ...current.created,
+      ...current.modified,
+      ...current.deleted,
+    ]);
+    return changes;
     //#endregion
   }
   //#endregion
