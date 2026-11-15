@@ -16,8 +16,10 @@ import type { BaseProject } from './base-project';
 export class BaseIgnoreHideHelpers<
   PROJECT extends BaseProject = any,
 > extends BaseFeatureForProject<PROJECT> {
+  //#region store in repo config files
   /**
-   * (@default: false)
+   * ALLOWED TO OVERRIDE
+   * (@default: true)
    *
    * If true, the files/folders/patterns that aren't really code and can
    * be recreated from template project like (tsconfig.json, .babelrc, .prettierc etc.)
@@ -26,6 +28,7 @@ export class BaseIgnoreHideHelpers<
   protected storeInRepoConfigFiles(): boolean {
     return true;
   }
+  //#endregion
 
   //#region init
   async init(): Promise<void> {
@@ -34,7 +37,7 @@ export class BaseIgnoreHideHelpers<
   }
   //#endregion
 
-  //#region
+  //#region recrusive patterns transform
   /**
    * @param data list of patterns
    * @returns list of patterns for recrusive ignore
@@ -55,6 +58,7 @@ export class BaseIgnoreHideHelpers<
 
   //#region patterns ignored in repo but visible to user
   /**
+   * ALLOWED TO OVERRIDE
    * Have to start with /
    *
    * Usefull if you are generating some files and folder in src/*.* folder
@@ -63,14 +67,14 @@ export class BaseIgnoreHideHelpers<
    */
   protected getPatternsIgnoredInRepoButVisibleToUser(): string[] {
     return [
-      '/*.sqlite', // you want to see your temp databases in the repo
-      '/*.rest', // you want to see your temp rest databases in the repo
+      '*.sqlite', // you want to see your temp databases in the repo
+      '*.rest', // you want to see your temp rest databases in the repo
     ];
   }
   //#endregion
 
   //#region always ignored and hidden patterns
-  protected alwaysIgnoredHiddenPatterns(): string[] {
+  protected getPatternsAlwaysIgnoredHidden(): string[] {
     return [
       'chrome-profiler-events*.json',
       'speed-measure-plugin*.json',
@@ -78,12 +82,16 @@ export class BaseIgnoreHideHelpers<
       'npm-debug.log*',
     ];
   }
+  //#endregion
 
-  alwaysUseRecursivePattern(): string[] {
+  //#region always use as recursive patterns
+  protected alwaysUseRecursivePattern(): string[] {
     return ['.DS_Store'];
   }
+  //#endregion
 
-  protected alwaysIgnoredAndHiddenFilesAndFolders(): string[] {
+  //#region files and folder always ignored and hidden
+  protected filesAndFoldersAlwaysIgnoredAndHidden(): string[] {
     return [
       '_changelog',
       '.sass-cache',
@@ -103,10 +111,7 @@ export class BaseIgnoreHideHelpers<
   }
   //#endregion
 
-  //#region hidden but not neccesary ignored
-  protected hiddenButNeverIgnoredInRepo(): string[] {
-    return ['.gitignore']; // just to avoid mess when not .gitignore and started project
-  }
+  //#region hidden but not neccesary ignored files and folders
 
   protected hiddenButNotNecessaryIgnoredInRepoFilesAndFolders(): string[] {
     return [
@@ -127,7 +132,9 @@ export class BaseIgnoreHideHelpers<
       ...this.project.linter.getLintFiles(),
     ];
   }
+  //#endregion
 
+  //#region hidden but not necessary ignore repo patterns
   protected hiddenButNotNecessaryIgnoredInRepoPatterns(): string[] {
     const linkeProjectPrefix =
       this.project.linkedProjects.getLinkedProjectsConfig().prefix;
@@ -164,11 +171,9 @@ export class BaseIgnoreHideHelpers<
   public writeGitIgnore(): void {
     //#region @backendFunc
     let filesAndFoldersToIgnoreInGit = this.recursivePatternTransformFn([
-      ...this.alwaysIgnoredAndHiddenFilesAndFolders(),
-      ...this.alwaysIgnoredHiddenPatterns(),
-      ...this.getPatternsIgnoredInRepoButVisibleToUser().map(c =>
-        c.startsWith('/') ? c.slice(1) : c,
-      ),
+      ...this.filesAndFoldersAlwaysIgnoredAndHidden(),
+      ...this.getPatternsAlwaysIgnoredHidden(),
+      ...this.getPatternsIgnoredInRepoButVisibleToUser(),
     ]);
 
     if (!this.storeInRepoConfigFiles()) {
@@ -203,9 +208,8 @@ export class BaseIgnoreHideHelpers<
   } {
     //#region @backendFunc
     const hideInVSCode = [
-      ...this.alwaysIgnoredAndHiddenFilesAndFolders(),
-      ...this.alwaysIgnoredHiddenPatterns(),
-      ...this.hiddenButNeverIgnoredInRepo(),
+      ...this.filesAndFoldersAlwaysIgnoredAndHidden(),
+      ...this.getPatternsAlwaysIgnoredHidden(),
       ...this.hiddenButNotNecessaryIgnoredInRepoFilesAndFolders(),
       ...this.hiddenButNotNecessaryIgnoredInRepoPatterns(),
     ];
