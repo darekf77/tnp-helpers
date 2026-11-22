@@ -255,9 +255,11 @@ export class BaseVscodeHelpers<
       '*.rest': true,
     };
 
-    Object.keys(settings['search.exclude']).forEach(k => {
-      settings['search.exclude'][`**/${k}`] = true;
-    });
+    Object.keys(settings['search.exclude'])
+      .filter(f => f !== '.ai')
+      .forEach(k => {
+        settings['search.exclude'][`**/${k}`] = true;
+      });
 
     settings['search.exclude']['projects'] = true;
 
