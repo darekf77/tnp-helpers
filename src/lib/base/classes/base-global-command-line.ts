@@ -501,6 +501,21 @@ export class BaseGlobalCommandLine<
     this._exit();
   }
 
+  async docsUpForce(): Promise<void> {
+    if (!(await this.cwdIsProject({ requireProjectWithGitRoot: true }))) {
+      return;
+    }
+    await this.updateProject(this.project, {
+      commitType: 'docs',
+      force: true,
+    });
+    this._exit();
+  }
+
+  async upDocsForce(): Promise<void> {
+    await this.docsUpForce();
+  }
+
   /**
    * alias for docsUpdate
    */

@@ -4150,7 +4150,9 @@ ${HelpersTaon.terminalLine()}\n`;
     const notAllowed: RegExp[] = [
       '^.vscode$',
       '^node_modules$',
-      ...Helpers.values(config.tempFolders).map(v => `^${v}$`),
+      ...Helpers.values(config.tempFolders)
+        .filter(f => f !== 'docs')
+        .map(v => `^${v}$`),
       '^e2e$',
       '^tmp.*',
       '^dist.*',

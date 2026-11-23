@@ -76,7 +76,7 @@ export class LinkedProject {
       omitRootFolders: [
         'src',
         'environments',
-        'docs',
+        // 'docs',
         'node_modules',
         'dist',
         'bin',
