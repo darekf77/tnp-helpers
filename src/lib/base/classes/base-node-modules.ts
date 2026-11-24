@@ -1,7 +1,7 @@
 //#region imports
 import type fs from 'fs';
 
-import { config, Helpers, UtilsTerminal } from 'tnp-core/src';
+import { child_process, config, Helpers, UtilsTerminal } from 'tnp-core/src';
 import { UtilsOs } from 'tnp-core/src';
 import {
   CoreModels,
@@ -186,45 +186,64 @@ export class BaseNodeModules<
     reinstallOptions?: Omit<CoreModels.NpmInstallOptions, 'pkg'>,
   ) {
     //#region @backendFunc
-    // console.log({ reinstallOptions });
-    const options = _.cloneDeep(reinstallOptions || {});
+    const options = _.cloneDeep(reinstallOptions || {}) as Omit<
+      CoreModels.NpmInstallOptions,
+      'pkg'
+    > & {
+      onnxruntimeNodeInstallCudaSkip?: boolean;
+    };
+
     if (_.isUndefined(options.useYarn)) {
       options.useYarn = this.npmHelpers.preferYarnOverNpm();
     }
+
     if (_.isUndefined(options.removeYarnOrPackageJsonLock)) {
       options.removeYarnOrPackageJsonLock = true;
     }
 
-    Helpers.taskStarted(
-      `
-      [${dateformat(new Date(), 'dd-mm-yyyy HH:MM:ss')}]
-      Reinstalling node modules in:
-${this.cwd}
+    Helpers.taskStarted(`
+    [${dateformat(new Date(), 'dd-mm-yyyy HH:MM:ss')}]
+    Reinstalling node modules in:
+    ${this.cwd}
 
-with ${options.useYarn ? 'yarn' : 'npm'}
+    with ${options.useYarn ? 'yarn' : 'npm'}
+  `);
 
-      `,
-    );
     while (true) {
       if (!options.skipRemovingNodeModules) {
         await this.remove({ skipQuestion: true });
       }
-      // TODO @LAST - use method makeSureNodeModulesInstalled()
+
       try {
-        Helpers.run(await this.prepareCommand(options, this.cwd), {
-          output: true,
-          silence: false,
+        const command = await this.prepareCommand(options, this.cwd);
+
+        child_process.execSync(command, {
           cwd: this.cwd,
-        }).sync();
+          stdio: 'inherit',
+          env: {
+            ...process.env,
+            ...(options.NODE_TLS_REJECT_UNAUTHORIZED === true
+              ? { NODE_TLS_REJECT_UNAUTHORIZED: '0' }
+              : {}),
+            ...(options.onnxruntimeNodeInstallCudaSkip === true
+              ? { npm_config_onnxruntime_node_install_cuda: 'skip' }
+              : {}),
+          },
+        });
+
         break;
       } catch (error) {
         console.log(error);
+
         const nodeModulesInstallFailOptions = {
           again: {
             name: 'Try again normal installation',
           },
           againUnautorized: {
-            name: 'Try again normal installation with NODE_TLS_REJECT_UNAUTHORIZED',
+            name: 'Try again with NODE_TLS_REJECT_UNAUTHORIZED=0',
+          },
+          againWithoutOnnxCuda: {
+            name: 'Try again without ONNX Runtime CUDA',
           },
           againForce: {
             name: 'Try again force installation',
@@ -236,24 +255,35 @@ with ${options.useYarn ? 'yarn' : 'npm'}
             name: 'Exit process',
           },
         };
+
         const res = await HelpersTaon.consoleGui.select<
           keyof typeof nodeModulesInstallFailOptions
         >('What to do?', nodeModulesInstallFailOptions);
+
         if (res === 'againUnautorized') {
           options.NODE_TLS_REJECT_UNAUTHORIZED = true;
           continue;
         }
+
+        if (res === 'againWithoutOnnxCuda') {
+          options.onnxruntimeNodeInstallCudaSkip = true;
+          continue;
+        }
+
         if (res === 'again') {
           options.force = false;
           continue;
         }
+
         if (res === 'againForce') {
           options.force = true;
           continue;
         }
+
         if (res === 'exit') {
           process.exit(0);
         }
+
         if (res === 'skip') {
           break;
         }
@@ -261,9 +291,10 @@ with ${options.useYarn ? 'yarn' : 'npm'}
     }
 
     Helpers.taskDone(`
-      [${dateformat(new Date(), 'dd-mm-yyyy HH:MM:ss')}]
-      Reinstalled node modules for ${this.cwd}
-      `);
+    [${dateformat(new Date(), 'dd-mm-yyyy HH:MM:ss')}]
+    Reinstalled node modules for ${this.cwd}
+  `);
+
     this.npmHelpers.packageJson.reloadPackageJsonInMemory();
     //#endregion
   }
@@ -388,18 +419,12 @@ with ${options.useYarn ? 'yarn' : 'npm'}
       force,
       removeYarnOrPackageJsonLock,
       generateYarnOrPackageJsonLock,
-      NODE_TLS_REJECT_UNAUTHORIZED,
     } = options || {};
 
     force = true; // TODO QUICK_FIX @UNCOMMENT
 
     let command = '';
     const commonOptions = `--ignore-engines`;
-
-    const envPrefix =
-      NODE_TLS_REJECT_UNAUTHORIZED === true
-        ? `npx --yes cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 `
-        : '';
 
     if (useYarn) {
       //#region yarn
@@ -412,11 +437,10 @@ with ${options.useYarn ? 'yarn' : 'npm'}
           fse.unlinkSync(yarnLock);
         } catch (error) {}
 
-        fse.writeFileSync(yarnLock, ''); // simulate touch
+        fse.writeFileSync(yarnLock, '');
       }
 
       command =
-        `${envPrefix}` +
         `yarn ${pkg ? (pkg?.installType === 'remove' ? 'remove' : 'add') : 'install'} ${pkg ? pkg.name : ''} ` +
         ` ${generateYarnOrPackageJsonLock ? '' : '--no-lockfile'} ` +
         ` ${argsForFasterInstall} ` +
@@ -438,14 +462,14 @@ with ${options.useYarn ? 'yarn' : 'npm'}
           fse.unlinkSync(packageLock);
         } catch (error) {}
 
-        fse.writeFileSync(packageLock, ''); // simulate touch
+        fse.writeFileSync(packageLock, '');
       }
 
       const isArch = UtilsOs.isRunningInLinuxDistro('arch');
+
       const archNpmParam = isArch ? `SHARP_IGNORE_GLOBAL_LIBVIPS=1 ` : '';
 
       command =
-        `${envPrefix}` +
         `${archNpmParam} npx --node-options=--max-old-space-size=8000 npm ` +
         `${pkg?.installType === 'remove' ? 'uninstall' : 'install'} ${pkg ? pkg.name : ''} ` +
         ` ${generateYarnOrPackageJsonLock ? '' : '--no-package-lock'} ` +
@@ -456,9 +480,9 @@ with ${options.useYarn ? 'yarn' : 'npm'}
 
     Helpers.info(`Command for npm install:
 
-      ${command}
+    ${command}
 
-      `);
+  `);
 
     return command;
     //#endregion
